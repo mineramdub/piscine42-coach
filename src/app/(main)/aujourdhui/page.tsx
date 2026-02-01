@@ -2,9 +2,11 @@ import { loadExercisesByDay } from '@/lib/exercises/loader'
 import LessonSection from '@/components/learning/LessonSection'
 import TheorySection from '@/components/learning/TheorySection'
 import PrepExercisesSection from '@/components/learning/PrepExercisesSection'
+import ReviewSection from '@/components/learning/ReviewSection'
 
 export default function AujourdhuiPage() {
   // Charger les exercices du jour 1 (par défaut)
+  const currentDay = 4 // Simulation : jour 4 pour voir les rappels (printf de J+3)
   const exercises = loadExercisesByDay(1)
   const todayExercise = exercises.find(ex => ex.category === 'c') || exercises[0]
 
@@ -15,7 +17,7 @@ export default function AujourdhuiPage() {
         <div className="flex items-center justify-between">
           <h1 className="text-4xl font-bold">🌊 Aujourd&apos;hui</h1>
           <div className="text-sm text-muted-foreground">
-            Jour 1 / 30
+            Jour {currentDay} / 30
           </div>
         </div>
 
@@ -30,6 +32,9 @@ export default function AujourdhuiPage() {
           </div>
         </div>
       </div>
+
+      {/* Section Rappels (Répétition espacée) */}
+      <ReviewSection currentDay={currentDay} />
 
       {/* Section Apprentissage */}
       {todayExercise.learningContent && (
