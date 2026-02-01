@@ -1,0 +1,45 @@
+{
+  "id": "c-day01-ex02-printf",
+  "category": "c",
+  "day": 1,
+  "order": 2,
+  "title": "Printf avancé",
+  "description": "Utilise printf() pour afficher 'Mon nombre: 42' sur une ligne, puis 'Mon caractère: A' sur la ligne suivante.",
+  "difficulty": 1,
+  "points": 15,
+  "estimatedTime": 15,
+  "learningObjectives": [
+    "Utiliser différents formats avec printf()",
+    "Afficher des caractères avec %c",
+    "Utiliser \\n pour les retours à la ligne"
+  ],
+  "starterCode": "#include <stdio.h>\n\nint main(void)\n{\n\t// Ton code ici\n\t\n\treturn (0);\n}",
+  "hints": [
+    "Utilise %d pour un nombre entier",
+    "Utilise %c pour un caractère",
+    "Utilise \\n pour passer à la ligne"
+  ],
+  "testCases": [
+    {
+      "id": 1,
+      "description": "Affiche deux lignes correctement formatées",
+      "stdin": "",
+      "expectedStdout": "Mon nombre: 42\nMon caractère: A\n",
+      "expectedExitCode": 0,
+      "visible": true
+    }
+  ],
+  "constraints": {
+    "allowedFunctions": ["printf"],
+    "forbiddenFunctions": [],
+    "maxExecutionTime": 5000,
+    "maxMemory": 128
+  },
+  "relatedExercises": ["c-day01-ex01-variables", "c-day02-ex00-conditions"],
+  "resources": [
+    {
+      "title": "Format specifiers",
+      "url": "/docs/c/printf-formats"
+    }
+  ]
+}

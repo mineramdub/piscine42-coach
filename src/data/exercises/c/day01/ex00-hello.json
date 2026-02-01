@@ -1,0 +1,45 @@
+{
+  "id": "c-day01-ex00-hello",
+  "category": "c",
+  "day": 1,
+  "order": 0,
+  "title": "Hello World",
+  "description": "Écris un programme C qui affiche 'Hello, World!' suivi d'un retour à la ligne.",
+  "difficulty": 1,
+  "points": 10,
+  "estimatedTime": 15,
+  "learningObjectives": [
+    "Comprendre la structure d'un programme C",
+    "Utiliser la fonction printf()",
+    "Compiler avec gcc"
+  ],
+  "starterCode": "#include <stdio.h>\n\nint main(void)\n{\n\t// Ton code ici\n\treturn (0);\n}",
+  "hints": [
+    "Utilise la fonction printf() pour afficher du texte",
+    "N'oublie pas le \\n pour le retour à la ligne",
+    "La fonction main() doit retourner 0"
+  ],
+  "testCases": [
+    {
+      "id": 1,
+      "description": "Affiche 'Hello, World!'",
+      "stdin": "",
+      "expectedStdout": "Hello, World!\n",
+      "expectedExitCode": 0,
+      "visible": true
+    }
+  ],
+  "constraints": {
+    "allowedFunctions": ["printf", "write"],
+    "forbiddenFunctions": ["system", "exec"],
+    "maxExecutionTime": 5000,
+    "maxMemory": 128
+  },
+  "relatedExercises": ["c-day01-ex01-variables"],
+  "resources": [
+    {
+      "title": "Documentation printf()",
+      "url": "/docs/c/printf"
+    }
+  ]
+}

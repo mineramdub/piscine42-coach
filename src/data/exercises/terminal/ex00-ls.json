@@ -1,0 +1,19 @@
+{
+  "id": "terminal-ex00-ls",
+  "category": "terminal",
+  "day": 1,
+  "order": 0,
+  "title": "Commande ls",
+  "description": "Utilise la commande 'ls' pour lister les fichiers du répertoire courant.",
+  "difficulty": 1,
+  "points": 10,
+  "estimatedTime": 10,
+  "learningObjectives": ["Découvrir ls", "Lister les fichiers", "Comprendre les options -l et -a"],
+  "expectedCommands": ["ls"],
+  "hints": ["Tape simplement 'ls'", "Essaie 'ls -l' pour plus de détails", "Essaie 'ls -a' pour voir les fichiers cachés"],
+  "testCases": [
+    {"id": 1, "description": "Exécuter ls", "command": "ls", "success": true}
+  ],
+  "relatedExercises": ["terminal-ex01-cd"],
+  "resources": [{"title": "man ls", "url": "/docs/terminal/ls"}]
+}

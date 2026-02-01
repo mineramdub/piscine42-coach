@@ -1,0 +1,21 @@
+{
+  "id": "c-day03-ex00-ft-strlen",
+  "category": "c",
+  "day": 3,
+  "order": 0,
+  "title": "ft_strlen",
+  "description": "Écris une fonction ft_strlen qui retourne la longueur d'une chaîne de caractères.",
+  "difficulty": 3,
+  "points": 30,
+  "estimatedTime": 30,
+  "learningObjectives": ["Parcourir une string", "Utiliser les pointeurs", "Créer une fonction"],
+  "starterCode": "#include <stdio.h>\n\nint ft_strlen(char *str)\n{\n\t// Ton code ici\n}\n\nint main(void)\n{\n\tprintf(\"%d\\n\", ft_strlen(\"Hello\"));\n\treturn (0);\n}",
+  "hints": ["Une string se termine par '\\0'", "Utilise un compteur", "Parcours caractère par caractère"],
+  "testCases": [
+    {"id": 1, "description": "String normale", "stdin": "", "expectedStdout": "5\n", "expectedExitCode": 0, "visible": true},
+    {"id": 2, "description": "String vide", "stdin": "", "expectedStdout": "0\n", "expectedExitCode": 0, "visible": false}
+  ],
+  "constraints": {"allowedFunctions": ["printf"], "forbiddenFunctions": ["strlen"], "maxExecutionTime": 5000, "maxMemory": 128},
+  "relatedExercises": ["c-day03-ex01-ft-putstr"],
+  "resources": []
+}

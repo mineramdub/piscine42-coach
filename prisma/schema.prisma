@@ -1,0 +1,202 @@
+// Prisma schema for Piscine42 Coach
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ====== UTILISATEUR (sans authentification) ======
+
+model User {
+  id       String  @id @default(cuid())
+  name     String  @default("Étudiant")
+  timezone String  @default("Europe/Paris")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  progress     UserProgress?
+  completions  ExerciseCompletion[]
+  submissions  ExerciseSubmission[]
+  badges       UserBadge[]
+  journals     DailyJournal[]
+  helpRequests HelpRequest[]
+}
+
+// ====== PROGRESSION ======
+
+model UserProgress {
+  id        String   @id @default(cuid())
+  userId    String   @unique
+
+  // XP et niveaux (4 tracks : C, Terminal, Git, Debug)
+  cXp           Int @default(0)
+  cLevel        Int @default(1)
+  terminalXp    Int @default(0)
+  terminalLevel Int @default(1)
+  gitXp         Int @default(0)
+  gitLevel      Int @default(1)
+  debugXp       Int @default(0)
+  debugLevel    Int @default(1)
+
+  // Streak
+  currentStreak     Int       @default(0)
+  longestStreak     Int       @default(0)
+  lastActivityDate  DateTime?
+  streakStartDate   DateTime?
+  totalActiveDays   Int       @default(0)
+
+  // Stats globales
+  totalExercisesCompleted Int @default(0)
+  totalExercisesAttempted Int @default(0)
+  totalTimeSpent          Int @default(0) // minutes
+  fastestExerciseTime     Int? // secondes
+  averageExerciseTime     Int? // secondes
+  perfectScoreCount       Int @default(0)
+  firstTrySuccessCount    Int @default(0)
+
+  // Métadonnées tracking
+  hasLateNightActivity Boolean @default(false)
+  lastNorminetteCheck  DateTime?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+}
+
+// ====== EXERCICES ======
+
+model ExerciseCompletion {
+  id String @id @default(cuid())
+  userId String
+  exerciseId String // Référence au JSON (ex: "c-day01-ex00-hello")
+
+  completed       Boolean  @default(false)
+  completedAt     DateTime?
+  attempts        Int      @default(0)
+  bestScore       Int      @default(0) // 0-100
+  timeSpent       Int      @default(0) // secondes
+  firstTrySuccess Boolean  @default(false)
+
+  // Métadonnées
+  lastAttemptAt DateTime?
+  hintsUsed     Int @default(0)
+  helpRequested Boolean @default(false)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, exerciseId])
+  @@index([userId, completed])
+  @@index([exerciseId])
+}
+
+model ExerciseSubmission {
+  id String @id @default(cuid())
+  userId String
+  exerciseId String
+
+  code      String   @db.Text
+  language  String   @default("c")
+
+  // Résultats
+  passed        Boolean @default(false)
+  score         Int     @default(0)
+  testsPassed   Int     @default(0)
+  testsTotal    Int
+  executionTime Int? // ms
+  memoryUsed    Int? // KB
+
+  // Feedback
+  stdout           String?  @db.Text
+  stderr           String?  @db.Text
+  feedback         String?  @db.Text
+  norminetteErrors String?  @db.Text // JSON
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@index([userId, exerciseId])
+  @@index([userId, passed])
+  @@index([createdAt])
+}
+
+// ====== BADGES ======
+
+model UserBadge {
+  id String @id @default(cuid())
+  userId String
+  badgeId String // Référence au badge-config.json
+
+  earnedAt DateTime @default(now())
+  notified Boolean @default(false)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, badgeId])
+  @@index([userId])
+}
+
+// ====== JOURNAL ======
+
+model DailyJournal {
+  id String @id @default(cuid())
+  userId String
+  date DateTime // Date du jour (sans heure)
+
+  // Contenu
+  mood String? // 'motivated' | 'tired' | 'struggling' | 'confident' | 'frustrated'
+  notes String? @db.Text
+  lessonsLearned String? @db.Text
+  blockers String? @db.Text
+  wins String? @db.Text
+
+  // Métadonnées journée
+  exercisesCompleted Int @default(0)
+  timeSpent Int @default(0) // minutes
+  helpRequestsCount Int @default(0)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, date])
+  @@index([userId])
+  @@index([date])
+}
+
+// ====== AIDE ======
+
+model HelpRequest {
+  id String @id @default(cuid())
+  userId String
+  exerciseId String
+
+  type String // 'stuck' | 'bug' | 'concept' | 'norminette' | 'compilation'
+  message String? @db.Text
+  codeSnapshot String? @db.Text
+  errorMessage String? @db.Text
+
+  resolved Boolean @default(false)
+  resolvedAt DateTime?
+  resolution String? @db.Text
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@index([userId, resolved])
+  @@index([exerciseId])
+  @@index([createdAt])
+}

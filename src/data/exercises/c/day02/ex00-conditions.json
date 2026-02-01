@@ -1,0 +1,56 @@
+{
+  "id": "c-day02-ex00-conditions",
+  "category": "c",
+  "day": 2,
+  "order": 0,
+  "title": "If/Else",
+  "description": "Écris un programme qui lit un nombre et affiche 'Positif' s'il est >= 0, sinon 'Négatif'.",
+  "difficulty": 2,
+  "points": 20,
+  "estimatedTime": 25,
+  "learningObjectives": [
+    "Utiliser les conditions if/else",
+    "Lire une entrée avec scanf()",
+    "Comparer des nombres"
+  ],
+  "starterCode": "#include <stdio.h>\n\nint main(void)\n{\n\tint n;\n\t\n\t// Lis le nombre depuis stdin\n\tscanf(\"%d\", &n);\n\t\n\t// Ton code ici\n\t\n\treturn (0);\n}",
+  "hints": [
+    "Utilise if (n >= 0) pour tester",
+    "N'oublie pas le else pour le cas négatif",
+    "Pense au cas 0 (il est positif)"
+  ],
+  "testCases": [
+    {
+      "id": 1,
+      "description": "Nombre positif",
+      "stdin": "42",
+      "expectedStdout": "Positif\n",
+      "expectedExitCode": 0,
+      "visible": true
+    },
+    {
+      "id": 2,
+      "description": "Nombre négatif",
+      "stdin": "-5",
+      "expectedStdout": "Négatif\n",
+      "expectedExitCode": 0,
+      "visible": true
+    },
+    {
+      "id": 3,
+      "description": "Zéro (edge case)",
+      "stdin": "0",
+      "expectedStdout": "Positif\n",
+      "expectedExitCode": 0,
+      "visible": false
+    }
+  ],
+  "constraints": {
+    "allowedFunctions": ["printf", "scanf"],
+    "forbiddenFunctions": [],
+    "maxExecutionTime": 5000,
+    "maxMemory": 128
+  },
+  "relatedExercises": ["c-day02-ex01-while"],
+  "resources": []
+}

@@ -1,0 +1,19 @@
+{
+  "id": "git-ex00-init",
+  "category": "git",
+  "day": 1,
+  "order": 0,
+  "title": "Git Init",
+  "description": "Initialise un nouveau dépôt Git avec la commande 'git init'.",
+  "difficulty": 1,
+  "points": 10,
+  "estimatedTime": 10,
+  "learningObjectives": ["Créer un repo Git", "Comprendre .git/", "Démarrer le versioning"],
+  "expectedCommands": ["git init"],
+  "hints": ["Tape 'git init' dans un dossier", "Un dossier .git/ sera créé", "Tu peux vérifier avec 'ls -a'"],
+  "testCases": [
+    {"id": 1, "description": "Initialiser repo", "command": "git init", "success": true}
+  ],
+  "relatedExercices": ["git-ex01-add"],
+  "resources": []
+}

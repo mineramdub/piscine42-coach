@@ -1,0 +1,45 @@
+{
+  "id": "c-day01-ex01-variables",
+  "category": "c",
+  "day": 1,
+  "order": 1,
+  "title": "Variables",
+  "description": "Déclare deux variables entières 'a' et 'b', assigne-leur les valeurs 42 et 21, puis affiche leur somme.",
+  "difficulty": 1,
+  "points": 15,
+  "estimatedTime": 20,
+  "learningObjectives": [
+    "Déclarer des variables",
+    "Faire des opérations arithmétiques",
+    "Afficher des nombres avec printf()"
+  ],
+  "starterCode": "#include <stdio.h>\n\nint main(void)\n{\n\t// Déclare tes variables ici\n\t\n\t// Affiche le résultat\n\t\n\treturn (0);\n}",
+  "hints": [
+    "Utilise 'int a = 42;' pour déclarer et initialiser",
+    "Utilise '%d' dans printf() pour afficher un entier",
+    "La somme se calcule avec l'opérateur +"
+  ],
+  "testCases": [
+    {
+      "id": 1,
+      "description": "Affiche 63 (42 + 21)",
+      "stdin": "",
+      "expectedStdout": "63\n",
+      "expectedExitCode": 0,
+      "visible": true
+    }
+  ],
+  "constraints": {
+    "allowedFunctions": ["printf"],
+    "forbiddenFunctions": [],
+    "maxExecutionTime": 5000,
+    "maxMemory": 128
+  },
+  "relatedExercises": ["c-day01-ex00-hello", "c-day01-ex02-printf"],
+  "resources": [
+    {
+      "title": "Variables en C",
+      "url": "/docs/c/variables"
+    }
+  ]
+}

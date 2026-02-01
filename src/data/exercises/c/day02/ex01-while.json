@@ -1,0 +1,25 @@
+{
+  "id": "c-day02-ex01-while",
+  "category": "c",
+  "day": 2,
+  "order": 1,
+  "title": "Boucle While",
+  "description": "Affiche les nombres de 1 à 5 (un par ligne) en utilisant une boucle while.",
+  "difficulty": 2,
+  "points": 20,
+  "estimatedTime": 20,
+  "learningObjectives": ["Utiliser une boucle while", "Incrémenter une variable", "Condition d'arrêt"],
+  "starterCode": "#include <stdio.h>\n\nint main(void)\n{\n\t// Ton code ici\n\t\n\treturn (0);\n}",
+  "hints": ["Initialise un compteur à 1", "Continue tant que le compteur <= 5", "N'oublie pas d'incrémenter"],
+  "testCases": [{
+    "id": 1,
+    "description": "Affiche 1 à 5",
+    "stdin": "",
+    "expectedStdout": "1\n2\n3\n4\n5\n",
+    "expectedExitCode": 0,
+    "visible": true
+  }],
+  "constraints": {"allowedFunctions": ["printf"], "forbiddenFunctions": [], "maxExecutionTime": 5000, "maxMemory": 128},
+  "relatedExercises": ["c-day02-ex02-for"],
+  "resources": []
+}
