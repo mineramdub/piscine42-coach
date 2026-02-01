@@ -13,6 +13,138 @@
     "Utiliser la fonction printf()",
     "Compiler avec gcc"
   ],
+  "learningContent": {
+    "lesson": {
+      "introduction": "Bienvenue dans ton premier programme C ! Le programme 'Hello World' est un classique de la programmation. Il va te permettre de comprendre la structure de base d'un programme C et comment afficher du texte à l'écran.",
+      "steps": [
+        {
+          "id": 1,
+          "title": "La structure d'un programme C",
+          "content": "Tout programme C a une structure de base :\n\n1. **Les includes** : pour utiliser des fonctions (comme `printf`)\n2. **La fonction main** : le point d'entrée du programme\n3. **Le return** : pour dire si le programme s'est bien passé",
+          "codeExample": "#include <stdio.h>\n\nint main(void)\n{\n\t// Ton code ici\n\treturn (0);\n}",
+          "language": "c"
+        },
+        {
+          "id": 2,
+          "title": "Le #include <stdio.h>",
+          "content": "**stdio** = **St**andar**d** **I**nput/**O**utput\n\nCette ligne permet d'utiliser les fonctions d'affichage comme `printf()`.\n\nSans ce `#include`, le compilateur ne saurait pas ce qu'est `printf` et renverrait une erreur.",
+          "codeExample": "#include <stdio.h>  // <- Nécessaire pour printf()",
+          "language": "c"
+        },
+        {
+          "id": 3,
+          "title": "La fonction printf()",
+          "content": "`printf()` affiche du texte à l'écran.\n\nLe texte à afficher doit être entre guillemets : `\"Ton texte\"`\n\n`\\n` est un caractère spécial qui signifie \"retour à la ligne\".",
+          "codeExample": "printf(\"Hello, World!\\n\");",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Essaye d'afficher ton prénom avec printf(). N'oublie pas le \\n !",
+            "starterCode": "#include <stdio.h>\n\nint main(void)\n{\n\tprintf(/* TON CODE ICI */);\n\treturn (0);\n}",
+            "solution": "#include <stdio.h>\n\nint main(void)\n{\n\tprintf(\"Marie\\n\");\n\treturn (0);\n}"
+          }
+        },
+        {
+          "id": 4,
+          "title": "Le return (0)",
+          "content": "`return (0);` indique que le programme s'est terminé **sans erreur**.\n\nC'est une convention : `0` = succès, autre valeur = erreur.\n\nLe système d'exploitation lit cette valeur pour savoir si tout s'est bien passé.",
+          "codeExample": "return (0);  // Tout s'est bien passé !",
+          "language": "c"
+        }
+      ]
+    },
+    "theory": [
+      {
+        "title": "Qu'est-ce qu'un compilateur ?",
+        "content": "Un **compilateur** transforme ton code C (lisible par les humains) en **code machine** (exécutable par l'ordinateur).\n\n`gcc` est le compilateur que tu vas utiliser à la Piscine.\n\nPour compiler un fichier `hello.c` :\n```bash\ngcc hello.c\n```\n\nCela crée un fichier exécutable `a.out` que tu peux lancer avec :\n```bash\n./a.out\n```",
+        "codeExamples": [
+          {
+            "title": "Compiler avec un nom personnalisé",
+            "code": "gcc hello.c -o hello",
+            "explanation": "L'option -o permet de donner un nom à l'exécutable (ici 'hello' au lieu de 'a.out')"
+          },
+          {
+            "title": "Compiler avec les warnings",
+            "code": "gcc -Wall -Wextra -Werror hello.c",
+            "explanation": "À la Piscine, tu devras TOUJOURS compiler avec ces flags qui activent tous les avertissements"
+          }
+        ],
+        "keyPoints": [
+          "Le compilateur transforme ton code C en programme exécutable",
+          "gcc est le compilateur standard en C",
+          "Les warnings sont là pour t'aider à trouver des bugs !",
+          "À la Piscine : -Wall -Wextra -Werror sont OBLIGATOIRES"
+        ],
+        "commonMistakes": [
+          "Oublier le #include <stdio.h> → erreur de compilation",
+          "Oublier le point-virgule après printf() → erreur de syntaxe",
+          "Oublier les guillemets autour du texte",
+          "Oublier le \\n → pas de retour à la ligne"
+        ]
+      },
+      {
+        "title": "Les caractères spéciaux",
+        "content": "En C, certains caractères ont un sens spécial quand ils sont précédés d'un **backslash** `\\` :\n\n- `\\n` : retour à la ligne (newline)\n- `\\t` : tabulation\n- `\\\\` : affiche un backslash\n- `\\\"` : affiche un guillemet",
+        "codeExamples": [
+          {
+            "title": "Exemple avec \\n",
+            "code": "printf(\"Ligne 1\\nLigne 2\\n\");",
+            "explanation": "Affiche :\nLigne 1\nLigne 2"
+          },
+          {
+            "title": "Exemple avec \\t",
+            "code": "printf(\"Nom:\\tMarie\\n\");",
+            "explanation": "Affiche : Nom:    Marie (avec une tabulation)"
+          }
+        ],
+        "keyPoints": [
+          "\\n = retour à la ligne (très important !)",
+          "\\t = tabulation (pour aligner du texte)",
+          "Ces séquences sont appelées 'escape sequences'"
+        ]
+      }
+    ],
+    "prepExercises": [
+      {
+        "id": 1,
+        "title": "Affiche Bonjour",
+        "instruction": "Écris un programme qui affiche 'Bonjour' suivi d'un retour à la ligne.",
+        "starterCode": "#include <stdio.h>\n\nint main(void)\n{\n\t// TON CODE ICI\n\treturn (0);\n}",
+        "solution": "#include <stdio.h>\n\nint main(void)\n{\n\tprintf(\"Bonjour\\n\");\n\treturn (0);\n}",
+        "hint": "Utilise printf() avec le texte entre guillemets, et n'oublie pas le \\n !",
+        "difficulty": 1,
+        "testCase": {
+          "input": "",
+          "expectedOutput": "Bonjour\n"
+        }
+      },
+      {
+        "id": 2,
+        "title": "Affiche 2 lignes",
+        "instruction": "Affiche 'Hello' sur la première ligne et 'World' sur la deuxième ligne.",
+        "starterCode": "#include <stdio.h>\n\nint main(void)\n{\n\t// TON CODE ICI\n\treturn (0);\n}",
+        "solution": "#include <stdio.h>\n\nint main(void)\n{\n\tprintf(\"Hello\\n\");\n\tprintf(\"World\\n\");\n\treturn (0);\n}",
+        "hint": "Tu peux appeler printf() plusieurs fois, ou utiliser \\n dans un seul printf !",
+        "difficulty": 2,
+        "testCase": {
+          "input": "",
+          "expectedOutput": "Hello\nWorld\n"
+        }
+      },
+      {
+        "id": 3,
+        "title": "Texte avec tabulation",
+        "instruction": "Affiche 'Nom:' suivi d'une tabulation puis 'Alice', le tout sur une ligne avec un retour à la ligne final.",
+        "starterCode": "#include <stdio.h>\n\nint main(void)\n{\n\t// TON CODE ICI\n\treturn (0);\n}",
+        "solution": "#include <stdio.h>\n\nint main(void)\n{\n\tprintf(\"Nom:\\tAlice\\n\");\n\treturn (0);\n}",
+        "hint": "Utilise \\t pour la tabulation et \\n pour le retour à la ligne",
+        "difficulty": 2,
+        "testCase": {
+          "input": "",
+          "expectedOutput": "Nom:\tAlice\n"
+        }
+      }
+    ]
+  },
   "starterCode": "#include <stdio.h>\n\nint main(void)\n{\n\t// Ton code ici\n\treturn (0);\n}",
   "hints": [
     "Utilise la fonction printf() pour afficher du texte",

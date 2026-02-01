@@ -1,4 +1,7 @@
 import { loadExercisesByDay } from '@/lib/exercises/loader'
+import LessonSection from '@/components/learning/LessonSection'
+import TheorySection from '@/components/learning/TheorySection'
+import PrepExercisesSection from '@/components/learning/PrepExercisesSection'
 
 export default function AujourdhuiPage() {
   // Charger les exercices du jour 1 (par défaut)
@@ -27,6 +30,42 @@ export default function AujourdhuiPage() {
           </div>
         </div>
       </div>
+
+      {/* Section Apprentissage */}
+      {todayExercise.learningContent && (
+        <div className="space-y-6">
+          <div className="flex items-center gap-3">
+            <h2 className="text-3xl font-bold">📚 Apprends d'abord</h2>
+            <span className="text-sm text-muted-foreground">
+              Suis le cours avant de commencer l'exercice
+            </span>
+          </div>
+
+          {/* Mini-cours interactif */}
+          {todayExercise.learningContent.lesson && (
+            <LessonSection lesson={todayExercise.learningContent.lesson} />
+          )}
+
+          {/* Théorie détaillée */}
+          {todayExercise.learningContent.theory && (
+            <TheorySection sections={todayExercise.learningContent.theory} />
+          )}
+
+          {/* Exercices préparatoires */}
+          {todayExercise.learningContent.prepExercises && (
+            <PrepExercisesSection exercises={todayExercise.learningContent.prepExercises} />
+          )}
+
+          {/* Séparateur */}
+          <div className="flex items-center gap-4 py-4">
+            <div className="flex-1 h-px bg-border"></div>
+            <span className="text-sm font-medium text-muted-foreground px-4">
+              Maintenant, passe à l'exercice principal
+            </span>
+            <div className="flex-1 h-px bg-border"></div>
+          </div>
+        </div>
+      )}
 
       {/* Mission du jour */}
       <div className="bg-primary/10 border border-primary rounded-lg p-6 space-y-4">

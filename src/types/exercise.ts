@@ -25,6 +25,59 @@ export interface Resource {
   url: string
 }
 
+export interface LessonStep {
+  id: number
+  title: string
+  content: string // Markdown
+  codeExample?: string
+  language?: string
+  tryItYourself?: {
+    instruction: string
+    starterCode: string
+    solution: string
+  }
+}
+
+export interface TheorySection {
+  title: string
+  content: string // Markdown
+  codeExamples?: Array<{
+    title: string
+    code: string
+    explanation: string
+  }>
+  keyPoints: string[]
+  commonMistakes?: string[]
+}
+
+export interface PrepExercise {
+  id: number
+  title: string
+  instruction: string
+  starterCode: string
+  solution: string
+  hint?: string
+  difficulty: 1 | 2 | 3
+  testCase?: {
+    input: string
+    expectedOutput: string
+  }
+}
+
+export interface LearningContent {
+  // Mini-cours interactif
+  lesson?: {
+    introduction: string
+    steps: LessonStep[]
+  }
+
+  // Théorie détaillée
+  theory?: TheorySection[]
+
+  // Exercices préparatoires
+  prepExercises?: PrepExercise[]
+}
+
 export interface Exercise {
   id: string
   category: ExerciseCategory
@@ -36,6 +89,9 @@ export interface Exercise {
   points: number
   estimatedTime: number // minutes
   learningObjectives: string[]
+
+  // NOUVEAU: Contenu d'apprentissage
+  learningContent?: LearningContent
 
   // Code (pour exercices C)
   starterCode?: string
