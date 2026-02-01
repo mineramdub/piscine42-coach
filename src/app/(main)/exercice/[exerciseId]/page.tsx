@@ -44,6 +44,10 @@ export default function ExercicePage({
   // Charger l'exercice (simplifié pour l'instant)
   const exercise = exercisesData[resolvedParams.exerciseId as keyof typeof exercisesData]
 
+  const handleCodeChange = (value: string | undefined) => {
+    setCode(value || '')
+  }
+
   if (!exercise) {
     return (
       <div className="text-center py-12">
@@ -107,7 +111,7 @@ export default function ExercicePage({
           <CodeEditor
             defaultValue={exercise.starterCode}
             language="c"
-            onChange={setCode}
+            onChange={handleCodeChange}
           />
         </div>
 
