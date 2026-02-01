@@ -13,6 +13,225 @@
     "Faire des opérations arithmétiques",
     "Afficher des nombres avec printf()"
   ],
+  "learningContent": {
+    "lesson": {
+      "introduction": "Les variables sont les briques de base de tout programme. Elles permettent de stocker des informations (nombres, caractères, etc.) pour les utiliser plus tard. Dans cet exercice, tu vas apprendre à créer des variables et à faire des calculs avec.",
+      "steps": [
+        {
+          "id": 1,
+          "title": "Qu'est-ce qu'une variable ?",
+          "content": "Une **variable** est comme une boîte dans la mémoire de l'ordinateur où tu peux stocker une valeur.\n\n**Chaque variable a :**\n1. Un **type** (int, char, float...) - quel genre de données elle stocke\n2. Un **nom** - pour y accéder\n3. Une **valeur** - ce qu'elle contient\n\n**Analogie :** Imagine une variable comme un casier numéroté. Le nom du casier permet de le retrouver, et dedans tu ranges une valeur.",
+          "codeExample": "int age;           // Déclaration : crée la variable\nage = 19;          // Affectation : donne une valeur\n\nint level = 1;     // Déclaration + initialisation en une ligne",
+          "language": "c"
+        },
+        {
+          "id": 2,
+          "title": "Les types de base en C",
+          "content": "En C, tu dois dire quel **type** de données ta variable va contenir.\n\n**Les 3 types les plus courants :**\n- `int` : nombres entiers (42, -5, 0)\n- `char` : un seul caractère ('A', 'x', '9')\n- `float` : nombres à virgule (3.14, -2.5)\n\n**Important :** À la Piscine, tu vas surtout utiliser `int` et `char` au début.",
+          "codeExample": "int nombre = 42;        // Entier\nchar lettre = 'A';      // Caractère (entre apostrophes !)\nfloat prix = 19.99;     // Virgule flottante",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Déclare une variable entière appelée 'score' et initialise-la à 100",
+            "starterCode": "// TON CODE ICI",
+            "solution": "int score = 100;"
+          }
+        },
+        {
+          "id": 3,
+          "title": "Déclaration vs Initialisation",
+          "content": "**Déclaration :** créer la variable sans lui donner de valeur\n**Initialisation :** lui donner une valeur dès sa création\n\n**Bonne pratique :** Initialise toujours tes variables ! Une variable non initialisée contient une valeur aléatoire (garbage value).",
+          "codeExample": "// ❌ DANGER : variable non initialisée\nint x;\nprintf(\"%d\", x);  // Affiche n'importe quoi !\n\n// ✅ BON : variable initialisée\nint x = 0;\nprintf(\"%d\", x);  // Affiche 0",
+          "language": "c"
+        },
+        {
+          "id": 4,
+          "title": "Les opérations arithmétiques",
+          "content": "Une fois que tu as des variables, tu peux faire des calculs avec !\n\n**Les opérateurs de base :**\n- `+` addition\n- `-` soustraction\n- `*` multiplication\n- `/` division\n- `%` modulo (reste de la division)",
+          "codeExample": "int a = 10;\nint b = 3;\n\nint somme = a + b;       // 13\nint produit = a * b;     // 30\nint quotient = a / b;    // 3 (division entière !)\nint reste = a % b;       // 1 (10 divisé par 3 = reste 1)",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Calcule le produit de 7 et 6, et stocke le résultat dans une variable 'resultat'",
+            "starterCode": "int resultat = ",
+            "solution": "int resultat = 7 * 6;"
+          }
+        }
+      ]
+    },
+    "theory": [
+      {
+        "title": "Comment afficher des nombres avec printf()",
+        "content": "Pour afficher un nombre entier, tu utilises le format `%d` (d = decimal).\n\n**Syntaxe :** `printf(\"texte %d texte\", variable);`\n\nLe `%d` est remplacé par la valeur de la variable.",
+        "codeExamples": [
+          {
+            "title": "Afficher une variable",
+            "code": "int age = 19;\nprintf(\"J'ai %d ans\\n\", age);\n// Affiche : J'ai 19 ans",
+            "explanation": "Le %d est remplacé par la valeur de age (19)"
+          },
+          {
+            "title": "Afficher plusieurs variables",
+            "code": "int a = 42;\nint b = 21;\nprintf(\"%d + %d = %d\\n\", a, b, a + b);\n// Affiche : 42 + 21 = 63",
+            "explanation": "Tu peux avoir plusieurs %d, dans l'ordre des variables après la chaîne"
+          },
+          {
+            "title": "Afficher juste le nombre",
+            "code": "int somme = 63;\nprintf(\"%d\\n\", somme);\n// Affiche : 63",
+            "explanation": "Pas besoin de texte autour, juste %d et \\n"
+          }
+        ],
+        "keyPoints": [
+          "%d est le format pour les int (entiers)",
+          "Mets les variables après les guillemets, dans l'ordre",
+          "N'oublie pas le \\n pour le retour à la ligne"
+        ],
+        "commonMistakes": [
+          "Oublier le % devant le d → affiche 'd' au lieu du nombre",
+          "Inverser l'ordre des variables → mauvaise valeur affichée",
+          "Utiliser %d pour un char → utilise %c à la place"
+        ]
+      },
+      {
+        "title": "La division entière en C",
+        "content": "**ATTENTION :** En C, si tu divises deux `int`, le résultat est un `int` (la partie décimale est supprimée).\n\nExemple : `10 / 3 = 3` (et pas 3.333...)\n\nSi tu veux le reste, utilise l'opérateur **modulo** `%`.",
+        "codeExamples": [
+          {
+            "title": "Division entière",
+            "code": "int a = 10;\nint b = 3;\nint quotient = a / b;     // quotient = 3\nint reste = a % b;        // reste = 1",
+            "explanation": "10 divisé par 3 = 3 avec un reste de 1"
+          },
+          {
+            "title": "Piège fréquent",
+            "code": "int resultat = 5 / 2;     // resultat = 2 (pas 2.5 !)\nfloat resultat2 = 5 / 2;  // resultat2 = 2.0 (toujours !)",
+            "explanation": "La division de deux int donne toujours un int, même si tu stockes dans un float"
+          }
+        ],
+        "keyPoints": [
+          "Division de deux int → résultat int (partie décimale supprimée)",
+          "Pour avoir une division décimale, au moins un des nombres doit être float",
+          "L'opérateur % donne le reste de la division"
+        ]
+      },
+      {
+        "title": "Conversion de types (cast)",
+        "content": "Parfois tu dois convertir une variable d'un type vers un autre. C'est appelé un **cast**.\n\n**Syntaxe :** `(nouveau_type)variable`",
+        "codeExamples": [
+          {
+            "title": "Cast pour division décimale",
+            "code": "int a = 5;\nint b = 2;\n\nfloat resultat1 = a / b;           // 2.0 (division entière !)\nfloat resultat2 = (float)a / b;    // 2.5 (cast de a en float)\n\nprintf(\"%.1f\\n\", resultat1);  // 2.0\nprintf(\"%.1f\\n\", resultat2);  // 2.5",
+            "explanation": "Le cast (float) transforme a en float avant la division"
+          },
+          {
+            "title": "Cast d'un float vers int",
+            "code": "float pi = 3.14;\nint entier = (int)pi;  // Troncature : 3\n\nprintf(\"%d\\n\", entier);  // 3",
+            "explanation": "Le cast (int) supprime la partie décimale"
+          }
+        ],
+        "keyPoints": [
+          "Cast = conversion de type",
+          "(float)x convertit x en float",
+          "(int)x tronque la partie décimale",
+          "Utile pour les divisions"
+        ]
+      },
+      {
+        "title": "Les constantes avec const",
+        "content": "Une **constante** est une variable dont la valeur ne peut pas changer.\n\n**Syntaxe :** `const type nom = valeur;`\n\n**Utilité :** Empêcher les modifications accidentelles de valeurs importantes.",
+        "codeExamples": [
+          {
+            "title": "Déclarer une constante",
+            "code": "const int MAX_LEVEL = 10;\nconst float PI = 3.14;\n\nprintf(\"%d\\n\", MAX_LEVEL);  // OK : lecture\n\n// MAX_LEVEL = 20;  // ❌ ERREUR : on ne peut pas modifier",
+            "explanation": "const empêche la modification"
+          },
+          {
+            "title": "Constantes vs variables",
+            "code": "int score = 100;          // Variable (modifiable)\nconst int MAX = 999;      // Constante (non modifiable)\n\nscore = 150;  // ✅ OK\n// MAX = 1000;   // ❌ ERREUR de compilation",
+            "explanation": "Utilise const pour les valeurs fixes"
+          }
+        ],
+        "keyPoints": [
+          "const rend une variable non modifiable",
+          "Convention : nom en MAJUSCULES pour les constantes",
+          "Utile pour les valeurs fixes (MAX, PI, etc.)"
+        ]
+      },
+      {
+        "title": "Exemples pratiques",
+        "content": "Voici des cas d'usage réels de variables :",
+        "codeExamples": [
+          {
+            "title": "Calculer une moyenne",
+            "code": "int note1 = 15;\nint note2 = 18;\nint note3 = 12;\n\nint somme = note1 + note2 + note3;\nfloat moyenne = (float)somme / 3;\n\nprintf(\"Moyenne : %.2f\\n\", moyenne);",
+            "explanation": "Cast nécessaire pour avoir une moyenne décimale"
+          },
+          {
+            "title": "Échanger deux variables",
+            "code": "int a = 5;\nint b = 10;\nint temp;\n\ntemp = a;  // Sauvegarde a\na = b;     // a prend la valeur de b\nb = temp;  // b prend l'ancienne valeur de a\n\nprintf(\"a = %d, b = %d\\n\", a, b);  // a = 10, b = 5",
+            "explanation": "Variable temporaire nécessaire pour l'échange"
+          }
+        ],
+        "keyPoints": [
+          "Les variables sont partout en programmation",
+          "Nomme tes variables clairement",
+          "Utilise des variables temporaires si besoin"
+        ]
+      }
+    ],
+    "prepExercises": [
+      {
+        "id": 1,
+        "title": "Déclarer une variable",
+        "instruction": "Déclare une variable entière 'x' et initialise-la à 10",
+        "starterCode": "#include <stdio.h>\n\nint main(void)\n{\n\t// TON CODE ICI\n\treturn (0);\n}",
+        "solution": "#include <stdio.h>\n\nint main(void)\n{\n\tint x = 10;\n\treturn (0);\n}",
+        "hint": "Utilise le type int suivi du nom de la variable",
+        "difficulty": 1
+      },
+      {
+        "id": 2,
+        "title": "Afficher une variable",
+        "instruction": "Déclare un entier 'nombre' égal à 42 et affiche-le",
+        "starterCode": "#include <stdio.h>\n\nint main(void)\n{\n\t// TON CODE ICI\n\treturn (0);\n}",
+        "solution": "#include <stdio.h>\n\nint main(void)\n{\n\tint nombre = 42;\n\tprintf(\"%d\\n\", nombre);\n\treturn (0);\n}",
+        "hint": "Utilise %d dans printf() pour afficher un int",
+        "difficulty": 2
+      },
+      {
+        "id": 3,
+        "title": "Calculer une somme",
+        "instruction": "Déclare deux variables a=10 et b=5, calcule leur somme et affiche-la",
+        "starterCode": "#include <stdio.h>\n\nint main(void)\n{\n\t// TON CODE ICI\n\treturn (0);\n}",
+        "solution": "#include <stdio.h>\n\nint main(void)\n{\n\tint a = 10;\n\tint b = 5;\n\tint somme = a + b;\n\tprintf(\"%d\\n\", somme);\n\treturn (0);\n}",
+        "hint": "Crée une troisième variable pour stocker a + b",
+        "difficulty": 2
+      },
+      {
+        "id": 4,
+        "title": "Modulo - Reste de division",
+        "instruction": "Calcule et affiche le reste de 17 divisé par 5",
+        "starterCode": "#include <stdio.h>\n\nint main(void)\n{\n\t// TON CODE ICI\n\treturn (0);\n}",
+        "solution": "#include <stdio.h>\n\nint main(void)\n{\n\tint a = 17;\n\tint b = 5;\n\tint reste = a % b;\n\tprintf(\"%d\\n\", reste);\n\treturn (0);\n}",
+        "hint": "Utilise l'opérateur % (modulo)",
+        "difficulty": 2
+      },
+      {
+        "id": 5,
+        "title": "Échanger deux variables",
+        "instruction": "Échange les valeurs de a=5 et b=10 avec une variable temporaire, puis affiche a et b",
+        "starterCode": "#include <stdio.h>\n\nint main(void)\n{\n\tint a = 5;\n\tint b = 10;\n\t// TON CODE ICI\n\treturn (0);\n}",
+        "solution": "#include <stdio.h>\n\nint main(void)\n{\n\tint a = 5;\n\tint b = 10;\n\tint temp = a;\n\ta = b;\n\tb = temp;\n\tprintf(\"%d %d\\n\", a, b);\n\treturn (0);\n}",
+        "hint": "Utilise int temp pour sauvegarder une valeur temporairement",
+        "difficulty": 3
+      },
+      {
+        "id": 6,
+        "title": "Calculer une moyenne",
+        "instruction": "Calcule la moyenne de 12, 14 et 16 (résultat attendu : 14)",
+        "starterCode": "#include <stdio.h>\n\nint main(void)\n{\n\t// TON CODE ICI\n\treturn (0);\n}",
+        "solution": "#include <stdio.h>\n\nint main(void)\n{\n\tint a = 12;\n\tint b = 14;\n\tint c = 16;\n\tint somme = a + b + c;\n\tint moyenne = somme / 3;\n\tprintf(\"%d\\n\", moyenne);\n\treturn (0);\n}",
+        "hint": "Calcule d'abord la somme, puis divise par 3",
+        "difficulty": 2
+      }
+    ]
+  },
   "starterCode": "#include <stdio.h>\n\nint main(void)\n{\n\t// Déclare tes variables ici\n\t\n\t// Affiche le résultat\n\t\n\treturn (0);\n}",
   "hints": [
     "Utilise 'int a = 42;' pour déclarer et initialiser",

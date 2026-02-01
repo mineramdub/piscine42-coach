@@ -1,0 +1,109 @@
+{
+  "id": "terminal-level01-lesson01-navigation",
+  "category": "terminal",
+  "level": 1,
+  "order": 0,
+  "title": "Navigation dans le terminal",
+  "description": "Apprends à te déplacer dans ton système de fichiers comme un pro",
+  "difficulty": 1,
+  "points": 10,
+  "estimatedTime": 20,
+  "learningObjectives": [
+    "Comprendre la structure du système de fichiers",
+    "Utiliser ls, cd, pwd efficacement",
+    "Naviguer rapidement entre les dossiers"
+  ],
+  "learningContent": {
+    "lesson": {
+      "introduction": "Le terminal est ton meilleur ami à la Piscine. Avant de coder, tu dois savoir te déplacer dans les dossiers. Cette leçon te montre les 3 commandes essentielles : ls, cd et pwd.",
+      "steps": [
+        {
+          "id": 1,
+          "title": "pwd - Où suis-je ?",
+          "content": "**pwd** signifie 'Print Working Directory'. C'est la première commande à connaître : elle affiche le chemin absolu du dossier où tu te trouves.\n\nExemple : si tu es dans ton dossier utilisateur, pwd affichera `/Users/ton-nom`.\n\n**Pourquoi c'est important ?**\nAvant de compiler, créer ou supprimer des fichiers, vérifie TOUJOURS où tu es avec pwd.",
+          "codeExample": "pwd\n# Affiche : /Users/ton-nom/piscine/c00",
+          "language": "bash"
+        },
+        {
+          "id": 2,
+          "title": "ls - Qu'est-ce qu'il y a ici ?",
+          "content": "**ls** liste tous les fichiers et dossiers dans le répertoire actuel.\n\n**Options essentielles :**\n- `ls -l` : format long avec permissions, taille, date\n- `ls -a` : affiche les fichiers cachés (commencent par .)\n- `ls -la` : combine les deux (le plus utilisé)",
+          "codeExample": "ls\n# Affiche : ex00  ex01  ex02\n\nls -l\n# Affiche avec détails:\n# -rw-r--r--  1 user  staff  123 Jan 1 12:00 main.c",
+          "language": "bash",
+          "tryItYourself": {
+            "instruction": "Tape la commande pour lister TOUS les fichiers (y compris cachés) en format long",
+            "starterCode": "ls",
+            "solution": "ls -la"
+          }
+        },
+        {
+          "id": 3,
+          "title": "cd - Change de dossier",
+          "content": "**cd** signifie 'Change Directory'. C'est comme double-cliquer sur un dossier, mais en plus rapide.\n\n**Raccourcis utiles :**\n- `cd ..` : remonte d'un niveau\n- `cd ~` ou juste `cd` : va au dossier home\n- `cd -` : revient au dossier précédent",
+          "codeExample": "cd ex00\npwd\n# Affiche : /Users/ton-nom/piscine/c00/ex00\n\ncd ..\npwd\n# Affiche : /Users/ton-nom/piscine/c00",
+          "language": "bash",
+          "tryItYourself": {
+            "instruction": "Comment remonter de 2 niveaux dans l'arborescence ?",
+            "starterCode": "cd",
+            "solution": "cd ../.."
+          }
+        },
+        {
+          "id": 4,
+          "title": "Combiner les commandes",
+          "content": "À la Piscine, tu vas enchaîner ces commandes des centaines de fois par jour.\n\n**Workflow typique :**\n1. `pwd` → vérifier où tu es\n2. `ls -la` → voir ce qu'il y a\n3. `cd ex00` → aller dans l'exercice\n4. `ls` → vérifier les fichiers\n5. Coder...\n6. `cd ..` → revenir en arrière",
+          "codeExample": "# Workflow complet\npwd\n# /Users/ton-nom/piscine\n\nls\n# c00  c01  c02\n\ncd c00\nls -la\n# ex00  ex01  ex02\n\ncd ex00\npwd\n# /Users/ton-nom/piscine/c00/ex00",
+          "language": "bash"
+        }
+      ]
+    },
+    "theory": [
+      {
+        "title": "Le système de fichiers Unix",
+        "content": "Unix (Linux, macOS) organise tout en arborescence. Tout part de la racine `/`.\n\nLa structure ressemble à ça :\n```\n/\n├── Users/\n│   └── ton-nom/\n│       ├── Documents/\n│       ├── Downloads/\n│       └── piscine/\n│           ├── c00/\n│           └── c01/\n```",
+        "keyPoints": [
+          "Chemin absolu : commence par / (ex: /Users/ton-nom)",
+          "Chemin relatif : depuis où tu es (ex: ../c01)",
+          ". = dossier actuel",
+          ".. = dossier parent",
+          "~ = ton dossier home"
+        ],
+        "commonMistakes": [
+          "Confondre / (racine) et ~ (home)",
+          "Oublier les espaces : cd mon dossier → ERREUR (utilise cd mon\\ dossier ou \"mon dossier\")",
+          "Ne pas vérifier avec pwd avant de faire des commandes dangereuses"
+        ]
+      }
+    ],
+    "prepExercises": [
+      {
+        "id": 1,
+        "title": "Navigation basique",
+        "instruction": "Tu es dans /Users/student/piscine. Quelle commande pour aller dans le dossier parent ?",
+        "starterCode": "",
+        "solution": "cd ..",
+        "hint": ".. représente le dossier parent",
+        "difficulty": 1
+      },
+      {
+        "id": 2,
+        "title": "Lister les fichiers cachés",
+        "instruction": "Quelle commande pour voir TOUS les fichiers (même .git) en format détaillé ?",
+        "starterCode": "ls",
+        "solution": "ls -la",
+        "hint": "-l pour le format long, -a pour all (tout)",
+        "difficulty": 1
+      },
+      {
+        "id": 3,
+        "title": "Chemin absolu vs relatif",
+        "instruction": "Tu es dans /Users/student. Comment aller dans /Users/student/piscine/c00 avec un chemin RELATIF ?",
+        "starterCode": "cd",
+        "solution": "cd piscine/c00",
+        "hint": "Pas besoin de / au début pour un chemin relatif",
+        "difficulty": 2
+      }
+    ]
+  },
+  "testCases": []
+}

@@ -9,6 +9,260 @@
   "points": 30,
   "estimatedTime": 30,
   "learningObjectives": ["Parcourir une string", "Utiliser les pointeurs", "Créer une fonction"],
+  "learningContent": {
+    "lesson": {
+      "introduction": "Aujourd'hui, tu vas créer ta première vraie fonction utilitaire : ft_strlen. Cette fonction compte le nombre de caractères dans une chaîne (string). C'est l'exercice le plus important du Jour 3 car il introduit les strings et les pointeurs, deux concepts fondamentaux du C.",
+      "steps": [
+        {
+          "id": 1,
+          "title": "Qu'est-ce qu'une string (chaîne de caractères) ?",
+          "content": "En C, une **string** est un tableau de caractères qui se termine par un caractère spécial : `'\\0'` (null terminator).\n\n**Exemple :**\n`\"Hello\"` est stocké en mémoire comme : `['H', 'e', 'l', 'l', 'o', '\\0']`\n\n**Points clés :**\n- Une string est entre guillemets doubles : `\"texte\"`\n- Un char est entre apostrophes simples : `'a'`\n- Le `\\0` marque la fin de la string (invisible mais crucial)",
+          "codeExample": "char texte[] = \"Hello\";  // Tableau de 6 caractères : H e l l o \\0\nchar lettre = 'H';       // Un seul caractère\n\n// En mémoire :\n// texte[0] = 'H'\n// texte[1] = 'e'\n// texte[2] = 'l'\n// texte[3] = 'l'\n// texte[4] = 'o'\n// texte[5] = '\\0'  ← Fin de la string",
+          "language": "c"
+        },
+        {
+          "id": 2,
+          "title": "Le terminateur null '\\0'",
+          "content": "Le caractère `'\\0'` (code ASCII 0) marque la **fin de la string**.\n\n**Pourquoi c'est important ?**\nC'est comme ça qu'on sait où s'arrêter quand on parcourt une string. Sans `\\0`, impossible de savoir où elle se termine !\n\n**La règle d'or :**\nPour compter les caractères, tu parcours la string JUSQU'À rencontrer `'\\0'`.",
+          "codeExample": "char str[] = \"Hi\";  // Stocké : ['H', 'i', '\\0']\n\n// Pour parcourir :\nint i = 0;\nwhile (str[i] != '\\0')  // Continue tant que pas à la fin\n{\n\tprintf(\"%c\", str[i]);\n\ti++;\n}\n// Affiche : Hi",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Comment tester si on est à la fin d'une string ?",
+            "starterCode": "// Quelle condition utiliser ?\nif (str[i] ...",
+            "solution": "if (str[i] == '\\0')"
+          }
+        },
+        {
+          "id": 3,
+          "title": "Parcourir une string avec une boucle",
+          "content": "Pour compter les caractères d'une string, tu dois :\n\n1. Créer un compteur à 0\n2. Parcourir chaque caractère\n3. S'arrêter quand tu rencontres `'\\0'`\n4. Retourner le compteur\n\n**Pattern classique :**\n```c\nint compteur = 0;\nwhile (str[compteur] != '\\0')\n{\n\tcompteur++;\n}\nreturn (compteur);\n```",
+          "codeExample": "// Compter \"Hello\" (5 caractères)\nchar str[] = \"Hello\";\nint len = 0;\n\nwhile (str[len] != '\\0')\n{\n\tlen++;  // Incrémente tant que pas à la fin\n}\n\nprintf(\"%d\\n\", len);  // Affiche : 5",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Quelle sera la valeur de len pour la string \"42\" ?",
+            "starterCode": "char str[] = \"42\";\nint len = 0;\nwhile (str[len] != '\\0')\n{\n\tlen++;\n}\n// len = ?",
+            "solution": "len = 2"
+          }
+        },
+        {
+          "id": 4,
+          "title": "Créer ta fonction ft_strlen",
+          "content": "Maintenant que tu sais parcourir une string, tu vas créer une **fonction** qui le fait.\n\n**Syntaxe d'une fonction :**\n```c\ntype_retour nom_fonction(type_parametre parametre)\n{\n\t// Code\n\treturn (valeur);\n}\n```\n\nPour ft_strlen :\n- **Type de retour :** `int` (le nombre de caractères)\n- **Paramètre :** `char *str` (un pointeur vers la string)\n- **Retourne :** la longueur",
+          "codeExample": "int ft_strlen(char *str)\n{\n\tint len = 0;\n\t\n\twhile (str[len] != '\\0')\n\t{\n\t\tlen++;\n\t}\n\t\n\treturn (len);\n}\n\n// Utilisation :\nint main(void)\n{\n\tint longueur = ft_strlen(\"Hello\");\n\tprintf(\"%d\\n\", longueur);  // Affiche : 5\n\treturn (0);\n}",
+          "language": "c"
+        }
+      ]
+    },
+    "theory": [
+      {
+        "title": "Les pointeurs (introduction simple)",
+        "content": "Un **pointeur** est une variable qui stocke l'**adresse mémoire** d'une autre variable.\n\n**char *str** signifie : \"str pointe vers le premier caractère d'une string\"\n\n**Pourquoi utiliser un pointeur pour les strings ?**\nAu lieu de copier toute la string, on passe juste son adresse. C'est beaucoup plus efficace !",
+        "codeExamples": [
+          {
+            "title": "Déclaration d'un pointeur",
+            "code": "char *str = \"Hello\";  // str pointe vers 'H'\n\n// str[0] = 'H'\n// str[1] = 'e'\n// str[2] = 'l'\n// etc.",
+            "explanation": "str[i] accède au caractère à la position i"
+          },
+          {
+            "title": "Passer une string à une fonction",
+            "code": "void afficher(char *s)  // s reçoit l'adresse de la string\n{\n\tprintf(\"%s\\n\", s);\n}\n\nint main(void)\n{\n\tchar texte[] = \"Bonjour\";\n\tafficher(texte);  // Passe l'adresse de texte\n\treturn (0);\n}",
+            "explanation": "On ne copie pas toute la string, juste son adresse"
+          }
+        ],
+        "keyPoints": [
+          "char *str signifie 'pointeur vers un caractère'",
+          "str[i] accède au caractère à la position i",
+          "Les pointeurs permettent de manipuler des strings efficacement"
+        ],
+        "commonMistakes": [
+          "Confondre char c et char *str (un caractère vs une string)",
+          "Oublier le \\0 à la fin d'une string",
+          "Dépasser la fin de la string (accéder après \\0)"
+        ]
+      },
+      {
+        "title": "Les fonctions ft_* à la Piscine",
+        "content": "À la Piscine 42, tu vas recréer toutes les fonctions standard de la libc (bibliothèque C).\n\n**Convention de nommage :**\n- Fonction standard : `strlen()`\n- Ta version : `ft_strlen()` (ft = forty-two)\n\n**Pourquoi recréer ces fonctions ?**\n- Comprendre comment elles fonctionnent en interne\n- Apprendre à manipuler la mémoire\n- Maîtriser les pointeurs et les boucles",
+        "codeExamples": [
+          {
+            "title": "strlen (version standard)",
+            "code": "#include <string.h>\n\nint main(void)\n{\n\tint len = strlen(\"Hello\");  // Fonction de la libc\n\tprintf(\"%d\\n\", len);  // 5\n\treturn (0);\n}",
+            "explanation": "La fonction strlen() de la libc fait exactement ce que tu codes"
+          },
+          {
+            "title": "ft_strlen (ta version)",
+            "code": "int ft_strlen(char *str)\n{\n\tint i = 0;\n\twhile (str[i])\n\t\ti++;\n\treturn (i);\n}\n\nint main(void)\n{\n\tint len = ft_strlen(\"Hello\");  // Ta fonction !\n\tprintf(\"%d\\n\", len);  // 5\n\treturn (0);\n}",
+            "explanation": "Tu recrées la même logique toi-même"
+          }
+        ],
+        "keyPoints": [
+          "ft_* = ta version des fonctions standard",
+          "Tu dois comprendre la logique, pas juste utiliser la libc",
+          "C'est l'essence de la Piscine : tout coder from scratch"
+        ]
+      },
+      {
+        "title": "Optimisation : while (str[i]) vs while (str[i] != '\\0')",
+        "content": "**Raccourci important :**\nEn C, `'\\0'` vaut 0, et 0 est considéré comme faux.\n\nDonc :\n- `while (str[i] != '\\0')` ← version explicite\n- `while (str[i])` ← version courte (équivalent)\n\n**Pourquoi ça marche ?**\n- Si `str[i]` est un caractère normal (non nul), c'est vrai → continue\n- Si `str[i]` est `'\\0'` (= 0), c'est faux → arrête",
+        "codeExamples": [
+          {
+            "title": "Version longue",
+            "code": "int ft_strlen(char *str)\n{\n\tint i = 0;\n\twhile (str[i] != '\\0')\n\t\ti++;\n\treturn (i);\n}",
+            "explanation": "Compare explicitement à \\0"
+          },
+          {
+            "title": "Version courte (à la 42)",
+            "code": "int ft_strlen(char *str)\n{\n\tint i = 0;\n\twhile (str[i])\n\t\ti++;\n\treturn (i);\n}",
+            "explanation": "Plus court, même résultat"
+          }
+        ],
+        "keyPoints": [
+          "while (str[i]) est équivalent à while (str[i] != '\\0')",
+          "'\\0' vaut 0, donc est considéré comme faux",
+          "Les deux versions sont correctes, la courte est plus 42-style"
+        ]
+      },
+      {
+        "title": "Accès par pointeur vs accès par indice",
+        "content": "Il existe deux façons d'accéder aux caractères d'une string :\n\n1. **Par indice :** `str[i]`\n2. **Par pointeur :** `*(str + i)` ou `*str` puis `str++`\n\n**Les deux sont équivalents**, mais l'accès par indice est plus lisible.",
+        "codeExamples": [
+          {
+            "title": "Accès par indice (recommandé)",
+            "code": "int ft_strlen(char *str)\n{\n\tint i = 0;\n\twhile (str[i] != '\\0')\n\t\ti++;\n\treturn (i);\n}",
+            "explanation": "str[i] est clair et facile à comprendre"
+          },
+          {
+            "title": "Accès par pointeur",
+            "code": "int ft_strlen(char *str)\n{\n\tint len = 0;\n\twhile (*str != '\\0')\n\t{\n\t\tlen++;\n\t\tstr++;  // Avance le pointeur\n\t}\n\treturn (len);\n}",
+            "explanation": "*str accède au caractère courant, str++ avance"
+          },
+          {
+            "title": "Version ultra-compacte",
+            "code": "int ft_strlen(char *str)\n{\n\tint i = 0;\n\twhile (str[i])\n\t\ti++;\n\treturn (i);\n}",
+            "explanation": "Le plus court : while (str[i]) au lieu de != '\\0'"
+          }
+        ],
+        "keyPoints": [
+          "str[i] = accès par indice (recommandé pour la clarté)",
+          "*str = accès par pointeur (plus avancé)",
+          "Les deux méthodes sont valides à la Piscine"
+        ]
+      },
+      {
+        "title": "Exemples pratiques avec strings",
+        "content": "Voici des opérations courantes sur les strings que tu rencontreras :",
+        "codeExamples": [
+          {
+            "title": "Comparer deux strings (basics)",
+            "code": "// Vérifier si deux strings ont la même longueur\nchar *str1 = \"Hello\";\nchar *str2 = \"World\";\n\nif (ft_strlen(str1) == ft_strlen(str2))\n\tprintf(\"Même longueur\\n\");",
+            "explanation": "ft_strlen sert souvent à comparer des tailles"
+          },
+          {
+            "title": "Vérifier si string vide",
+            "code": "char *str = \"\";\n\nif (ft_strlen(str) == 0)\n\tprintf(\"String vide\\n\");",
+            "explanation": "Une string vide a une longueur de 0"
+          },
+          {
+            "title": "Afficher longueur d'un input",
+            "code": "char input[100];\nprintf(\"Entre ton nom: \");\nscanf(\"%s\", input);\nprintf(\"Ton nom contient %d lettres\\n\", ft_strlen(input));",
+            "explanation": "Utile pour valider des inputs utilisateur"
+          }
+        ],
+        "keyPoints": [
+          "ft_strlen est une fonction de base très utilisée",
+          "Elle sert souvent pour des validations",
+          "C'est le premier exercice avec pointeurs à la Piscine"
+        ]
+      },
+      {
+        "title": "Erreurs courantes avec les strings",
+        "content": "Voici les pièges fréquents quand on débute avec les strings :",
+        "codeExamples": [
+          {
+            "title": "❌ Dépasser la fin de la string",
+            "code": "char str[] = \"Hi\";  // ['H', 'i', '\\0']\n\nfor (int i = 0; i < 5; i++)  // ❌ Dépasse !\n{\n\tprintf(\"%c\", str[i]);\n}\n// Accède à str[3], str[4] qui n'existent pas !",
+            "explanation": "Toujours s'arrêter à '\\0', pas à un indice fixe"
+          },
+          {
+            "title": "✅ Version correcte",
+            "code": "char str[] = \"Hi\";\n\nint i = 0;\nwhile (str[i] != '\\0')  // ✅ S'arrête au bon moment\n{\n\tprintf(\"%c\", str[i]);\n\ti++;\n}",
+            "explanation": "Toujours tester str[i] != '\\0'"
+          },
+          {
+            "title": "❌ Oublier le prototype",
+            "code": "int main(void)\n{\n\tprintf(\"%d\\n\", ft_strlen(\"test\"));  // ❌ Erreur !\n\treturn (0);\n}\n\nint ft_strlen(char *str)  // Défini après main\n{\n\t// ...\n}",
+            "explanation": "La fonction doit être déclarée AVANT main"
+          },
+          {
+            "title": "✅ Avec prototype",
+            "code": "int ft_strlen(char *str);  // Prototype\n\nint main(void)\n{\n\tprintf(\"%d\\n\", ft_strlen(\"test\"));  // ✅ OK\n\treturn (0);\n}\n\nint ft_strlen(char *str)\n{\n\t// ...\n}",
+            "explanation": "Déclare le prototype en haut du fichier"
+          }
+        ],
+        "keyPoints": [
+          "Ne JAMAIS dépasser '\\0'",
+          "Toujours déclarer le prototype avant main",
+          "Tester ton code avec des strings vides"
+        ]
+      }
+    ],
+    "prepExercises": [
+      {
+        "id": 1,
+        "title": "Compter manuellement",
+        "instruction": "Combien de caractères dans \"Piscine\" (sans compter le \\0) ?",
+        "starterCode": "// Ta réponse : ",
+        "solution": "7",
+        "hint": "Compte les lettres : P-i-s-c-i-n-e",
+        "difficulty": 1
+      },
+      {
+        "id": 2,
+        "title": "Parcourir une string",
+        "instruction": "Écris une boucle qui affiche chaque caractère de \"42\" sur une ligne différente",
+        "starterCode": "#include <stdio.h>\n\nint main(void)\n{\n\tchar str[] = \"42\";\n\t// TON CODE ICI\n\treturn (0);\n}",
+        "solution": "#include <stdio.h>\n\nint main(void)\n{\n\tchar str[] = \"42\";\n\tint i = 0;\n\twhile (str[i] != '\\0')\n\t{\n\t\tprintf(\"%c\\n\", str[i]);\n\t\ti++;\n\t}\n\treturn (0);\n}",
+        "hint": "Utilise une boucle while avec str[i] != '\\0'",
+        "difficulty": 2
+      },
+      {
+        "id": 3,
+        "title": "Fonction simple",
+        "instruction": "Écris une fonction qui retourne toujours 42",
+        "starterCode": "#include <stdio.h>\n\n// TON CODE ICI\n\nint main(void)\n{\n\tprintf(\"%d\\n\", ma_fonction());\n\treturn (0);\n}",
+        "solution": "#include <stdio.h>\n\nint ma_fonction(void)\n{\n\treturn (42);\n}\n\nint main(void)\n{\n\tprintf(\"%d\\n\", ma_fonction());\n\treturn (0);\n}",
+        "hint": "int ma_fonction(void) { return (42); }",
+        "difficulty": 2
+      },
+      {
+        "id": 4,
+        "title": "Fonction avec paramètre",
+        "instruction": "Écris une fonction ft_double qui prend un int et retourne son double",
+        "starterCode": "#include <stdio.h>\n\n// TON CODE ICI\n\nint main(void)\n{\n\tprintf(\"%d\\n\", ft_double(5));  // Doit afficher 10\n\treturn (0);\n}",
+        "solution": "#include <stdio.h>\n\nint ft_double(int n)\n{\n\treturn (n * 2);\n}\n\nint main(void)\n{\n\tprintf(\"%d\\n\", ft_double(5));\n\treturn (0);\n}",
+        "hint": "int ft_double(int n) { return (n * 2); }",
+        "difficulty": 2
+      },
+      {
+        "id": 5,
+        "title": "Accéder au premier caractère",
+        "instruction": "Affiche le premier caractère de la string \"Bonjour\"",
+        "starterCode": "#include <stdio.h>\n\nint main(void)\n{\n\tchar *str = \"Bonjour\";\n\t// TON CODE ICI\n\treturn (0);\n}",
+        "solution": "#include <stdio.h>\n\nint main(void)\n{\n\tchar *str = \"Bonjour\";\n\tprintf(\"%c\\n\", str[0]);\n\treturn (0);\n}",
+        "hint": "Le premier caractère est à l'indice 0 : str[0]",
+        "difficulty": 2
+      },
+      {
+        "id": 6,
+        "title": "Vérifier si string vide",
+        "instruction": "Écris un programme qui affiche 'Vide' si la string est vide, sinon 'Non vide'",
+        "starterCode": "#include <stdio.h>\n\nint main(void)\n{\n\tchar *str = \"\";\n\t// TON CODE ICI\n\treturn (0);\n}",
+        "solution": "#include <stdio.h>\n\nint main(void)\n{\n\tchar *str = \"\";\n\tif (str[0] == '\\0')\n\t\tprintf(\"Vide\\n\");\n\telse\n\t\tprintf(\"Non vide\\n\");\n\treturn (0);\n}",
+        "hint": "Une string vide commence directement par '\\0'",
+        "difficulty": 3
+      }
+    ]
+  },
   "starterCode": "#include <stdio.h>\n\nint ft_strlen(char *str)\n{\n\t// Ton code ici\n}\n\nint main(void)\n{\n\tprintf(\"%d\\n\", ft_strlen(\"Hello\"));\n\treturn (0);\n}",
   "hints": ["Une string se termine par '\\0'", "Utilise un compteur", "Parcours caractère par caractère"],
   "testCases": [

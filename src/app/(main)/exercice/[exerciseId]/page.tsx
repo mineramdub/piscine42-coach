@@ -1,49 +1,11 @@
 'use client'
 
-import { useState, use } from 'react'
+import { useState, use, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import CodeEditor from '@/components/exercise/CodeEditor'
 import CompletionModal from '@/components/exercise/CompletionModal'
-import { Play, ArrowLeft, Lightbulb, CheckCircle, XCircle, Send } from 'lucide-react'
-
-// Pour l'instant, on charge les exercices côté client
-// Plus tard on pourra faire un fetch API
-const exercisesData = {
-  'c-day01-ex00-hello': {
-    id: 'c-day01-ex00-hello',
-    title: 'Hello World',
-    description: 'Écris un programme C qui affiche \'Hello, World!\' suivi d\'un retour à la ligne.',
-    starterCode: '#include <stdio.h>\n\nint main(void)\n{\n\t// Ton code ici\n\treturn (0);\n}',
-    hints: [
-      'Utilise la fonction printf() pour afficher du texte',
-      'N\'oublie pas le \\n pour le retour à la ligne',
-      'La fonction main() doit retourner 0'
-    ],
-    testCases: [
-      {
-        id: 1,
-        description: 'Affiche \'Hello, World!\'',
-        expectedStdout: 'Hello, World!\n',
-        visible: true
-      },
-      {
-        id: 2,
-        description: 'Code compile sans erreur',
-        expectedStdout: '',
-        visible: true
-      },
-      {
-        id: 3,
-        description: 'Return code = 0',
-        expectedStdout: '',
-        visible: true
-      }
-    ],
-    points: 10,
-    day: 1,
-    order: 0,
-  }
-}
+import { Play, ArrowLeft, Lightbulb, CheckCircle, XCircle, Send, Loader2 } from 'lucide-react'
+import type { Exercise } from '@/types/exercise'
 
 interface TestResult {
   id: number
@@ -58,6 +20,14 @@ export default function ExercicePage({
 }) {
   const resolvedParams = use(params)
   const router = useRouter()
+
+  // États de chargement
+  const [exercise, setExercise] = useState<Exercise | null>(null)
+  const [nextExerciseId, setNextExerciseId] = useState<string | undefined>()
+  const [isLastOfDay, setIsLastOfDay] = useState(false)
+  const [loading, setLoading] = useState(true)
+
+  // États de l'exercice
   const [code, setCode] = useState('')
   const [output, setOutput] = useState('')
   const [isRunning, setIsRunning] = useState(false)
@@ -66,22 +36,29 @@ export default function ExercicePage({
   const [allTestsPassed, setAllTestsPassed] = useState(false)
   const [showCompletionModal, setShowCompletionModal] = useState(false)
 
-  // Charger l'exercice (simplifié pour l'instant)
-  const exercise = exercisesData[resolvedParams.exerciseId as keyof typeof exercisesData]
+  // Charger l'exercice depuis l'API
+  useEffect(() => {
+    const loadExercise = async () => {
+      try {
+        const response = await fetch(`/api/exercises/${resolvedParams.exerciseId}`)
 
-  if (!exercise) {
-    return (
-      <div className="text-center py-12">
-        <h1 className="text-2xl font-bold mb-4">Exercice introuvable</h1>
-        <button
-          onClick={() => router.back()}
-          className="text-primary hover:underline"
-        >
-          Retour
-        </button>
-      </div>
-    )
-  }
+        if (!response.ok) {
+          throw new Error('Exercise not found')
+        }
+
+        const data = await response.json()
+        setExercise(data.exercise)
+        setNextExerciseId(data.nextExerciseId)
+        setIsLastOfDay(data.isLastOfDay)
+      } catch (error) {
+        console.error('Error loading exercise:', error)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    loadExercise()
+  }, [resolvedParams.exerciseId])
 
   const handleCodeChange = (value: string | undefined) => {
     setCode(value || '')
@@ -93,6 +70,8 @@ export default function ExercicePage({
   }
 
   const handleRunTests = async () => {
+    if (!exercise) return
+
     setIsRunning(true)
     setOutput('🔄 Compilation et exécution des tests...\n')
     setTestResults([])
@@ -145,12 +124,32 @@ export default function ExercicePage({
     setShowCompletionModal(true)
   }
 
-  const getNextExercise = () => {
-    // Pour l'instant, pas d'exercice suivant (c'est le seul)
-    return undefined
+  // Écran de chargement
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <div className="text-center space-y-4">
+          <Loader2 className="w-12 h-12 animate-spin text-primary mx-auto" />
+          <p className="text-muted-foreground">Chargement de l'exercice...</p>
+        </div>
+      </div>
+    )
   }
 
-  const isLastOfDay = exercise.order === 2 // Simulation : 3 exercices par jour, order 0-2
+  // Exercice non trouvé
+  if (!exercise) {
+    return (
+      <div className="text-center py-12">
+        <h1 className="text-2xl font-bold mb-4">Exercice introuvable</h1>
+        <button
+          onClick={() => router.back()}
+          className="text-primary hover:underline"
+        >
+          Retour
+        </button>
+      </div>
+    )
+  }
 
   return (
     <>
@@ -274,27 +273,29 @@ export default function ExercicePage({
             </div>
 
             {/* Indices */}
-            <div className="border border-warning bg-warning/10 rounded-lg p-4 space-y-3">
-              <button
-                onClick={() => setShowHints(!showHints)}
-                className="flex items-center gap-2 font-bold w-full text-left"
-              >
-                <Lightbulb className="w-5 h-5" />
-                <span>Indices ({exercise.hints.length})</span>
-                <span className="ml-auto text-sm">{showHints ? '▼' : '▶'}</span>
-              </button>
+            {exercise.hints && exercise.hints.length > 0 && (
+              <div className="border border-warning bg-warning/10 rounded-lg p-4 space-y-3">
+                <button
+                  onClick={() => setShowHints(!showHints)}
+                  className="flex items-center gap-2 font-bold w-full text-left"
+                >
+                  <Lightbulb className="w-5 h-5" />
+                  <span>Indices ({exercise.hints.length})</span>
+                  <span className="ml-auto text-sm">{showHints ? '▼' : '▶'}</span>
+                </button>
 
-              {showHints && (
-                <ul className="space-y-2 pt-2">
-                  {exercise.hints.map((hint, index) => (
-                    <li key={index} className="flex items-start gap-2 text-sm">
-                      <span className="text-warning mt-1">•</span>
-                      <span>{hint}</span>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </div>
+                {showHints && (
+                  <ul className="space-y-2 pt-2">
+                    {exercise.hints.map((hint, index) => (
+                      <li key={index} className="flex items-start gap-2 text-sm">
+                        <span className="text-warning mt-1">•</span>
+                        <span>{hint}</span>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -305,7 +306,7 @@ export default function ExercicePage({
         exerciseTitle={exercise.title}
         points={exercise.points}
         isLastOfDay={isLastOfDay}
-        nextExerciseId={getNextExercise()}
+        nextExerciseId={nextExerciseId}
         currentDay={exercise.day}
         onClose={() => setShowCompletionModal(false)}
       />

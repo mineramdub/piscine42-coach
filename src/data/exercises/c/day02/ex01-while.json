@@ -9,6 +9,256 @@
   "points": 20,
   "estimatedTime": 20,
   "learningObjectives": ["Utiliser une boucle while", "Incrémenter une variable", "Condition d'arrêt"],
+  "learningContent": {
+    "lesson": {
+      "introduction": "Les boucles permettent de répéter du code plusieurs fois sans avoir à le réécrire. C'est l'un des concepts les plus puissants en programmation. Au lieu d'écrire 100 lignes de code identiques, tu écris une boucle qui s'exécute 100 fois !",
+      "steps": [
+        {
+          "id": 1,
+          "title": "Qu'est-ce qu'une boucle ?",
+          "content": "Une **boucle** est une structure qui répète un bloc de code **tant qu'une condition est vraie**.\n\n**Analogie :** Imagine que tu cours autour d'une piste. Tu continues à tourner TANT QUE tu n'as pas atteint 10 tours. Dès que tu as fait 10 tours, tu t'arrêtes.\n\nEn programmation, c'est pareil : le code tourne en boucle tant que la condition est vraie.",
+          "codeExample": "// Sans boucle (répétitif) :\nprintf(\"1\\n\");\nprintf(\"2\\n\");\nprintf(\"3\\n\");\nprintf(\"4\\n\");\nprintf(\"5\\n\");\n\n// Avec boucle (intelligent) :\nint i = 1;\nwhile (i <= 5)\n{\n\tprintf(\"%d\\n\", i);\n\ti = i + 1;\n}",
+          "language": "c"
+        },
+        {
+          "id": 2,
+          "title": "La syntaxe while",
+          "content": "**Structure d'une boucle while :**\n\n```c\nwhile (condition)\n{\n\t// Code à répéter\n}\n```\n\n**Fonctionnement :**\n1. Teste la condition\n2. Si vraie → exécute le code entre {}\n3. Retourne à l'étape 1\n4. Si fausse → sort de la boucle\n\n**Important :** Si la condition est toujours vraie, la boucle ne s'arrête JAMAIS (boucle infinie) !",
+          "codeExample": "int compteur = 0;\n\nwhile (compteur < 3)\n{\n\tprintf(\"Tour %d\\n\", compteur);\n\tcompteur = compteur + 1;\n}\nprintf(\"Fini !\\n\");\n\n// Affiche :\n// Tour 0\n// Tour 1\n// Tour 2\n// Fini !",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Écris une boucle qui affiche les nombres de 1 à 3",
+            "starterCode": "int i = 1;\n// TON CODE ICI",
+            "solution": "int i = 1;\nwhile (i <= 3)\n{\n\tprintf(\"%d\\n\", i);\n\ti = i + 1;\n}"
+          }
+        },
+        {
+          "id": 3,
+          "title": "Le pattern classique : initialisation, condition, incrémentation",
+          "content": "**Toute boucle while suit ce pattern en 3 étapes :**\n\n1. **Initialisation** : créer et initialiser le compteur AVANT la boucle\n2. **Condition** : tester le compteur dans le while\n3. **Incrémentation** : modifier le compteur DANS la boucle\n\n**ATTENTION :** Si tu oublies l'incrémentation, la boucle devient infinie !",
+          "codeExample": "// 1. Initialisation\nint i = 1;\n\n// 2. Condition\nwhile (i <= 5)\n{\n\tprintf(\"%d\\n\", i);\n\t\n\t// 3. Incrémentation (NE PAS OUBLIER !)\n\ti = i + 1;  // ou i++ (équivalent)\n}",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Complète cette boucle pour afficher 10, 11, 12",
+            "starterCode": "int n = 10;\nwhile (n <= 12)\n{\n\tprintf(\"%d\\n\", n);\n\t// TON CODE ICI\n}",
+            "solution": "int n = 10;\nwhile (n <= 12)\n{\n\tprintf(\"%d\\n\", n);\n\tn++;\n}"
+          }
+        },
+        {
+          "id": 4,
+          "title": "Incrémentation : i++ vs i = i + 1",
+          "content": "Pour augmenter une variable de 1, tu as deux syntaxes équivalentes :\n\n- `i = i + 1` (version explicite)\n- `i++` (version courte, très utilisée)\n- `i += 1` (version intermédiaire)\n\n**À la Piscine, tu verras surtout `i++`.**\n\n**Autres raccourcis utiles :**\n- `i--` : diminue de 1 (équivalent à `i = i - 1`)\n- `i += 5` : augmente de 5 (équivalent à `i = i + 5`)\n- `i *= 2` : multiplie par 2 (équivalent à `i = i * 2`)",
+          "codeExample": "int i = 0;\n\n// Ces 3 lignes font la même chose :\ni = i + 1;  // Version longue\ni += 1;     // Version intermédiaire\ni++;        // Version courte (la plus utilisée)\n\nprintf(\"%d\\n\", i);  // Affiche : 3",
+          "language": "c"
+        }
+      ]
+    },
+    "theory": [
+      {
+        "title": "Boucles infinies - Le piège à éviter",
+        "content": "Une **boucle infinie** est une boucle dont la condition ne devient jamais fausse. Le programme reste bloqué et ne s'arrête jamais !\n\n**Causes fréquentes :**\n- Oublier l'incrémentation du compteur\n- Condition toujours vraie\n- Mauvaise logique de la condition",
+        "codeExamples": [
+          {
+            "title": "❌ Boucle infinie (oubli incrémentation)",
+            "code": "int i = 0;\nwhile (i < 5)\n{\n\tprintf(\"%d\\n\", i);\n\t// OUBLI : i++ manquant !\n}\n// i reste à 0, donc i < 5 est toujours vrai\n// La boucle ne s'arrête JAMAIS",
+            "explanation": "Sans i++, la condition reste toujours vraie"
+          },
+          {
+            "title": "❌ Boucle infinie (condition toujours vraie)",
+            "code": "while (1)  // 1 = vrai, toujours\n{\n\tprintf(\"Infini\\n\");\n}\n// Cette boucle ne s'arrête jamais",
+            "explanation": "La condition est toujours vraie"
+          },
+          {
+            "title": "✅ Boucle correcte",
+            "code": "int i = 0;\nwhile (i < 5)\n{\n\tprintf(\"%d\\n\", i);\n\ti++;  // IMPORTANT : ne pas oublier !\n}\nprintf(\"Fini\\n\");",
+            "explanation": "L'incrémentation fait évoluer i jusqu'à sortir de la boucle"
+          }
+        ],
+        "keyPoints": [
+          "Toujours incrémenter le compteur dans la boucle",
+          "Vérifier que la condition peut devenir fausse",
+          "Si ton programme se bloque, c'est souvent une boucle infinie"
+        ],
+        "commonMistakes": [
+          "Oublier i++ → boucle infinie",
+          "Mettre un ; après while(condition); → le corps de la boucle n'est pas exécuté",
+          "Modifier le mauvais compteur dans une boucle imbriquée"
+        ]
+      },
+      {
+        "title": "Boucles décroissantes",
+        "content": "Une boucle peut aussi **décompter** au lieu de compter !\n\nAu lieu de i++, tu utilises i-- (diminuer de 1).",
+        "codeExamples": [
+          {
+            "title": "Compte à rebours",
+            "code": "int i = 5;\nwhile (i > 0)\n{\n\tprintf(\"%d\\n\", i);\n\ti--;  // Diminue de 1\n}\nprintf(\"Décollage !\\n\");\n\n// Affiche :\n// 5\n// 4\n// 3\n// 2\n// 1\n// Décollage !",
+            "explanation": "On commence à 5 et on descend jusqu'à 1"
+          },
+          {
+            "title": "Afficher à l'envers",
+            "code": "int i = 10;\nwhile (i >= 1)\n{\n\tprintf(\"%d \", i);\n\ti--;\n}\n// Affiche : 10 9 8 7 6 5 4 3 2 1",
+            "explanation": "Note le >= au lieu de > pour inclure 1"
+          }
+        ],
+        "keyPoints": [
+          "i-- pour décrémenter (diminuer de 1)",
+          "Condition adaptée : i > 0 ou i >= 1",
+          "Utile pour parcourir à l'envers"
+        ]
+      },
+      {
+        "title": "La boucle for - Alternative plus compacte",
+        "content": "La boucle `for` regroupe **initialisation, condition et incrémentation** sur une seule ligne.\n\n**Syntaxe :**\n```c\nfor (initialisation; condition; incrémentation)\n{\n\t// Code à répéter\n}\n```\n\n**Équivalence while ↔ for :**\n```c\n// Avec while :\nint i = 0;\nwhile (i < 5)\n{\n\tprintf(\"%d\\n\", i);\n\ti++;\n}\n\n// Avec for :\nfor (int i = 0; i < 5; i++)\n{\n\tprintf(\"%d\\n\", i);\n}\n```",
+        "codeExamples": [
+          {
+            "title": "Afficher 1 à 10",
+            "code": "for (int i = 1; i <= 10; i++)\n{\n\tprintf(\"%d\\n\", i);\n}",
+            "explanation": "Plus compact qu'un while pour ce cas"
+          },
+          {
+            "title": "Parcourir à l'envers",
+            "code": "for (int i = 10; i > 0; i--)\n{\n\tprintf(\"%d\\n\", i);\n}\nprintf(\"Décollage !\\n\");",
+            "explanation": "Compte à rebours de 10 à 1"
+          },
+          {
+            "title": "Parcourir par pas de 2",
+            "code": "for (int i = 0; i <= 10; i += 2)\n{\n\tprintf(\"%d\\n\", i);\n}\n// Affiche : 0, 2, 4, 6, 8, 10",
+            "explanation": "i += 2 augmente de 2 à chaque tour"
+          }
+        ],
+        "keyPoints": [
+          "for regroupe initialisation, condition, incrémentation",
+          "Plus compact que while pour les compteurs",
+          "for (int i = 0; i < n; i++) est le pattern le plus courant"
+        ]
+      },
+      {
+        "title": "Opérateurs composés (+=, -=, *=, /=)",
+        "content": "Au lieu d'écrire `x = x + 5`, tu peux écrire `x += 5`.\n\n**Tous les opérateurs composés :**\n- `x += 5` → `x = x + 5`\n- `x -= 3` → `x = x - 3`\n- `x *= 2` → `x = x * 2`\n- `x /= 4` → `x = x / 4`\n- `x %= 10` → `x = x % 10`",
+        "codeExamples": [
+          {
+            "title": "Additionner dans une boucle",
+            "code": "int somme = 0;\nfor (int i = 1; i <= 5; i++)\n{\n\tsomme += i;\n}\nprintf(\"%d\\n\", somme);  // 15",
+            "explanation": "somme += i est plus court que somme = somme + i"
+          },
+          {
+            "title": "Multiplier (factorielle)",
+            "code": "int produit = 1;\nfor (int i = 1; i <= 5; i++)\n{\n\tproduit *= i;\n}\nprintf(\"%d\\n\", produit);  // 120",
+            "explanation": "Calcule 1*2*3*4*5 = 120"
+          }
+        ],
+        "keyPoints": [
+          "+= pour ajouter (très utilisé pour les sommes)",
+          "*= pour multiplier (factorielle, puissances)",
+          "Ces opérateurs modifient la variable directement"
+        ]
+      },
+      {
+        "title": "Boucles imbriquées (boucle dans une boucle)",
+        "content": "Une **boucle imbriquée** est une boucle à l'intérieur d'une autre boucle.\n\n**Fonctionnement :**\nPour chaque tour de la boucle externe, la boucle interne s'exécute complètement.",
+        "codeExamples": [
+          {
+            "title": "Carré 3x3 d'étoiles",
+            "code": "for (int ligne = 0; ligne < 3; ligne++)\n{\n\tfor (int col = 0; col < 3; col++)\n\t{\n\t\tprintf(\"* \");\n\t}\n\tprintf(\"\\n\");\n}\n// Affiche :\n// * * *\n// * * *\n// * * *",
+            "explanation": "Boucle externe = lignes, boucle interne = colonnes"
+          },
+          {
+            "title": "Triangle d'étoiles",
+            "code": "for (int ligne = 1; ligne <= 5; ligne++)\n{\n\tfor (int col = 0; col < ligne; col++)\n\t{\n\t\tprintf(\"*\");\n\t}\n\tprintf(\"\\n\");\n}\n// Affiche :\n// *\n// **\n// ***\n// ****\n// *****",
+            "explanation": "Le nombre d'étoiles dépend du numéro de ligne"
+          }
+        ],
+        "keyPoints": [
+          "Boucle imbriquée = boucle dans une boucle",
+          "La boucle interne s'exécute complètement à chaque tour de l'externe",
+          "Utile pour les tableaux 2D et motifs",
+          "Attention : complexité multipliée (3 × 4 = 12 tours)"
+        ]
+      },
+      {
+        "title": "Exemples pratiques Piscine",
+        "content": "Voici des cas d'usage réels que tu rencontreras :",
+        "codeExamples": [
+          {
+            "title": "Afficher l'alphabet",
+            "code": "char c = 'a';\nwhile (c <= 'z')\n{\n\tprintf(\"%c\", c);\n\tc++;\n}\nprintf(\"\\n\");",
+            "explanation": "Les char s'incrémentent comme des nombres"
+          },
+          {
+            "title": "Compter les chiffres d'un nombre",
+            "code": "int n = 12345;\nint compteur = 0;\nwhile (n > 0)\n{\n\tn = n / 10;\n\tcompteur++;\n}\nprintf(\"%d chiffres\\n\", compteur);  // 5",
+            "explanation": "Division par 10 supprime un chiffre"
+          },
+          {
+            "title": "Puissance (x^n)",
+            "code": "int x = 2;\nint n = 5;\nint resultat = 1;\nfor (int i = 0; i < n; i++)\n{\n\tresultat *= x;\n}\nprintf(\"%d\\n\", resultat);  // 32",
+            "explanation": "Multiplie x par lui-même n fois"
+          }
+        ],
+        "keyPoints": [
+          "Les boucles servent à tout : calculs, transformations, algorithmes",
+          "Trace à la main si tu ne comprends pas",
+          "Les exercices Piscine utilisent beaucoup les boucles"
+        ]
+      }
+    ],
+    "prepExercises": [
+      {
+        "id": 1,
+        "title": "Boucle simple 1 à 5",
+        "instruction": "Affiche les nombres de 1 à 5, un par ligne, avec une boucle while",
+        "starterCode": "#include <stdio.h>\n\nint main(void)\n{\n\t// TON CODE ICI\n\treturn (0);\n}",
+        "solution": "#include <stdio.h>\n\nint main(void)\n{\n\tint i = 1;\n\twhile (i <= 5)\n\t{\n\t\tprintf(\"%d\\n\", i);\n\t\ti++;\n\t}\n\treturn (0);\n}",
+        "hint": "Initialise i à 1, teste i <= 5, incrémente avec i++",
+        "difficulty": 1
+      },
+      {
+        "id": 2,
+        "title": "Compte à rebours",
+        "instruction": "Affiche un compte à rebours de 10 à 1, un nombre par ligne",
+        "starterCode": "#include <stdio.h>\n\nint main(void)\n{\n\t// TON CODE ICI\n\treturn (0);\n}",
+        "solution": "#include <stdio.h>\n\nint main(void)\n{\n\tint i = 10;\n\twhile (i >= 1)\n\t{\n\t\tprintf(\"%d\\n\", i);\n\t\ti--;\n\t}\n\treturn (0);\n}",
+        "hint": "Commence à 10, teste i >= 1, décrémente avec i--",
+        "difficulty": 2
+      },
+      {
+        "id": 3,
+        "title": "Somme avec boucle",
+        "instruction": "Calcule la somme des nombres de 1 à 5 avec une boucle et affiche le résultat (15)",
+        "starterCode": "#include <stdio.h>\n\nint main(void)\n{\n\t// TON CODE ICI\n\treturn (0);\n}",
+        "solution": "#include <stdio.h>\n\nint main(void)\n{\n\tint i = 1;\n\tint somme = 0;\n\twhile (i <= 5)\n\t{\n\t\tsomme = somme + i;\n\t\ti++;\n\t}\n\tprintf(\"%d\\n\", somme);\n\treturn (0);\n}",
+        "hint": "Crée une variable somme = 0, puis ajoute i à chaque tour de boucle",
+        "difficulty": 2
+      },
+      {
+        "id": 4,
+        "title": "Boucle for simple",
+        "instruction": "Affiche les nombres de 0 à 4 avec une boucle for",
+        "starterCode": "#include <stdio.h>\n\nint main(void)\n{\n\t// TON CODE ICI\n\treturn (0);\n}",
+        "solution": "#include <stdio.h>\n\nint main(void)\n{\n\tfor (int i = 0; i < 5; i++)\n\t{\n\t\tprintf(\"%d\\n\", i);\n\t}\n\treturn (0);\n}",
+        "hint": "Utilise for (int i = 0; i < 5; i++)",
+        "difficulty": 2
+      },
+      {
+        "id": 5,
+        "title": "Factorielle avec *=",
+        "instruction": "Calcule la factorielle de 5 (1*2*3*4*5 = 120) avec une boucle et l'opérateur *=",
+        "starterCode": "#include <stdio.h>\n\nint main(void)\n{\n\t// TON CODE ICI\n\treturn (0);\n}",
+        "solution": "#include <stdio.h>\n\nint main(void)\n{\n\tint produit = 1;\n\tfor (int i = 1; i <= 5; i++)\n\t{\n\t\tproduit *= i;\n\t}\n\tprintf(\"%d\\n\", produit);\n\treturn (0);\n}",
+        "hint": "Initialise produit = 1, puis multiplie par i à chaque tour avec produit *= i",
+        "difficulty": 2
+      },
+      {
+        "id": 6,
+        "title": "Triangle d'étoiles (boucles imbriquées)",
+        "instruction": "Affiche un triangle d'étoiles de 3 lignes (*, **, ***) avec des boucles imbriquées",
+        "starterCode": "#include <stdio.h>\n\nint main(void)\n{\n\t// TON CODE ICI\n\treturn (0);\n}",
+        "solution": "#include <stdio.h>\n\nint main(void)\n{\n\tfor (int ligne = 1; ligne <= 3; ligne++)\n\t{\n\t\tfor (int col = 0; col < ligne; col++)\n\t\t{\n\t\t\tprintf(\"*\");\n\t\t}\n\t\tprintf(\"\\n\");\n\t}\n\treturn (0);\n}",
+        "hint": "Boucle externe pour les lignes, boucle interne pour les étoiles (col < ligne)",
+        "difficulty": 3
+      }
+    ]
+  },
   "starterCode": "#include <stdio.h>\n\nint main(void)\n{\n\t// Ton code ici\n\t\n\treturn (0);\n}",
   "hints": ["Initialise un compteur à 1", "Continue tant que le compteur <= 5", "N'oublie pas d'incrémenter"],
   "testCases": [{

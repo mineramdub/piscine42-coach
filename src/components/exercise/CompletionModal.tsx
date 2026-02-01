@@ -27,12 +27,18 @@ export default function CompletionModal({
   if (!isOpen) return null
 
   const handleNext = () => {
+    // Si c'est le dernier exercice du jour, incrémenter le jour
     if (isLastOfDay) {
-      // Retour à la page Aujourd'hui pour voir le jour suivant débloqué
+      const savedDay = localStorage.getItem('currentDay')
+      const currentDayNumber = savedDay ? parseInt(savedDay, 10) : currentDay
+      const nextDay = currentDayNumber + 1
+      localStorage.setItem('currentDay', nextDay.toString())
+
+      // Rediriger vers la page Aujourd'hui avec le nouveau jour
+      router.push(`/aujourdhui?day=${nextDay}`)
+    } else {
+      // Sinon, retourner à la page Aujourd'hui sans changer de jour
       router.push('/aujourdhui')
-    } else if (nextExerciseId) {
-      // Passer à l'exercice suivant
-      router.push(`/exercice/${nextExerciseId}`)
     }
   }
 
@@ -64,40 +70,46 @@ export default function CompletionModal({
         </div>
 
         {/* Message */}
-        {isLastOfDay ? (
-          <div className="bg-success/10 border border-success rounded-lg p-4 text-center">
-            <p className="font-medium text-success mb-1">
-              Tous les exercices du jour {currentDay} sont terminés !
-            </p>
-            <p className="text-sm text-muted-foreground">
-              Le jour {currentDay + 1} est maintenant débloqué 🔓
-            </p>
-          </div>
-        ) : (
-          <p className="text-center text-muted-foreground">
-            Continue comme ça ! L'exercice suivant t'attend.
-          </p>
-        )}
+        <div className="bg-success/10 border border-success rounded-lg p-4 text-center">
+          {isLastOfDay ? (
+            <>
+              <p className="font-medium text-success mb-1">
+                Tous les exercices du jour {currentDay} sont terminés !
+              </p>
+              <p className="text-sm text-muted-foreground">
+                Le jour {currentDay + 1} est maintenant débloqué 🔓
+              </p>
+            </>
+          ) : (
+            <>
+              <p className="font-medium text-success mb-1">
+                Exercice validé avec succès !
+              </p>
+              <p className="text-sm text-muted-foreground">
+                Tu vas découvrir le cours du prochain exercice 📚
+              </p>
+            </>
+          )}
+        </div>
 
         {/* Actions */}
         <div className="space-y-2">
-          {isLastOfDay ? (
-            <button
-              onClick={handleNext}
-              className="w-full bg-success text-success-foreground px-6 py-3 rounded-lg font-medium hover:opacity-90 transition-opacity flex items-center justify-center gap-2"
-            >
-              <Home className="w-5 h-5" />
-              Retour à l'accueil
-            </button>
-          ) : (
-            <button
-              onClick={handleNext}
-              className="w-full bg-primary text-primary-foreground px-6 py-3 rounded-lg font-medium hover:opacity-90 transition-opacity flex items-center justify-center gap-2"
-            >
-              Exercice suivant
-              <ChevronRight className="w-5 h-5" />
-            </button>
-          )}
+          <button
+            onClick={handleNext}
+            className="w-full bg-success text-success-foreground px-6 py-3 rounded-lg font-medium hover:opacity-90 transition-opacity flex items-center justify-center gap-2"
+          >
+            {isLastOfDay ? (
+              <>
+                <Home className="w-5 h-5" />
+                Découvrir le jour {currentDay + 1}
+              </>
+            ) : (
+              <>
+                Continuer
+                <ChevronRight className="w-5 h-5" />
+              </>
+            )}
+          </button>
 
           <button
             onClick={onClose}

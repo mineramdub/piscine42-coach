@@ -13,6 +13,193 @@
     "Afficher des caractères avec %c",
     "Utiliser \\n pour les retours à la ligne"
   ],
+  "learningContent": {
+    "lesson": {
+      "introduction": "Tu sais déjà utiliser printf() pour afficher du texte simple. Maintenant tu vas apprendre à afficher différents types de données (nombres, caractères) et à formater ton affichage de manière professionnelle.",
+      "steps": [
+        {
+          "id": 1,
+          "title": "Les format specifiers",
+          "content": "Un **format specifier** est un code spécial qui commence par `%` et qui dit à printf() quel type de donnée afficher.\n\n**Les plus courants :**\n- `%d` ou `%i` : entier (int)\n- `%c` : caractère (char)\n- `%s` : chaîne de caractères (string)\n- `%f` : nombre à virgule (float)\n\n**Syntaxe :** Le %X dans la chaîne est remplacé par la variable correspondante.",
+          "codeExample": "int age = 19;\nchar initiale = 'M';\n\nprintf(\"Age: %d\\n\", age);           // Age: 19\nprintf(\"Initiale: %c\\n\", initiale); // Initiale: M",
+          "language": "c"
+        },
+        {
+          "id": 2,
+          "title": "Combiner plusieurs formats",
+          "content": "Tu peux mettre **plusieurs format specifiers** dans un seul printf().\n\n**IMPORTANT :** L'ordre des variables après les guillemets doit correspondre à l'ordre des %X dans la chaîne.",
+          "codeExample": "int nombre = 42;\nchar lettre = 'A';\n\nprintf(\"Mon nombre: %d\\n\", nombre);\nprintf(\"Mon caractère: %c\\n\", lettre);\n\n// OU en un seul printf :\nprintf(\"Mon nombre: %d\\nMon caractère: %c\\n\", nombre, lettre);",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Affiche 'X = 10' et 'Y = 20' sur deux lignes différentes avec un seul printf()",
+            "starterCode": "int x = 10;\nint y = 20;\nprintf(",
+            "solution": "int x = 10;\nint y = 20;\nprintf(\"X = %d\\nY = %d\\n\", x, y);"
+          }
+        },
+        {
+          "id": 3,
+          "title": "Différence entre %d et %c",
+          "content": "`%d` affiche la **valeur numérique** de la variable.\n`%c` affiche le **caractère** correspondant au code ASCII.\n\n**Exemple :** La valeur 65 correspond au caractère 'A' en ASCII.",
+          "codeExample": "char lettre = 'A';\n\nprintf(\"%c\\n\", lettre);  // Affiche : A\nprintf(\"%d\\n\", lettre);  // Affiche : 65 (code ASCII de 'A')\n\nint code = 66;\nprintf(\"%c\\n\", code);    // Affiche : B\nprintf(\"%d\\n\", code);    // Affiche : 66",
+          "language": "c"
+        },
+        {
+          "id": 4,
+          "title": "Attention aux erreurs de type",
+          "content": "**DANGER :** Si tu utilises le mauvais format specifier, tu auras un comportement bizarre ou une erreur !\n\n**Règle d'or :** Utilise toujours le bon format pour le bon type de variable.",
+          "codeExample": "// ✅ BON\nint nombre = 42;\nprintf(\"%d\\n\", nombre);\n\nchar lettre = 'A';\nprintf(\"%c\\n\", lettre);\n\n// ❌ MAUVAIS\nprintf(\"%c\\n\", 1000);  // Affiche un caractère bizarre\nprintf(\"%d\\n\", \"texte\"); // ERREUR !",
+          "language": "c"
+        }
+      ]
+    },
+    "theory": [
+      {
+        "title": "Table complète des format specifiers",
+        "content": "Voici tous les format specifiers que tu vas rencontrer à la Piscine :\n\n| Format | Type | Exemple | Affiche |\n|--------|------|---------|--------|\n| %d ou %i | int | printf(\"%d\", 42) | 42 |\n| %c | char | printf(\"%c\", 'A') | A |\n| %s | string | printf(\"%s\", \"Hello\") | Hello |\n| %f | float | printf(\"%f\", 3.14) | 3.140000 |\n| %% | % littéral | printf(\"50%%\") | 50% |\n| %p | pointeur | printf(\"%p\", &x) | adresse mémoire |",
+        "codeExamples": [
+          {
+            "title": "Afficher un pourcentage",
+            "code": "int score = 85;\nprintf(\"Score: %d%%\\n\", score);\n// Affiche : Score: 85%",
+            "explanation": "Pour afficher %, utilise %% (deux fois)"
+          },
+          {
+            "title": "Float avec précision",
+            "code": "float pi = 3.14159;\nprintf(\"%.2f\\n\", pi);\n// Affiche : 3.14",
+            "explanation": "%.2f limite à 2 chiffres après la virgule"
+          }
+        ],
+        "keyPoints": [
+          "Chaque type de variable a son format specifier",
+          "%d pour int, %c pour char, %s pour string",
+          "%% pour afficher un vrai caractère %"
+        ],
+        "commonMistakes": [
+          "Utiliser %d pour un char → affiche le code ASCII au lieu du caractère",
+          "Oublier le % devant la lettre → affiche 'd' au lieu du nombre",
+          "Inverser l'ordre des variables → mauvaise valeur affichée"
+        ]
+      },
+      {
+        "title": "Les caractères : char vs int",
+        "content": "En C, un `char` est en fait stocké comme un petit nombre entier (le code ASCII du caractère).\n\n**Code ASCII :**\n- 'A' = 65\n- 'B' = 66\n- 'a' = 97\n- '0' = 48\n- ' ' (espace) = 32\n\nTu peux donc faire des calculs avec des char !",
+        "codeExamples": [
+          {
+            "title": "Convertir majuscule en minuscule",
+            "code": "char majuscule = 'A';\nchar minuscule = majuscule + 32;  // 'a'\nprintf(\"%c\\n\", minuscule);  // Affiche : a",
+            "explanation": "La différence entre 'A' et 'a' est toujours 32 en ASCII"
+          },
+          {
+            "title": "Caractère suivant",
+            "code": "char c = 'A';\nc = c + 1;\nprintf(\"%c\\n\", c);  // Affiche : B",
+            "explanation": "Tu peux incrémenter un char comme un nombre"
+          }
+        ],
+        "keyPoints": [
+          "Un char est stocké comme un nombre (code ASCII)",
+          "Tu peux faire des opérations arithmétiques sur les char",
+          "'A' = 65, 'a' = 97, '0' = 48"
+        ]
+      },
+      {
+        "title": "Printf avec plusieurs variables",
+        "content": "Tu peux afficher plusieurs variables dans un seul printf() en mettant plusieurs format specifiers.",
+        "codeExamples": [
+          {
+            "title": "Afficher 3 variables",
+            "code": "int x = 10;\nint y = 20;\nint z = 30;\n\nprintf(\"x=%d, y=%d, z=%d\\n\", x, y, z);\n// Affiche : x=10, y=20, z=30",
+            "explanation": "Ordre des %d = ordre des variables"
+          },
+          {
+            "title": "Mélanger types",
+            "code": "int age = 19;\nchar initiale = 'M';\n\nprintf(\"Age: %d, Initiale: %c\\n\", age, initiale);\n// Affiche : Age: 19, Initiale: M",
+            "explanation": "Mélange %d et %c dans le même printf"
+          }
+        ],
+        "keyPoints": [
+          "Ordre des %X = ordre des variables après les guillemets",
+          "Tu peux mélanger %d, %c dans un même printf",
+          "Nombre de %X doit égaler le nombre de variables"
+        ]
+      },
+      {
+        "title": "Exemples pratiques",
+        "content": "Cas d'usage réels que tu verras souvent :",
+        "codeExamples": [
+          {
+            "title": "Afficher un score",
+            "code": "int score = 12500;\nint level = 3;\n\nprintf(\"Score: %d | Level: %d\\n\", score, level);",
+            "explanation": "Format lisible pour l'utilisateur"
+          },
+          {
+            "title": "Afficher avec code ASCII",
+            "code": "char lettre = 'A';\n\nprintf(\"Lettre: %c, Code ASCII: %d\\n\", lettre, lettre);\n// Affiche : Lettre: A, Code ASCII: 65",
+            "explanation": "Même variable avec deux formats différents"
+          }
+        ],
+        "keyPoints": [
+          "Printf sert à communiquer avec l'utilisateur",
+          "Utilise des formats clairs et lisibles",
+          "Une même variable peut être affichée de différentes façons"
+        ]
+      }
+    ],
+    "prepExercises": [
+      {
+        "id": 1,
+        "title": "Afficher un entier",
+        "instruction": "Déclare un int 'x' égal à 99 et affiche-le avec le format 'Nombre: 99'",
+        "starterCode": "#include <stdio.h>\n\nint main(void)\n{\n\t// TON CODE ICI\n\treturn (0);\n}",
+        "solution": "#include <stdio.h>\n\nint main(void)\n{\n\tint x = 99;\n\tprintf(\"Nombre: %d\\n\", x);\n\treturn (0);\n}",
+        "hint": "Utilise %d pour afficher un entier",
+        "difficulty": 1
+      },
+      {
+        "id": 2,
+        "title": "Afficher un caractère",
+        "instruction": "Déclare un char 'c' égal à 'X' et affiche-le avec le format 'Lettre: X'",
+        "starterCode": "#include <stdio.h>\n\nint main(void)\n{\n\t// TON CODE ICI\n\treturn (0);\n}",
+        "solution": "#include <stdio.h>\n\nint main(void)\n{\n\tchar c = 'X';\n\tprintf(\"Lettre: %c\\n\", c);\n\treturn (0);\n}",
+        "hint": "Utilise %c pour afficher un caractère, et les apostrophes pour 'X'",
+        "difficulty": 1
+      },
+      {
+        "id": 3,
+        "title": "Format complexe",
+        "instruction": "Affiche 'Mon nombre: 42' sur la première ligne et 'Mon caractère: A' sur la deuxième (en un seul printf)",
+        "starterCode": "#include <stdio.h>\n\nint main(void)\n{\n\t// TON CODE ICI\n\treturn (0);\n}",
+        "solution": "#include <stdio.h>\n\nint main(void)\n{\n\tprintf(\"Mon nombre: %d\\nMon caractère: %c\\n\", 42, 'A');\n\treturn (0);\n}",
+        "hint": "Utilise \\n pour passer à la ligne, et mets 42 et 'A' après les guillemets",
+        "difficulty": 2
+      },
+      {
+        "id": 4,
+        "title": "Afficher 3 variables",
+        "instruction": "Déclare x=5, y=10, z=15 et affiche 'x=5, y=10, z=15' sur une ligne",
+        "starterCode": "#include <stdio.h>\n\nint main(void)\n{\n\t// TON CODE ICI\n\treturn (0);\n}",
+        "solution": "#include <stdio.h>\n\nint main(void)\n{\n\tint x = 5;\n\tint y = 10;\n\tint z = 15;\n\tprintf(\"x=%d, y=%d, z=%d\\n\", x, y, z);\n\treturn (0);\n}",
+        "hint": "Utilise 3 fois %d dans le même printf",
+        "difficulty": 2
+      },
+      {
+        "id": 5,
+        "title": "Code ASCII d'un caractère",
+        "instruction": "Affiche le caractère 'B' ET son code ASCII (66) avec un seul printf",
+        "starterCode": "#include <stdio.h>\n\nint main(void)\n{\n\t// TON CODE ICI\n\treturn (0);\n}",
+        "solution": "#include <stdio.h>\n\nint main(void)\n{\n\tchar c = 'B';\n\tprintf(\"Caractère: %c, Code: %d\\n\", c, c);\n\treturn (0);\n}",
+        "hint": "Utilise la même variable avec %c puis %d",
+        "difficulty": 3
+      },
+      {
+        "id": 6,
+        "title": "Afficher un calcul",
+        "instruction": "Affiche '5 + 3 = 8' en utilisant des variables et printf",
+        "starterCode": "#include <stdio.h>\n\nint main(void)\n{\n\t// TON CODE ICI\n\treturn (0);\n}",
+        "solution": "#include <stdio.h>\n\nint main(void)\n{\n\tint a = 5;\n\tint b = 3;\n\tprintf(\"%d + %d = %d\\n\", a, b, a + b);\n\treturn (0);\n}",
+        "hint": "Utilise 3 fois %d : pour a, b, et a+b",
+        "difficulty": 2
+      }
+    ]
+  },
   "starterCode": "#include <stdio.h>\n\nint main(void)\n{\n\t// Ton code ici\n\t\n\treturn (0);\n}",
   "hints": [
     "Utilise %d pour un nombre entier",

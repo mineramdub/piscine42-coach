@@ -1,9 +1,7 @@
-import Anthropic from '@anthropic-ai/sdk'
+import { GoogleGenerativeAI } from '@google/generative-ai'
 import { NextRequest, NextResponse } from 'next/server'
 
-const anthropic = new Anthropic({
-  apiKey: process.env.ANTHROPIC_API_KEY || '',
-})
+const genAI = new GoogleGenerativeAI(process.env.GOOGLE_API_KEY || '')
 
 export async function POST(request: NextRequest) {
   try {
@@ -17,7 +15,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Construire le prompt système avec le contexte
-    const systemPrompt = `Tu es un assistant pédagogique pour la Piscine 42. Tu aides les débutants en programmation C.
+    const systemInstruction = `Tu es un assistant pédagogique pour la Piscine 42. Tu aides les débutants en programmation C.
 
 ${context ? `CONTEXTE ACTUEL :
 Type: ${context.type}
@@ -45,26 +43,37 @@ Format de réponse :
 - Propose toujours un exemple de code si pertinent
 `
 
-    // Appel à l'API Claude
-    const response = await anthropic.messages.create({
-      model: 'claude-3-5-sonnet-20241022',
-      max_tokens: 1024,
-      system: systemPrompt,
-      messages: messages,
+    // Convertir les messages au format Gemini (user/model au lieu de user/assistant)
+    const geminiMessages = messages.map((msg: { role: string; content: string }) => ({
+      role: msg.role === 'assistant' ? 'model' : 'user',
+      parts: [{ text: msg.content }],
+    }))
+
+    // Initialiser le modèle avec les instructions système
+    const model = genAI.getGenerativeModel({
+      model: 'gemini-1.5-flash',
+      systemInstruction: systemInstruction,
     })
 
-    const assistantMessage = response.content[0]
+    // Créer une session de chat
+    const chat = model.startChat({
+      history: geminiMessages.slice(0, -1), // Tous les messages sauf le dernier
+    })
 
-    if (assistantMessage.type !== 'text') {
-      return NextResponse.json(
-        { error: 'Unexpected response type' },
-        { status: 500 }
-      )
-    }
+    // Envoyer le dernier message
+    const lastMessage = messages[messages.length - 1]
+    const result = await chat.sendMessage(lastMessage.content)
+    const response = result.response
+    const text = response.text()
 
     return NextResponse.json({
-      message: assistantMessage.text,
-      usage: response.usage,
+      message: text,
+      usage: {
+        // Gemini ne fournit pas toujours les détails d'usage
+        prompt_tokens: 0,
+        completion_tokens: 0,
+        total_tokens: 0,
+      },
     })
   } catch (error) {
     console.error('Chat API error:', error)

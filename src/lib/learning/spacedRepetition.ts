@@ -19,7 +19,7 @@ export interface Review {
 /**
  * Calcule tous les rappels à faire pour un jour donné
  *
- * @param currentDay Le jour actuel (1-30)
+ * @param currentDay Le jour actuel (1-90+)
  * @returns Liste des concepts à réviser ce jour
  */
 export function getReviewsForDay(currentDay: number): Review[] {

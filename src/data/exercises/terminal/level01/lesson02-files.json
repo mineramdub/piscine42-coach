@@ -1,0 +1,119 @@
+{
+  "id": "terminal-level01-lesson02-files",
+  "category": "terminal",
+  "level": 1,
+  "order": 1,
+  "title": "Manipulation de fichiers",
+  "description": "Créer, copier, déplacer et supprimer des fichiers en ligne de commande",
+  "difficulty": 2,
+  "points": 15,
+  "estimatedTime": 25,
+  "learningObjectives": [
+    "Créer et visualiser des fichiers",
+    "Copier et déplacer des fichiers en sécurité",
+    "Comprendre les dangers de rm"
+  ],
+  "learningContent": {
+    "lesson": {
+      "introduction": "Maintenant que tu sais naviguer, il est temps de manipuler des fichiers. À la Piscine, tu vas créer, copier, renommer et supprimer des dizaines de fichiers par jour. Ces commandes sont puissantes mais dangereuses si mal utilisées !",
+      "steps": [
+        {
+          "id": 1,
+          "title": "cat - Lire un fichier",
+          "content": "**cat** affiche le contenu d'un fichier à l'écran. C'est l'équivalent de double-cliquer pour ouvrir un fichier texte.\n\n**Utilité à la Piscine :**\nAvant de compiler, vérifie ton code avec `cat main.c` pour être sûr que c'est le bon fichier.",
+          "codeExample": "cat main.c\n# Affiche tout le contenu du fichier\n\ncat -n main.c\n# Affiche avec les numéros de ligne",
+          "language": "bash"
+        },
+        {
+          "id": 2,
+          "title": "cp - Copier des fichiers",
+          "content": "**cp** copie un fichier ou un dossier vers une autre destination.\n\n**Syntaxe :** `cp source destination`\n\n**Important :**\n- Pour copier un dossier, utilise `cp -r` (récursif)\n- `cp -i` demande confirmation avant d'écraser un fichier existant",
+          "codeExample": "cp main.c main_backup.c\n# Crée une copie de sauvegarde\n\ncp -r ex00 ex00_backup\n# Copie tout le dossier",
+          "language": "bash",
+          "tryItYourself": {
+            "instruction": "Copie le fichier hello.c dans un nouveau fichier hello_test.c",
+            "starterCode": "cp",
+            "solution": "cp hello.c hello_test.c"
+          }
+        },
+        {
+          "id": 3,
+          "title": "mv - Déplacer/Renommer",
+          "content": "**mv** a deux usages :\n1. Déplacer un fichier vers un autre dossier\n2. Renommer un fichier\n\n**Attention :** mv écrase le fichier de destination sans prévenir ! Utilise `mv -i` pour être sûr.",
+          "codeExample": "mv old_name.c new_name.c\n# Renomme le fichier\n\nmv main.c ex01/\n# Déplace main.c dans le dossier ex01\n\nmv -i file.c backup.c\n# Demande confirmation si backup.c existe déjà",
+          "language": "bash",
+          "tryItYourself": {
+            "instruction": "Renomme test.c en main.c",
+            "starterCode": "mv",
+            "solution": "mv test.c main.c"
+          }
+        },
+        {
+          "id": 4,
+          "title": "rm - Supprimer (DANGER !)",
+          "content": "**rm** supprime définitivement des fichiers. **Pas de corbeille, pas de retour en arrière !**\n\n**Règles de sécurité :**\n1. TOUJOURS vérifier avec `ls` avant de faire `rm`\n2. JAMAIS faire `rm -rf *` sans être 100% sûr\n3. Utilise `rm -i` pour avoir une confirmation\n\n**Options :**\n- `rm fichier.c` : supprime un fichier\n- `rm -r dossier/` : supprime un dossier et son contenu\n- `rm -f` : force sans confirmation (DANGEREUX)",
+          "codeExample": "# TOUJOURS faire ça d'abord :\nls\n# ex00.c  ex01.c  test.c\n\n# Puis supprimer :\nrm test.c\n\n# Pour un dossier :\nrm -r old_folder/\n\n# JAMAIS :\nrm -rf /  # DÉTRUIT TON SYSTÈME !",
+          "language": "bash"
+        }
+      ]
+    },
+    "theory": [
+      {
+        "title": "Wildcards (*, ?)",
+        "content": "Les wildcards permettent de cibler plusieurs fichiers à la fois.\n\n**Symboles :**\n- `*` : n'importe quelle séquence de caractères\n- `?` : un seul caractère\n- `[abc]` : un caractère parmi a, b ou c",
+        "codeExamples": [
+          {
+            "title": "Supprimer tous les .o",
+            "code": "rm *.o\n# Supprime main.o, utils.o, etc.",
+            "explanation": "Utile pour nettoyer après compilation"
+          },
+          {
+            "title": "Copier tous les .c",
+            "code": "cp *.c backup/\n# Copie tous les fichiers .c dans backup/",
+            "explanation": "Pratique pour faire des sauvegardes rapides"
+          }
+        ],
+        "keyPoints": [
+          "* remplace zéro ou plusieurs caractères",
+          "Toujours vérifier avec ls avant d'utiliser * avec rm",
+          "rm *.c supprime TOUS les fichiers .c du dossier"
+        ],
+        "commonMistakes": [
+          "Faire rm * .o au lieu de rm *.o (supprime tout + erreur sur .o)",
+          "Oublier que rm -rf * supprime TOUT le dossier",
+          "Utiliser mv *.c sans destination"
+        ]
+      }
+    ],
+    "prepExercises": [
+      {
+        "id": 1,
+        "title": "Copie de sécurité",
+        "instruction": "Copie main.c en main_backup.c",
+        "starterCode": "cp",
+        "solution": "cp main.c main_backup.c",
+        "hint": "cp source destination",
+        "difficulty": 1
+      },
+      {
+        "id": 2,
+        "title": "Renommer un fichier",
+        "instruction": "Renomme old.c en new.c",
+        "starterCode": "mv",
+        "solution": "mv old.c new.c",
+        "hint": "mv sert aussi à renommer",
+        "difficulty": 1
+      },
+      {
+        "id": 3,
+        "title": "Supprimer avec wildcards",
+        "instruction": "Supprime tous les fichiers .o (fichiers objets de compilation)",
+        "starterCode": "rm",
+        "solution": "rm *.o",
+        "hint": "Utilise * pour 'tous'",
+        "difficulty": 2
+      }
+    ]
+  },
+  "testCases": []
+}

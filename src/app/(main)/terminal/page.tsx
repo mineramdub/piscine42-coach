@@ -1,313 +1,239 @@
 'use client'
 
-import { useState } from 'react'
-import { Terminal, Search, ChevronRight } from 'lucide-react'
+import { useState, useEffect } from 'react'
+import { useSearchParams } from 'next/navigation'
+import LessonSection from '@/components/learning/LessonSection'
+import TheorySection from '@/components/learning/TheorySection'
+import PrepExercisesSection from '@/components/learning/PrepExercisesSection'
+import { Loader2, Terminal as TerminalIcon, BookOpen } from 'lucide-react'
+import type { Exercise } from '@/types/exercise'
 
 export default function TerminalPage() {
-  const [selectedCommand, setSelectedCommand] = useState<string | null>('ls')
-  const [searchQuery, setSearchQuery] = useState('')
+  const searchParams = useSearchParams()
+  const [currentLevel, setCurrentLevel] = useState(1)
+  const [lessons, setLessons] = useState<Exercise[]>([])
+  const [currentLessonIndex, setCurrentLessonIndex] = useState(0)
+  const [loading, setLoading] = useState(true)
 
-  // Commandes organisées par catégorie
-  const commandsByCategory = {
-    'Navigation': [
-      {
-        name: 'ls',
-        description: 'Liste les fichiers et dossiers',
-        syntax: 'ls [options] [chemin]',
-        examples: ['ls', 'ls -l', 'ls -la', 'ls -lh'],
-        options: [
-          { flag: '-l', desc: 'Format long avec détails' },
-          { flag: '-a', desc: 'Affiche les fichiers cachés' },
-          { flag: '-h', desc: 'Tailles lisibles (KB, MB)' },
-          { flag: '-R', desc: 'Liste récursive' },
-        ],
-        tips: ['Utilise ls -la pour tout voir, y compris les fichiers cachés comme .git'],
-        traps: ['Ne pas confondre -l (long) avec -1 (un fichier par ligne)'],
-      },
-      {
-        name: 'cd',
-        description: 'Change de répertoire',
-        syntax: 'cd [chemin]',
-        examples: ['cd Documents', 'cd ..', 'cd ~', 'cd /Users/ton-login'],
-        options: [],
-        tips: ['cd sans argument ramène au dossier home', 'cd - revient au dossier précédent'],
-        traps: ['Les espaces dans les chemins doivent être échappés avec \\ ou entre guillemets'],
-      },
-      {
-        name: 'pwd',
-        description: 'Affiche le chemin absolu du répertoire actuel',
-        syntax: 'pwd',
-        examples: ['pwd'],
-        options: [],
-        tips: ['Utilise pwd pour vérifier où tu es avant de faire rm ou mv'],
-        traps: [],
-      },
-    ],
-    'Fichiers': [
-      {
-        name: 'cat',
-        description: 'Affiche le contenu d\'un fichier',
-        syntax: 'cat [fichier]',
-        examples: ['cat hello.c', 'cat file1.txt file2.txt', 'cat *.c'],
-        options: [
-          { flag: '-n', desc: 'Numéros de ligne' },
-          { flag: '-e', desc: 'Affiche $ à la fin de chaque ligne' },
-        ],
-        tips: ['Utilise cat pour vérifier ton code avant de compiler'],
-        traps: ['cat sur un gros fichier peut saturer le terminal'],
-      },
-      {
-        name: 'cp',
-        description: 'Copie des fichiers ou dossiers',
-        syntax: 'cp [source] [destination]',
-        examples: ['cp hello.c hello_backup.c', 'cp -r folder1 folder2'],
-        options: [
-          { flag: '-r', desc: 'Copie récursive (pour dossiers)' },
-          { flag: '-i', desc: 'Demande confirmation avant écrasement' },
-        ],
-        tips: ['Toujours utiliser cp -r pour copier un dossier'],
-        traps: ['cp écrase sans prévenir ! Utilise -i pour être sûr'],
-      },
-      {
-        name: 'mv',
-        description: 'Déplace ou renomme des fichiers',
-        syntax: 'mv [source] [destination]',
-        examples: ['mv old.c new.c', 'mv file.c folder/', 'mv *.c src/'],
-        options: [
-          { flag: '-i', desc: 'Demande confirmation avant écrasement' },
-        ],
-        tips: ['mv sert aussi à renommer : mv old.txt new.txt'],
-        traps: ['mv écrase sans prévenir si le fichier existe déjà'],
-      },
-      {
-        name: 'rm',
-        description: 'Supprime des fichiers ou dossiers',
-        syntax: 'rm [options] [fichier]',
-        examples: ['rm test.c', 'rm *.o', 'rm -rf temp/'],
-        options: [
-          { flag: '-r', desc: 'Suppression récursive (dossiers)' },
-          { flag: '-f', desc: 'Force sans confirmation' },
-          { flag: '-i', desc: 'Demande confirmation' },
-        ],
-        tips: ['TOUJOURS vérifier avec ls avant de faire rm'],
-        traps: ['rm -rf est DANGEREUX : suppression définitive sans corbeille !'],
-      },
-    ],
-    'Compilation': [
-      {
-        name: 'gcc',
-        description: 'Compile du code C',
-        syntax: 'gcc [options] fichier.c',
-        examples: [
-          'gcc hello.c',
-          'gcc -Wall -Wextra -Werror main.c',
-          'gcc main.c -o mon_programme',
-          'gcc *.c -o programme',
-        ],
-        options: [
-          { flag: '-Wall', desc: 'Active tous les warnings' },
-          { flag: '-Wextra', desc: 'Warnings supplémentaires' },
-          { flag: '-Werror', desc: 'Traite les warnings comme erreurs' },
-          { flag: '-o nom', desc: 'Nom du fichier de sortie' },
-          { flag: '-g', desc: 'Inclut les symboles de debug' },
-        ],
-        tips: ['À la Piscine, TOUJOURS compiler avec -Wall -Wextra -Werror'],
-        traps: ['Sans -o, le programme s\'appelle a.out par défaut'],
-      },
-      {
-        name: 'make',
-        description: 'Automatise la compilation',
-        syntax: 'make [target]',
-        examples: ['make', 'make clean', 'make fclean', 'make re'],
-        options: [],
-        tips: ['Lis toujours le Makefile pour comprendre les targets disponibles'],
-        traps: ['make utilise des TABS, pas des espaces (erreur fréquente !)'],
-      },
-    ],
-    'Recherche': [
-      {
-        name: 'grep',
-        description: 'Recherche du texte dans des fichiers',
-        syntax: 'grep [pattern] [fichier]',
-        examples: [
-          'grep "main" *.c',
-          'grep -r "TODO" .',
-          'grep -n "printf" hello.c',
-        ],
-        options: [
-          { flag: '-r', desc: 'Recherche récursive' },
-          { flag: '-n', desc: 'Affiche les numéros de ligne' },
-          { flag: '-i', desc: 'Ignore la casse' },
-        ],
-        tips: ['grep est super utile pour trouver des fonctions dans un gros projet'],
-        traps: [],
-      },
-      {
-        name: 'find',
-        description: 'Trouve des fichiers par nom',
-        syntax: 'find [chemin] [options]',
-        examples: [
-          'find . -name "*.c"',
-          'find . -type f -name "main.c"',
-        ],
-        options: [
-          { flag: '-name', desc: 'Recherche par nom' },
-          { flag: '-type f', desc: 'Fichiers seulement' },
-          { flag: '-type d', desc: 'Dossiers seulement' },
-        ],
-        tips: ['Combine avec grep : find . -name "*.c" -exec grep "main" {} \\;'],
-        traps: [],
-      },
-    ],
+  // Charger le niveau actuel
+  useEffect(() => {
+    const loadLevel = () => {
+      setLoading(true)
+
+      // Vérifier si un niveau est spécifié dans l'URL
+      const levelParam = searchParams.get('level')
+      let level: number
+
+      if (levelParam) {
+        level = parseInt(levelParam, 10)
+        localStorage.setItem('terminalLevel', level.toString())
+      } else {
+        const savedLevel = localStorage.getItem('terminalLevel')
+        level = savedLevel ? parseInt(savedLevel, 10) : 1
+      }
+
+      setCurrentLevel(level)
+
+      // Charger les leçons du niveau
+      const loadLessons = async () => {
+        try {
+          const response = await fetch(`/api/exercises/terminal/${level}`)
+          if (response.ok) {
+            const data = await response.json()
+            setLessons(data.exercises)
+          }
+        } catch (error) {
+          console.error('Error loading terminal lessons:', error)
+        } finally {
+          setLoading(false)
+        }
+      }
+
+      loadLessons()
+    }
+
+    loadLevel()
+  }, [searchParams])
+
+  const currentLesson = lessons[currentLessonIndex]
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <div className="text-center space-y-4">
+          <Loader2 className="w-12 h-12 animate-spin text-primary mx-auto" />
+          <p className="text-muted-foreground">Chargement du niveau {currentLevel}...</p>
+        </div>
+      </div>
+    )
   }
 
-  // Filtrage des commandes selon la recherche
-  const filteredCommands = Object.entries(commandsByCategory).reduce((acc, [category, commands]) => {
-    const filtered = commands.filter(cmd =>
-      cmd.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      cmd.description.toLowerCase().includes(searchQuery.toLowerCase())
+  if (!currentLesson) {
+    return (
+      <div className="text-center py-12">
+        <h1 className="text-2xl font-bold mb-4">Aucune leçon disponible pour ce niveau</h1>
+        <p className="text-muted-foreground">Le niveau {currentLevel} n'a pas encore de leçons.</p>
+      </div>
     )
-    if (filtered.length > 0) {
-      acc[category] = filtered
-    }
-    return acc
-  }, {} as Record<string, typeof commandsByCategory[keyof typeof commandsByCategory]>)
-
-  const currentCommand = Object.values(commandsByCategory)
-    .flat()
-    .find(cmd => cmd.name === selectedCommand)
+  }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       {/* Header */}
       <div className="space-y-4">
-        <h1 className="text-4xl font-bold">💻 Terminal</h1>
-        <p className="text-lg text-muted-foreground">
-          Encyclopédie des commandes essentielles pour la Piscine
-        </p>
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-4xl font-bold flex items-center gap-3">
+              <TerminalIcon className="w-10 h-10" />
+              💻 Terminal
+            </h1>
+            <p className="text-sm text-muted-foreground mt-1">
+              Niveau {currentLevel} - Maîtrise de la ligne de commande
+            </p>
+          </div>
+          <div className="text-right">
+            <div className="text-2xl font-bold">
+              {currentLessonIndex + 1}/{lessons.length}
+            </div>
+            <div className="text-xs text-muted-foreground">Leçons</div>
+          </div>
+        </div>
 
-        {/* Barre de recherche */}
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-          <input
-            type="text"
-            placeholder="Rechercher une commande..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-10 pr-4 py-3 border rounded-lg bg-background focus:outline-none focus:ring-2 focus:ring-primary"
-          />
+        {/* Sélection de leçon */}
+        {lessons.length > 1 && (
+          <div className="flex gap-2 overflow-x-auto pb-2">
+            {lessons.map((lesson, idx) => (
+              <button
+                key={lesson.id}
+                onClick={() => setCurrentLessonIndex(idx)}
+                className={`flex-shrink-0 px-4 py-2 rounded-lg font-medium text-sm transition-all ${
+                  idx === currentLessonIndex
+                    ? 'bg-primary text-primary-foreground'
+                    : 'bg-muted hover:bg-muted/70'
+                }`}
+              >
+                {idx + 1}. {lesson.title}
+              </button>
+            ))}
+          </div>
+        )}
+
+        {/* Barre de progression */}
+        <div className="space-y-2">
+          <div className="flex justify-between text-sm">
+            <span>Progression du niveau</span>
+            <span className="text-muted-foreground">
+              {Math.round(((currentLessonIndex + 1) / lessons.length) * 100)}%
+            </span>
+          </div>
+          <div className="h-2 bg-muted rounded-full overflow-hidden">
+            <div
+              className="h-full bg-primary transition-all"
+              style={{ width: `${((currentLessonIndex + 1) / lessons.length) * 100}%` }}
+            ></div>
+          </div>
         </div>
       </div>
 
-      {/* Layout : Liste + Détail */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Liste des commandes par catégorie */}
-        <div className="space-y-4">
-          {Object.entries(filteredCommands).map(([category, commands]) => (
-            <div key={category} className="border rounded-lg p-4 space-y-2">
-              <h3 className="font-bold text-sm text-muted-foreground uppercase tracking-wide">
-                {category}
-              </h3>
-              <div className="space-y-1">
-                {commands.map((cmd) => (
-                  <button
-                    key={cmd.name}
-                    onClick={() => setSelectedCommand(cmd.name)}
-                    className={`w-full text-left px-3 py-2 rounded-lg transition-colors flex items-center justify-between ${
-                      selectedCommand === cmd.name
-                        ? 'bg-primary text-primary-foreground'
-                        : 'hover:bg-muted'
-                    }`}
-                  >
-                    <div>
-                      <div className="font-mono font-bold">{cmd.name}</div>
-                      <div className="text-xs opacity-90 line-clamp-1">{cmd.description}</div>
-                    </div>
-                    <ChevronRight className="w-4 h-4" />
-                  </button>
-                ))}
-              </div>
-            </div>
-          ))}
+      {/* Leçon actuelle */}
+      <div className="bg-primary/5 border border-primary/20 rounded-lg p-6 space-y-3">
+        <div className="flex items-center gap-2">
+          <BookOpen className="w-5 h-5 text-primary" />
+          <h2 className="text-2xl font-bold">{currentLesson.title}</h2>
+        </div>
+        <p className="text-muted-foreground">{currentLesson.description}</p>
+        <div className="flex gap-4 text-sm">
+          <span className="flex items-center gap-1">
+            ⏱️ {currentLesson.estimatedTime} min
+          </span>
+          <span className="flex items-center gap-1">
+            🔥 Difficulté : {currentLesson.difficulty}/5
+          </span>
+          <span className="flex items-center gap-1">
+            ⭐ {currentLesson.points} points
+          </span>
+        </div>
+      </div>
+
+      {/* Contenu d'apprentissage */}
+      {currentLesson.learningContent && (
+        <div className="space-y-6">
+          {/* Mini-cours interactif */}
+          {currentLesson.learningContent.lesson && (
+            <LessonSection lesson={currentLesson.learningContent.lesson} />
+          )}
+
+          {/* Théorie détaillée */}
+          {currentLesson.learningContent.theory && (
+            <TheorySection sections={currentLesson.learningContent.theory} />
+          )}
+
+          {/* Exercices préparatoires */}
+          {currentLesson.learningContent.prepExercises && (
+            <PrepExercisesSection exercises={currentLesson.learningContent.prepExercises} />
+          )}
+        </div>
+      )}
+
+      {/* Objectifs d'apprentissage */}
+      {currentLesson.learningObjectives && currentLesson.learningObjectives.length > 0 && (
+        <div className="border rounded-lg p-6 space-y-4">
+          <h3 className="text-xl font-bold">📚 Ce que tu vas apprendre</h3>
+          <ul className="space-y-2">
+            {currentLesson.learningObjectives.map((objective, index) => (
+              <li key={index} className="flex items-start gap-2">
+                <span className="text-success mt-1">✓</span>
+                <span>{objective}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      {/* Navigation */}
+      <div className="flex items-center justify-between pt-4 border-t">
+        <button
+          onClick={() => setCurrentLessonIndex(Math.max(0, currentLessonIndex - 1))}
+          disabled={currentLessonIndex === 0}
+          className="px-4 py-2 border rounded-lg hover:bg-muted transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          ← Leçon précédente
+        </button>
+
+        <div className="text-sm text-muted-foreground">
+          Leçon {currentLessonIndex + 1} sur {lessons.length}
         </div>
 
-        {/* Détail de la commande sélectionnée */}
-        {currentCommand && (
-          <div className="lg:col-span-2 border rounded-lg p-6 space-y-6 h-fit sticky top-6">
-            <div>
-              <div className="flex items-center gap-3 mb-2">
-                <Terminal className="w-6 h-6 text-primary" />
-                <h2 className="text-3xl font-bold font-mono">{currentCommand.name}</h2>
-              </div>
-              <p className="text-lg text-muted-foreground">{currentCommand.description}</p>
-            </div>
+        <button
+          onClick={() =>
+            setCurrentLessonIndex(Math.min(lessons.length - 1, currentLessonIndex + 1))
+          }
+          disabled={currentLessonIndex === lessons.length - 1}
+          className="px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          Leçon suivante →
+        </button>
+      </div>
 
-            {/* Syntaxe */}
-            <div>
-              <h3 className="font-bold mb-2">📝 Syntaxe</h3>
-              <pre className="bg-muted p-3 rounded-lg font-mono text-sm">
-                {currentCommand.syntax}
-              </pre>
-            </div>
-
-            {/* Exemples */}
-            <div>
-              <h3 className="font-bold mb-2">💡 Exemples</h3>
-              <div className="space-y-2">
-                {currentCommand.examples.map((example, idx) => (
-                  <div key={idx} className="bg-muted p-3 rounded-lg">
-                    <code className="font-mono text-sm">$ {example}</code>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Options */}
-            {currentCommand.options.length > 0 && (
-              <div>
-                <h3 className="font-bold mb-2">⚙️ Options principales</h3>
-                <div className="space-y-2">
-                  {currentCommand.options.map((option, idx) => (
-                    <div key={idx} className="flex items-start gap-3 bg-muted p-3 rounded-lg">
-                      <code className="font-mono font-bold text-primary">{option.flag}</code>
-                      <span className="text-sm">{option.desc}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Tips */}
-            {currentCommand.tips.length > 0 && (
-              <div className="bg-success/10 border border-success rounded-lg p-4">
-                <h3 className="font-bold mb-2 text-success">✓ Tips</h3>
-                <ul className="space-y-1 text-sm">
-                  {currentCommand.tips.map((tip, idx) => (
-                    <li key={idx} className="flex items-start gap-2">
-                      <span className="text-success">•</span>
-                      <span>{tip}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
-
-            {/* Pièges */}
-            {currentCommand.traps.length > 0 && (
-              <div className="bg-danger/10 border border-danger rounded-lg p-4">
-                <h3 className="font-bold mb-2 text-danger">⚠️ Pièges à éviter</h3>
-                <ul className="space-y-1 text-sm">
-                  {currentCommand.traps.map((trap, idx) => (
-                    <li key={idx} className="flex items-start gap-2">
-                      <span className="text-danger">•</span>
-                      <span>{trap}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
-          </div>
-        )}
+      {/* Changement de niveau */}
+      <div className="border-t pt-6">
+        <h3 className="font-bold mb-3">📊 Autres niveaux</h3>
+        <div className="flex gap-2">
+          {[1, 2, 3, 4, 5].map((level) => (
+            <a
+              key={level}
+              href={`/terminal?level=${level}`}
+              onClick={() => localStorage.setItem('terminalLevel', level.toString())}
+              className={`px-4 py-2 rounded-lg font-medium transition-all ${
+                level === currentLevel
+                  ? 'bg-primary text-primary-foreground'
+                  : 'bg-muted hover:bg-muted/70'
+              }`}
+            >
+              Niveau {level}
+            </a>
+          ))}
+        </div>
       </div>
     </div>
   )

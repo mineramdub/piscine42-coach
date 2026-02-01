@@ -101,6 +101,90 @@
           "\\t = tabulation (pour aligner du texte)",
           "Ces séquences sont appelées 'escape sequences'"
         ]
+      },
+      {
+        "title": "Erreurs de compilation courantes",
+        "content": "Quand tu compiles avec `gcc`, tu peux rencontrer des erreurs. Voici les plus fréquentes pour un débutant :",
+        "codeExamples": [
+          {
+            "title": "❌ Erreur : stdio.h introuvable",
+            "code": "// Fichier : main.c\nint main(void)\n{\n\tprintf(\"Hello\\n\");  // ❌ Erreur !\n\treturn (0);\n}\n\n// Erreur de compilation :\n// error: implicit declaration of function 'printf'",
+            "explanation": "Oublier #include <stdio.h> → printf() est inconnu"
+          },
+          {
+            "title": "❌ Erreur : point-virgule manquant",
+            "code": "#include <stdio.h>\n\nint main(void)\n{\n\tprintf(\"Hello\\n\")  // ❌ Oubli du ;\n\treturn (0);\n}\n\n// Erreur :\n// error: expected ';' before 'return'",
+            "explanation": "Chaque instruction doit se terminer par ;"
+          },
+          {
+            "title": "❌ Erreur : guillemets mal fermés",
+            "code": "#include <stdio.h>\n\nint main(void)\n{\n\tprintf(\"Hello);  // ❌ Guillemet fermant manquant\n\treturn (0);\n}\n\n// Erreur :\n// error: missing terminating \" character",
+            "explanation": "Toujours fermer les guillemets : \"texte\""
+          },
+          {
+            "title": "✅ Code correct",
+            "code": "#include <stdio.h>\n\nint main(void)\n{\n\tprintf(\"Hello\\n\");\n\treturn (0);\n}",
+            "explanation": "Toutes les erreurs corrigées !"
+          }
+        ],
+        "keyPoints": [
+          "Oublier #include = fonction inconnue",
+          "Oublier ; = erreur de syntaxe",
+          "Lis toujours le message d'erreur du compilateur"
+        ],
+        "commonMistakes": [
+          "Écrire <Studio.h> au lieu de <stdio.h>",
+          "Mettre des guillemets simples 'texte' au lieu de doubles \"texte\"",
+          "Oublier le \\n → l'output ne termine pas par un retour à la ligne"
+        ]
+      },
+      {
+        "title": "La Norminette - Introduction",
+        "content": "À la Piscine 42, ton code doit respecter **la Norme** (norminette). C'est un ensemble de règles strictes sur le formatage du code.\n\n**Règles de base pour Hello World :**\n- Maximum 80 caractères par ligne\n- Indentation avec des tabulations (pas d'espaces)\n- Accolades { et } sur leur propre ligne\n- Un retour à la ligne à la fin du fichier",
+        "codeExamples": [
+          {
+            "title": "✅ Code conforme à la norme",
+            "code": "#include <stdio.h>\n\nint main(void)\n{\n\tprintf(\"Hello, World!\\n\");\n\treturn (0);\n}",
+            "explanation": "Indentation avec TAB, accolades seules, < 80 char"
+          },
+          {
+            "title": "❌ Code NON conforme",
+            "code": "#include <stdio.h>\nint main(void) {\n    printf(\"Hello\\n\");  // Espaces au lieu de TAB\n    return (0); }\n// Accolades mal placées",
+            "explanation": "Plusieurs violations de la norme"
+          }
+        ],
+        "keyPoints": [
+          "La norminette vérifie ton code à la Piscine",
+          "Code non conforme = 0 à l'exercice",
+          "Utilise TOUJOURS des tabulations pour indenter",
+          "Accolades { et } seules sur leur ligne"
+        ]
+      },
+      {
+        "title": "Exemples pratiques de printf()",
+        "content": "Voici des utilisations courantes de printf() que tu rencontreras :",
+        "codeExamples": [
+          {
+            "title": "Afficher plusieurs lignes",
+            "code": "printf(\"Ligne 1\\n\");\nprintf(\"Ligne 2\\n\");\nprintf(\"Ligne 3\\n\");\n\n// OU en un seul printf :\nprintf(\"Ligne 1\\nLigne 2\\nLigne 3\\n\");",
+            "explanation": "Les deux méthodes sont équivalentes"
+          },
+          {
+            "title": "Créer un ASCII art simple",
+            "code": "printf(\"  *  \\n\");\nprintf(\" *** \\n\");\nprintf(\"*****\\n\");\n\n// Affiche un triangle :\n//   *\n//  ***\n// *****",
+            "explanation": "Utilise des espaces pour positionner"
+          },
+          {
+            "title": "Afficher un message d'erreur",
+            "code": "printf(\"Erreur : fichier introuvable\\n\");",
+            "explanation": "Les messages d'erreur se terminent par \\n"
+          }
+        ],
+        "keyPoints": [
+          "printf() est la fonction la plus utilisée en C",
+          "Toujours terminer par \\n pour un retour à la ligne",
+          "Tu peux afficher du texte complexe avec printf()"
+        ]
       }
     ],
     "prepExercises": [
@@ -141,6 +225,45 @@
         "testCase": {
           "input": "",
           "expectedOutput": "Nom:\tAlice\n"
+        }
+      },
+      {
+        "id": 4,
+        "title": "Afficher 3 lignes en un printf",
+        "instruction": "Affiche 'Un', 'Deux', 'Trois' sur 3 lignes différentes avec UN SEUL printf()",
+        "starterCode": "#include <stdio.h>\n\nint main(void)\n{\n\t// TON CODE ICI\n\treturn (0);\n}",
+        "solution": "#include <stdio.h>\n\nint main(void)\n{\n\tprintf(\"Un\\nDeux\\nTrois\\n\");\n\treturn (0);\n}",
+        "hint": "Utilise plusieurs \\n dans le même printf()",
+        "difficulty": 2,
+        "testCase": {
+          "input": "",
+          "expectedOutput": "Un\nDeux\nTrois\n"
+        }
+      },
+      {
+        "id": 5,
+        "title": "ASCII art simple",
+        "instruction": "Affiche un triangle : ligne 1 = '*', ligne 2 = '**', ligne 3 = '***'",
+        "starterCode": "#include <stdio.h>\n\nint main(void)\n{\n\t// TON CODE ICI\n\treturn (0);\n}",
+        "solution": "#include <stdio.h>\n\nint main(void)\n{\n\tprintf(\"*\\n\");\n\tprintf(\"**\\n\");\n\tprintf(\"***\\n\");\n\treturn (0);\n}",
+        "hint": "Trois printf() avec *, **, ***",
+        "difficulty": 2,
+        "testCase": {
+          "input": "",
+          "expectedOutput": "*\n**\n***\n"
+        }
+      },
+      {
+        "id": 6,
+        "title": "Afficher un backslash",
+        "instruction": "Affiche un seul backslash \\ suivi d'un retour à la ligne",
+        "starterCode": "#include <stdio.h>\n\nint main(void)\n{\n\t// TON CODE ICI\n\treturn (0);\n}",
+        "solution": "#include <stdio.h>\n\nint main(void)\n{\n\tprintf(\"\\\\\\n\");\n\treturn (0);\n}",
+        "hint": "Pour afficher un backslash, utilise \\\\ (double backslash)",
+        "difficulty": 3,
+        "testCase": {
+          "input": "",
+          "expectedOutput": "\\\n"
         }
       }
     ]

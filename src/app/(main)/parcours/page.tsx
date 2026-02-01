@@ -2,6 +2,7 @@
 
 import { Check, Lock, Play } from 'lucide-react'
 import Link from 'next/link'
+import { TOTAL_DAYS, PHASES } from '@/lib/config/constants'
 
 export default function ParcoursPage() {
   // Données mockées pour le parcours
@@ -46,7 +47,7 @@ export default function ParcoursPage() {
         { day: 20, title: 'Révision Phase 2', exercises: 8, completed: 0, status: 'locked' },
       ],
     },
-    // Phase 3 : Piscine réelle (Jours 21-30)
+    // Phase 3 : Piscine réelle (Jours 31-45)
     {
       phase: 3,
       title: 'Phase 3 : Piscine réelle',
@@ -62,7 +63,39 @@ export default function ParcoursPage() {
         { day: 27, title: 'Exam simulation', exercises: 10, completed: 0, status: 'locked' },
         { day: 28, title: 'Projet final (Part 1)', exercises: 1, completed: 0, status: 'locked' },
         { day: 29, title: 'Projet final (Part 2)', exercises: 1, completed: 0, status: 'locked' },
-        { day: 30, title: 'Bilan & Préparation', exercises: 5, completed: 0, status: 'locked' },
+        { day: 30, title: 'Bilan Phase 2', exercises: 5, completed: 0, status: 'locked' },
+      ],
+    },
+    // Phase 4 : Approfondissement (Jours 46-60)
+    {
+      phase: 4,
+      title: 'Phase 4 : Approfondissement',
+      description: 'Maîtrise approfondie et projets avancés',
+      color: 'success',
+      days: [
+        { day: 46, title: 'Structures de données avancées', exercises: 6, completed: 0, status: 'locked' },
+        { day: 48, title: 'Algorithmes de tri', exercises: 5, completed: 0, status: 'locked' },
+        { day: 50, title: 'Gestion mémoire avancée', exercises: 4, completed: 0, status: 'locked' },
+        { day: 52, title: 'Projet: Minishell', exercises: 1, completed: 0, status: 'locked' },
+        { day: 55, title: 'Optimisation de code', exercises: 5, completed: 0, status: 'locked' },
+        { day: 58, title: 'Debugging avancé', exercises: 4, completed: 0, status: 'locked' },
+        { day: 60, title: 'Bilan Phase 4', exercises: 5, completed: 0, status: 'locked' },
+      ],
+    },
+    // Phase 5 : Expertise (Jours 61-90)
+    {
+      phase: 5,
+      title: 'Phase 5 : Expertise',
+      description: 'Niveau expert et préparation complète',
+      color: 'warning',
+      days: [
+        { day: 61, title: 'Réseau et sockets', exercises: 5, completed: 0, status: 'locked' },
+        { day: 65, title: 'Threads et processus', exercises: 6, completed: 0, status: 'locked' },
+        { day: 70, title: 'Projet: Webserver', exercises: 1, completed: 0, status: 'locked' },
+        { day: 75, title: 'Sécurité en C', exercises: 4, completed: 0, status: 'locked' },
+        { day: 80, title: 'Performance & Profiling', exercises: 5, completed: 0, status: 'locked' },
+        { day: 85, title: 'Projet final expert', exercises: 1, completed: 0, status: 'locked' },
+        { day: 90, title: 'Certification finale', exercises: 10, completed: 0, status: 'locked' },
       ],
     },
   ]
@@ -84,6 +117,8 @@ export default function ParcoursPage() {
       primary: 'bg-primary/10 border-primary text-primary',
       success: 'bg-success/10 border-success text-success',
       warning: 'bg-warning/10 border-warning text-warning',
+      danger: 'bg-danger/10 border-danger text-danger',
+      purple: 'bg-purple-100 dark:bg-purple-900/20 border-purple-500 text-purple-700 dark:text-purple-300',
     }
     return colors[color] || 'bg-muted border-border'
   }
@@ -94,14 +129,14 @@ export default function ParcoursPage() {
       <div className="space-y-4">
         <h1 className="text-4xl font-bold">🗺️ Parcours</h1>
         <p className="text-lg text-muted-foreground">
-          30 jours de préparation intensive pour réussir ta Piscine
+          {TOTAL_DAYS} jours de formation complète - De débutant à expert
         </p>
 
         {/* Progress globale */}
         <div className="border rounded-lg p-4 space-y-2">
           <div className="flex justify-between text-sm">
             <span className="font-medium">Progression globale</span>
-            <span className="text-muted-foreground">Jour {currentDay}/30 - 5/150 exercices</span>
+            <span className="text-muted-foreground">Jour {currentDay}/{TOTAL_DAYS} - 5 exercices complétés</span>
           </div>
           <div className="h-3 bg-muted rounded-full overflow-hidden">
             <div className="h-full bg-primary rounded-full" style={{ width: '3%' }}></div>
@@ -123,10 +158,15 @@ export default function ParcoursPage() {
             {phase.days.map((day) => (
               <Link
                 key={day.day}
-                href={day.status === 'locked' ? '#' : '/aujourdhui'}
+                href={day.status === 'locked' ? '#' : `/aujourdhui?day=${day.day}`}
                 className={`block border rounded-lg p-4 transition-all ${getStatusColor(
                   day.status
                 )} ${day.status !== 'locked' ? 'hover:scale-105 cursor-pointer' : 'cursor-not-allowed'}`}
+                onClick={(e) => {
+                  if (day.status !== 'locked') {
+                    localStorage.setItem('currentDay', day.day.toString())
+                  }
+                }}
               >
                 <div className="flex items-start justify-between mb-3">
                   <div className="flex items-center gap-2">

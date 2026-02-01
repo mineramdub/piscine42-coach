@@ -15,20 +15,38 @@ export default function PrepExercisesSection({ exercises }: PrepExercisesSection
   const [showHint, setShowHint] = useState(false)
   const [showSolution, setShowSolution] = useState(false)
   const [completed, setCompleted] = useState<number[]>([])
+  const [checkResult, setCheckResult] = useState<'success' | 'error' | null>(null)
 
   const exercise = exercises[currentExercise]
   const isCompleted = completed.includes(exercise.id)
 
   const handleCodeChange = (value: string | undefined) => {
     setCode(value || '')
+    // Reset check result when code changes
+    setCheckResult(null)
   }
 
   const handleCheckSolution = () => {
-    // Simulation simple : on vérifie si le code contient la solution
-    if (code.trim() === exercise.solution.trim()) {
+    // Normaliser le code (enlever espaces/retours à la ligne superflus)
+    const normalizeCode = (str: string) => {
+      return str
+        .replace(/\s+/g, ' ') // Tous les espaces multiples → 1 espace
+        .replace(/\s*([{}();,])\s*/g, '$1') // Enlever espaces autour des symboles
+        .trim()
+    }
+
+    const userCodeNormalized = normalizeCode(code)
+    const solutionNormalized = normalizeCode(exercise.solution)
+
+    if (userCodeNormalized === solutionNormalized) {
+      // Succès !
+      setCheckResult('success')
       if (!completed.includes(exercise.id)) {
         setCompleted([...completed, exercise.id])
       }
+    } else {
+      // Erreur
+      setCheckResult('error')
     }
   }
 
@@ -38,6 +56,7 @@ export default function PrepExercisesSection({ exercises }: PrepExercisesSection
       setCode(exercises[currentExercise + 1].starterCode)
       setShowHint(false)
       setShowSolution(false)
+      setCheckResult(null)
     }
   }
 
@@ -47,6 +66,7 @@ export default function PrepExercisesSection({ exercises }: PrepExercisesSection
       setCode(exercises[currentExercise - 1].starterCode)
       setShowHint(false)
       setShowSolution(false)
+      setCheckResult(null)
     }
   }
 
@@ -174,6 +194,40 @@ export default function PrepExercisesSection({ exercises }: PrepExercisesSection
             {showSolution ? 'Cacher' : 'Voir'} la solution
           </button>
         </div>
+
+        {/* Feedback de vérification */}
+        {checkResult === 'success' && (
+          <div className="bg-success/10 border border-success rounded-lg p-4">
+            <div className="flex items-center gap-2 mb-3">
+              <Check className="w-5 h-5 text-success" />
+              <span className="font-medium text-success">✓ Correct ! Exercice validé</span>
+            </div>
+            {currentExercise < exercises.length - 1 ? (
+              <button
+                onClick={handleNext}
+                className="w-full bg-success text-white px-4 py-2 rounded-lg hover:opacity-90 transition-opacity font-medium"
+              >
+                Continuer vers l'exercice suivant →
+              </button>
+            ) : (
+              <p className="text-sm text-success">
+                🎉 Tous les exercices préparatoires sont terminés ! Tu peux passer à l'exercice principal.
+              </p>
+            )}
+          </div>
+        )}
+
+        {checkResult === 'error' && (
+          <div className="bg-danger/10 border border-danger rounded-lg p-4">
+            <div className="flex items-start gap-2">
+              <X className="w-5 h-5 text-danger flex-shrink-0 mt-0.5" />
+              <div>
+                <p className="font-medium text-danger mb-1">Pas tout à fait...</p>
+                <p className="text-sm">Vérifie ton code et réessaye. Tu peux consulter l'indice ou la solution si besoin.</p>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Hint */}
         {showHint && exercise.hint && (

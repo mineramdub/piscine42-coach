@@ -13,6 +13,277 @@
     "Lire une entrée avec scanf()",
     "Comparer des nombres"
   ],
+  "learningContent": {
+    "lesson": {
+      "introduction": "Les conditions sont au cœur de la programmation. Elles permettent à ton programme de prendre des décisions : 'SI cette condition est vraie, ALORS fais ça, SINON fais autre chose'. C'est ce qui rend un programme intelligent !",
+      "steps": [
+        {
+          "id": 1,
+          "title": "Qu'est-ce qu'une condition ?",
+          "content": "Une **condition** est une expression qui peut être **vraie** (true) ou **fausse** (false).\n\nEn C, un nombre est considéré comme :\n- **vrai** s'il est différent de 0\n- **faux** s'il est égal à 0\n\nExemples de conditions :\n- `x > 5` : vrai si x est supérieur à 5\n- `age == 18` : vrai si age vaut exactement 18\n- `lettre != 'A'` : vrai si lettre est différent de 'A'",
+          "codeExample": "int age = 19;\n\nif (age >= 18)  // Condition : age >= 18 ?\n{\n\tprintf(\"Majeur\\n\");  // Exécuté si vrai\n}",
+          "language": "c"
+        },
+        {
+          "id": 2,
+          "title": "La syntaxe if",
+          "content": "**Syntaxe complète d'un if :**\n\n```c\nif (condition)\n{\n\t// Code exécuté si condition vraie\n}\n```\n\n**Points importants :**\n- La condition est entre **parenthèses** (obligatoire !)\n- Le code à exécuter est entre **accolades** {}\n- Si la condition est vraie, le code entre accolades s'exécute\n- Sinon, il est ignoré",
+          "codeExample": "int nombre = 10;\n\nif (nombre > 0)\n{\n\tprintf(\"Le nombre est positif\\n\");\n}\n// Si nombre <= 0, ce printf est ignoré",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Écris une condition qui affiche 'Grand' si la variable 'taille' est supérieure à 100",
+            "starterCode": "int taille = 150;\n// TON CODE ICI",
+            "solution": "int taille = 150;\nif (taille > 100)\n{\n\tprintf(\"Grand\\n\");\n}"
+          }
+        },
+        {
+          "id": 3,
+          "title": "Le else (sinon)",
+          "content": "`else` permet d'exécuter du code **si la condition est fausse**.\n\n**Syntaxe :**\n```c\nif (condition)\n{\n\t// Exécuté si vrai\n}\nelse\n{\n\t// Exécuté si faux\n}\n```\n\n**Important :** Un `else` doit toujours suivre un `if`.",
+          "codeExample": "int age = 15;\n\nif (age >= 18)\n{\n\tprintf(\"Majeur\\n\");\n}\nelse\n{\n\tprintf(\"Mineur\\n\");  // Exécuté car 15 < 18\n}",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Écris un if/else qui affiche 'Pair' si un nombre est divisible par 2, sinon 'Impair'",
+            "starterCode": "int n = 7;\n// TON CODE ICI",
+            "solution": "int n = 7;\nif (n % 2 == 0)\n{\n\tprintf(\"Pair\\n\");\n}\nelse\n{\n\tprintf(\"Impair\\n\");\n}"
+          }
+        },
+        {
+          "id": 4,
+          "title": "Les opérateurs de comparaison",
+          "content": "Pour comparer des valeurs, tu utilises des **opérateurs de comparaison** :\n\n| Opérateur | Signification | Exemple | Résultat |\n|-----------|---------------|---------|----------|\n| == | égal à | 5 == 5 | vrai |\n| != | différent de | 5 != 3 | vrai |\n| > | supérieur à | 10 > 5 | vrai |\n| < | inférieur à | 3 < 7 | vrai |\n| >= | supérieur ou égal | 5 >= 5 | vrai |\n| <= | inférieur ou égal | 4 <= 10 | vrai |\n\n**ATTENTION :** `==` pour comparer, `=` pour assigner !",
+          "codeExample": "int x = 10;\n\nif (x == 10)   // ✅ Comparaison\n{\n\tprintf(\"x vaut 10\\n\");\n}\n\nif (x = 10)    // ❌ ERREUR : assignation, pas comparaison !\n{\n\t// Ce code s'exécute toujours (10 est vrai)\n}",
+          "language": "c"
+        }
+      ]
+    },
+    "theory": [
+      {
+        "title": "Les opérateurs logiques",
+        "content": "Tu peux combiner plusieurs conditions avec des **opérateurs logiques** :\n\n- `&&` (ET logique) : vrai si **les deux** conditions sont vraies\n- `||` (OU logique) : vrai si **au moins une** condition est vraie\n- `!` (NON logique) : inverse la condition",
+        "codeExamples": [
+          {
+            "title": "ET logique (&&)",
+            "code": "int age = 20;\nint argent = 50;\n\nif (age >= 18 && argent >= 10)\n{\n\tprintf(\"Tu peux entrer en boîte\\n\");\n}\n// Vrai seulement si age >= 18 ET argent >= 10",
+            "explanation": "Les DEUX conditions doivent être vraies"
+          },
+          {
+            "title": "OU logique (||)",
+            "code": "int jour = 6;  // samedi\n\nif (jour == 6 || jour == 7)\n{\n\tprintf(\"C'est le weekend !\\n\");\n}\n// Vrai si jour est 6 OU 7",
+            "explanation": "Au moins UNE des conditions doit être vraie"
+          },
+          {
+            "title": "NON logique (!)",
+            "code": "int pluie = 0;  // 0 = false\n\nif (!pluie)\n{\n\tprintf(\"Il ne pleut pas\\n\");\n}\n// ! inverse : !0 devient vrai",
+            "explanation": "! inverse le résultat de la condition"
+          }
+        ],
+        "keyPoints": [
+          "&& = ET (toutes les conditions doivent être vraies)",
+          "|| = OU (au moins une condition vraie)",
+          "! = NON (inverse la condition)"
+        ],
+        "commonMistakes": [
+          "Utiliser & au lieu de && (& est l'opérateur binaire, pas logique)",
+          "Écrire if (x = 5) au lieu de if (x == 5)",
+          "Oublier les parenthèses autour de chaque condition : if (x > 5 && < 10) ❌"
+        ]
+      },
+      {
+        "title": "else if - Tester plusieurs conditions",
+        "content": "`else if` permet de tester **plusieurs conditions successives**.\n\n**Syntaxe :**\n```c\nif (condition1)\n{\n\t// Si condition1 vraie\n}\nelse if (condition2)\n{\n\t// Si condition1 fausse ET condition2 vraie\n}\nelse\n{\n\t// Si toutes les conditions sont fausses\n}\n```\n\n**Important :** Dès qu'une condition est vraie, les autres ne sont pas testées.",
+        "codeExamples": [
+          {
+            "title": "Note scolaire",
+            "code": "int note = 15;\n\nif (note >= 16)\n{\n\tprintf(\"Très bien\\n\");\n}\nelse if (note >= 14)\n{\n\tprintf(\"Bien\\n\");  // Exécuté (15 >= 14)\n}\nelse if (note >= 10)\n{\n\tprintf(\"Assez bien\\n\");  // Ignoré\n}\nelse\n{\n\tprintf(\"Insuffisant\\n\");  // Ignoré\n}",
+            "explanation": "Seul le premier 'Bien' est affiché car 15 >= 14"
+          },
+          {
+            "title": "Signe d'un nombre",
+            "code": "int n = -5;\n\nif (n > 0)\n{\n\tprintf(\"Positif\\n\");\n}\nelse if (n < 0)\n{\n\tprintf(\"Négatif\\n\");  // Exécuté\n}\nelse\n{\n\tprintf(\"Zéro\\n\");\n}",
+            "explanation": "Couvre les 3 cas : positif, négatif, zéro"
+          }
+        ],
+        "keyPoints": [
+          "else if permet de tester plusieurs cas successifs",
+          "Dès qu'une condition est vraie, les autres sont ignorées",
+          "Toujours finir par un else pour le cas 'par défaut'"
+        ]
+      },
+      {
+        "title": "Le switch/case - Alternative au if/else",
+        "content": "Quand tu dois tester **une seule variable** contre plusieurs valeurs, `switch/case` est plus lisible que des `if/else if` en cascade.\n\n**Syntaxe :**\n```c\nswitch (variable)\n{\n\tcase valeur1:\n\t\t// Code si variable == valeur1\n\t\tbreak;\n\tcase valeur2:\n\t\t// Code si variable == valeur2\n\t\tbreak;\n\tdefault:\n\t\t// Code si aucun case ne correspond\n}\n```\n\n**IMPORTANT :** N'oublie JAMAIS le `break` sinon le code continue dans le case suivant !",
+        "codeExamples": [
+          {
+            "title": "Menu avec switch",
+            "code": "int choix = 2;\n\nswitch (choix)\n{\n\tcase 1:\n\t\tprintf(\"Option 1\\n\");\n\t\tbreak;\n\tcase 2:\n\t\tprintf(\"Option 2\\n\");  // Exécuté\n\t\tbreak;\n\tcase 3:\n\t\tprintf(\"Option 3\\n\");\n\t\tbreak;\n\tdefault:\n\t\tprintf(\"Choix invalide\\n\");\n}",
+            "explanation": "Plus clair que 3 if/else if successifs"
+          },
+          {
+            "title": "❌ Oubli du break (PIÈGE)",
+            "code": "int x = 1;\n\nswitch (x)\n{\n\tcase 1:\n\t\tprintf(\"Un\\n\");\n\t\t// Oubli break !\n\tcase 2:\n\t\tprintf(\"Deux\\n\");\n\t\tbreak;\n}\n// Affiche : Un\n//           Deux\n// (les 2 !)",
+            "explanation": "Sans break, le code 'tombe' dans le case suivant"
+          },
+          {
+            "title": "✅ Version correcte",
+            "code": "int x = 1;\n\nswitch (x)\n{\n\tcase 1:\n\t\tprintf(\"Un\\n\");\n\t\tbreak;  // ✅ N'oublie pas !\n\tcase 2:\n\t\tprintf(\"Deux\\n\");\n\t\tbreak;\n}\n// Affiche : Un",
+            "explanation": "Le break empêche de tomber dans le case suivant"
+          },
+          {
+            "title": "Note : switch vs if",
+            "code": "char note = 'A';\n\nswitch (note)\n{\n\tcase 'A':\n\t\tprintf(\"Excellent\\n\");\n\t\tbreak;\n\tcase 'B':\n\t\tprintf(\"Bien\\n\");\n\t\tbreak;\n\tcase 'C':\n\t\tprintf(\"Moyen\\n\");\n\t\tbreak;\n\tdefault:\n\t\tprintf(\"Insuffisant\\n\");\n}",
+            "explanation": "Fonctionne aussi avec des char !"
+          }
+        ],
+        "keyPoints": [
+          "switch teste une variable contre plusieurs valeurs",
+          "break est OBLIGATOIRE après chaque case",
+          "default gère le cas 'aucun case ne correspond'",
+          "Plus lisible que if/else if quand beaucoup de cas"
+        ],
+        "commonMistakes": [
+          "Oublier break → le code continue dans le case suivant",
+          "Utiliser switch pour des conditions complexes (utilise if à la place)",
+          "Oublier default → pas de cas par défaut si aucun case ne correspond"
+        ]
+      },
+      {
+        "title": "Exemples pratiques Piscine",
+        "content": "Voici des cas d'usage réels que tu rencontreras à la Piscine :",
+        "codeExamples": [
+          {
+            "title": "Vérifier un intervalle",
+            "code": "int score = 75;\n\n// Vérifier si entre 50 et 100\nif (score >= 50 && score <= 100)\n{\n\tprintf(\"Score valide\\n\");\n}\nelse\n{\n\tprintf(\"Score invalide\\n\");\n}",
+            "explanation": "Combinaison de deux conditions avec &&"
+          },
+          {
+            "title": "Tester si un nombre est entre deux valeurs (exclus)",
+            "code": "int age = 17;\n\n// Strictement entre 16 et 18 (16 et 18 exclus)\nif (age > 16 && age < 18)\n{\n\tprintf(\"Tu as 17 ans\\n\");\n}",
+            "explanation": "Utilise > et < (pas >= ni <=)"
+          },
+          {
+            "title": "Vérifier si divisible par 3 OU par 5",
+            "code": "int n = 15;\n\nif (n % 3 == 0 || n % 5 == 0)\n{\n\tprintf(\"%d est divisible par 3 ou 5\\n\", n);\n}\n// 15 est divisible par les deux → affiche",
+            "explanation": "|| = OU : au moins une condition vraie suffit"
+          },
+          {
+            "title": "Vérifier si un char est une lettre majuscule",
+            "code": "char c = 'A';\n\nif (c >= 'A' && c <= 'Z')\n{\n\tprintf(\"Majuscule\\n\");\n}\n// Fonctionne car 'A' = 65, 'Z' = 90 en ASCII",
+            "explanation": "On peut comparer des char comme des nombres"
+          },
+          {
+            "title": "Vérifier si un char est un chiffre",
+            "code": "char c = '5';\n\nif (c >= '0' && c <= '9')\n{\n\tprintf(\"C'est un chiffre\\n\");\n}\n// '0' = 48, '9' = 57 en ASCII",
+            "explanation": "Attention : '5' (char) != 5 (int)"
+          }
+        ],
+        "keyPoints": [
+          "Utilise && pour tester un intervalle",
+          "|| pour tester plusieurs possibilités",
+          "Les char se comparent comme des nombres (ASCII)",
+          "Modulo % utile pour tester la divisibilité"
+        ]
+      },
+      {
+        "title": "Pièges et erreurs à éviter",
+        "content": "**Les erreurs les plus fréquentes chez les débutants :**",
+        "codeExamples": [
+          {
+            "title": "❌ Piège 1 : if sans accolades",
+            "code": "int x = 5;\n\nif (x > 0)\n\tprintf(\"Positif\\n\");\n\tprintf(\"Fin\\n\");  // TOUJOURS exécuté !\n\n// L'indentation ne compte pas !\n// Seule la première ligne appartient au if",
+            "explanation": "Sans {}, seule la ligne suivant if est conditionnelle"
+          },
+          {
+            "title": "✅ Solution : toujours mettre des accolades",
+            "code": "int x = 5;\n\nif (x > 0)\n{\n\tprintf(\"Positif\\n\");\n\tprintf(\"Fin\\n\");  // Maintenant dans le if\n}",
+            "explanation": "Même pour 1 ligne, prends l'habitude de mettre {}"
+          },
+          {
+            "title": "❌ Piège 2 : = au lieu de ==",
+            "code": "int x = 5;\n\nif (x = 10)  // ❌ ASSIGNATION pas comparaison\n{\n\tprintf(\"x vaut maintenant 10\\n\");\n}\n// S'exécute TOUJOURS (10 est vrai)",
+            "explanation": "= assigne, == compare. Erreur très fréquente !"
+          },
+          {
+            "title": "❌ Piège 3 : point-virgule après if",
+            "code": "int x = 5;\n\nif (x > 0);  // ❌ Point-virgule en trop\n{\n\tprintf(\"Positif\\n\");  // TOUJOURS exécuté\n}\n// Le ; termine le if (qui ne fait rien)",
+            "explanation": "Le ; fait que le if ne contrôle rien"
+          },
+          {
+            "title": "❌ Piège 4 : tester un float avec ==",
+            "code": "float x = 0.1 + 0.2;  // = 0.30000000004 (imprécision)\n\nif (x == 0.3)  // ❌ Souvent faux !\n{\n\tprintf(\"Égal\\n\");\n}\n// Ne s'exécute pas à cause de l'imprécision",
+            "explanation": "Les float ne sont pas exacts, évite =="
+          },
+          {
+            "title": "✅ Solution : tester avec un epsilon",
+            "code": "float x = 0.1 + 0.2;\nfloat epsilon = 0.0001;\n\nif (x > 0.3 - epsilon && x < 0.3 + epsilon)\n{\n\tprintf(\"Environ égal\\n\");\n}",
+            "explanation": "Teste si la différence est très petite"
+          }
+        ],
+        "keyPoints": [
+          "Toujours mettre {} même pour 1 ligne",
+          "== pour comparer, = pour assigner",
+          "Pas de ; après if (condition)",
+          "Ne jamais tester l'égalité exacte de float avec =="
+        ]
+      }
+    ],
+    "prepExercises": [
+      {
+        "id": 1,
+        "title": "Test simple",
+        "instruction": "Écris un programme qui affiche 'Positif' si un nombre est >= 0, sinon 'Négatif'",
+        "starterCode": "#include <stdio.h>\n\nint main(void)\n{\n\tint n = -3;\n\t// TON CODE ICI\n\treturn (0);\n}",
+        "solution": "#include <stdio.h>\n\nint main(void)\n{\n\tint n = -3;\n\tif (n >= 0)\n\t{\n\t\tprintf(\"Positif\\n\");\n\t}\n\telse\n\t{\n\t\tprintf(\"Négatif\\n\");\n\t}\n\treturn (0);\n}",
+        "hint": "Utilise if (n >= 0) et else",
+        "difficulty": 1
+      },
+      {
+        "id": 2,
+        "title": "Pair ou impair",
+        "instruction": "Affiche 'Pair' si un nombre est divisible par 2, sinon 'Impair'",
+        "starterCode": "#include <stdio.h>\n\nint main(void)\n{\n\tint n = 7;\n\t// TON CODE ICI\n\treturn (0);\n}",
+        "solution": "#include <stdio.h>\n\nint main(void)\n{\n\tint n = 7;\n\tif (n % 2 == 0)\n\t{\n\t\tprintf(\"Pair\\n\");\n\t}\n\telse\n\t{\n\t\tprintf(\"Impair\\n\");\n\t}\n\treturn (0);\n}",
+        "hint": "Utilise l'opérateur % (modulo) : si n % 2 == 0, c'est pair",
+        "difficulty": 1
+      },
+      {
+        "id": 3,
+        "title": "Comparaison de deux nombres",
+        "instruction": "Affiche 'Plus grand' si a > b, 'Plus petit' si a < b, 'Égal' sinon",
+        "starterCode": "#include <stdio.h>\n\nint main(void)\n{\n\tint a = 10;\n\tint b = 5;\n\t// TON CODE ICI\n\treturn (0);\n}",
+        "solution": "#include <stdio.h>\n\nint main(void)\n{\n\tint a = 10;\n\tint b = 5;\n\tif (a > b)\n\t{\n\t\tprintf(\"Plus grand\\n\");\n\t}\n\telse if (a < b)\n\t{\n\t\tprintf(\"Plus petit\\n\");\n\t}\n\telse\n\t{\n\t\tprintf(\"Égal\\n\");\n\t}\n\treturn (0);\n}",
+        "hint": "Utilise if/else if/else pour tester les 3 cas",
+        "difficulty": 2
+      },
+      {
+        "id": 4,
+        "title": "Intervalle de nombres",
+        "instruction": "Affiche 'Dans l'intervalle' si un nombre est entre 10 et 20 (inclus), sinon 'Hors intervalle'",
+        "starterCode": "#include <stdio.h>\n\nint main(void)\n{\n\tint n = 15;\n\t// TON CODE ICI\n\treturn (0);\n}",
+        "solution": "#include <stdio.h>\n\nint main(void)\n{\n\tint n = 15;\n\tif (n >= 10 && n <= 20)\n\t{\n\t\tprintf(\"Dans l'intervalle\\n\");\n\t}\n\telse\n\t{\n\t\tprintf(\"Hors intervalle\\n\");\n\t}\n\treturn (0);\n}",
+        "hint": "Utilise && pour combiner deux conditions : n >= 10 ET n <= 20",
+        "difficulty": 2
+      },
+      {
+        "id": 5,
+        "title": "Note scolaire avec switch",
+        "instruction": "Utilise switch/case pour afficher 'Excellent' si note='A', 'Bien' si 'B', 'Moyen' si 'C', 'Insuffisant' sinon",
+        "starterCode": "#include <stdio.h>\n\nint main(void)\n{\n\tchar note = 'B';\n\t// TON CODE ICI\n\treturn (0);\n}",
+        "solution": "#include <stdio.h>\n\nint main(void)\n{\n\tchar note = 'B';\n\tswitch (note)\n\t{\n\t\tcase 'A':\n\t\t\tprintf(\"Excellent\\n\");\n\t\t\tbreak;\n\t\tcase 'B':\n\t\t\tprintf(\"Bien\\n\");\n\t\t\tbreak;\n\t\tcase 'C':\n\t\t\tprintf(\"Moyen\\n\");\n\t\t\tbreak;\n\t\tdefault:\n\t\t\tprintf(\"Insuffisant\\n\");\n\t}\n\treturn (0);\n}",
+        "hint": "N'oublie pas break après chaque case !",
+        "difficulty": 2
+      },
+      {
+        "id": 6,
+        "title": "Vérifier si majuscule",
+        "instruction": "Affiche 'Majuscule' si un caractère est entre 'A' et 'Z', sinon 'Pas majuscule'",
+        "starterCode": "#include <stdio.h>\n\nint main(void)\n{\n\tchar c = 'M';\n\t// TON CODE ICI\n\treturn (0);\n}",
+        "solution": "#include <stdio.h>\n\nint main(void)\n{\n\tchar c = 'M';\n\tif (c >= 'A' && c <= 'Z')\n\t{\n\t\tprintf(\"Majuscule\\n\");\n\t}\n\telse\n\t{\n\t\tprintf(\"Pas majuscule\\n\");\n\t}\n\treturn (0);\n}",
+        "hint": "Les caractères se comparent comme des nombres : 'A' <= c <= 'Z'",
+        "difficulty": 3
+      }
+    ]
+  },
   "starterCode": "#include <stdio.h>\n\nint main(void)\n{\n\tint n;\n\t\n\t// Lis le nombre depuis stdin\n\tscanf(\"%d\", &n);\n\t\n\t// Ton code ici\n\t\n\treturn (0);\n}",
   "hints": [
     "Utilise if (n >= 0) pour tester",
