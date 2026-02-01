@@ -1,9 +1,10 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { BookOpen, ChevronRight, Code, Play } from 'lucide-react'
 import type { LearningContent } from '@/types/exercise'
 import CodeEditor from '@/components/exercise/CodeEditor'
+import { useLearning } from '@/contexts/LearningContext'
 
 interface LessonSectionProps {
   lesson: NonNullable<LearningContent['lesson']>
@@ -13,9 +14,20 @@ export default function LessonSection({ lesson }: LessonSectionProps) {
   const [currentStep, setCurrentStep] = useState(0)
   const [tryItCode, setTryItCode] = useState('')
   const [showSolution, setShowSolution] = useState(false)
+  const { setCurrentSection } = useLearning()
 
   const step = lesson.steps[currentStep]
   const isLastStep = currentStep === lesson.steps.length - 1
+
+  // Met à jour le contexte quand l'étape change
+  useEffect(() => {
+    setCurrentSection({
+      type: 'lesson',
+      title: step.title,
+      content: step.content + (step.codeExample ? `\n\nExemple de code:\n${step.codeExample}` : ''),
+      stepNumber: step.id,
+    })
+  }, [currentStep, step, setCurrentSection])
 
   const handleNext = () => {
     if (!isLastStep) {
