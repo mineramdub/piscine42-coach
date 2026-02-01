@@ -123,48 +123,67 @@ export default function ReviewSection({ currentDay }: ReviewSectionProps) {
               }`}
             >
               {/* Header du rappel */}
-              <button
-                onClick={() => toggleExpanded(review.concept.id)}
-                className="w-full p-4 flex items-center justify-between hover:bg-background/50 transition-colors rounded-lg"
-              >
-                <div className="flex items-center gap-3 flex-1 text-left">
-                  <button
+              <div className="p-4 flex items-center justify-between hover:bg-background/50 transition-colors rounded-lg">
+                <div className="flex items-center gap-3 flex-1">
+                  {/* Checkbox de complétion */}
+                  <div
                     onClick={(e) => {
                       e.stopPropagation()
                       toggleCompleted(review.concept.id)
                     }}
-                    className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-colors ${
+                    role="button"
+                    tabIndex={0}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault()
+                        toggleCompleted(review.concept.id)
+                      }
+                    }}
+                    className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-colors cursor-pointer ${
                       isCompleted
                         ? 'bg-success border-success text-success-foreground'
                         : 'border-muted-foreground hover:border-success'
                     }`}
                   >
                     {isCompleted && <Check className="w-4 h-4" />}
+                  </div>
+
+                  {/* Contenu du rappel - cliquable pour expand */}
+                  <button
+                    onClick={() => toggleExpanded(review.concept.id)}
+                    className="flex items-center gap-3 flex-1 text-left"
+                  >
+                    <span className="text-xl">{getCategoryIcon(review.concept.category)}</span>
+
+                    <div className="flex-1">
+                      <h3 className="font-bold">{review.concept.name}</h3>
+                      <p className="text-sm text-muted-foreground">{review.concept.shortDescription}</p>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs px-2 py-1 bg-background rounded-full">
+                        {getDayLabel(review.daysSinceIntroduction)}
+                      </span>
+                      <span className="text-xs font-medium">
+                        {getImportanceBadge(review.importance)}
+                      </span>
+                    </div>
                   </button>
-
-                  <span className="text-xl">{getCategoryIcon(review.concept.category)}</span>
-
-                  <div className="flex-1">
-                    <h3 className="font-bold">{review.concept.name}</h3>
-                    <p className="text-sm text-muted-foreground">{review.concept.shortDescription}</p>
-                  </div>
-
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs px-2 py-1 bg-background rounded-full">
-                      {getDayLabel(review.daysSinceIntroduction)}
-                    </span>
-                    <span className="text-xs font-medium">
-                      {getImportanceBadge(review.importance)}
-                    </span>
-                  </div>
                 </div>
 
-                {isExpanded ? (
-                  <ChevronUp className="w-5 h-5 ml-3 flex-shrink-0" />
-                ) : (
-                  <ChevronDown className="w-5 h-5 ml-3 flex-shrink-0" />
-                )}
-              </button>
+                {/* Chevron expand/collapse */}
+                <button
+                  onClick={() => toggleExpanded(review.concept.id)}
+                  className="ml-3 flex-shrink-0 p-1 hover:bg-muted rounded transition-colors"
+                  aria-label={isExpanded ? 'Replier' : 'Déplier'}
+                >
+                  {isExpanded ? (
+                    <ChevronUp className="w-5 h-5" />
+                  ) : (
+                    <ChevronDown className="w-5 h-5" />
+                  )}
+                </button>
+              </div>
 
               {/* Contenu déployé */}
               {isExpanded && (
