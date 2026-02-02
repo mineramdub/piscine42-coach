@@ -5,7 +5,6 @@ import { useSearchParams } from 'next/navigation'
 import LessonSection from '@/components/learning/LessonSection'
 import TheorySection from '@/components/learning/TheorySection'
 import PrepExercisesSection from '@/components/learning/PrepExercisesSection'
-import ReviewSection from '@/components/learning/ReviewSection'
 import { Loader2 } from 'lucide-react'
 import type { Exercise } from '@/types/exercise'
 import { TOTAL_DAYS, getCurrentPhase, getProgressPercent } from '@/lib/config/constants'
@@ -127,9 +126,6 @@ export default function AujourdhuiPage() {
           </div>
         </div>
       </div>
-
-      {/* Section Rappels (Répétition espacée) */}
-      <ReviewSection currentDay={currentDay} />
 
       {/* Section Apprentissage */}
       {todayExercise.learningContent && (
