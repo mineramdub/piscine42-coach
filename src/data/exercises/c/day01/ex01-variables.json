@@ -238,6 +238,7 @@
     "Utilise '%d' dans printf() pour afficher un entier",
     "La somme se calcule avec l'opérateur +"
   ],
+  "solution": "#include <stdio.h>\n\nint main(void)\n{\n\tint a = 42;\n\tint b = 21;\n\t\n\tprintf(\"%d\\n\", a + b);\n\t\n\treturn (0);\n}",
   "testCases": [
     {
       "id": 1,

@@ -261,6 +261,7 @@
   },
   "starterCode": "#include <stdio.h>\n\nint main(void)\n{\n\tint i = 1;\n\t\n\t// Écris ta boucle while ici\n\t// N'oublie pas d'incrémenter i !\n\t\n\treturn (0);\n}",
   "hints": ["Initialise un compteur à 1", "Continue tant que le compteur <= 5", "N'oublie pas d'incrémenter"],
+  "solution": "#include <stdio.h>\n\nint main(void)\n{\n\tint i = 1;\n\t\n\twhile (i <= 5)\n\t{\n\t\tprintf(\"%d\\n\", i);\n\t\ti++;\n\t}\n\t\n\treturn (0);\n}",
   "testCases": [{
     "id": 1,
     "description": "Affiche 1 à 5",

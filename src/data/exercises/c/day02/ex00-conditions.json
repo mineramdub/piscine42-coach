@@ -290,6 +290,7 @@
     "N'oublie pas le else pour le cas négatif",
     "Pense au cas 0 (il est positif)"
   ],
+  "solution": "#include <stdio.h>\n\nint main(void)\n{\n\t// Change cette valeur pour tester :\n\tint n = 5;\n\t\n\tif (n >= 0)\n\t{\n\t\tprintf(\"Positif\\n\");\n\t}\n\telse\n\t{\n\t\tprintf(\"Négatif\\n\");\n\t}\n\t\n\treturn (0);\n}",
   "testCases": [
     {
       "id": 1,

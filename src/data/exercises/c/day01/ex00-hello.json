@@ -274,6 +274,7 @@
     "N'oublie pas le \\n pour le retour à la ligne",
     "La fonction main() doit retourner 0"
   ],
+  "solution": "#include <stdio.h>\n\nint main(void)\n{\n\tprintf(\"Hello, World!\\n\");\n\treturn (0);\n}",
   "testCases": [
     {
       "id": 1,

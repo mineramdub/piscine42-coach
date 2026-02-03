@@ -4,7 +4,7 @@ import { useState, use, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import CodeEditor from '@/components/exercise/CodeEditor'
 import CompletionModal from '@/components/exercise/CompletionModal'
-import { Play, ArrowLeft, Lightbulb, CheckCircle, XCircle, Send, Loader2 } from 'lucide-react'
+import { Play, ArrowLeft, Lightbulb, CheckCircle, XCircle, Send, Loader2, Eye, EyeOff } from 'lucide-react'
 import type { Exercise } from '@/types/exercise'
 
 interface TestResult {
@@ -32,6 +32,7 @@ export default function ExercicePage({
   const [output, setOutput] = useState('')
   const [isRunning, setIsRunning] = useState(false)
   const [showHints, setShowHints] = useState(false)
+  const [showSolution, setShowSolution] = useState(false)
   const [testResults, setTestResults] = useState<TestResult[]>([])
   const [allTestsPassed, setAllTestsPassed] = useState(false)
   const [showCompletionModal, setShowCompletionModal] = useState(false)
@@ -124,6 +125,16 @@ export default function ExercicePage({
     setShowCompletionModal(true)
   }
 
+  const handleToggleSolution = () => {
+    if (!showSolution && exercise?.solution) {
+      setCode(exercise.solution)
+      setShowSolution(true)
+    } else if (exercise?.starterCode) {
+      setCode(exercise.starterCode)
+      setShowSolution(false)
+    }
+  }
+
   // Écran de chargement
   if (loading) {
     return (
@@ -182,6 +193,14 @@ export default function ExercicePage({
             <div className="flex items-center justify-between">
               <h2 className="text-xl font-bold">💻 Ton code</h2>
               <div className="flex gap-2">
+                <button
+                  onClick={handleToggleSolution}
+                  disabled={!exercise.solution}
+                  className="flex items-center gap-2 bg-warning/10 text-warning border border-warning px-4 py-2 rounded-lg hover:bg-warning/20 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {showSolution ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  {showSolution ? 'Cacher' : 'Voir la solution'}
+                </button>
                 <button
                   onClick={handleRunTests}
                   disabled={isRunning || !code}

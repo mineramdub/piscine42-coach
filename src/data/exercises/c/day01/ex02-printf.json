@@ -206,6 +206,7 @@
     "Utilise %c pour un caractère",
     "Utilise \\n pour passer à la ligne"
   ],
+  "solution": "#include <stdio.h>\n\nint main(void)\n{\n\tint nombre = 42;\n\tchar lettre = 'A';\n\t\n\tprintf(\"Mon nombre: %d\\n\", nombre);\n\tprintf(\"Mon caractère: %c\\n\", lettre);\n\t\n\treturn (0);\n}",
   "testCases": [
     {
       "id": 1,

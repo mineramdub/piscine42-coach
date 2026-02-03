@@ -265,6 +265,7 @@
   },
   "starterCode": "#include <stdio.h>\n\nint ft_strlen(char *str)\n{\n\t// Ton code ici\n}\n\nint main(void)\n{\n\tprintf(\"%d\\n\", ft_strlen(\"Hello\"));\n\treturn (0);\n}",
   "hints": ["Une string se termine par '\\0'", "Utilise un compteur", "Parcours caractère par caractère"],
+  "solution": "#include <stdio.h>\n\nint ft_strlen(char *str)\n{\n\tint i = 0;\n\t\n\twhile (str[i] != '\\0')\n\t{\n\t\ti++;\n\t}\n\t\n\treturn (i);\n}\n\nint main(void)\n{\n\tprintf(\"%d\\n\", ft_strlen(\"Hello\"));\n\treturn (0);\n}",
   "testCases": [
     {"id": 1, "description": "String normale", "stdin": "", "expectedStdout": "5\n", "expectedExitCode": 0, "visible": true},
     {"id": 2, "description": "String vide", "stdin": "", "expectedStdout": "0\n", "expectedExitCode": 0, "visible": false}
