@@ -4,7 +4,7 @@
   "day": 2,
   "order": 0,
   "title": "If/Else",
-  "description": "Écris un programme qui lit un nombre entier dans une variable 'n' (avec scanf), puis affiche 'Positif' si n >= 0, sinon affiche 'Négatif'. Le starterCode te donne déjà le scanf.",
+  "description": "La variable 'n' a une valeur (change-la pour tester). Écris le code qui affiche 'Positif' si n >= 0, sinon affiche 'Négatif'. Teste avec n = 5, n = -3, n = 0.",
   "difficulty": 2,
   "points": 20,
   "estimatedTime": 25,
@@ -284,7 +284,7 @@
       }
     ]
   },
-  "starterCode": "#include <stdio.h>\n\nint main(void)\n{\n\tint n;\n\t\n\t// Lis le nombre depuis stdin\n\tscanf(\"%d\", &n);\n\t\n\t// Ton code ici\n\t\n\treturn (0);\n}",
+  "starterCode": "#include <stdio.h>\n\nint main(void)\n{\n\t// Change cette valeur pour tester :\n\tint n = 5;\n\t\n\t// Ton code ici : affiche 'Positif' ou 'Négatif'\n\t\n\treturn (0);\n}",
   "hints": [
     "Utilise if (n >= 0) pour tester",
     "N'oublie pas le else pour le cas négatif",
