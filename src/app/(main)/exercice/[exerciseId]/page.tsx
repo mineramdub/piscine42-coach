@@ -131,10 +131,13 @@ export default function ExercicePage({
   }
 
   const handleToggleSolution = () => {
+    console.log('Toggle solution clicked', { showSolution, hasSolution: !!exercise?.solution, exercise })
     if (!showSolution && exercise?.solution) {
+      console.log('Showing solution:', exercise.solution)
       setCode(exercise.solution)
       setShowSolution(true)
     } else if (exercise?.starterCode) {
+      console.log('Hiding solution, showing starter code')
       setCode(exercise.starterCode)
       setShowSolution(false)
     }
@@ -226,8 +229,7 @@ export default function ExercicePage({
             </div>
 
             <CodeEditor
-              key={exercise.id}
-              defaultValue={code || exercise.starterCode}
+              value={code}
               language="c"
               onChange={handleCodeChange}
             />
