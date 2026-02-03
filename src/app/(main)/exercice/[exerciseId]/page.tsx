@@ -51,6 +51,11 @@ export default function ExercicePage({
         setExercise(data.exercise)
         setNextExerciseId(data.nextExerciseId)
         setIsLastOfDay(data.isLastOfDay)
+
+        // Initialiser le code avec le starterCode
+        if (data.exercise.starterCode) {
+          setCode(data.exercise.starterCode)
+        }
       } catch (error) {
         console.error('Error loading exercise:', error)
       } finally {
@@ -221,7 +226,8 @@ export default function ExercicePage({
             </div>
 
             <CodeEditor
-              defaultValue={exercise.starterCode}
+              key={exercise.id}
+              defaultValue={code || exercise.starterCode}
               language="c"
               onChange={handleCodeChange}
             />
