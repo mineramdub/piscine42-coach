@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { BookOpen, ChevronRight, Code, Play } from 'lucide-react'
 import type { LearningContent } from '@/types/exercise'
 import CodeEditor from '@/components/exercise/CodeEditor'
+import CodeBlock from '@/components/learning/CodeBlock'
 import { useLearning } from '@/contexts/LearningContext'
 
 interface LessonSectionProps {
@@ -93,15 +94,12 @@ export default function LessonSection({ lesson }: LessonSectionProps) {
 
         {/* Exemple de code */}
         {step.codeExample && (
-          <div className="bg-muted rounded-lg p-4">
-            <div className="flex items-center gap-2 mb-2">
-              <Code className="w-4 h-4 text-primary" />
-              <span className="text-sm font-medium">Exemple</span>
-            </div>
-            <pre className="font-mono text-sm overflow-x-auto">
-              <code>{step.codeExample}</code>
-            </pre>
-          </div>
+          <CodeBlock
+            code={step.codeExample}
+            language={step.language || 'c'}
+            title="Exemple"
+            showLineNumbers={false}
+          />
         )}
 
         {/* Try It Yourself */}
@@ -129,12 +127,11 @@ export default function LessonSection({ lesson }: LessonSectionProps) {
             </div>
 
             {showSolution && (
-              <div className="bg-muted rounded-lg p-3">
-                <p className="text-xs text-muted-foreground mb-2">Solution :</p>
-                <pre className="font-mono text-sm overflow-x-auto">
-                  <code>{step.tryItYourself.solution}</code>
-                </pre>
-              </div>
+              <CodeBlock
+                code={step.tryItYourself.solution}
+                language={step.language || 'c'}
+                title="Solution"
+              />
             )}
           </div>
         )}

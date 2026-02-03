@@ -5,6 +5,7 @@ import { useSearchParams } from 'next/navigation'
 import LessonSection from '@/components/learning/LessonSection'
 import TheorySection from '@/components/learning/TheorySection'
 import PrepExercisesSection from '@/components/learning/PrepExercisesSection'
+import CodeBlock from '@/components/learning/CodeBlock'
 import { Loader2 } from 'lucide-react'
 import type { Exercise } from '@/types/exercise'
 import { TOTAL_DAYS, getCurrentPhase, getProgressPercent } from '@/lib/config/constants'
@@ -210,9 +211,11 @@ export default function AujourdhuiPage() {
       {todayExercise && todayExercise.starterCode && (
         <div className="border rounded-lg p-6 space-y-4">
           <h3 className="text-xl font-bold">💻 Code de départ</h3>
-          <pre className="bg-muted p-4 rounded-lg overflow-x-auto">
-            <code className="text-sm font-mono">{todayExercise.starterCode}</code>
-          </pre>
+          <CodeBlock
+            code={todayExercise.starterCode}
+            language="c"
+            title="Code de départ"
+          />
         </div>
       )}
 

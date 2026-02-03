@@ -4,6 +4,7 @@ import { useState, use, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import CodeEditor from '@/components/exercise/CodeEditor'
 import CompletionModal from '@/components/exercise/CompletionModal'
+import CodeBlock from '@/components/learning/CodeBlock'
 import { Play, ArrowLeft, Lightbulb, CheckCircle, XCircle, Send, Loader2, Eye, EyeOff } from 'lucide-react'
 import type { Exercise } from '@/types/exercise'
 import { validateExercise } from '@/lib/validation/exercise-validator'
@@ -228,9 +229,12 @@ export default function ExercicePage({
             {/* Sortie du programme */}
             <div className="border rounded-lg p-4 space-y-2">
               <h3 className="font-bold">📟 Sortie</h3>
-              <pre className="bg-muted p-4 rounded-lg min-h-[120px] font-mono text-sm whitespace-pre-wrap">
-                {output || 'Clique sur "Tester" pour lancer les tests...'}
-              </pre>
+              <CodeBlock
+                code={output || 'Clique sur "Tester" pour lancer les tests...'}
+                language="bash"
+                title="Output"
+                showLineNumbers={false}
+              />
             </div>
 
             {/* Résultats des tests */}

@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { BookOpen, Code2, ChevronDown, ChevronRight } from 'lucide-react'
+import CodeBlock from '@/components/learning/CodeBlock'
 
 interface CodeSnippet {
   title: string
@@ -287,18 +288,13 @@ export default function FichesPage() {
                             Code à retenir
                           </h4>
                           {fiche.codeSnippets.map((snippet, i) => (
-                            <div key={i} className="space-y-2">
-                              <div className="flex items-center gap-2">
-                                <div className="w-1 h-6 bg-primary rounded-full"></div>
-                                <p className="font-medium text-sm">{snippet.title}</p>
-                              </div>
-                              <pre className="bg-muted p-4 rounded-lg overflow-x-auto text-sm">
-                                <code className="font-mono">{snippet.code}</code>
-                              </pre>
-                              <p className="text-sm text-muted-foreground italic">
-                                → {snippet.explanation}
-                              </p>
-                            </div>
+                            <CodeBlock
+                              key={i}
+                              code={snippet.code}
+                              language="c"
+                              title={snippet.title}
+                              explanation={snippet.explanation}
+                            />
                           ))}
                         </div>
                       )}

@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { GitBranch, Search, ChevronRight, Shield, Sparkles, Zap } from 'lucide-react'
+import CodeBlock from '@/components/learning/CodeBlock'
 
 export default function GitPage() {
   const [selectedLevel, setSelectedLevel] = useState<number>(1)
@@ -327,19 +328,24 @@ export default function GitPage() {
             {/* Syntaxe */}
             <div>
               <h3 className="font-bold mb-2">📝 Syntaxe</h3>
-              <pre className="bg-muted p-3 rounded-lg font-mono text-sm">
-                {currentCommand.syntax}
-              </pre>
+              <CodeBlock
+                code={currentCommand.syntax}
+                language="bash"
+                showLineNumbers={false}
+              />
             </div>
 
             {/* Exemples */}
             <div>
               <h3 className="font-bold mb-2">💡 Exemples</h3>
-              <div className="space-y-2">
+              <div className="flex flex-wrap gap-2">
                 {currentCommand.examples.map((example, idx) => (
-                  <div key={idx} className="bg-muted p-3 rounded-lg">
-                    <code className="font-mono text-sm">$ {example}</code>
-                  </div>
+                  <CodeBlock
+                    key={idx}
+                    code={`$ ${example}`}
+                    language="bash"
+                    showLineNumbers={false}
+                  />
                 ))}
               </div>
             </div>

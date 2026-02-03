@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { Dumbbell, Check, X, Eye, EyeOff } from 'lucide-react'
 import type { PrepExercise } from '@/types/exercise'
 import CodeEditor from '@/components/exercise/CodeEditor'
+import CodeBlock from '@/components/learning/CodeBlock'
 
 interface PrepExercisesSectionProps {
   exercises: PrepExercise[]
@@ -238,12 +239,11 @@ export default function PrepExercisesSection({ exercises }: PrepExercisesSection
 
         {/* Solution */}
         {showSolution && (
-          <div className="bg-success/10 border border-success rounded-lg p-4 space-y-2">
-            <p className="text-sm font-medium text-success">Solution :</p>
-            <pre className="font-mono text-sm overflow-x-auto bg-background p-3 rounded">
-              <code>{exercise.solution}</code>
-            </pre>
-          </div>
+          <CodeBlock
+            code={exercise.solution}
+            language="c"
+            title="Solution"
+          />
         )}
 
         {/* État de complétion */}
