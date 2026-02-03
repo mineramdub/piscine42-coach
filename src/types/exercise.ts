@@ -95,6 +95,7 @@ export interface Exercise {
 
   // Code (pour exercices C)
   starterCode?: string
+  solution?: string
   hints?: string[]
   testCases: TestCase[]
   constraints?: Constraints
