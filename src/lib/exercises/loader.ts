@@ -9,8 +9,11 @@ let exercisesCache: Exercise[] | null = null
  * Charge tous les exercices depuis les fichiers JSON
  */
 export function loadAllExercises(): Exercise[] {
-  // Retourner le cache si déjà chargé
-  if (exercisesCache) {
+  // En développement, toujours recharger (pas de cache)
+  const isDev = process.env.NODE_ENV === 'development'
+
+  // Retourner le cache si déjà chargé (seulement en production)
+  if (exercisesCache && !isDev) {
     return exercisesCache
   }
 
@@ -53,8 +56,10 @@ export function loadAllExercises(): Exercise[] {
     return a.order - b.order
   })
 
-  // Mettre en cache
-  exercisesCache = exercises
+  // Mettre en cache (seulement en production)
+  if (!isDev) {
+    exercisesCache = exercises
+  }
 
   return exercises
 }
