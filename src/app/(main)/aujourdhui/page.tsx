@@ -6,6 +6,7 @@ import LessonSection from '@/components/learning/LessonSection'
 import TheorySection from '@/components/learning/TheorySection'
 import PrepExercisesSection from '@/components/learning/PrepExercisesSection'
 import CodeBlock from '@/components/learning/CodeBlock'
+import MarkdownText from '@/components/ui/MarkdownText'
 import { Loader2 } from 'lucide-react'
 import type { Exercise } from '@/types/exercise'
 import { TOTAL_DAYS, getCurrentPhase, getProgressPercent } from '@/lib/config/constants'
@@ -172,9 +173,9 @@ export default function AujourdhuiPage() {
             <p className="text-lg">
               Aujourd&apos;hui tu dois : <strong>{todayExercise.title}</strong>
             </p>
-            <p className="text-muted-foreground">
+            <MarkdownText className="text-muted-foreground">
               {todayExercise.description}
-            </p>
+            </MarkdownText>
             <div className="flex gap-4 text-sm">
               <span className="flex items-center gap-1">
                 ⏱️ Temps estimé : {todayExercise.estimatedTime} min
@@ -227,7 +228,7 @@ export default function AujourdhuiPage() {
             {todayExercise.hints.map((hint, index) => (
               <li key={index} className="flex items-start gap-2">
                 <span className="text-warning mt-1">•</span>
-                <span>{hint}</span>
+                <MarkdownText>{hint}</MarkdownText>
               </li>
             ))}
           </ul>

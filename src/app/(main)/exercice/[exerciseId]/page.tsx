@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import CodeEditor from '@/components/exercise/CodeEditor'
 import CompletionModal from '@/components/exercise/CompletionModal'
 import CodeBlock from '@/components/learning/CodeBlock'
+import MarkdownText from '@/components/ui/MarkdownText'
 import { Play, ArrowLeft, Lightbulb, CheckCircle, XCircle, Send, Loader2, Eye, EyeOff } from 'lucide-react'
 import type { Exercise } from '@/types/exercise'
 import { validateExercise } from '@/lib/validation/exercise-validator'
@@ -171,7 +172,7 @@ export default function ExercicePage({
                   {exercise.points} XP
                 </span>
               </div>
-              <p className="text-muted-foreground">{exercise.description}</p>
+              <MarkdownText className="text-muted-foreground">{exercise.description}</MarkdownText>
             </div>
           </div>
         </div>
@@ -301,7 +302,7 @@ export default function ExercicePage({
                     {exercise.hints.map((hint, index) => (
                       <li key={index} className="flex items-start gap-2 text-sm">
                         <span className="text-warning mt-1">•</span>
-                        <span>{hint}</span>
+                        <MarkdownText>{hint}</MarkdownText>
                       </li>
                     ))}
                   </ul>

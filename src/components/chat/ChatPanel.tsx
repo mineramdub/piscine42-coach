@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from 'react'
 import { Send, X, Loader2, MessageCircle } from 'lucide-react'
 import { useLearning } from '@/contexts/LearningContext'
+import MarkdownText from '@/components/ui/MarkdownText'
 
 interface Message {
   role: 'user' | 'assistant'
@@ -134,7 +135,7 @@ export default function ChatPanel({ isOpen, onClose }: ChatPanelProps) {
                   : 'bg-muted'
               }`}
             >
-              <p className="text-sm whitespace-pre-wrap">{message.content}</p>
+              <MarkdownText className="text-sm">{message.content}</MarkdownText>
             </div>
           </div>
         ))}

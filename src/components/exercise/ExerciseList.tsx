@@ -3,6 +3,7 @@
 import { Lock, CheckCircle, Circle, ChevronRight } from 'lucide-react'
 import Link from 'next/link'
 import { calculateUnlockStatus } from '@/lib/progression/unlockSystem'
+import MarkdownText from '@/components/ui/MarkdownText'
 
 interface Exercise {
   id: string
@@ -109,9 +110,9 @@ export default function ExerciseList({ exercises, completedExercises, currentDay
                     </div>
 
                     <h4 className="font-medium mb-2 line-clamp-1">{exercise.title}</h4>
-                    <p className="text-sm text-muted-foreground line-clamp-2 mb-3">
-                      {exercise.description}
-                    </p>
+                    <div className="text-sm text-muted-foreground line-clamp-2 mb-3">
+                      <MarkdownText>{exercise.description}</MarkdownText>
+                    </div>
 
                     <div className="flex items-center justify-between text-sm">
                       <span className="text-primary font-medium">{exercise.points} XP</span>

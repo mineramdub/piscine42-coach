@@ -5,6 +5,7 @@ import { useSearchParams } from 'next/navigation'
 import LessonSection from '@/components/learning/LessonSection'
 import TheorySection from '@/components/learning/TheorySection'
 import PrepExercisesSection from '@/components/learning/PrepExercisesSection'
+import MarkdownText from '@/components/ui/MarkdownText'
 import { Loader2, Terminal as TerminalIcon, BookOpen } from 'lucide-react'
 import type { Exercise } from '@/types/exercise'
 
@@ -141,7 +142,7 @@ export default function TerminalPage() {
           <BookOpen className="w-5 h-5 text-primary" />
           <h2 className="text-2xl font-bold">{currentLesson.title}</h2>
         </div>
-        <p className="text-muted-foreground">{currentLesson.description}</p>
+        <MarkdownText className="text-muted-foreground">{currentLesson.description}</MarkdownText>
         <div className="flex gap-4 text-sm">
           <span className="flex items-center gap-1">
             ⏱️ {currentLesson.estimatedTime} min

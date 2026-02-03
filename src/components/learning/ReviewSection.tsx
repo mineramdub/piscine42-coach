@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { Brain, ChevronDown, ChevronUp, Check, Eye, EyeOff } from 'lucide-react'
 import { getReviewsForDay, type Review } from '@/lib/learning/spacedRepetition'
+import MarkdownText from '@/components/ui/MarkdownText'
 
 interface ReviewSectionProps {
   currentDay: number
@@ -233,7 +234,7 @@ export default function ReviewSection({ currentDay }: ReviewSectionProps) {
                           <div className="space-y-2 mt-3">
                             <div className="bg-warning/10 border border-warning rounded p-3 text-sm">
                               <p className="font-medium text-warning mb-1">💡 Indice :</p>
-                              <p>{review.concept.quickReview.hint}</p>
+                              <MarkdownText>{review.concept.quickReview.hint}</MarkdownText>
                             </div>
 
                             <div className="bg-success/10 border border-success rounded p-3 text-sm">

@@ -5,6 +5,7 @@ import { BookOpen, ChevronRight, Code, Play } from 'lucide-react'
 import type { LearningContent } from '@/types/exercise'
 import CodeEditor from '@/components/exercise/CodeEditor'
 import CodeBlock from '@/components/learning/CodeBlock'
+import MarkdownText from '@/components/ui/MarkdownText'
 import { useLearning } from '@/contexts/LearningContext'
 
 interface LessonSectionProps {
@@ -57,7 +58,7 @@ export default function LessonSection({ lesson }: LessonSectionProps) {
       {/* Introduction (visible seulement sur step 0) */}
       {currentStep === 0 && (
         <div className="bg-background border rounded-lg p-4">
-          <p className="text-muted-foreground">{lesson.introduction}</p>
+          <MarkdownText className="text-muted-foreground">{lesson.introduction}</MarkdownText>
         </div>
       )}
 
@@ -88,9 +89,7 @@ export default function LessonSection({ lesson }: LessonSectionProps) {
         </div>
 
         {/* Contenu */}
-        <div className="prose prose-sm max-w-none">
-          <div className="whitespace-pre-line">{step.content}</div>
-        </div>
+        <MarkdownText>{step.content}</MarkdownText>
 
         {/* Exemple de code */}
         {step.codeExample && (

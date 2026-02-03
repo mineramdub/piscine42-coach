@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { Highlight, themes } from 'prism-react-renderer'
 import { Copy, Check, Terminal, FileCode2 } from 'lucide-react'
+import MarkdownText from '@/components/ui/MarkdownText'
 
 interface CodeBlockProps {
   code: string
@@ -92,8 +93,8 @@ export default function CodeBlock({
 
       {/* Explanation */}
       {explanation && (
-        <div className="px-4 py-3 bg-muted/30 border-t text-sm text-muted-foreground">
-          {explanation}
+        <div className="px-4 py-3 bg-muted/30 border-t">
+          <MarkdownText className="text-sm text-muted-foreground">{explanation}</MarkdownText>
         </div>
       )}
     </div>

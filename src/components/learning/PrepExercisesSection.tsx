@@ -5,6 +5,7 @@ import { Dumbbell, Check, X, Eye, EyeOff } from 'lucide-react'
 import type { PrepExercise } from '@/types/exercise'
 import CodeEditor from '@/components/exercise/CodeEditor'
 import CodeBlock from '@/components/learning/CodeBlock'
+import MarkdownText from '@/components/ui/MarkdownText'
 
 interface PrepExercisesSectionProps {
   exercises: PrepExercise[]
@@ -138,7 +139,7 @@ export default function PrepExercisesSection({ exercises }: PrepExercisesSection
           </div>
         </div>
 
-        <p className="text-muted-foreground">{exercise.instruction}</p>
+        <MarkdownText className="text-muted-foreground">{exercise.instruction}</MarkdownText>
 
         {/* Test case */}
         {exercise.testCase && (
@@ -233,7 +234,7 @@ export default function PrepExercisesSection({ exercises }: PrepExercisesSection
         {/* Hint */}
         {showHint && exercise.hint && (
           <div className="bg-primary/10 border border-primary rounded-lg p-4">
-            <p className="text-sm">💡 {exercise.hint}</p>
+            <MarkdownText className="text-sm">💡 {exercise.hint}</MarkdownText>
           </div>
         )}
 
