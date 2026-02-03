@@ -2,13 +2,14 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Home, Map, Flame, Brain, Terminal, GitBranch, User } from 'lucide-react'
+import { Home, Map, Flame, Brain, BookOpen, Terminal, GitBranch, User } from 'lucide-react'
 
 const navItems = [
   { href: '/aujourdhui', label: 'Aujourd\'hui', icon: Home },
   { href: '/parcours', label: 'Parcours', icon: Map },
   { href: '/survie', label: 'Survie', icon: Flame },
   { href: '/revisions', label: 'Révisions', icon: Brain },
+  { href: '/fiches', label: 'Fiches', icon: BookOpen },
   { href: '/terminal', label: 'Terminal', icon: Terminal },
   { href: '/git', label: 'Git', icon: GitBranch },
   { href: '/profil', label: 'Profil', icon: User },
