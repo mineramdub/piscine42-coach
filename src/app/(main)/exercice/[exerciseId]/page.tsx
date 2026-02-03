@@ -6,6 +6,7 @@ import CodeEditor from '@/components/exercise/CodeEditor'
 import CompletionModal from '@/components/exercise/CompletionModal'
 import { Play, ArrowLeft, Lightbulb, CheckCircle, XCircle, Send, Loader2, Eye, EyeOff } from 'lucide-react'
 import type { Exercise } from '@/types/exercise'
+import { validateExercise } from '@/lib/validation/exercise-validator'
 
 interface TestResult {
   id: number
@@ -85,28 +86,8 @@ export default function ExercicePage({
     // Simulation des tests
     await new Promise(resolve => setTimeout(resolve, 1500))
 
-    // Check si le code contient printf("Hello, World!\n")
-    const hasCorrectPrintf = code.includes('printf("Hello, World!\\n")')
-    const hasInclude = code.includes('#include <stdio.h>')
-    const hasReturn = code.includes('return (0)')
-
-    const results: TestResult[] = [
-      {
-        id: 1,
-        passed: hasCorrectPrintf,
-        message: hasCorrectPrintf ? 'Affiche correctement "Hello, World!"' : 'Le texte affiché n\'est pas correct'
-      },
-      {
-        id: 2,
-        passed: hasInclude,
-        message: hasInclude ? 'Compilation réussie' : 'Erreur de compilation : include manquant'
-      },
-      {
-        id: 3,
-        passed: hasReturn,
-        message: hasReturn ? 'Return code correct (0)' : 'Return code incorrect'
-      }
-    ]
+    // Validation dynamique basée sur l'exercice
+    const results: TestResult[] = validateExercise(exercise.id, code)
 
     setTestResults(results)
 
