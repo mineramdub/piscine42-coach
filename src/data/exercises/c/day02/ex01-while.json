@@ -4,7 +4,7 @@
   "day": 2,
   "order": 1,
   "title": "Boucle While",
-  "description": "Affiche les nombres de 1 à 5 (un par ligne) en utilisant une boucle while.",
+  "description": "Crée une variable entière 'i' (int i = 1;). Utilise une boucle while pour afficher les valeurs de i de 1 à 5 (un nombre par ligne). N'oublie pas d'incrémenter i dans la boucle !",
   "difficulty": 2,
   "points": 20,
   "estimatedTime": 20,

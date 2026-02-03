@@ -4,7 +4,7 @@
   "day": 1,
   "order": 2,
   "title": "Printf avancé",
-  "description": "Utilise printf() pour afficher 'Mon nombre: 42' sur une ligne, puis 'Mon caractère: A' sur la ligne suivante.",
+  "description": "Déclare une variable entière 'nombre' avec la valeur 42, et une variable caractère 'lettre' avec la valeur 'A'. Utilise printf() pour afficher 'Mon nombre: 42' puis 'Mon caractère: A' (deux lignes séparées).",
   "difficulty": 1,
   "points": 15,
   "estimatedTime": 15,
@@ -200,7 +200,7 @@
       }
     ]
   },
-  "starterCode": "#include <stdio.h>\n\nint main(void)\n{\n\t// Ton code ici\n\t\n\treturn (0);\n}",
+  "starterCode": "#include <stdio.h>\n\nint main(void)\n{\n\tint nombre = 42;\n\tchar lettre = 'A';\n\t\n\t// Affiche avec printf() et les bons format specifiers (%d et %c)\n\t\n\treturn (0);\n}",
   "hints": [
     "Utilise %d pour un nombre entier",
     "Utilise %c pour un caractère",

@@ -4,7 +4,7 @@
   "day": 3,
   "order": 0,
   "title": "ft_strlen",
-  "description": "Écris une fonction ft_strlen qui retourne la longueur d'une chaîne de caractères.",
+  "description": "Écris une fonction ft_strlen avec le prototype exact : int ft_strlen(char *str). Elle doit retourner le nombre de caractères dans str (sans compter le \\0). Utilise une variable 'i' pour parcourir la string.",
   "difficulty": 3,
   "points": 30,
   "estimatedTime": 30,

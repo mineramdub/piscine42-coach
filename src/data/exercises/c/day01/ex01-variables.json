@@ -232,7 +232,7 @@
       }
     ]
   },
-  "starterCode": "#include <stdio.h>\n\nint main(void)\n{\n\t// Déclare tes variables ici\n\t\n\t// Affiche le résultat\n\t\n\treturn (0);\n}",
+  "starterCode": "#include <stdio.h>\n\nint main(void)\n{\n\tint a = 42;\n\tint b = 21;\n\t\n\t// Affiche le résultat (la somme de a et b)\n\t\n\treturn (0);\n}",
   "hints": [
     "Utilise 'int a = 42;' pour déclarer et initialiser",
     "Utilise '%d' dans printf() pour afficher un entier",
