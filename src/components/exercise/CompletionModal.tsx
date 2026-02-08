@@ -36,7 +36,7 @@ export default function CompletionModal({
       // Obtenir un userId ou utiliser une valeur par défaut
       const userId = localStorage.getItem('userId') || 'default-user'
 
-      const response = await fetch('/api/exercises/{submit}', {
+      const response = await fetch('/api/exercises/submit', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
