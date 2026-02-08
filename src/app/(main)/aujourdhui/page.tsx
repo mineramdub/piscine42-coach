@@ -10,6 +10,8 @@ import MarkdownText from '@/components/ui/MarkdownText'
 import { Loader2 } from 'lucide-react'
 import type { Exercise } from '@/types/exercise'
 import { TOTAL_DAYS, getCurrentPhase, getProgressPercent } from '@/lib/config/constants'
+import useRecommendations from '@/hooks/useRecommendations'
+import Link from 'next/link'
 
 export default function AujourdhuiPage() {
   const searchParams = useSearchParams()
@@ -77,6 +79,7 @@ export default function AujourdhuiPage() {
   const todayExercise = exercises.find(ex => ex.category === 'c') || exercises[0]
   const progressPercent = getProgressPercent(currentDay)
   const currentPhase = getCurrentPhase(currentDay)
+  const { loading: recLoading, recommendations } = useRecommendations()
 
   if (loading) {
     return (
@@ -164,6 +167,32 @@ export default function AujourdhuiPage() {
           </div>
         </div>
       )}
+
+      {/* Recommandations personnalisées */}
+      <div className="border rounded-lg p-4">
+        <div className="flex items-center justify-between mb-3">
+          <h3 className="text-xl font-bold">🔎 Exercices recommandés pour toi</h3>
+          <span className="text-sm text-muted-foreground">Basé sur ton historique</span>
+        </div>
+
+        {recLoading ? (
+          <div className="text-center py-6">
+            <Loader2 className="w-8 h-8 animate-spin mx-auto text-primary" />
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+            {recommendations.length === 0 && (
+              <div className="text-sm text-muted-foreground">Aucune recommandation disponible pour le moment.</div>
+            )}
+            {recommendations.map((r) => (
+              <Link key={r.exerciseId} href={`/exercice/${r.exerciseId}`} className="block border rounded-lg p-3 hover:shadow">
+                <div className="font-medium">{r.title || r.exerciseId}</div>
+                <div className="text-xs text-muted-foreground">{r.reason === 'revise' ? 'À réviser' : r.reason === 'new' ? 'Nouveau' : 'Pratique'}</div>
+              </Link>
+            ))}
+          </div>
+        )}
+      </div>
 
       {/* Mission du jour */}
       <div className="bg-primary/10 border border-primary rounded-lg p-6 space-y-4">
