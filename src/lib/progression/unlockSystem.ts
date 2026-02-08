@@ -17,10 +17,7 @@ export interface DayProgress {
 
 /**
  * Calcule le statut de déblocage pour tous les exercices d'un jour
- * Règle : Les exercices sont débloqués par groupes de 3
- * - Groupe 0 (ex 0-2) : débloqué par défaut
- * - Groupe 1 (ex 3-5) : débloqué quand 1+ exercice du groupe 0 est complété
- * - Groupe 2 (ex 6-8) : débloqué quand 1+ exercice du groupe 1 est complété
+ * Règle : TOUS LES EXERCICES SONT DÉBLOQUÉS DIRECTEMENT
  */
 export function calculateUnlockStatus(
   totalExercises: number,
@@ -33,25 +30,8 @@ export function calculateUnlockStatus(
     const groupNumber = Math.floor(i / groupSize)
     const isCompleted = completedExercises.includes(i)
 
-    let isUnlocked = false
-
-    if (groupNumber === 0) {
-      // Premier groupe : toujours débloqué
-      isUnlocked = true
-    } else {
-      // Groupes suivants : débloqués si au moins 1 exercice du groupe précédent est complété
-      const previousGroupStart = (groupNumber - 1) * groupSize
-      const previousGroupEnd = previousGroupStart + groupSize
-      const previousGroupExercises = Array.from(
-        { length: groupSize },
-        (_, idx) => previousGroupStart + idx
-      ).filter(idx => idx < totalExercises)
-
-      // Vérifie si au moins 1 exercice du groupe précédent est complété
-      isUnlocked = previousGroupExercises.some(idx =>
-        completedExercises.includes(idx)
-      )
-    }
+    // Tous les exercices sont débloqués
+    const isUnlocked = true
 
     status.push({
       exerciseId: `ex${i.toString().padStart(2, '0')}`,
@@ -66,28 +46,14 @@ export function calculateUnlockStatus(
 
 /**
  * Détermine si un exercice spécifique est débloqué
+ * Tous les exercices sont débloqués directement
  */
 export function isExerciseUnlocked(
   exerciseOrder: number,
   completedExercises: number[]
 ): boolean {
-  const groupNumber = Math.floor(exerciseOrder / 3)
-
-  if (groupNumber === 0) {
-    return true
-  }
-
-  const previousGroupStart = (groupNumber - 1) * 3
-  const previousGroupEnd = previousGroupStart + 3
-
-  // Au moins 1 exercice du groupe précédent doit être complété
-  for (let i = previousGroupStart; i < previousGroupEnd; i++) {
-    if (completedExercises.includes(i)) {
-      return true
-    }
-  }
-
-  return false
+  // Tous les exercices sont débloqués
+  return true
 }
 
 /**

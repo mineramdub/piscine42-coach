@@ -18,14 +18,14 @@ export default function ParcoursPage() {
       days: [
         { day: 1, title: 'Hello World & Variables', exercises: 3, completed: 3, status: 'completed' },
         { day: 2, title: 'Conditions & Boucles', exercises: 4, completed: 2, status: 'in_progress' },
-        { day: 3, title: 'Strings & Arrays', exercises: 5, completed: 0, status: 'locked' },
-        { day: 4, title: 'Pointeurs (intro)', exercises: 4, completed: 0, status: 'locked' },
-        { day: 5, title: 'Fonctions', exercises: 5, completed: 0, status: 'locked' },
-        { day: 6, title: 'Terminal basics', exercises: 6, completed: 0, status: 'locked' },
-        { day: 7, title: 'Git basics', exercises: 5, completed: 0, status: 'locked' },
-        { day: 8, title: 'Récursivité', exercises: 4, completed: 0, status: 'locked' },
-        { day: 9, title: 'Strings avancé', exercises: 5, completed: 0, status: 'locked' },
-        { day: 10, title: 'Révision Phase 1', exercises: 8, completed: 0, status: 'locked' },
+        { day: 3, title: 'Strings & Arrays', exercises: 5, completed: 0, status: 'unlocked' },
+        { day: 4, title: 'Pointeurs (intro)', exercises: 4, completed: 0, status: 'unlocked' },
+        { day: 5, title: 'Fonctions', exercises: 5, completed: 0, status: 'unlocked' },
+        { day: 6, title: 'Terminal basics', exercises: 6, completed: 0, status: 'unlocked' },
+        { day: 7, title: 'Git basics', exercises: 5, completed: 0, status: 'unlocked' },
+        { day: 8, title: 'Récursivité', exercises: 4, completed: 0, status: 'unlocked' },
+        { day: 9, title: 'Strings avancé', exercises: 5, completed: 0, status: 'unlocked' },
+        { day: 10, title: 'Révision Phase 1', exercises: 8, completed: 0, status: 'unlocked' },
       ],
     },
     // Phase 2 : Autonomie (Jours 11-20)
@@ -35,16 +35,16 @@ export default function ParcoursPage() {
       description: 'Devenir indépendant et gérer les erreurs',
       color: 'success',
       days: [
-        { day: 11, title: 'Pointeurs avancés', exercises: 5, completed: 0, status: 'locked' },
-        { day: 12, title: 'Malloc & Free', exercises: 4, completed: 0, status: 'locked' },
-        { day: 13, title: 'Structures', exercises: 5, completed: 0, status: 'locked' },
-        { day: 14, title: 'Makefile', exercises: 4, completed: 0, status: 'locked' },
-        { day: 15, title: 'Terminal avancé', exercises: 6, completed: 0, status: 'locked' },
-        { day: 16, title: 'Git workflows', exercises: 5, completed: 0, status: 'locked' },
-        { day: 17, title: 'Debugging', exercises: 5, completed: 0, status: 'locked' },
-        { day: 18, title: 'Tests unitaires', exercises: 4, completed: 0, status: 'locked' },
-        { day: 19, title: 'Optimisation', exercises: 5, completed: 0, status: 'locked' },
-        { day: 20, title: 'Révision Phase 2', exercises: 8, completed: 0, status: 'locked' },
+        { day: 11, title: 'Pointeurs avancés', exercises: 5, completed: 0, status: 'unlocked' },
+        { day: 12, title: 'Malloc & Free', exercises: 4, completed: 0, status: 'unlocked' },
+        { day: 13, title: 'Structures', exercises: 5, completed: 0, status: 'unlocked' },
+        { day: 14, title: 'Makefile', exercises: 4, completed: 0, status: 'unlocked' },
+        { day: 15, title: 'Terminal avancé', exercises: 6, completed: 0, status: 'unlocked' },
+        { day: 16, title: 'Git workflows', exercises: 5, completed: 0, status: 'unlocked' },
+        { day: 17, title: 'Debugging', exercises: 5, completed: 0, status: 'unlocked' },
+        { day: 18, title: 'Tests unitaires', exercises: 4, completed: 0, status: 'unlocked' },
+        { day: 19, title: 'Optimisation', exercises: 5, completed: 0, status: 'unlocked' },
+        { day: 20, title: 'Révision Phase 2', exercises: 8, completed: 0, status: 'unlocked' },
       ],
     },
     // Phase 3 : Piscine réelle (Jours 31-45)
@@ -54,16 +54,16 @@ export default function ParcoursPage() {
       description: 'Simulation de la vraie Piscine',
       color: 'warning',
       days: [
-        { day: 21, title: 'Projet : ft_printf', exercises: 1, completed: 0, status: 'locked' },
-        { day: 22, title: 'Projet : get_next_line', exercises: 1, completed: 0, status: 'locked' },
-        { day: 23, title: 'Peer evaluation', exercises: 3, completed: 0, status: 'locked' },
-        { day: 24, title: 'Rush 00', exercises: 1, completed: 0, status: 'locked' },
-        { day: 25, title: 'Mode survie 4h', exercises: 5, completed: 0, status: 'locked' },
-        { day: 26, title: 'Mode survie 8h', exercises: 8, completed: 0, status: 'locked' },
-        { day: 27, title: 'Exam simulation', exercises: 10, completed: 0, status: 'locked' },
-        { day: 28, title: 'Projet final (Part 1)', exercises: 1, completed: 0, status: 'locked' },
-        { day: 29, title: 'Projet final (Part 2)', exercises: 1, completed: 0, status: 'locked' },
-        { day: 30, title: 'Bilan Phase 2', exercises: 5, completed: 0, status: 'locked' },
+        { day: 21, title: 'Projet : ft_printf', exercises: 1, completed: 0, status: 'unlocked' },
+        { day: 22, title: 'Projet : get_next_line', exercises: 1, completed: 0, status: 'unlocked' },
+        { day: 23, title: 'Peer evaluation', exercises: 3, completed: 0, status: 'unlocked' },
+        { day: 24, title: 'Rush 00', exercises: 1, completed: 0, status: 'unlocked' },
+        { day: 25, title: 'Mode survie 4h', exercises: 5, completed: 0, status: 'unlocked' },
+        { day: 26, title: 'Mode survie 8h', exercises: 8, completed: 0, status: 'unlocked' },
+        { day: 27, title: 'Exam simulation', exercises: 10, completed: 0, status: 'unlocked' },
+        { day: 28, title: 'Projet final (Part 1)', exercises: 1, completed: 0, status: 'unlocked' },
+        { day: 29, title: 'Projet final (Part 2)', exercises: 1, completed: 0, status: 'unlocked' },
+        { day: 30, title: 'Bilan Phase 2', exercises: 5, completed: 0, status: 'unlocked' },
       ],
     },
     // Phase 4 : Approfondissement (Jours 46-60)
@@ -73,13 +73,13 @@ export default function ParcoursPage() {
       description: 'Maîtrise approfondie et projets avancés',
       color: 'success',
       days: [
-        { day: 46, title: 'Structures de données avancées', exercises: 6, completed: 0, status: 'locked' },
-        { day: 48, title: 'Algorithmes de tri', exercises: 5, completed: 0, status: 'locked' },
-        { day: 50, title: 'Gestion mémoire avancée', exercises: 4, completed: 0, status: 'locked' },
-        { day: 52, title: 'Projet: Minishell', exercises: 1, completed: 0, status: 'locked' },
-        { day: 55, title: 'Optimisation de code', exercises: 5, completed: 0, status: 'locked' },
-        { day: 58, title: 'Debugging avancé', exercises: 4, completed: 0, status: 'locked' },
-        { day: 60, title: 'Bilan Phase 4', exercises: 5, completed: 0, status: 'locked' },
+        { day: 46, title: 'Structures de données avancées', exercises: 6, completed: 0, status: 'unlocked' },
+        { day: 48, title: 'Algorithmes de tri', exercises: 5, completed: 0, status: 'unlocked' },
+        { day: 50, title: 'Gestion mémoire avancée', exercises: 4, completed: 0, status: 'unlocked' },
+        { day: 52, title: 'Projet: Minishell', exercises: 1, completed: 0, status: 'unlocked' },
+        { day: 55, title: 'Optimisation de code', exercises: 5, completed: 0, status: 'unlocked' },
+        { day: 58, title: 'Debugging avancé', exercises: 4, completed: 0, status: 'unlocked' },
+        { day: 60, title: 'Bilan Phase 4', exercises: 5, completed: 0, status: 'unlocked' },
       ],
     },
     // Phase 5 : Expertise (Jours 61-90)
@@ -89,13 +89,13 @@ export default function ParcoursPage() {
       description: 'Niveau expert et préparation complète',
       color: 'warning',
       days: [
-        { day: 61, title: 'Réseau et sockets', exercises: 5, completed: 0, status: 'locked' },
-        { day: 65, title: 'Threads et processus', exercises: 6, completed: 0, status: 'locked' },
-        { day: 70, title: 'Projet: Webserver', exercises: 1, completed: 0, status: 'locked' },
-        { day: 75, title: 'Sécurité en C', exercises: 4, completed: 0, status: 'locked' },
-        { day: 80, title: 'Performance & Profiling', exercises: 5, completed: 0, status: 'locked' },
-        { day: 85, title: 'Projet final expert', exercises: 1, completed: 0, status: 'locked' },
-        { day: 90, title: 'Certification finale', exercises: 10, completed: 0, status: 'locked' },
+        { day: 61, title: 'Réseau et sockets', exercises: 5, completed: 0, status: 'unlocked' },
+        { day: 65, title: 'Threads et processus', exercises: 6, completed: 0, status: 'unlocked' },
+        { day: 70, title: 'Projet: Webserver', exercises: 1, completed: 0, status: 'unlocked' },
+        { day: 75, title: 'Sécurité en C', exercises: 4, completed: 0, status: 'unlocked' },
+        { day: 80, title: 'Performance & Profiling', exercises: 5, completed: 0, status: 'unlocked' },
+        { day: 85, title: 'Projet final expert', exercises: 1, completed: 0, status: 'unlocked' },
+        { day: 90, title: 'Certification finale', exercises: 10, completed: 0, status: 'unlocked' },
       ],
     },
   ]
@@ -103,13 +103,13 @@ export default function ParcoursPage() {
   const getStatusIcon = (status: string) => {
     if (status === 'completed') return <Check className="w-5 h-5 text-success" />
     if (status === 'in_progress') return <Play className="w-5 h-5 text-primary" />
-    return <Lock className="w-5 h-5 text-muted-foreground" />
+    return <Play className="w-5 h-5 text-muted-foreground" />
   }
 
   const getStatusColor = (status: string) => {
     if (status === 'completed') return 'border-success bg-success/10'
     if (status === 'in_progress') return 'border-primary bg-primary/10'
-    return 'border-border bg-muted opacity-60'
+    return 'border-border bg-border/50'
   }
 
   const getPhaseColor = (color: string) => {
@@ -158,14 +158,12 @@ export default function ParcoursPage() {
             {phase.days.map((day) => (
               <Link
                 key={day.day}
-                href={day.status === 'locked' ? '#' : `/aujourdhui?day=${day.day}`}
+                href={`/aujourdhui?day=${day.day}`}
                 className={`block border rounded-lg p-4 transition-all ${getStatusColor(
                   day.status
-                )} ${day.status !== 'locked' ? 'hover:scale-105 cursor-pointer' : 'cursor-not-allowed'}`}
+                )} hover:scale-105 cursor-pointer`}
                 onClick={(e) => {
-                  if (day.status !== 'locked') {
-                    localStorage.setItem('currentDay', day.day.toString())
-                  }
+                  localStorage.setItem('currentDay', day.day.toString())
                 }}
               >
                 <div className="flex items-start justify-between mb-3">
@@ -189,7 +187,7 @@ export default function ParcoursPage() {
 
                 <div className="flex items-center justify-between text-sm text-muted-foreground">
                   <span>{day.exercises} exercices</span>
-                  {day.status !== 'locked' && (
+                  {day.status !== 'unlocked' && (
                     <span className="text-xs">
                       {day.completed}/{day.exercises}
                     </span>
@@ -223,8 +221,8 @@ export default function ParcoursPage() {
             <span>Jour en cours (exercices en progression)</span>
           </div>
           <div className="flex items-center gap-2">
-            <Lock className="w-5 h-5 text-muted-foreground" />
-            <span>Jour verrouillé (complète les jours précédents)</span>
+            <Play className="w-5 h-5 text-muted-foreground" />
+            <span>Jour disponible (à commencer)</span>
           </div>
         </div>
       </div>

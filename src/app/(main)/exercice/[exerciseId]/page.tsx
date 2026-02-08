@@ -321,6 +321,7 @@ export default function ExercicePage({
         isLastOfDay={isLastOfDay}
         nextExerciseId={nextExerciseId}
         currentDay={exercise.day}
+        exerciseId={exercise.id}
         onClose={() => setShowCompletionModal(false)}
       />
     </>
