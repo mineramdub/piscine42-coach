@@ -1,0 +1,257 @@
+{
+  "id": "c-day55-ex01-ft-parse-args",
+  "category": "c",
+  "day": 55,
+  "order": 1,
+  "title": "Parser une ligne de commande en argc/argv",
+  "description": "Ecris une fonction ft_parse_args qui transforme une ligne de commande en un tableau argc/argv. La fonction gere les espaces multiples, les quotes simples et doubles, et les caracteres d'echappement (backslash). Prototype : char **ft_parse_args(char *line, int *argc);",
+  "difficulty": 5,
+  "points": 50,
+  "estimatedTime": 45,
+  "learningObjectives": [
+    "Construire un parser complet pour les lignes de commande",
+    "Gerer les caracteres d'echappement (backslash)",
+    "Combiner gestion des quotes et des echappements",
+    "Comprendre comment un shell decompose les commandes",
+    "Preparer directement le parsing de minishell"
+  ],
+  "learningContent": {
+    "lesson": {
+      "introduction": "Quand tu tapes une commande dans le terminal, le shell doit decomposer la ligne en arguments (argc/argv) avant de lancer le programme. Ce parsing est plus complexe qu'un simple split : il doit gerer les espaces multiples, les quotes (simples et doubles), et les caracteres d'echappement (backslash). Par exemple, `echo hello\\ world` est un seul argument 'hello world' car le backslash echappe l'espace. C'est exactement ce que tu devras coder dans minishell.",
+      "steps": [
+        {
+          "id": 1,
+          "title": "Les regles du parsing shell",
+          "content": "Le parsing d'une ligne de commande suit ces regles :\n\n1. **Espaces** : separent les arguments (un ou plusieurs espaces = un separateur)\n2. **Quotes simples** : tout est litteral, meme les espaces et les backslash\n3. **Quotes doubles** : les espaces sont proteges, les backslash sont actifs\n4. **Backslash** : echappe le caractere suivant (le rend litteral)\n5. **argc** : le nombre d'arguments\n6. **argv** : tableau de chaines, termine par NULL",
+          "codeExample": "// Exemples :\n// \"ls -la /tmp\" -> argc=3, argv=[\"ls\", \"-la\", \"/tmp\"]\n// \"echo hello   world\" -> argc=3 (espaces multiples)\n// \"echo 'hello world'\" -> argc=2, argv=[\"echo\", \"hello world\"]\n// \"echo hello\\\\ world\" -> argc=2, argv=[\"echo\", \"hello world\"]\n// \"echo \\\"hello\\\"\" -> argc=2, argv=[\"echo\", \"hello\"]\n// \"echo 'it\\'s'\" -> argc=2 (quote simple dans simple : complique!)\n\n// Simplifie pour cet exercice :\n// - Backslash echappe le caractere suivant PARTOUT\n// - Pas de backslash-newline",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Combien d'arguments dans : echo \"hello world\" 'foo bar' baz ?",
+            "starterCode": "// Ligne : echo \"hello world\" 'foo bar' baz\n// Argument 1 : ???\n// Argument 2 : ???\n// Argument 3 : ???\n// Argument 4 : ???\n// argc = ???",
+            "solution": "// Argument 1 : echo\n// Argument 2 : hello world (quotes doubles)\n// Argument 3 : foo bar (quotes simples)\n// Argument 4 : baz\n// argc = 4"
+          }
+        },
+        {
+          "id": 2,
+          "title": "Gestion du backslash",
+          "content": "Le backslash (`\\`) echappe le caractere suivant : il le rend litteral.\n\n- `\\n` dans le code C est un newline, mais dans le shell `\\n` est le caractere 'n'\n- `\\ ` (backslash espace) est un espace litteral (pas un separateur)\n- `\\\"` est un guillemet double litteral (pas une ouverture de quote)\n- `\\\\` est un backslash litteral\n\nQuand on rencontre un backslash, on saute le backslash et on prend le caractere suivant tel quel.",
+          "codeExample": "// Traitement du backslash dans le parsing :\nif (str[i] == '\\\\' && str[i + 1])\n{\n\t// Sauter le backslash\n\ti++;\n\t// Prendre le caractere suivant litteralement\n\tbuf[bi++] = str[i];\n\ti++;\n}\n\n// Exemples :\n// echo hello\\\\ world -> [echo, hello world]\n//   Le backslash echappe l'espace\n// echo \\\\n -> [echo, n]\n//   Le backslash echappe le 'n' (pas un newline)\n// echo \\\\\\\\ -> [echo, \\\\]\n//   Le premier \\\\ echappe le second",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Que donne le parsing de : echo \\\"hello\\\" ?",
+            "starterCode": "// Ligne : echo \\\"hello\\\"\n// \\ echappe \" -> pas une ouverture de quote\n// Donc \\\" est le caractere \" litteral\n// Resultat : argc=???, argv=[???]",
+            "solution": "// echo est le premier argument\n// \\\" -> \" (litteral)\n// hello -> texte\n// \\\" -> \" (litteral)\n// Resultat : argc=2, argv=[\"echo\", \"\\\"hello\\\"\"]"
+          }
+        },
+        {
+          "id": 3,
+          "title": "Combiner quotes et echappements",
+          "content": "L'automate a maintenant 3 etats avec des regles supplementaires pour le backslash :\n\n**Etat NORMAL :**\n- Espace : separateur\n- Quote simple : ouvre IN_SINGLE\n- Quote double : ouvre IN_DOUBLE\n- Backslash : echappe le caractere suivant\n\n**Etat IN_SINGLE :**\n- Quote simple : ferme\n- Tout le reste : litteral (meme backslash !)\n\n**Etat IN_DOUBLE :**\n- Quote double : ferme\n- Backslash : echappe le suivant\n- Tout le reste : litteral",
+          "codeExample": "void\tft_parse_char(char *str, int *i, char *buf, int *bi, int *state)\n{\n\tif (*state == NORMAL)\n\t{\n\t\tif (str[*i] == '\\\\' && str[*i + 1])\n\t\t\tbuf[(*bi)++] = str[++(*i)];\n\t\telse if (str[*i] == '\\'')\n\t\t\t*state = IN_SINGLE;\n\t\telse if (str[*i] == '\"')\n\t\t\t*state = IN_DOUBLE;\n\t\telse\n\t\t\tbuf[(*bi)++] = str[*i];\n\t}\n\telse if (*state == IN_SINGLE)\n\t{\n\t\tif (str[*i] == '\\'')\n\t\t\t*state = NORMAL;\n\t\telse\n\t\t\tbuf[(*bi)++] = str[*i];\n\t}\n\telse if (*state == IN_DOUBLE)\n\t{\n\t\tif (str[*i] == '\"')\n\t\t\t*state = NORMAL;\n\t\telse if (str[*i] == '\\\\' && str[*i + 1])\n\t\t\tbuf[(*bi)++] = str[++(*i)];\n\t\telse\n\t\t\tbuf[(*bi)++] = str[*i];\n\t}\n}",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Que donne : echo 'hello\\nworld' (quotes simples avec backslash) ?",
+            "starterCode": "// En quotes simples, le backslash est litteral\n// echo 'hello\\nworld'\n// argv[1] = ???\n// Le \\n est-il un newline ou les caracteres \\ et n ?",
+            "solution": "// En quotes simples, TOUT est litteral\n// Le backslash n'est pas special\n// argv[1] = \"hello\\nworld\" (avec le \\ et le n)\n// Ce n'est PAS un newline, c'est deux caracteres"
+          }
+        },
+        {
+          "id": 4,
+          "title": "Implementation complete",
+          "content": "Le programme prend une ligne de commande, la parse en argc/argv, et affiche chaque argument. La structure est :\n\n1. ft_count_args : compte les arguments (passe 1)\n2. ft_extract_arg : extrait un argument (sans quotes, avec echappement)\n3. ft_parse_args : orchestre le tout et retourne char ** + argc\n\nLe resultat est un tableau de char * termine par NULL, compatible avec execve.",
+          "codeExample": "#include <unistd.h>\n#include <stdlib.h>\n\nint\tmain(void)\n{\n\tchar\t**argv;\n\tint\t\targc;\n\tint\t\ti;\n\n\targv = ft_parse_args(\"ls -la '/tmp/my dir' \\\"hello world\\\"\", &argc);\n\tft_putnbr(argc);\n\twrite(1, \"\\n\", 1);\n\ti = 0;\n\twhile (i < argc)\n\t{\n\t\tft_putstr(argv[i]);\n\t\twrite(1, \"\\n\", 1);\n\t\ti++;\n\t}\n\t// Affiche :\n\t// 4\n\t// ls\n\t// -la\n\t// /tmp/my dir\n\t// hello world\n\treturn (0);\n}",
+          "language": "c"
+        }
+      ]
+    },
+    "theory": [
+      {
+        "title": "Le parsing dans un shell",
+        "content": "Le shell decompose chaque ligne en tokens avant de l'executer. Le parsing est la premiere etape du pipeline : lecture -> parsing -> expansion -> execution. Un parser robuste est essentiel pour un shell fonctionnel.",
+        "codeExamples": [
+          {
+            "title": "Pipeline du shell",
+            "code": "// Etapes du traitement d'une commande shell :\n// 1. Lecture : readline() ou read()\n// 2. Parsing : decomposer en tokens/arguments\n// 3. Expansion : $VAR, *, ~, etc.\n// 4. Execution : fork + execve\n\n// Cet exercice couvre l'etape 2 (parsing)\n\n// Input : echo \"hello $USER\" 'literal $VAR'\n// Parsing : [\"echo\", \"hello $USER\", \"literal $VAR\"]\n// Expansion : [\"echo\", \"hello florent\", \"literal $VAR\"]\n//             (les single quotes bloquent l'expansion)\n// Execution : execve(\"/bin/echo\", argv, envp)",
+            "explanation": "Le parsing transforme une chaine en un tableau d'arguments structuré"
+          }
+        ],
+        "keyPoints": [
+          "Le parsing est la premiere etape du traitement d'une commande",
+          "Il transforme une chaine en un tableau de tokens",
+          "Les quotes et echappements affectent la tokenisation",
+          "Le resultat est un argc/argv utilisable par execve"
+        ],
+        "commonMistakes": [
+          "Melanger parsing et expansion (ce sont des etapes separees)",
+          "Ne pas gerer les espaces multiples entre les arguments",
+          "Oublier que argv doit se terminer par NULL pour execve"
+        ]
+      },
+      {
+        "title": "Caracteres d'echappement",
+        "content": "Le backslash est le caractere d'echappement en C et dans le shell. Il donne un sens litteral au caractere suivant, annulant sa signification speciale.",
+        "codeExamples": [
+          {
+            "title": "Echappement dans differents contextes",
+            "code": "// Dans le code C :\n// '\\n' -> newline\n// '\\t' -> tabulation\n// '\\\\' -> backslash litteral\n// '\\\"' -> guillemet litteral\n\n// Dans le shell (etat NORMAL) :\n// \\ suivi de n'importe quoi -> le caractere suivant\n// echo hello\\\\ world -> \"hello world\"\n// echo \\\"hi\\\" -> '\"hi\"'\n\n// Dans le shell (quotes doubles) :\n// \\\" -> guillemet litteral\n// \\\\ -> backslash litteral\n// \\$ -> dollar litteral\n// \\n -> n (pas special)\n\n// Dans le shell (quotes simples) :\n// RIEN n'est special, meme \\\\ est litteral",
+            "explanation": "Le backslash a un comportement different selon le contexte (normal, simple, double)"
+          }
+        ],
+        "keyPoints": [
+          "Le backslash echappe le caractere suivant en etat NORMAL",
+          "En quotes doubles, le backslash echappe seulement certains caracteres",
+          "En quotes simples, le backslash n'a aucun effet special",
+          "Un backslash en fin de ligne peut signifier une continuation"
+        ],
+        "commonMistakes": [
+          "Appliquer l'echappement dans les quotes simples (il ne s'applique pas)",
+          "Oublier de verifier qu'il y a un caractere apres le backslash",
+          "Confondre l'echappement C et l'echappement shell"
+        ]
+      },
+      {
+        "title": "argc et argv : interface standard",
+        "content": "argc (argument count) et argv (argument vector) sont l'interface standard pour passer des arguments a un programme en C. Le shell remplit ces valeurs avant d'appeler execve.",
+        "codeExamples": [
+          {
+            "title": "Structure argc/argv",
+            "code": "// int main(int argc, char **argv)\n// argc = nombre d'arguments (incluant le programme)\n// argv[0] = nom du programme\n// argv[1] = premier argument\n// ...\n// argv[argc] = NULL\n\n// Commande : ls -la /tmp\n// argc = 3\n// argv[0] = \"ls\"\n// argv[1] = \"-la\"\n// argv[2] = \"/tmp\"\n// argv[3] = NULL\n\n// execve(path, argv, envp)\n// argv doit etre un char ** termine par NULL",
+            "explanation": "argc/argv est l'interface universelle pour les arguments de programme en C"
+          }
+        ],
+        "keyPoints": [
+          "argc inclut le nom du programme (argv[0])",
+          "argv est un tableau de char * termine par NULL",
+          "argv[0] est le nom du programme, argv[1] le premier vrai argument",
+          "execve necessite un argv termine par NULL"
+        ],
+        "commonMistakes": [
+          "Oublier que argv[0] est le nom du programme (argc >= 1)",
+          "Ne pas terminer argv par NULL (crash dans execve)",
+          "Confondre argc (incluant argv[0]) et le nombre d'arguments reels"
+        ]
+      },
+      {
+        "title": "Robustesse du parser",
+        "content": "Un parser robuste doit gerer les cas extremes : ligne vide, que des espaces, quotes non fermees, backslash en fin de ligne, espaces multiples, etc.",
+        "codeExamples": [
+          {
+            "title": "Cas limites a gerer",
+            "code": "// Ligne vide : \"\" -> argc=0, argv=[NULL]\n// Que des espaces : \"   \" -> argc=0\n// Un seul mot : \"hello\" -> argc=1\n// Espaces multiples : \"a   b   c\" -> argc=3\n// Quotes vides : \"a '' b\" -> argc=3, argv=[a, , b]\n// Quote non fermee : \"echo 'hello\" -> erreur ou traiter comme litteral\n// Backslash en fin : \"echo hello\\\\\" -> le \\\\ echappe rien\n\n// Pour cet exercice :\n// Quotes non fermees : traiter le reste comme texte\n// Backslash en fin : ignorer",
+            "explanation": "Un parser robuste ne doit jamais crasher, meme sur une entree invalide"
+          }
+        ],
+        "keyPoints": [
+          "Toujours gerer la ligne vide (argc = 0, argv = [NULL])",
+          "Les espaces en debut et fin de ligne sont ignores",
+          "Les quotes non fermees doivent etre gerees sans crash",
+          "Le backslash en fin de ligne est un cas special"
+        ],
+        "commonMistakes": [
+          "Crasher sur une ligne vide (segfault)",
+          "Ne pas gerer les quotes non fermees (boucle infinie)",
+          "Oublier les espaces multiples entre les arguments"
+        ]
+      }
+    ],
+    "prepExercises": [
+      {
+        "id": 1,
+        "title": "Sauter les espaces",
+        "instruction": "Ecris une fonction qui avance un index en sautant tous les espaces.",
+        "starterCode": "void\tft_skip_spaces(char *str, int *i)\n{\n\t// Avance *i tant que str[*i] est un espace\n\t// TON CODE ICI\n}",
+        "solution": "void\tft_skip_spaces(char *str, int *i)\n{\n\twhile (str[*i] == ' ')\n\t\t(*i)++;\n}",
+        "hint": "Simple boucle while sur str[*i] == ' '.",
+        "difficulty": 1
+      },
+      {
+        "id": 2,
+        "title": "Gerer le backslash",
+        "instruction": "Ecris le code qui traite un backslash : saute le \\ et prend le caractere suivant.",
+        "starterCode": "void\tft_handle_backslash(char *str, int *i, char *buf, int *bi)\n{\n\t// Si str[*i] est '\\\\' et str[*i+1] existe :\n\t// Sauter le backslash, copier le caractere suivant\n\t// TON CODE ICI\n}",
+        "solution": "void\tft_handle_backslash(char *str, int *i, char *buf, int *bi)\n{\n\tif (str[*i] == '\\\\' && str[*i + 1])\n\t{\n\t\t(*i)++;\n\t\tbuf[(*bi)++] = str[*i];\n\t}\n}",
+        "hint": "Verifie que str[*i+1] existe, puis incremente i et copie str[*i] dans buf.",
+        "difficulty": 2
+      },
+      {
+        "id": 3,
+        "title": "Parser en etat IN_SINGLE",
+        "instruction": "Ecris le code de parsing pour l'etat IN_SINGLE (quotes simples).",
+        "starterCode": "// En etat IN_SINGLE :\n// ' -> ferme la quote (retour NORMAL)\n// Tout le reste -> copier litteralement\nvoid\tft_parse_single(char c, char *buf, int *bi, int *state)\n{\n\t// TON CODE ICI\n}",
+        "solution": "void\tft_parse_single(char c, char *buf, int *bi, int *state)\n{\n\tif (c == '\\'')\n\t\t*state = 0;\n\telse\n\t\tbuf[(*bi)++] = c;\n}",
+        "hint": "Si c est une quote simple, retour a NORMAL. Sinon, copier le caractere dans buf.",
+        "difficulty": 1
+      },
+      {
+        "id": 4,
+        "title": "Compter les arguments",
+        "instruction": "Ecris ft_count_args qui compte les arguments en gerant quotes et backslash.",
+        "starterCode": "int\tft_count_args(char *str)\n{\n\tint\tc = 0, in = 0, st = 0, i = 0;\n\t// Parcourir en gerant etats et backslash\n\t// TON CODE ICI\n}",
+        "solution": "int\tft_count_args(char *str)\n{\n\tint\tc = 0, in = 0, st = 0, i = 0;\n\twhile (str[i])\n\t{\n\t\tif (st == 0 && str[i] == ' ')\n\t\t\tin = 0;\n\t\telse\n\t\t{\n\t\t\tif (!in) { c++; in = 1; }\n\t\t\tif (st == 0 && str[i] == '\\\\' && str[i + 1])\n\t\t\t\ti++;\n\t\t\telse if (st == 0 && (str[i] == '\\'' || str[i] == '\"'))\n\t\t\t\tst = (str[i] == '\\'') ? 1 : 2;\n\t\t\telse if ((st == 1 && str[i] == '\\'') || (st == 2 && str[i] == '\"'))\n\t\t\t\tst = 0;\n\t\t\telse if (st == 2 && str[i] == '\\\\' && str[i + 1])\n\t\t\t\ti++;\n\t\t}\n\t\ti++;\n\t}\n\treturn (c);\n}",
+        "hint": "Meme logique que ft_count_words mais avec gestion du backslash en etat NORMAL et IN_DOUBLE.",
+        "difficulty": 3
+      },
+      {
+        "id": 5,
+        "title": "Assembler le parser complet",
+        "instruction": "Ecris ft_parse_args qui combine comptage et extraction.",
+        "starterCode": "char\t**ft_parse_args(char *line, int *argc)\n{\n\tchar\t**argv;\n\tint\t\tpos;\n\tint\t\ti;\n\n\t*argc = ft_count_args(line);\n\targv = (char **)malloc(sizeof(char *) * (*argc + 1));\n\tif (!argv) return (NULL);\n\t// Extraire chaque argument\n\t// TON CODE ICI\n\targv[*argc] = NULL;\n\treturn (argv);\n}",
+        "solution": "char\t**ft_parse_args(char *line, int *argc)\n{\n\tchar\t**argv;\n\tint\t\tpos;\n\tint\t\ti;\n\n\t*argc = ft_count_args(line);\n\targv = (char **)malloc(sizeof(char *) * (*argc + 1));\n\tif (!argv) return (NULL);\n\tpos = 0;\n\ti = 0;\n\twhile (i < *argc)\n\t{\n\t\twhile (line[pos] == ' ')\n\t\t\tpos++;\n\t\targv[i] = ft_extract_arg(line, &pos);\n\t\ti++;\n\t}\n\targv[*argc] = NULL;\n\treturn (argv);\n}",
+        "hint": "Saute les espaces, extrais un argument, repete argc fois. Termine avec NULL.",
+        "difficulty": 3
+      }
+    ]
+  },
+  "starterCode": "#include <unistd.h>\n#include <stdlib.h>\n\n#define NORMAL 0\n#define IN_SINGLE 1\n#define IN_DOUBLE 2\n\nvoid\tft_putstr(char *s) { while (*s) write(1, s++, 1); }\nvoid\tft_putnbr(int n) { char c; if (n >= 10) ft_putnbr(n / 10); c = n % 10 + '0'; write(1, &c, 1); }\n\nchar\t**ft_parse_args(char *line, int *argc)\n{\n\t// 1. Compter les arguments (gerer quotes + backslash)\n\t// 2. Allouer le tableau\n\t// 3. Extraire chaque argument (sans quotes, echappements resolus)\n\t// 4. Terminer par NULL\n\treturn (NULL);\n}\n\nint\tmain(void)\n{\n\tchar\t**argv;\n\tint\t\targc;\n\tint\t\ti;\n\n\targv = ft_parse_args(\"echo \\\"hello world\\\" 'foo bar' baz\", &argc);\n\tft_putnbr(argc);\n\twrite(1, \"\\n\", 1);\n\ti = 0;\n\twhile (i < argc)\n\t{\n\t\tft_putstr(argv[i]);\n\t\twrite(1, \"\\n\", 1);\n\t\ti++;\n\t}\n\treturn (0);\n}",
+  "solution": "#include <unistd.h>\n#include <stdlib.h>\n\n#define NORMAL 0\n#define IN_SINGLE 1\n#define IN_DOUBLE 2\n\nvoid\tft_putstr(char *s) { while (*s) write(1, s++, 1); }\nvoid\tft_putnbr(int n) { char c; if (n >= 10) ft_putnbr(n / 10); c = n % 10 + '0'; write(1, &c, 1); }\n\nint\tft_count_args(char *s)\n{\n\tint c = 0, in = 0, st = 0, i = 0;\n\twhile (s[i])\n\t{\n\t\tif (st == 0 && s[i] == ' ') in = 0;\n\t\telse\n\t\t{\n\t\t\tif (!in) { c++; in = 1; }\n\t\t\tif (st == 0 && s[i] == '\\\\' && s[i+1]) i++;\n\t\t\telse if (st == 0 && (s[i] == '\\'' || s[i] == '\"'))\n\t\t\t\tst = (s[i] == '\\'') ? 1 : 2;\n\t\t\telse if ((st == 1 && s[i] == '\\'') || (st == 2 && s[i] == '\"'))\n\t\t\t\tst = 0;\n\t\t\telse if (st == 2 && s[i] == '\\\\' && s[i+1]) i++;\n\t\t}\n\t\ti++;\n\t}\n\treturn (c);\n}\n\nchar\t*ft_extract_arg(char *s, int *pos)\n{\n\tchar buf[4096];\n\tint bi = 0, st = 0;\n\tchar *w;\n\n\twhile (s[*pos] && !(st == 0 && s[*pos] == ' '))\n\t{\n\t\tif (st == 0 && s[*pos] == '\\\\' && s[*pos + 1])\n\t\t\t{ (*pos)++; buf[bi++] = s[*pos]; }\n\t\telse if (st == 0 && (s[*pos] == '\\'' || s[*pos] == '\"'))\n\t\t\tst = (s[*pos] == '\\'') ? 1 : 2;\n\t\telse if ((st == 1 && s[*pos] == '\\'') || (st == 2 && s[*pos] == '\"'))\n\t\t\tst = 0;\n\t\telse if (st == 2 && s[*pos] == '\\\\' && s[*pos + 1])\n\t\t\t{ (*pos)++; buf[bi++] = s[*pos]; }\n\t\telse\n\t\t\tbuf[bi++] = s[*pos];\n\t\t(*pos)++;\n\t}\n\tbuf[bi] = '\\0';\n\tw = (char *)malloc(bi + 1);\n\tif (!w) return (NULL);\n\tbi = 0;\n\twhile (buf[bi]) { w[bi] = buf[bi]; bi++; }\n\tw[bi] = '\\0';\n\treturn (w);\n}\n\nchar\t**ft_parse_args(char *line, int *argc)\n{\n\tchar **argv;\n\tint pos = 0, i = 0;\n\n\t*argc = ft_count_args(line);\n\targv = (char **)malloc(sizeof(char *) * (*argc + 1));\n\tif (!argv) return (NULL);\n\twhile (i < *argc)\n\t{\n\t\twhile (line[pos] == ' ') pos++;\n\t\targv[i] = ft_extract_arg(line, &pos);\n\t\ti++;\n\t}\n\targv[*argc] = NULL;\n\treturn (argv);\n}\n\nint\tmain(void)\n{\n\tchar **argv;\n\tint argc, i;\n\n\targv = ft_parse_args(\"echo \\\"hello world\\\" 'foo bar' baz\", &argc);\n\tft_putnbr(argc);\n\twrite(1, \"\\n\", 1);\n\ti = 0;\n\twhile (i < argc)\n\t{\n\t\tft_putstr(argv[i]);\n\t\twrite(1, \"\\n\", 1);\n\t\ti++;\n\t}\n\treturn (0);\n}",
+  "hints": [
+    "L'automate a 3 etats : NORMAL, IN_SINGLE, IN_DOUBLE. Le backslash est traite en NORMAL et IN_DOUBLE uniquement.",
+    "En quotes simples, TOUT est litteral : le backslash, les quotes doubles, tout. Seule une quote simple ferme.",
+    "Pour l'extraction, copie chaque caractere sauf les quotes qui ouvrent/ferment et les backslash d'echappement."
+  ],
+  "testCases": [
+    {
+      "id": 1,
+      "description": "echo \"hello world\" 'foo bar' baz -> 4 args",
+      "stdin": "",
+      "expectedStdout": "4\necho\nhello world\nfoo bar\nbaz\n",
+      "expectedExitCode": 0,
+      "visible": true
+    },
+    {
+      "id": 2,
+      "description": "ls -la /tmp -> 3 args simples",
+      "stdin": "",
+      "expectedStdout": "3\nls\n-la\n/tmp\n",
+      "expectedExitCode": 0,
+      "visible": false
+    },
+    {
+      "id": 3,
+      "description": "Ligne vide -> 0 args",
+      "stdin": "",
+      "expectedStdout": "0\n",
+      "expectedExitCode": 0,
+      "visible": false
+    }
+  ],
+  "constraints": {
+    "allowedFunctions": ["write", "malloc", "free"],
+    "forbiddenFunctions": ["printf", "strtok", "strsep"],
+    "maxExecutionTime": 5000,
+    "maxMemory": 128
+  },
+  "relatedExercises": ["c-day55-ex00-ft-split-quotes", "c-day55-ex02-ft-eval-expr"],
+  "resources": [
+    {
+      "title": "Bash quoting et echappement",
+      "url": "https://www.gnu.org/software/bash/manual/html_node/Quoting.html",
+      "type": "documentation"
+    },
+    {
+      "title": "Comment un shell parse les commandes",
+      "url": "https://www.gnu.org/software/bash/manual/html_node/Shell-Operation.html",
+      "type": "article"
+    }
+  ]
+}

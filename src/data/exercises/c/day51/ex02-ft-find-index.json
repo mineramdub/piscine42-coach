@@ -1,0 +1,257 @@
+{
+  "id": "c-day51-ex02-ft-find-index",
+  "category": "c",
+  "day": 51,
+  "order": 2,
+  "title": "Trouver l'index d'un element dans la pile",
+  "description": "Ecris une fonction ft_find_index qui, pour chaque element d'une pile, calcule son index (sa position dans le tableau trie). L'index 0 correspond au plus petit element, l'index n-1 au plus grand. Cette indexation est essentielle pour optimiser les rotations dans push_swap. Prototype : void ft_find_index(int *stack, int *indexes, int size);",
+  "difficulty": 3,
+  "points": 30,
+  "estimatedTime": 30,
+  "learningObjectives": [
+    "Comprendre le concept d'indexation relative dans un tableau",
+    "Savoir transformer des valeurs arbitraires en index ordonnes",
+    "Maitriser les comparaisons entre elements d'un tableau",
+    "Optimiser les algorithmes de tri avec des index normalises",
+    "Preparer l'utilisation des index dans l'algorithme radix sort"
+  ],
+  "learningContent": {
+    "lesson": {
+      "introduction": "Dans push_swap, les elements de la pile peuvent etre n'importe quels entiers (positifs, negatifs, grands, petits). Pour simplifier les algorithmes de tri, on transforme ces valeurs en index : le plus petit element recoit l'index 0, le suivant l'index 1, etc. Cette normalisation permet d'utiliser des algorithmes comme le radix sort qui travaillent sur des valeurs consecutives. C'est une etape de pre-traitement cruciale dans la plupart des solutions push_swap performantes.",
+      "steps": [
+        {
+          "id": 1,
+          "title": "Pourquoi indexer les elements ?",
+          "content": "Les elements d'une pile push_swap peuvent etre des valeurs quelconques : -42, 1000000, 3, -7... Les algorithmes de tri optimaux (comme le radix sort) fonctionnent mieux avec des valeurs consecutives de 0 a n-1.\n\n**L'indexation** remplace chaque valeur par sa position relative dans l'ordre trie :\n- Le plus petit element -> index 0\n- Le 2eme plus petit -> index 1\n- ...\n- Le plus grand -> index n-1\n\nLes relations d'ordre sont preservees mais les valeurs sont normalisees.",
+          "codeExample": "// Pile originale : [42, -7, 100, 3, -50]\n// Valeurs triees :  -50, -7, 3, 42, 100\n// Index :            0    1   2   3    4\n\n// Resultat de l'indexation :\n// 42  -> index 3 (c'est le 4eme plus petit)\n// -7  -> index 1 (c'est le 2eme plus petit)\n// 100 -> index 4 (c'est le plus grand)\n// 3   -> index 2 (c'est le 3eme plus petit)\n// -50 -> index 0 (c'est le plus petit)\n\n// Pile indexee : [3, 1, 4, 2, 0]\n// C'est equivalent a trier [3, 1, 4, 2, 0]",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Quelle est la pile indexee pour [10, 30, 20, 50, 40] ?",
+            "starterCode": "// Pile : [10, 30, 20, 50, 40]\n// Tri : 10 < 20 < 30 < 40 < 50\n// 10 -> index ???\n// 30 -> index ???\n// 20 -> index ???\n// 50 -> index ???\n// 40 -> index ???",
+            "solution": "// 10 -> index 0 (plus petit)\n// 30 -> index 2 (3eme)\n// 20 -> index 1 (2eme)\n// 50 -> index 4 (plus grand)\n// 40 -> index 3 (4eme)\n// Pile indexee : [0, 2, 1, 4, 3]"
+          }
+        },
+        {
+          "id": 2,
+          "title": "Algorithme d'indexation par comptage",
+          "content": "L'approche la plus simple pour calculer les index est le **comptage** : pour chaque element, on compte combien d'elements sont plus petits que lui. Ce nombre est son index.\n\nPour l'element `stack[i]`, son index est le nombre d'elements `stack[j]` tels que `stack[j] < stack[i]`.\n\nCet algorithme est en O(n^2) mais c'est suffisant pour push_swap (max 500 elements).",
+          "codeExample": "void\tft_find_index(int *stack, int *indexes, int size)\n{\n\tint\ti;\n\tint\tj;\n\tint\tcount;\n\n\ti = 0;\n\twhile (i < size)\n\t{\n\t\tcount = 0;\n\t\tj = 0;\n\t\twhile (j < size)\n\t\t{\n\t\t\tif (stack[j] < stack[i])\n\t\t\t\tcount++;\n\t\t\tj++;\n\t\t}\n\t\tindexes[i] = count;\n\t\ti++;\n\t}\n}\n\n// stack = [42, -7, 100, 3, -50]\n// Pour i=0 (42) : count des val < 42 = 3 (-7, 3, -50)\n// indexes[0] = 3",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Pour stack = [5, 2, 8, 1], calcule l'index de l'element 5 (position 0).",
+            "starterCode": "// stack = [5, 2, 8, 1]\n// Pour stack[0] = 5 :\n// Combien d'elements < 5 ?\n// stack[0]=5 < 5 ? Non\n// stack[1]=2 < 5 ? ???\n// stack[2]=8 < 5 ? ???\n// stack[3]=1 < 5 ? ???\n// count = ???, donc index = ???",
+            "solution": "// Pour stack[0] = 5 :\n// stack[0]=5 < 5 ? Non\n// stack[1]=2 < 5 ? Oui (count=1)\n// stack[2]=8 < 5 ? Non\n// stack[3]=1 < 5 ? Oui (count=2)\n// count = 2, donc indexes[0] = 2\n// (5 est le 3eme plus petit element)"
+          }
+        },
+        {
+          "id": 3,
+          "title": "Utilisation des index dans push_swap",
+          "content": "Une fois les index calcules, on travaille avec la pile indexee au lieu de la pile originale. Cela simplifie enormement les algorithmes :\n\n1. **Radix sort** : trie en regardant les bits des index (0 a n-1)\n2. **Calcul du cout** : la distance entre deux index consecutifs est simple a calculer\n3. **Detection du tri** : la pile est triee quand les index sont dans l'ordre 0, 1, 2, ..., n-1\n\nL'indexation est un pre-traitement qui facilite toute la suite.",
+          "codeExample": "// Sans indexation :\n// [1000000, -999, 42, -2147483648, 7]\n// Difficile a manipuler avec radix sort\n\n// Avec indexation :\n// [4, 1, 3, 0, 2]\n// Valeurs de 0 a 4, parfait pour radix sort\n\n// Verification du tri :\nint\tft_is_sorted_by_index(int *indexes, int size)\n{\n\tint\ti;\n\n\ti = 0;\n\twhile (i < size - 1)\n\t{\n\t\tif (indexes[i] > indexes[i + 1])\n\t\t\treturn (0);\n\t\ti++;\n\t}\n\treturn (1);\n}\n\n// Ou meme plus simple :\n// indexes[i] doit etre egal a i pour tout i",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "La pile indexee [2, 0, 1, 3, 4] est-elle triee ? Quel element est mal place ?",
+            "starterCode": "// indexes = [2, 0, 1, 3, 4]\n// Verifier : indexes[0] <= indexes[1] ?\n// 2 <= 0 ? ???\n// Quel est le premier element mal place ?",
+            "solution": "// indexes = [2, 0, 1, 3, 4]\n// indexes[0]=2 <= indexes[1]=0 ? Non !\n// La pile n'est pas triee.\n// L'element d'index 2 est en position 0\n// alors qu'il devrait etre en position 2.\n// Les index 0 et 1 doivent etre avant."
+          }
+        },
+        {
+          "id": 4,
+          "title": "Programme complet avec affichage",
+          "content": "Le programme complet prend les valeurs de la pile, calcule les index, et affiche le resultat. Chaque element est affiche avec sa valeur originale et son index.\n\nPour afficher, on utilise ft_putnbr avec write (pas de printf).\n\n**Attention :** Les index sont uniques car le sujet push_swap garantit qu'il n'y a pas de doublons dans la pile. Si deux elements sont egaux, l'algorithme de comptage donnerait le meme index, ce qui serait un bug.",
+          "codeExample": "#include <unistd.h>\n\nvoid\tft_putnbr(int n)\n{\n\tchar\tc;\n\n\tif (n < 0)\n\t{\n\t\twrite(1, \"-\", 1);\n\t\tif (n == -2147483648)\n\t\t{\n\t\t\twrite(1, \"2147483648\", 10);\n\t\t\treturn ;\n\t\t}\n\t\tn = -n;\n\t}\n\tif (n >= 10)\n\t\tft_putnbr(n / 10);\n\tc = (n % 10) + '0';\n\twrite(1, &c, 1);\n}\n\nvoid\tft_print_indexes(int *stack, int *indexes, int size)\n{\n\tint\ti;\n\n\ti = 0;\n\twhile (i < size)\n\t{\n\t\tft_putnbr(stack[i]);\n\t\twrite(1, \" -> \", 4);\n\t\tft_putnbr(indexes[i]);\n\t\twrite(1, \"\\n\", 1);\n\t\ti++;\n\t}\n}",
+          "language": "c"
+        }
+      ]
+    },
+    "theory": [
+      {
+        "title": "L'indexation : normalisation des donnees",
+        "content": "L'indexation est une technique de normalisation qui transforme des valeurs arbitraires en une sequence de 0 a n-1. Elle preserve l'ordre relatif des elements tout en simplifiant les calculs.",
+        "codeExamples": [
+          {
+            "title": "Avant et apres normalisation",
+            "code": "// Avant : valeurs quelconques\nint stack[] = {-500, 42, 0, 999, -1};\n\n// Apres indexation : valeurs de 0 a 4\nint indexes[] = {0, 3, 2, 4, 1};\n\n// -500 -> 0 (plus petit)\n// -1   -> 1\n// 0    -> 2\n// 42   -> 3\n// 999  -> 4 (plus grand)\n\n// L'ordre est preserve : si a < b alors index(a) < index(b)",
+            "explanation": "L'indexation preserve l'ordre relatif tout en normalisant les valeurs"
+          }
+        ],
+        "keyPoints": [
+          "L'indexation transforme des valeurs arbitraires en 0..n-1",
+          "L'ordre relatif des elements est toujours preserve",
+          "Les valeurs normalisees sont plus faciles a manipuler",
+          "C'est une etape de pre-traitement courante en algorithmique"
+        ],
+        "commonMistakes": [
+          "Confondre la position dans le tableau et l'index calcule",
+          "Oublier que l'indexation ne modifie pas le tableau original",
+          "Stocker les index dans le meme tableau que les valeurs"
+        ]
+      },
+      {
+        "title": "Algorithme de comptage en O(n^2)",
+        "content": "L'algorithme de comptage compare chaque element a tous les autres pour determiner son rang. C'est simple mais quadratique. Pour push_swap (max 500 elements), c'est largement suffisant.",
+        "codeExamples": [
+          {
+            "title": "Double boucle de comptage",
+            "code": "// Pour chaque element i :\n//   Compter combien d'elements j sont < stack[i]\n//   Ce nombre est l'index de stack[i]\n\n// Complexite : O(n^2)\n// n = 500 -> 250 000 comparaisons\n// C'est instantane pour un ordinateur\n\n// Alternative en O(n log n) :\n// 1. Copier et trier le tableau\n// 2. Chercher chaque element dans le tableau trie\n// Mais O(n^2) est plus simple a coder",
+            "explanation": "Le comptage est O(n^2) mais suffisant pour les tailles de push_swap"
+          }
+        ],
+        "keyPoints": [
+          "L'algorithme compare chaque paire d'elements une fois",
+          "La complexite est O(n^2), acceptable pour n <= 500",
+          "Pas besoin de trier le tableau original",
+          "Chaque index est unique si pas de doublons dans la pile"
+        ],
+        "commonMistakes": [
+          "Comparer un element avec lui-meme (stack[j] < stack[i] quand j == i)",
+          "Utiliser <= au lieu de < (donnerait des index decales s'il y a des egaux)",
+          "Ne pas initialiser le compteur a 0 a chaque iteration de la boucle externe"
+        ]
+      },
+      {
+        "title": "Application au radix sort",
+        "content": "Le radix sort est un algorithme de tri non-comparatif qui trie les elements bit par bit. Il fonctionne idealement avec des valeurs de 0 a n-1, ce qui est exactement ce que l'indexation fournit.",
+        "codeExamples": [
+          {
+            "title": "Principe du radix sort avec des index",
+            "code": "// Index : [3, 1, 4, 2, 0]\n// En binaire :\n// 3 = 011\n// 1 = 001\n// 4 = 100\n// 2 = 010\n// 0 = 000\n\n// Radix sort regarde bit par bit (du LSB au MSB)\n// Bit 0 : si 0 -> reste dans a, si 1 -> pb\n// 3(011)->pb, 1(001)->pb, 4(100)->reste,\n// 2(010)->reste, 0(000)->reste\n// a=[4,2,0] b=[1,3]\n// pa tout -> a=[3,1,4,2,0]\n// Repeter pour bit 1, bit 2...",
+            "explanation": "Le radix sort est tres efficace avec des index normalises de 0 a n-1"
+          }
+        ],
+        "keyPoints": [
+          "Le radix sort ne compare pas les elements entre eux",
+          "Il trie en examinant les bits des valeurs un par un",
+          "Il necessite des valeurs de 0 a n-1 (d'ou l'indexation)",
+          "C'est l'un des algorithmes les plus populaires pour push_swap"
+        ],
+        "commonMistakes": [
+          "Appliquer le radix sort sur les valeurs originales au lieu des index",
+          "Oublier que le radix sort necessite log2(n) passes",
+          "Ne pas remettre les elements de b dans a apres chaque passe"
+        ]
+      },
+      {
+        "title": "Gestion des cas limites",
+        "content": "L'indexation doit gerer plusieurs cas limites : pile vide, pile d'un seul element, valeurs negatives, valeurs INT_MIN et INT_MAX. Le sujet push_swap garantit l'absence de doublons, mais il faut quand meme etre robuste.",
+        "codeExamples": [
+          {
+            "title": "Cas limites a considerer",
+            "code": "// Pile vide : rien a faire\nif (size == 0)\n\treturn ;\n\n// Un seul element : index 0\nif (size == 1)\n{\n\tindexes[0] = 0;\n\treturn ;\n}\n\n// Valeurs extremes :\n// INT_MIN (-2147483648) -> toujours index 0\n// INT_MAX (2147483647)  -> toujours index n-1\n\n// Pas de doublons garantis par le sujet\n// Mais si doublons : meme index (bug potentiel)\nint stack[] = {3, 3, 1}; // INTERDIT par le sujet\n// indexes = {1, 1, 0} // Probleme : index 1 en double !",
+            "explanation": "Le sujet garantit l'unicite mais il faut gerer les tailles limites"
+          }
+        ],
+        "keyPoints": [
+          "Toujours verifier si la pile est vide ou de taille 1",
+          "Les valeurs negatives sont gerees naturellement par la comparaison <",
+          "INT_MIN et INT_MAX fonctionnent car < compare correctement",
+          "Le sujet push_swap garantit l'absence de doublons"
+        ],
+        "commonMistakes": [
+          "Ne pas gerer le cas size == 0 (boucle sur un tableau vide)",
+          "Supposer que les valeurs sont positives",
+          "Ne pas allouer assez de memoire pour le tableau indexes"
+        ]
+      }
+    ],
+    "prepExercises": [
+      {
+        "id": 1,
+        "title": "Compter les elements plus petits",
+        "instruction": "Ecris une fonction qui compte combien d'elements du tableau sont strictement inferieurs a une valeur donnee.",
+        "starterCode": "int\tft_count_smaller(int *arr, int size, int value)\n{\n\t// Retourne le nombre d'elements < value\n\t// TON CODE ICI\n}",
+        "solution": "int\tft_count_smaller(int *arr, int size, int value)\n{\n\tint\tcount;\n\tint\ti;\n\n\tcount = 0;\n\ti = 0;\n\twhile (i < size)\n\t{\n\t\tif (arr[i] < value)\n\t\t\tcount++;\n\t\ti++;\n\t}\n\treturn (count);\n}",
+        "hint": "Parcours le tableau avec une boucle et incremente un compteur pour chaque element < value.",
+        "difficulty": 1
+      },
+      {
+        "id": 2,
+        "title": "Indexer un seul element",
+        "instruction": "Utilise ft_count_smaller pour calculer l'index d'un element specifique dans le tableau.",
+        "starterCode": "#include <stdio.h>\n\nint\tft_count_smaller(int *arr, int size, int value)\n{\n\tint count = 0, i = 0;\n\twhile (i < size) { if (arr[i] < value) count++; i++; }\n\treturn (count);\n}\n\nint\tmain(void)\n{\n\tint arr[] = {42, -7, 100, 3, -50};\n\tint index;\n\n\t// Calcule l'index de 42\n\tindex = ft_count_smaller(arr, 5, 42);\n\tprintf(\"Index de 42 : %d\\n\", index);\n\t// Attendu : 3\n\treturn (0);\n}",
+        "solution": "#include <stdio.h>\n\nint\tft_count_smaller(int *arr, int size, int value)\n{\n\tint count = 0, i = 0;\n\twhile (i < size) { if (arr[i] < value) count++; i++; }\n\treturn (count);\n}\n\nint\tmain(void)\n{\n\tint arr[] = {42, -7, 100, 3, -50};\n\tint index;\n\n\tindex = ft_count_smaller(arr, 5, 42);\n\tprintf(\"Index de 42 : %d\\n\", index);\n\t// 42 est plus grand que -7, 3, -50 -> index = 3\n\treturn (0);\n}",
+        "hint": "L'index d'un element est simplement le nombre d'elements plus petits que lui.",
+        "difficulty": 1
+      },
+      {
+        "id": 3,
+        "title": "Indexer tout le tableau",
+        "instruction": "Ecris ft_find_index qui calcule l'index de chaque element du tableau.",
+        "starterCode": "void\tft_find_index(int *stack, int *indexes, int size)\n{\n\t// Pour chaque element, compter combien sont plus petits\n\t// TON CODE ICI\n}",
+        "solution": "void\tft_find_index(int *stack, int *indexes, int size)\n{\n\tint\ti;\n\tint\tj;\n\tint\tcount;\n\n\ti = 0;\n\twhile (i < size)\n\t{\n\t\tcount = 0;\n\t\tj = 0;\n\t\twhile (j < size)\n\t\t{\n\t\t\tif (stack[j] < stack[i])\n\t\t\t\tcount++;\n\t\t\tj++;\n\t\t}\n\t\tindexes[i] = count;\n\t\ti++;\n\t}\n}",
+        "hint": "Double boucle : pour chaque i, parcours tout le tableau avec j et compte les stack[j] < stack[i].",
+        "difficulty": 2
+      },
+      {
+        "id": 4,
+        "title": "Afficher le mapping valeur -> index",
+        "instruction": "Ecris un programme qui affiche chaque valeur avec son index sous la forme 'valeur -> index'.",
+        "starterCode": "#include <unistd.h>\n\nvoid\tft_putnbr(int n);\nvoid\tft_find_index(int *stack, int *indexes, int size);\n\nint\tmain(void)\n{\n\tint stack[] = {10, 30, 20, 50, 40};\n\tint indexes[5];\n\n\tft_find_index(stack, indexes, 5);\n\t// Affiche chaque valeur -> index\n\t// TON CODE ICI\n\treturn (0);\n}",
+        "solution": "#include <unistd.h>\n\nvoid\tft_putnbr(int n);\nvoid\tft_find_index(int *stack, int *indexes, int size);\n\nint\tmain(void)\n{\n\tint stack[] = {10, 30, 20, 50, 40};\n\tint indexes[5];\n\tint i;\n\n\tft_find_index(stack, indexes, 5);\n\ti = 0;\n\twhile (i < 5)\n\t{\n\t\tft_putnbr(stack[i]);\n\t\twrite(1, \" -> \", 4);\n\t\tft_putnbr(indexes[i]);\n\t\twrite(1, \"\\n\", 1);\n\t\ti++;\n\t}\n\treturn (0);\n}",
+        "hint": "Boucle de 0 a size-1, affiche stack[i], ' -> ', indexes[i], '\\n'.",
+        "difficulty": 2
+      },
+      {
+        "id": 5,
+        "title": "Verifier l'indexation",
+        "instruction": "Ecris une fonction qui verifie que les index sont valides : chaque valeur de 0 a size-1 apparait exactement une fois.",
+        "starterCode": "int\tft_check_indexes(int *indexes, int size)\n{\n\t// Retourne 1 si valide, 0 sinon\n\t// Chaque index de 0 a size-1 doit apparaitre exactement 1 fois\n\t// TON CODE ICI\n}",
+        "solution": "int\tft_check_indexes(int *indexes, int size)\n{\n\tint\ti;\n\tint\tj;\n\tint\tfound;\n\n\ti = 0;\n\twhile (i < size)\n\t{\n\t\tfound = 0;\n\t\tj = 0;\n\t\twhile (j < size)\n\t\t{\n\t\t\tif (indexes[j] == i)\n\t\t\t\tfound++;\n\t\t\tj++;\n\t\t}\n\t\tif (found != 1)\n\t\t\treturn (0);\n\t\ti++;\n\t}\n\treturn (1);\n}",
+        "hint": "Pour chaque valeur v de 0 a size-1, compte combien de fois v apparait dans indexes. Doit etre 1.",
+        "difficulty": 2
+      }
+    ]
+  },
+  "starterCode": "#include <unistd.h>\n\nvoid\tft_putnbr(int n)\n{\n\tchar\tc;\n\n\tif (n == -2147483648)\n\t{\n\t\twrite(1, \"-2147483648\", 11);\n\t\treturn ;\n\t}\n\tif (n < 0)\n\t{\n\t\twrite(1, \"-\", 1);\n\t\tn = -n;\n\t}\n\tif (n >= 10)\n\t\tft_putnbr(n / 10);\n\tc = (n % 10) + '0';\n\twrite(1, &c, 1);\n}\n\nvoid\tft_find_index(int *stack, int *indexes, int size)\n{\n\t// Pour chaque element stack[i] :\n\t//   Compter combien d'elements stack[j] < stack[i]\n\t//   Ce nombre est indexes[i]\n\t// Double boucle necessaire\n}\n\nint\tmain(void)\n{\n\tint\tstack[] = {42, -7, 100, 3, -50};\n\tint\tindexes[5];\n\tint\ti;\n\n\tft_find_index(stack, indexes, 5);\n\ti = 0;\n\twhile (i < 5)\n\t{\n\t\tft_putnbr(stack[i]);\n\t\twrite(1, \" -> \", 4);\n\t\tft_putnbr(indexes[i]);\n\t\twrite(1, \"\\n\", 1);\n\t\ti++;\n\t}\n\treturn (0);\n}",
+  "solution": "#include <unistd.h>\n\nvoid\tft_putnbr(int n)\n{\n\tchar\tc;\n\n\tif (n == -2147483648)\n\t{\n\t\twrite(1, \"-2147483648\", 11);\n\t\treturn ;\n\t}\n\tif (n < 0)\n\t{\n\t\twrite(1, \"-\", 1);\n\t\tn = -n;\n\t}\n\tif (n >= 10)\n\t\tft_putnbr(n / 10);\n\tc = (n % 10) + '0';\n\twrite(1, &c, 1);\n}\n\nvoid\tft_find_index(int *stack, int *indexes, int size)\n{\n\tint\ti;\n\tint\tj;\n\tint\tcount;\n\n\ti = 0;\n\twhile (i < size)\n\t{\n\t\tcount = 0;\n\t\tj = 0;\n\t\twhile (j < size)\n\t\t{\n\t\t\tif (stack[j] < stack[i])\n\t\t\t\tcount++;\n\t\t\tj++;\n\t\t}\n\t\tindexes[i] = count;\n\t\ti++;\n\t}\n}\n\nint\tmain(void)\n{\n\tint\tstack[] = {42, -7, 100, 3, -50};\n\tint\tindexes[5];\n\tint\ti;\n\n\tft_find_index(stack, indexes, 5);\n\ti = 0;\n\twhile (i < 5)\n\t{\n\t\tft_putnbr(stack[i]);\n\t\twrite(1, \" -> \", 4);\n\t\tft_putnbr(indexes[i]);\n\t\twrite(1, \"\\n\", 1);\n\t\ti++;\n\t}\n\treturn (0);\n}",
+  "hints": [
+    "L'index d'un element est le nombre d'elements strictement plus petits que lui dans le tableau.",
+    "Utilise une double boucle : pour chaque i, parcours tout le tableau avec j et compte les stack[j] < stack[i].",
+    "Attention a utiliser < (strictement inferieur) et non <= pour eviter de compter l'element lui-meme."
+  ],
+  "testCases": [
+    {
+      "id": 1,
+      "description": "Pile [42, -7, 100, 3, -50] : valeurs positives et negatives",
+      "stdin": "",
+      "expectedStdout": "42 -> 3\n-7 -> 1\n100 -> 4\n3 -> 2\n-50 -> 0\n",
+      "expectedExitCode": 0,
+      "visible": true
+    },
+    {
+      "id": 2,
+      "description": "Pile [1, 2, 3] : deja triee",
+      "stdin": "",
+      "expectedStdout": "1 -> 0\n2 -> 1\n3 -> 2\n",
+      "expectedExitCode": 0,
+      "visible": false
+    },
+    {
+      "id": 3,
+      "description": "Pile [5, 4, 3, 2, 1] : ordre inverse",
+      "stdin": "",
+      "expectedStdout": "5 -> 4\n4 -> 3\n3 -> 2\n2 -> 1\n1 -> 0\n",
+      "expectedExitCode": 0,
+      "visible": false
+    }
+  ],
+  "constraints": {
+    "allowedFunctions": ["write"],
+    "forbiddenFunctions": ["printf", "puts", "sort", "qsort"],
+    "maxExecutionTime": 5000,
+    "maxMemory": 128
+  },
+  "relatedExercises": ["c-day51-ex00-ft-sort-three", "c-day51-ex01-ft-sort-five"],
+  "resources": [
+    {
+      "title": "Push_swap et l'algorithme radix sort",
+      "url": "https://medium.com/nerd-for-tech/push-swap-tutorial-fa746e6b2571",
+      "type": "article"
+    },
+    {
+      "title": "Normalisation de donnees pour le tri",
+      "url": "https://fr.wikipedia.org/wiki/Tri_par_base",
+      "type": "documentation"
+    }
+  ]
+}

@@ -1,0 +1,257 @@
+{
+  "id": "c-day49-ex02-ft-stack-operations",
+  "category": "c",
+  "day": 49,
+  "order": 2,
+  "title": "Operations sa, sb, ss (swap)",
+  "description": "Implemente les operations de swap de push_swap : sa (swap les 2 premiers elements de la pile a), sb (swap les 2 premiers de b), et ss (sa et sb en meme temps). Ces operations echangent les deux elements au sommet d'une pile. Prototypes : void ft_sa(t_stack *a); void ft_sb(t_stack *b); void ft_ss(t_stack *a, t_stack *b);",
+  "difficulty": 3,
+  "points": 30,
+  "estimatedTime": 30,
+  "learningObjectives": [
+    "Implementer les operations de swap de push_swap",
+    "Comprendre la manipulation du sommet d'une pile",
+    "Gerer les cas ou le swap est impossible (moins de 2 elements)",
+    "Factoriser le code avec une fonction swap generique",
+    "Se familiariser avec le vocabulaire de push_swap"
+  ],
+  "learningContent": {
+    "lesson": {
+      "introduction": "Le projet push_swap definit un ensemble d'operations pour manipuler deux piles. Les premieres operations a connaitre sont les swaps : sa, sb et ss. Le swap echange les deux elements au sommet d'une pile. Si la pile a moins de 2 elements, l'operation ne fait rien. Ces operations sont simples mais fondamentales pour comprendre comment push_swap fonctionne.",
+      "steps": [
+        {
+          "id": 1,
+          "title": "L'operation sa (swap a)",
+          "content": "**sa** echange les deux premiers elements au sommet de la pile a. C'est comme swapper data[top] et data[top - 1].\n\n**Regles :**\n- Si la pile a moins de 2 elements, ne rien faire\n- Seuls les 2 elements du sommet sont affectes\n- Le reste de la pile ne change pas\n\nDans push_swap, 'premier element' signifie l'element au sommet (data[top]). Le deuxieme est celui juste en dessous (data[top - 1]).",
+          "codeExample": "// Pile a : [3, 5, 2, 8]  (3 est au sommet)\n//   top -> 3\n//          5\n//          2\n//          8\n// Apres sa :\n//   top -> 5\n//          3\n//          2\n//          8\n// Pile a : [5, 3, 2, 8]  (5 est au sommet)\n\n// Seuls 3 et 5 ont ete echanges\n// 2 et 8 n'ont pas bouge",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Pile a = [7, 1, 4, 9] (7 au sommet). Que donne sa ?",
+            "starterCode": "// Pile a : top=3\n// data = [9, 4, 1, 7]\n// (data[top] = 7, data[top-1] = 1)\n// Apres sa :\n// data[top] = ???\n// data[top-1] = ???",
+            "solution": "// Apres sa :\n// data[top] = 1\n// data[top-1] = 7\n// Pile a : [1, 7, 4, 9] (1 au sommet)\n// Seuls les 2 premiers ont ete echanges"
+          }
+        },
+        {
+          "id": 2,
+          "title": "Implementation du swap sur une pile",
+          "content": "Le swap sur une pile est un simple echange entre `data[top]` et `data[top - 1]`. On utilise une variable temporaire, exactement comme pour le swap d'entiers.\n\n**Verification prealable :** Il faut au moins 2 elements (top >= 1) pour pouvoir swapper. Si top < 1, on ne fait rien.\n\nOn peut factoriser le code en ecrivant une seule fonction `ft_stack_swap` et en l'utilisant pour sa, sb et ss.",
+          "codeExample": "void\tft_stack_swap(t_stack *stack)\n{\n\tint\ttmp;\n\n\tif (!stack || stack->top < 1)\n\t\treturn ;\n\ttmp = stack->data[stack->top];\n\tstack->data[stack->top] = stack->data[stack->top - 1];\n\tstack->data[stack->top - 1] = tmp;\n}\n\nvoid\tft_sa(t_stack *a)\n{\n\tft_stack_swap(a);\n}\n\nvoid\tft_sb(t_stack *b)\n{\n\tft_stack_swap(b);\n}",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Pourquoi la condition est top < 1 et pas top < 0 pour le swap ?",
+            "starterCode": "// top = -1 : pile vide -> ??? elements -> swap ???\n// top = 0  : 1 element -> swap ???\n// top = 1  : 2 elements -> swap ???\n// Condition minimale pour swap : top >= ???",
+            "solution": "// top = -1 : 0 elements -> pas de swap\n// top = 0  : 1 element -> pas de swap (besoin de 2)\n// top = 1  : 2 elements -> swap possible !\n// Condition minimale : top >= 1 (au moins 2 elements)"
+          }
+        },
+        {
+          "id": 3,
+          "title": "L'operation ss (swap a et b)",
+          "content": "**ss** execute sa et sb en meme temps. C'est simplement un appel a ft_sa suivi de ft_sb (ou inversement, l'ordre n'a pas d'importance car elles operent sur des piles differentes).\n\nDans push_swap, ss compte comme **une seule operation**, pas deux. C'est une optimisation : si on doit swapper les deux piles, on utilise ss au lieu de sa + sb (2 operations).",
+          "codeExample": "void\tft_ss(t_stack *a, t_stack *b)\n{\n\tft_sa(a);\n\tft_sb(b);\n}\n\n// Avant ss :\n// Pile a : [3, 5, 2]  Pile b : [8, 1, 4]\n// Apres ss :\n// Pile a : [5, 3, 2]  Pile b : [1, 8, 4]\n\n// ss = 1 operation (pas 2)\n// Equivalent a faire sa et sb simultanement",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Pile a = [2, 7] et pile b = [9, 3]. Que donnent sa, sb et ss ?",
+            "starterCode": "// Pile a = [2, 7], pile b = [9, 3]\n// sa seul : a = [7, 2], b = [9, 3]\n// sb seul : a = [2, 7], b = [3, 9]\n// ss : a = ???, b = ???",
+            "solution": "// ss : a = [7, 2], b = [3, 9]\n// ss fait sa ET sb en meme temps"
+          }
+        },
+        {
+          "id": 4,
+          "title": "Factorisation et bonnes pratiques",
+          "content": "En push_swap, il y a 11 operations a implementer. Pour eviter la duplication de code, on utilise la **factorisation** : ecrire une fonction generique et l'utiliser pour les cas specifiques.\n\nPar exemple, `ft_stack_swap` est la fonction generique, et `ft_sa`, `ft_sb`, `ft_ss` l'utilisent. Cette approche est essentielle pour push_swap car les operations sont similaires entre les piles a et b.\n\n**Convention push_swap :** Apres chaque operation, on affiche le nom de l'operation (sa, sb, ss). Cela permet de generer la liste d'instructions de tri.",
+          "codeExample": "// Factorisation : une fonction generique\nvoid\tft_stack_swap(t_stack *stack)\n{\n\tint\ttmp;\n\n\tif (!stack || stack->top < 1)\n\t\treturn ;\n\ttmp = stack->data[stack->top];\n\tstack->data[stack->top] = stack->data[stack->top - 1];\n\tstack->data[stack->top - 1] = tmp;\n}\n\n// Fonctions specifiques qui utilisent la generique\nvoid\tft_sa(t_stack *a)\n{\n\tft_stack_swap(a);\n\twrite(1, \"sa\\n\", 3);\n}\n\nvoid\tft_sb(t_stack *b)\n{\n\tft_stack_swap(b);\n\twrite(1, \"sb\\n\", 3);\n}\n\nvoid\tft_ss(t_stack *a, t_stack *b)\n{\n\tft_stack_swap(a);\n\tft_stack_swap(b);\n\twrite(1, \"ss\\n\", 3);\n}",
+          "language": "c"
+        }
+      ]
+    },
+    "theory": [
+      {
+        "title": "Les operations de push_swap",
+        "content": "push_swap definit 11 operations pour manipuler deux piles. Elles se divisent en 4 categories : swap, push, rotate et reverse rotate. Chaque operation s'applique a la pile a, b, ou aux deux.",
+        "codeExamples": [
+          {
+            "title": "Les 11 operations",
+            "code": "// SWAP (echange les 2 premiers) :\n// sa : swap a\n// sb : swap b\n// ss : sa + sb\n\n// PUSH (deplace le premier d'une pile a l'autre) :\n// pa : premier de b -> sommet de a\n// pb : premier de a -> sommet de b\n\n// ROTATE (premier -> dernier) :\n// ra : rotate a\n// rb : rotate b\n// rr : ra + rb\n\n// REVERSE ROTATE (dernier -> premier) :\n// rra : reverse rotate a\n// rrb : reverse rotate b\n// rrr : rra + rrb",
+            "explanation": "11 operations : 3 swap, 2 push, 3 rotate, 3 reverse rotate"
+          }
+        ],
+        "keyPoints": [
+          "Sa, sb, ss : echangent les 2 premiers elements du sommet",
+          "Pa, pb : deplacent le sommet d'une pile vers l'autre",
+          "Ra, rb, rr : le premier element passe en dernier",
+          "Rra, rrb, rrr : le dernier element passe en premier"
+        ],
+        "commonMistakes": [
+          "Confondre pa (b -> a) et pb (a -> b)",
+          "Oublier que sa/sb ne font rien avec 0 ou 1 element",
+          "Confondre rotate (premier -> dernier) et reverse rotate (dernier -> premier)"
+        ]
+      },
+      {
+        "title": "Swap de deux elements dans un tableau",
+        "content": "Le swap dans le contexte d'une pile s'effectue entre data[top] et data[top-1]. C'est un swap par indice dans un tableau, identique a celui utilise dans les algorithmes de tri.",
+        "codeExamples": [
+          {
+            "title": "Swap par indice dans un tableau",
+            "code": "// Swap generique entre tab[i] et tab[j]\nvoid\tswap_at(int *tab, int i, int j)\n{\n\tint\ttmp;\n\n\ttmp = tab[i];\n\ttab[i] = tab[j];\n\ttab[j] = tmp;\n}\n\n// Pour la pile, c'est :\nswap_at(stack->data, stack->top, stack->top - 1);\n\n// Ou directement :\nint tmp = stack->data[stack->top];\nstack->data[stack->top] = stack->data[stack->top - 1];\nstack->data[stack->top - 1] = tmp;",
+            "explanation": "Le swap est toujours le meme pattern : tmp, affectation, affectation"
+          }
+        ],
+        "keyPoints": [
+          "Le swap utilise toujours une variable temporaire",
+          "Pour une pile, on swap data[top] et data[top - 1]",
+          "L'operation est en O(1) (temps constant)",
+          "Il faut verifier qu'il y a au moins 2 elements"
+        ],
+        "commonMistakes": [
+          "Oublier la variable temporaire (ecraser une valeur)",
+          "Swapper les mauvais indices (top et top+1 au lieu de top et top-1)",
+          "Ne pas verifier qu'il y a au moins 2 elements"
+        ]
+      },
+      {
+        "title": "Factorisation de code",
+        "content": "La factorisation consiste a ecrire une seule fonction generique et a l'appeler pour chaque cas specifique. Cela evite la duplication de code et facilite la maintenance.",
+        "codeExamples": [
+          {
+            "title": "Avant vs apres factorisation",
+            "code": "// SANS factorisation (code duplique) :\nvoid ft_sa(t_stack *a)\n{\n\tint tmp;\n\tif (!a || a->top < 1) return;\n\ttmp = a->data[a->top];\n\ta->data[a->top] = a->data[a->top - 1];\n\ta->data[a->top - 1] = tmp;\n}\nvoid ft_sb(t_stack *b)\n{\n\tint tmp;\n\tif (!b || b->top < 1) return;\n\ttmp = b->data[b->top];\n\t// ... exactement le meme code ...\n}\n\n// AVEC factorisation (pas de duplication) :\nvoid ft_stack_swap(t_stack *s)\n{\n\tint tmp;\n\tif (!s || s->top < 1) return;\n\ttmp = s->data[s->top];\n\ts->data[s->top] = s->data[s->top - 1];\n\ts->data[s->top - 1] = tmp;\n}\nvoid ft_sa(t_stack *a) { ft_stack_swap(a); }\nvoid ft_sb(t_stack *b) { ft_stack_swap(b); }",
+            "explanation": "La factorisation reduit le code et les risques de bugs"
+          }
+        ],
+        "keyPoints": [
+          "Ecrire une fonction generique utilisee par les cas specifiques",
+          "Reduit la duplication de code (DRY : Don't Repeat Yourself)",
+          "Un bug corrige dans la fonction generique corrige tous les cas",
+          "Facilite l'ajout de nouvelles fonctionnalites"
+        ],
+        "commonMistakes": [
+          "Dupliquer le meme code dans sa et sb au lieu de factoriser",
+          "Ne pas factoriser quand le code est identique a un parametre pres",
+          "Sur-factoriser (creer des fonctions trop generiques et illisibles)"
+        ]
+      },
+      {
+        "title": "L'importance du vocabulaire push_swap",
+        "content": "Dans le projet push_swap, chaque operation a un nom precis (sa, sb, pa, pb, etc.). Il est essentiel de connaitre ces noms et leur signification exacte pour implementer et debugger le projet.",
+        "codeExamples": [
+          {
+            "title": "Terminologie push_swap",
+            "code": "// 'Premier element' = element au SOMMET de la pile\n//                   = data[top]\n\n// 'Swap' = echanger les 2 premiers\n// sa : swap les 2 premiers de a\n// sb : swap les 2 premiers de b\n\n// 'Push' = deplacer le sommet vers l'autre pile\n// pa : prend le sommet de b, le met en sommet de a\n// pb : prend le sommet de a, le met en sommet de b\n\n// 'Rotate' = rotation circulaire\n// ra : le premier de a passe en dernier\n// rra : le dernier de a passe en premier\n\n// Attention : 'premier' = sommet (top), 'dernier' = base (bottom)",
+            "explanation": "La terminologie est specifique a push_swap et peut preter a confusion"
+          }
+        ],
+        "keyPoints": [
+          "Premier element = sommet de la pile (top)",
+          "Dernier element = base de la pile (bottom)",
+          "Swap = echanger les 2 elements du sommet",
+          "Les noms des operations sont standardises (sa, sb, pa, pb, etc.)"
+        ],
+        "commonMistakes": [
+          "Confondre 'premier' (sommet) avec 'premier du tableau' (indice 0)",
+          "Confondre pa (push vers a) avec pb (push vers b)",
+          "Ne pas afficher le nom de l'operation apres l'avoir executee"
+        ]
+      }
+    ],
+    "prepExercises": [
+      {
+        "id": 1,
+        "title": "Swap de deux elements au sommet",
+        "instruction": "Ecris le code qui echange data[top] et data[top-1] d'une pile.",
+        "starterCode": "// stack->top = 2\n// stack->data = [10, 20, 30] (30 au sommet)\nint tmp;\n// Swap data[top] et data[top - 1]\n// TON CODE ICI",
+        "solution": "int tmp;\ntmp = stack->data[stack->top];\nstack->data[stack->top] = stack->data[stack->top - 1];\nstack->data[stack->top - 1] = tmp;\n// data = [10, 30, 20] (20 au sommet)",
+        "hint": "Swap classique avec tmp entre data[top] et data[top - 1].",
+        "difficulty": 1
+      },
+      {
+        "id": 2,
+        "title": "ft_stack_swap generique",
+        "instruction": "Ecris ft_stack_swap qui swap le sommet de n'importe quelle pile.",
+        "starterCode": "void\tft_stack_swap(t_stack *stack)\n{\n\t// Verifie au moins 2 elements\n\t// Swap data[top] et data[top-1]\n\t// TON CODE ICI\n}",
+        "solution": "void\tft_stack_swap(t_stack *stack)\n{\n\tint\ttmp;\n\n\tif (!stack || stack->top < 1)\n\t\treturn ;\n\ttmp = stack->data[stack->top];\n\tstack->data[stack->top] = stack->data[stack->top - 1];\n\tstack->data[stack->top - 1] = tmp;\n}",
+        "hint": "Verifie top >= 1 (au moins 2 elements), puis swap classique.",
+        "difficulty": 2
+      },
+      {
+        "id": 3,
+        "title": "Implementer ft_sa et ft_sb",
+        "instruction": "Ecris ft_sa et ft_sb en utilisant ft_stack_swap.",
+        "starterCode": "void\tft_sa(t_stack *a)\n{\n\t// TON CODE ICI\n}\n\nvoid\tft_sb(t_stack *b)\n{\n\t// TON CODE ICI\n}",
+        "solution": "void\tft_sa(t_stack *a)\n{\n\tft_stack_swap(a);\n}\n\nvoid\tft_sb(t_stack *b)\n{\n\tft_stack_swap(b);\n}",
+        "hint": "Chacune appelle simplement ft_stack_swap sur la pile correspondante.",
+        "difficulty": 1
+      },
+      {
+        "id": 4,
+        "title": "Implementer ft_ss",
+        "instruction": "Ecris ft_ss qui fait sa et sb en meme temps.",
+        "starterCode": "void\tft_ss(t_stack *a, t_stack *b)\n{\n\t// TON CODE ICI\n}",
+        "solution": "void\tft_ss(t_stack *a, t_stack *b)\n{\n\tft_stack_swap(a);\n\tft_stack_swap(b);\n}",
+        "hint": "Appelle ft_stack_swap sur a ET sur b.",
+        "difficulty": 1
+      },
+      {
+        "id": 5,
+        "title": "Test complet sa, sb, ss",
+        "instruction": "Ecris un main qui cree deux piles, push des valeurs, et teste sa, sb et ss.",
+        "starterCode": "int\tmain(void)\n{\n\tt_stack\t*a = ft_stack_init(5);\n\tt_stack\t*b = ft_stack_init(5);\n\t// Push des valeurs dans a et b\n\t// Teste sa, sb, ss\n\t// Affiche les resultats\n\t// TON CODE ICI\n\tft_stack_free(a);\n\tft_stack_free(b);\n\treturn (0);\n}",
+        "solution": "int\tmain(void)\n{\n\tt_stack\t*a = ft_stack_init(5);\n\tt_stack\t*b = ft_stack_init(5);\n\n\tft_stack_push(a, 1);\n\tft_stack_push(a, 2);\n\tft_stack_push(a, 3);\n\tft_stack_push(b, 10);\n\tft_stack_push(b, 20);\n\tft_sa(a);\n\tft_putnbr(a->data[a->top]);\n\twrite(1, \"\\n\", 1);\n\tft_sb(b);\n\tft_putnbr(b->data[b->top]);\n\twrite(1, \"\\n\", 1);\n\tft_stack_free(a);\n\tft_stack_free(b);\n\treturn (0);\n}",
+        "hint": "Push 3 valeurs dans a, 2 dans b, fais sa et sb, affiche les sommets.",
+        "difficulty": 2
+      }
+    ]
+  },
+  "starterCode": "#include <stdlib.h>\n#include <unistd.h>\n\ntypedef struct s_stack\n{\n\tint\t*data;\n\tint\ttop;\n\tint\tcapacity;\n}\t\t\tt_stack;\n\nvoid\tft_putnbr(int n)\n{\n\tchar\tc;\n\n\tif (n == -2147483648)\n\t{\n\t\twrite(1, \"-2147483648\", 11);\n\t\treturn ;\n\t}\n\tif (n < 0)\n\t{\n\t\twrite(1, \"-\", 1);\n\t\tn = -n;\n\t}\n\tif (n >= 10)\n\t\tft_putnbr(n / 10);\n\tc = (n % 10) + '0';\n\twrite(1, &c, 1);\n}\n\nt_stack\t*ft_stack_init(int capacity)\n{\n\tt_stack\t*stack;\n\n\tstack = malloc(sizeof(t_stack));\n\tif (!stack)\n\t\treturn (NULL);\n\tstack->data = malloc(sizeof(int) * capacity);\n\tif (!stack->data)\n\t{\n\t\tfree(stack);\n\t\treturn (NULL);\n\t}\n\tstack->top = -1;\n\tstack->capacity = capacity;\n\treturn (stack);\n}\n\nvoid\tft_stack_free(t_stack *stack)\n{\n\tif (!stack)\n\t\treturn ;\n\tif (stack->data)\n\t\tfree(stack->data);\n\tfree(stack);\n}\n\nint\tft_stack_push(t_stack *stack, int value)\n{\n\tif (!stack || stack->top >= stack->capacity - 1)\n\t\treturn (-1);\n\tstack->top++;\n\tstack->data[stack->top] = value;\n\treturn (0);\n}\n\nvoid\tft_sa(t_stack *a)\n{\n\t// Swap les 2 premiers elements de a\n\t// TON CODE ICI\n}\n\nvoid\tft_sb(t_stack *b)\n{\n\t// Swap les 2 premiers elements de b\n\t// TON CODE ICI\n}\n\nvoid\tft_ss(t_stack *a, t_stack *b)\n{\n\t// sa et sb en meme temps\n\t// TON CODE ICI\n}\n\nint\tmain(void)\n{\n\tt_stack\t*a;\n\tt_stack\t*b;\n\n\ta = ft_stack_init(5);\n\tb = ft_stack_init(5);\n\tft_stack_push(a, 1);\n\tft_stack_push(a, 2);\n\tft_stack_push(a, 3);\n\tft_stack_push(b, 10);\n\tft_stack_push(b, 20);\n\tft_sa(a);\n\tft_putnbr(a->data[a->top]);\n\twrite(1, \"\\n\", 1);\n\tft_putnbr(a->data[a->top - 1]);\n\twrite(1, \"\\n\", 1);\n\tft_ss(a, b);\n\tft_putnbr(a->data[a->top]);\n\twrite(1, \"\\n\", 1);\n\tft_putnbr(b->data[b->top]);\n\twrite(1, \"\\n\", 1);\n\tft_stack_free(a);\n\tft_stack_free(b);\n\treturn (0);\n}",
+  "solution": "#include <stdlib.h>\n#include <unistd.h>\n\ntypedef struct s_stack\n{\n\tint\t*data;\n\tint\ttop;\n\tint\tcapacity;\n}\t\t\tt_stack;\n\nvoid\tft_putnbr(int n)\n{\n\tchar\tc;\n\n\tif (n == -2147483648)\n\t{\n\t\twrite(1, \"-2147483648\", 11);\n\t\treturn ;\n\t}\n\tif (n < 0)\n\t{\n\t\twrite(1, \"-\", 1);\n\t\tn = -n;\n\t}\n\tif (n >= 10)\n\t\tft_putnbr(n / 10);\n\tc = (n % 10) + '0';\n\twrite(1, &c, 1);\n}\n\nt_stack\t*ft_stack_init(int capacity)\n{\n\tt_stack\t*stack;\n\n\tstack = malloc(sizeof(t_stack));\n\tif (!stack)\n\t\treturn (NULL);\n\tstack->data = malloc(sizeof(int) * capacity);\n\tif (!stack->data)\n\t{\n\t\tfree(stack);\n\t\treturn (NULL);\n\t}\n\tstack->top = -1;\n\tstack->capacity = capacity;\n\treturn (stack);\n}\n\nvoid\tft_stack_free(t_stack *stack)\n{\n\tif (!stack)\n\t\treturn ;\n\tif (stack->data)\n\t\tfree(stack->data);\n\tfree(stack);\n}\n\nint\tft_stack_push(t_stack *stack, int value)\n{\n\tif (!stack || stack->top >= stack->capacity - 1)\n\t\treturn (-1);\n\tstack->top++;\n\tstack->data[stack->top] = value;\n\treturn (0);\n}\n\nvoid\tft_stack_swap(t_stack *stack)\n{\n\tint\ttmp;\n\n\tif (!stack || stack->top < 1)\n\t\treturn ;\n\ttmp = stack->data[stack->top];\n\tstack->data[stack->top] = stack->data[stack->top - 1];\n\tstack->data[stack->top - 1] = tmp;\n}\n\nvoid\tft_sa(t_stack *a)\n{\n\tft_stack_swap(a);\n}\n\nvoid\tft_sb(t_stack *b)\n{\n\tft_stack_swap(b);\n}\n\nvoid\tft_ss(t_stack *a, t_stack *b)\n{\n\tft_stack_swap(a);\n\tft_stack_swap(b);\n}\n\nint\tmain(void)\n{\n\tt_stack\t*a;\n\tt_stack\t*b;\n\n\ta = ft_stack_init(5);\n\tb = ft_stack_init(5);\n\tft_stack_push(a, 1);\n\tft_stack_push(a, 2);\n\tft_stack_push(a, 3);\n\tft_stack_push(b, 10);\n\tft_stack_push(b, 20);\n\tft_sa(a);\n\tft_putnbr(a->data[a->top]);\n\twrite(1, \"\\n\", 1);\n\tft_putnbr(a->data[a->top - 1]);\n\twrite(1, \"\\n\", 1);\n\tft_ss(a, b);\n\tft_putnbr(a->data[a->top]);\n\twrite(1, \"\\n\", 1);\n\tft_putnbr(b->data[b->top]);\n\twrite(1, \"\\n\", 1);\n\tft_stack_free(a);\n\tft_stack_free(b);\n\treturn (0);\n}",
+  "hints": [
+    "Ecris d'abord ft_stack_swap qui swap data[top] et data[top-1] avec une variable temporaire. Verifie top >= 1.",
+    "ft_sa et ft_sb appellent simplement ft_stack_swap sur leur pile respective.",
+    "ft_ss appelle ft_stack_swap sur a ET sur b."
+  ],
+  "testCases": [
+    {
+      "id": 1,
+      "description": "sa puis ss sur deux piles",
+      "stdin": "",
+      "expectedStdout": "2\n3\n3\n10\n",
+      "expectedExitCode": 0,
+      "visible": true
+    },
+    {
+      "id": 2,
+      "description": "sa sur pile de 1 element (pas de crash)",
+      "stdin": "",
+      "expectedStdout": "2\n3\n3\n10\n",
+      "expectedExitCode": 0,
+      "visible": false
+    },
+    {
+      "id": 3,
+      "description": "ss avec pile vide (pas de crash)",
+      "stdin": "",
+      "expectedStdout": "2\n3\n3\n10\n",
+      "expectedExitCode": 0,
+      "visible": false
+    }
+  ],
+  "constraints": {
+    "allowedFunctions": ["write", "malloc", "free"],
+    "forbiddenFunctions": ["printf", "calloc", "realloc"],
+    "maxExecutionTime": 5000,
+    "maxMemory": 128
+  },
+  "relatedExercises": ["c-day49-ex00-ft-stack-init", "c-day49-ex01-ft-stack-push-pop"],
+  "resources": [
+    {
+      "title": "push_swap - Sujet 42",
+      "url": "https://github.com/42School/push_swap",
+      "type": "documentation"
+    },
+    {
+      "title": "Comprendre push_swap",
+      "url": "https://medium.com/@jamierobertdawson/push-swap-the-least-amount-of-moves-with-two-stacks-d1e76a71789a",
+      "type": "article"
+    }
+  ]
+}

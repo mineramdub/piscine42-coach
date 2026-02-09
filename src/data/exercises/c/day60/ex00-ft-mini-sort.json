@@ -1,0 +1,257 @@
+{
+  "id": "c-day60-ex00-ft-mini-sort",
+  "category": "c",
+  "day": 60,
+  "order": 0,
+  "title": "Examen : trier un tableau d'entiers",
+  "description": "Ecris un programme qui prend des entiers en arguments de la ligne de commande, les trie par ordre croissant, et les affiche separes par des espaces suivis d'un retour a la ligne. Le parsing de argv doit gerer les nombres negatifs et les erreurs (arguments non numeriques). Si aucun argument n'est donne, le programme n'affiche rien. Exemple : ./ft_mini_sort 42 -5 100 3 -> '-5 3 42 100'.",
+  "difficulty": 3,
+  "points": 30,
+  "estimatedTime": 30,
+  "learningObjectives": [
+    "Savoir parser argv pour extraire des entiers (ft_atoi)",
+    "Implementer un algorithme de tri simple (selection, bulle, insertion)",
+    "Gerer les nombres negatifs et les cas limites (INT_MIN, INT_MAX)",
+    "Afficher des entiers avec write et ft_putnbr",
+    "Combiner parsing, tri et affichage dans un programme complet"
+  ],
+  "learningContent": {
+    "lesson": {
+      "introduction": "Cet exercice d'examen teste votre capacite a combiner plusieurs competences : le parsing d'arguments, l'allocation et la gestion d'un tableau, l'implementation d'un algorithme de tri, et l'affichage formate. C'est le type d'exercice que vous pouvez rencontrer aux examens de la piscine 42. La difficulte n'est pas dans chaque partie individuellement, mais dans leur combinaison sans erreur.",
+      "steps": [
+        {
+          "id": 1,
+          "title": "Parser les arguments en entiers",
+          "content": "Les arguments de argv sont des chaines de caracteres. Il faut les convertir en entiers avec une fonction ft_atoi. Il faut gerer :\n- Les signes + et -\n- Les espaces au debut\n- Les arguments non numeriques (erreur)\n\n**ft_atoi** convertit une chaine en entier. Pour un examen, une version simple suffit.",
+          "codeExample": "int\tft_atoi(char *str)\n{\n\tint\tresult;\n\tint\tsign;\n\n\tresult = 0;\n\tsign = 1;\n\twhile (*str == ' ' || (*str >= 9 && *str <= 13))\n\t\tstr++;\n\tif (*str == '-')\n\t\tsign = -1;\n\tif (*str == '-' || *str == '+')\n\t\tstr++;\n\twhile (*str >= '0' && *str <= '9')\n\t{\n\t\tresult = result * 10 + (*str - '0');\n\t\tstr++;\n\t}\n\treturn (result * sign);\n}",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Que retourne ft_atoi(\"-42abc\") ? Et ft_atoi(\"  +100\") ?",
+            "starterCode": "// ft_atoi(\"-42abc\") = ???\n// ft_atoi(\"  +100\") = ???\n// ft_atoi(\"abc\") = ???",
+            "solution": "// ft_atoi(\"-42abc\") = -42 (s'arrete au premier non-chiffre)\n// ft_atoi(\"  +100\") = 100 (gere espaces et signe +)\n// ft_atoi(\"abc\") = 0 (pas de chiffre)"
+          }
+        },
+        {
+          "id": 2,
+          "title": "Algorithme de tri par selection",
+          "content": "Le **tri par selection** est simple a implementer pour un examen :\n1. Trouver le minimum dans le tableau non trie\n2. L'echanger avec le premier element non trie\n3. Repeter pour la partie restante\n\nComplexite : O(n^2) en temps, O(1) en espace. Suffisant pour un examen.",
+          "codeExample": "void\tft_sort(int *tab, int size)\n{\n\tint\ti;\n\tint\tj;\n\tint\tmin;\n\tint\ttmp;\n\n\ti = 0;\n\twhile (i < size - 1)\n\t{\n\t\tmin = i;\n\t\tj = i + 1;\n\t\twhile (j < size)\n\t\t{\n\t\t\tif (tab[j] < tab[min])\n\t\t\t\tmin = j;\n\t\t\tj++;\n\t\t}\n\t\ttmp = tab[i];\n\t\ttab[i] = tab[min];\n\t\ttab[min] = tmp;\n\t\ti++;\n\t}\n}",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Combien de comparaisons fait le tri par selection pour un tableau de 5 elements ?",
+            "starterCode": "// Passe 1 : compare avec ??? elements\n// Passe 2 : compare avec ??? elements\n// Total : ???",
+            "solution": "// Passe 1 : compare avec 4 elements\n// Passe 2 : compare avec 3 elements\n// Passe 3 : 2 elements, Passe 4 : 1 element\n// Total : 4+3+2+1 = 10 comparaisons"
+          }
+        },
+        {
+          "id": 3,
+          "title": "Afficher le resultat",
+          "content": "Apres le tri, on affiche les nombres separes par des espaces. Le dernier nombre est suivi d'un retour a la ligne, pas d'un espace.\n\nOn utilise ft_putnbr pour afficher chaque entier et write pour les separateurs.",
+          "codeExample": "void\tprint_tab(int *tab, int size)\n{\n\tint\ti;\n\n\ti = 0;\n\twhile (i < size)\n\t{\n\t\tft_putnbr(tab[i]);\n\t\tif (i < size - 1)\n\t\t\twrite(1, \" \", 1);\n\t\ti++;\n\t}\n\twrite(1, \"\\n\", 1);\n}\n\n// Exemple :\n// tab = {-5, 3, 42, 100}\n// Sortie : -5 3 42 100\\n",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Pourquoi tester i < size - 1 pour l'espace ?",
+            "starterCode": "// Si on met un espace apres CHAQUE nombre :\n// Sortie : \"1 2 3 \" (espace en trop)\n// Avec le test i < size - 1 :\n// Sortie : ???",
+            "solution": "// Avec le test i < size - 1 :\n// Sortie : \"1 2 3\" (pas d'espace apres le dernier)\n// L'espace n'est ajoute qu'ENTRE les nombres, pas apres le dernier"
+          }
+        },
+        {
+          "id": 4,
+          "title": "Le programme complet",
+          "content": "Le programme complet suit ces etapes :\n1. Verifier qu'il y a au moins un argument\n2. Allouer un tableau (ou utiliser argv directement)\n3. Parser chaque argument avec ft_atoi\n4. Trier le tableau\n5. Afficher le resultat\n6. Liberer la memoire si necessaire\n\nPour un examen, on peut utiliser un tableau de taille fixe ou malloc.",
+          "codeExample": "#include <unistd.h>\n#include <stdlib.h>\n\nint\tmain(int argc, char **argv)\n{\n\tint\t*tab;\n\tint\tsize;\n\tint\ti;\n\n\tif (argc < 2)\n\t\treturn (0);\n\tsize = argc - 1;\n\ttab = malloc(sizeof(int) * size);\n\tif (!tab)\n\t\treturn (1);\n\ti = 0;\n\twhile (i < size)\n\t{\n\t\ttab[i] = ft_atoi(argv[i + 1]);\n\t\ti++;\n\t}\n\tft_sort(tab, size);\n\tprint_tab(tab, size);\n\tfree(tab);\n\treturn (0);\n}",
+          "language": "c"
+        }
+      ]
+    },
+    "theory": [
+      {
+        "title": "Parsing des arguments en C",
+        "content": "Le parsing d'argv est une competence fondamentale en C. argc contient le nombre d'arguments et argv est un tableau de chaines. argv[0] est le nom du programme.",
+        "codeExamples": [
+          {
+            "title": "Structure de argc et argv",
+            "code": "// Appel : ./prog hello 42 world\n// argc = 4\n// argv[0] = \"./prog\"\n// argv[1] = \"hello\"\n// argv[2] = \"42\"\n// argv[3] = \"world\"\n// argv[4] = NULL (toujours)\n\n// Les arguments sont TOUJOURS des chaines\n// Il faut les convertir avec ft_atoi pour les nombres\nint n = ft_atoi(argv[1]); // Convertit \"hello\" -> 0\nint m = ft_atoi(argv[2]); // Convertit \"42\" -> 42",
+            "explanation": "argv contient des chaines, il faut les convertir pour les utiliser comme nombres"
+          }
+        ],
+        "keyPoints": [
+          "argc = nombre d'arguments (programme inclus)",
+          "argv[0] = nom du programme, argv[1] = premier argument",
+          "argv[argc] = NULL (toujours)",
+          "Les arguments sont des chaines, pas des entiers"
+        ],
+        "commonMistakes": [
+          "Oublier que argv[0] est le nom du programme (les args commencent a 1)",
+          "Ne pas verifier argc avant d'acceder a argv[1], argv[2], etc.",
+          "Supposer que les arguments sont des nombres sans les convertir"
+        ]
+      },
+      {
+        "title": "Algorithmes de tri simples",
+        "content": "Pour un examen, un tri simple en O(n^2) suffit. Les trois plus courants sont : tri par selection, tri a bulles, et tri par insertion.",
+        "codeExamples": [
+          {
+            "title": "Tri a bulles (alternative)",
+            "code": "void\tbubble_sort(int *tab, int size)\n{\n\tint\ti;\n\tint\tswapped;\n\tint\ttmp;\n\n\tswapped = 1;\n\twhile (swapped)\n\t{\n\t\tswapped = 0;\n\t\ti = 0;\n\t\twhile (i < size - 1)\n\t\t{\n\t\t\tif (tab[i] > tab[i + 1])\n\t\t\t{\n\t\t\t\ttmp = tab[i];\n\t\t\t\ttab[i] = tab[i + 1];\n\t\t\t\ttab[i + 1] = tmp;\n\t\t\t\tswapped = 1;\n\t\t\t}\n\t\t\ti++;\n\t\t}\n\t\tsize--;\n\t}\n}",
+            "explanation": "Le tri a bulles est simple mais moins efficace que le tri par selection"
+          }
+        ],
+        "keyPoints": [
+          "Tri par selection : trouve le min et echange (simple et stable en nb d'echanges)",
+          "Tri a bulles : compare les adjacents et echange (simple a coder)",
+          "Tri par insertion : insere chaque element a sa place (bon pour les petits tableaux)",
+          "Tous sont O(n^2) mais suffisants pour un examen"
+        ],
+        "commonMistakes": [
+          "Off-by-one dans les boucles (i < size vs i < size - 1)",
+          "Oublier d'echanger les valeurs (juste copier au lieu de swap)",
+          "Ne pas gerer le cas size <= 1 (rien a trier)"
+        ]
+      },
+      {
+        "title": "ft_putnbr et affichage d'entiers",
+        "content": "ft_putnbr est une fonction classique de la piscine 42. Elle affiche un entier avec write(), en gerant les negatifs et le cas special de INT_MIN.",
+        "codeExamples": [
+          {
+            "title": "ft_putnbr robuste",
+            "code": "void\tft_putnbr(int n)\n{\n\tchar\tc;\n\n\tif (n == -2147483648)\n\t{\n\t\twrite(1, \"-2147483648\", 11);\n\t\treturn ;\n\t}\n\tif (n < 0)\n\t{\n\t\twrite(1, \"-\", 1);\n\t\tn = -n;\n\t}\n\tif (n >= 10)\n\t\tft_putnbr(n / 10);\n\tc = (n % 10) + '0';\n\twrite(1, &c, 1);\n}\n\n// Cas speciaux :\n// ft_putnbr(0)           -> \"0\"\n// ft_putnbr(-42)         -> \"-42\"\n// ft_putnbr(-2147483648) -> \"-2147483648\"",
+            "explanation": "INT_MIN ne peut pas etre inverse car -INT_MIN depasse INT_MAX"
+          }
+        ],
+        "keyPoints": [
+          "Gerer INT_MIN (-2147483648) comme cas special",
+          "Les negatifs : afficher '-' puis inverser le signe",
+          "La recursion divise par 10 puis affiche le reste",
+          "Le cas n == 0 fonctionne naturellement avec cette approche"
+        ],
+        "commonMistakes": [
+          "Ne pas gerer INT_MIN (n = -n overflow !)",
+          "Oublier le cas n == 0",
+          "Ecrire les chiffres dans le mauvais ordre (recursive vs iterative)"
+        ]
+      },
+      {
+        "title": "Strategies d'examen",
+        "content": "Lors d'un examen, il faut coder vite et bien. Quelques strategies pour reussir les exercices de tri et de parsing.",
+        "codeExamples": [
+          {
+            "title": "Template d'examen pour tri",
+            "code": "// Template rapide pour un exercice de tri :\n\nint\tft_atoi(char *s)\n{\n\tint r = 0, sign = 1;\n\twhile (*s == ' ') s++;\n\tif (*s == '-') { sign = -1; s++; }\n\telse if (*s == '+') s++;\n\twhile (*s >= '0' && *s <= '9')\n\t\tr = r * 10 + (*s++ - '0');\n\treturn (r * sign);\n}\n\nvoid\tft_swap(int *a, int *b)\n{\n\tint tmp = *a;\n\t*a = *b;\n\t*b = tmp;\n}\n\nvoid\tft_sort(int *t, int n)\n{\n\tint i = -1;\n\twhile (++i < n - 1)\n\t{\n\t\tint j = i, m = i;\n\t\twhile (++j < n)\n\t\t\tif (t[j] < t[m]) m = j;\n\t\tft_swap(&t[i], &t[m]);\n\t}\n}",
+            "explanation": "Un template compact pour coder rapidement lors d'un examen"
+          }
+        ],
+        "keyPoints": [
+          "Coder d'abord les fonctions utilitaires (ft_atoi, ft_putnbr, ft_sort)",
+          "Tester chaque partie independamment avant d'assembler",
+          "Gerer les cas limites : pas d'argument, un seul argument, nombres negatifs",
+          "Ne pas optimiser : un tri O(n^2) suffit pour les examens"
+        ],
+        "commonMistakes": [
+          "Passer trop de temps a optimiser (un tri simple suffit)",
+          "Oublier de gerer le cas sans argument",
+          "Ne pas tester avec des nombres negatifs"
+        ]
+      }
+    ],
+    "prepExercises": [
+      {
+        "id": 1,
+        "title": "ft_atoi simple",
+        "instruction": "Ecris ft_atoi qui convertit une chaine en entier (gere les negatifs).",
+        "starterCode": "#include <unistd.h>\n\nint\tft_atoi(char *str)\n{\n\t// Convertis str en int\n\t// TON CODE ICI\n\treturn (0);\n}",
+        "solution": "#include <unistd.h>\n\nint\tft_atoi(char *str)\n{\n\tint result = 0;\n\tint sign = 1;\n\n\twhile (*str == ' ')\n\t\tstr++;\n\tif (*str == '-')\n\t\tsign = -1;\n\tif (*str == '-' || *str == '+')\n\t\tstr++;\n\twhile (*str >= '0' && *str <= '9')\n\t{\n\t\tresult = result * 10 + (*str - '0');\n\t\tstr++;\n\t}\n\treturn (result * sign);\n}",
+        "hint": "Gere le signe d'abord, puis boucle sur les chiffres : result = result * 10 + (c - '0').",
+        "difficulty": 1
+      },
+      {
+        "id": 2,
+        "title": "ft_putnbr avec negatifs",
+        "instruction": "Ecris ft_putnbr qui affiche un entier avec write, en gerant INT_MIN.",
+        "starterCode": "#include <unistd.h>\n\nvoid\tft_putnbr(int n)\n{\n\t// Affiche n avec write\n\t// TON CODE ICI\n}",
+        "solution": "#include <unistd.h>\n\nvoid\tft_putnbr(int n)\n{\n\tchar c;\n\n\tif (n == -2147483648)\n\t{\n\t\twrite(1, \"-2147483648\", 11);\n\t\treturn ;\n\t}\n\tif (n < 0)\n\t{\n\t\twrite(1, \"-\", 1);\n\t\tn = -n;\n\t}\n\tif (n >= 10)\n\t\tft_putnbr(n / 10);\n\tc = (n % 10) + '0';\n\twrite(1, &c, 1);\n}",
+        "hint": "Cas special pour -2147483648. Sinon : signe, recursion n/10, affiche n%10+'0'.",
+        "difficulty": 1
+      },
+      {
+        "id": 3,
+        "title": "Tri par selection",
+        "instruction": "Ecris ft_sort qui trie un tableau d'entiers par selection.",
+        "starterCode": "#include <unistd.h>\n\nvoid\tft_sort(int *tab, int size)\n{\n\t// Tri par selection\n\t// TON CODE ICI\n}",
+        "solution": "#include <unistd.h>\n\nvoid\tft_sort(int *tab, int size)\n{\n\tint i = 0;\n\twhile (i < size - 1)\n\t{\n\t\tint min = i;\n\t\tint j = i + 1;\n\t\twhile (j < size)\n\t\t{\n\t\t\tif (tab[j] < tab[min])\n\t\t\t\tmin = j;\n\t\t\tj++;\n\t\t}\n\t\tint tmp = tab[i];\n\t\ttab[i] = tab[min];\n\t\ttab[min] = tmp;\n\t\ti++;\n\t}\n}",
+        "hint": "Double boucle : externe pour la position, interne pour trouver le min. Swap.",
+        "difficulty": 2
+      },
+      {
+        "id": 4,
+        "title": "Parser argv en tableau",
+        "instruction": "Ecris un programme qui parse argv en tableau d'entiers et les affiche.",
+        "starterCode": "#include <unistd.h>\n#include <stdlib.h>\n\nint ft_atoi(char *s) { int r=0,g=1; while(*s==' ')s++; if(*s=='-'){g=-1;s++;}else if(*s=='+')s++; while(*s>='0'&&*s<='9')r=r*10+(*s++-'0'); return r*g; }\nvoid ft_putnbr(int n) { char c; if(n==-2147483648){write(1,\"-2147483648\",11);return;} if(n<0){write(1,\"-\",1);n=-n;} if(n>=10)ft_putnbr(n/10); c=(n%10)+'0'; write(1,&c,1); }\n\nint\tmain(int argc, char **argv)\n{\n\t// Parse argv[1..argc-1] et affiche les entiers\n\t// TON CODE ICI\n\treturn (0);\n}",
+        "solution": "#include <unistd.h>\n#include <stdlib.h>\n\nint ft_atoi(char *s) { int r=0,g=1; while(*s==' ')s++; if(*s=='-'){g=-1;s++;}else if(*s=='+')s++; while(*s>='0'&&*s<='9')r=r*10+(*s++-'0'); return r*g; }\nvoid ft_putnbr(int n) { char c; if(n==-2147483648){write(1,\"-2147483648\",11);return;} if(n<0){write(1,\"-\",1);n=-n;} if(n>=10)ft_putnbr(n/10); c=(n%10)+'0'; write(1,&c,1); }\n\nint\tmain(int argc, char **argv)\n{\n\tint i = 1;\n\twhile (i < argc)\n\t{\n\t\tft_putnbr(ft_atoi(argv[i]));\n\t\tif (i < argc - 1)\n\t\t\twrite(1, \" \", 1);\n\t\ti++;\n\t}\n\tif (argc > 1)\n\t\twrite(1, \"\\n\", 1);\n\treturn (0);\n}",
+        "hint": "Boucle de 1 a argc-1, ft_atoi(argv[i]) pour convertir, ft_putnbr pour afficher.",
+        "difficulty": 2
+      },
+      {
+        "id": 5,
+        "title": "Programme complet de tri",
+        "instruction": "Combine ft_atoi, ft_sort et ft_putnbr pour trier et afficher les arguments.",
+        "starterCode": "#include <unistd.h>\n#include <stdlib.h>\n\n// Fonctions fournies...\n\nint\tmain(int argc, char **argv)\n{\n\t// Parse, trie, affiche\n\t// TON CODE ICI\n\treturn (0);\n}",
+        "solution": "#include <unistd.h>\n#include <stdlib.h>\n\nint ft_atoi(char *s) { int r=0,g=1; while(*s==' ')s++; if(*s=='-'){g=-1;s++;}else if(*s=='+')s++; while(*s>='0'&&*s<='9')r=r*10+(*s++-'0'); return r*g; }\nvoid ft_putnbr(int n) { char c; if(n==-2147483648){write(1,\"-2147483648\",11);return;} if(n<0){write(1,\"-\",1);n=-n;} if(n>=10)ft_putnbr(n/10); c=(n%10)+'0'; write(1,&c,1); }\nvoid ft_sort(int *t, int n) { int i=0; while(i<n-1){int m=i,j=i+1; while(j<n){if(t[j]<t[m])m=j;j++;} int tmp=t[i];t[i]=t[m];t[m]=tmp;i++;} }\n\nint\tmain(int argc, char **argv)\n{\n\tint *tab;\n\tint size = argc - 1;\n\tint i;\n\n\tif (size <= 0) return (0);\n\ttab = malloc(sizeof(int) * size);\n\tif (!tab) return (1);\n\ti = 0;\n\twhile (i < size)\n\t{\n\t\ttab[i] = ft_atoi(argv[i + 1]);\n\t\ti++;\n\t}\n\tft_sort(tab, size);\n\ti = 0;\n\twhile (i < size)\n\t{\n\t\tft_putnbr(tab[i]);\n\t\tif (i < size - 1)\n\t\t\twrite(1, \" \", 1);\n\t\ti++;\n\t}\n\twrite(1, \"\\n\", 1);\n\tfree(tab);\n\treturn (0);\n}",
+        "hint": "malloc le tableau, parse avec ft_atoi, trie avec ft_sort, affiche avec ft_putnbr.",
+        "difficulty": 3
+      }
+    ]
+  },
+  "starterCode": "#include <unistd.h>\n#include <stdlib.h>\n\nint\tft_atoi(char *str)\n{\n\t// Convertis str en entier\n}\n\nvoid\tft_putnbr(int n)\n{\n\t// Affiche un entier avec write\n}\n\nvoid\tft_sort(int *tab, int size)\n{\n\t// Tri par selection\n}\n\nint\tmain(int argc, char **argv)\n{\n\t// 1. Si pas d'argument, retourne 0\n\t// 2. Alloue un tableau de (argc - 1) entiers\n\t// 3. Parse chaque argv[i] avec ft_atoi\n\t// 4. Trie le tableau\n\t// 5. Affiche les entiers separes par des espaces\n\t// 6. Libere la memoire\n\t(void)argc;\n\t(void)argv;\n\treturn (0);\n}",
+  "solution": "#include <unistd.h>\n#include <stdlib.h>\n\nint\tft_atoi(char *str)\n{\n\tint\tresult;\n\tint\tsign;\n\n\tresult = 0;\n\tsign = 1;\n\twhile (*str == ' ' || (*str >= 9 && *str <= 13))\n\t\tstr++;\n\tif (*str == '-')\n\t\tsign = -1;\n\tif (*str == '-' || *str == '+')\n\t\tstr++;\n\twhile (*str >= '0' && *str <= '9')\n\t{\n\t\tresult = result * 10 + (*str - '0');\n\t\tstr++;\n\t}\n\treturn (result * sign);\n}\n\nvoid\tft_putnbr(int n)\n{\n\tchar\tc;\n\n\tif (n == -2147483648)\n\t{\n\t\twrite(1, \"-2147483648\", 11);\n\t\treturn ;\n\t}\n\tif (n < 0)\n\t{\n\t\twrite(1, \"-\", 1);\n\t\tn = -n;\n\t}\n\tif (n >= 10)\n\t\tft_putnbr(n / 10);\n\tc = (n % 10) + '0';\n\twrite(1, &c, 1);\n}\n\nvoid\tft_sort(int *tab, int size)\n{\n\tint\ti;\n\tint\tj;\n\tint\tmin;\n\tint\ttmp;\n\n\ti = 0;\n\twhile (i < size - 1)\n\t{\n\t\tmin = i;\n\t\tj = i + 1;\n\t\twhile (j < size)\n\t\t{\n\t\t\tif (tab[j] < tab[min])\n\t\t\t\tmin = j;\n\t\t\tj++;\n\t\t}\n\t\ttmp = tab[i];\n\t\ttab[i] = tab[min];\n\t\ttab[min] = tmp;\n\t\ti++;\n\t}\n}\n\nint\tmain(int argc, char **argv)\n{\n\tint\t*tab;\n\tint\tsize;\n\tint\ti;\n\n\tsize = argc - 1;\n\tif (size <= 0)\n\t\treturn (0);\n\ttab = malloc(sizeof(int) * size);\n\tif (!tab)\n\t\treturn (1);\n\ti = 0;\n\twhile (i < size)\n\t{\n\t\ttab[i] = ft_atoi(argv[i + 1]);\n\t\ti++;\n\t}\n\tft_sort(tab, size);\n\ti = 0;\n\twhile (i < size)\n\t{\n\t\tft_putnbr(tab[i]);\n\t\tif (i < size - 1)\n\t\t\twrite(1, \" \", 1);\n\t\ti++;\n\t}\n\twrite(1, \"\\n\", 1);\n\tfree(tab);\n\treturn (0);\n}",
+  "hints": [
+    "Commence par ecrire ft_atoi et ft_putnbr. Teste-les individuellement avant de continuer.",
+    "Pour le tri par selection : double boucle, trouve le min dans la partie non triee, echange avec la position courante.",
+    "N'oublie pas de gerer le cas argc == 1 (pas d'arguments) et de free le tableau a la fin."
+  ],
+  "testCases": [
+    {
+      "id": 1,
+      "description": "Tri de 5 entiers melanges",
+      "stdin": "",
+      "expectedStdout": "-5 3 42 100 200\n",
+      "expectedExitCode": 0,
+      "visible": true
+    },
+    {
+      "id": 2,
+      "description": "Un seul argument",
+      "stdin": "",
+      "expectedStdout": "42\n",
+      "expectedExitCode": 0,
+      "visible": false
+    },
+    {
+      "id": 3,
+      "description": "Pas d'argument",
+      "stdin": "",
+      "expectedStdout": "",
+      "expectedExitCode": 0,
+      "visible": false
+    }
+  ],
+  "constraints": {
+    "allowedFunctions": ["write", "malloc", "free"],
+    "forbiddenFunctions": ["printf", "system", "qsort", "atoi"],
+    "maxExecutionTime": 5000,
+    "maxMemory": 128
+  },
+  "relatedExercises": ["c-day60-ex01-ft-pipex-exam", "c-day60-ex02-ft-phase4-review"],
+  "resources": [
+    {
+      "title": "Algorithmes de tri - Visualisation",
+      "url": "https://visualgo.net/en/sorting",
+      "type": "documentation"
+    },
+    {
+      "title": "Tri par selection en C",
+      "url": "https://www.geeksforgeeks.org/selection-sort/",
+      "type": "article"
+    }
+  ]
+}

@@ -1,0 +1,257 @@
+{
+  "id": "c-day60-ex01-ft-pipex-exam",
+  "category": "c",
+  "day": 60,
+  "order": 1,
+  "title": "Examen : mini pipex simplifie",
+  "description": "Ecris un programme qui prend 4 arguments : infile cmd1 cmd2 outfile. Il reproduit le comportement de '< infile cmd1 | cmd2 > outfile'. Les commandes sont des chaines simples sans arguments (ex: 'cat', 'wc'). Le programme doit creer un pipe, fork deux fils, rediriger les entrees/sorties et executer les commandes avec execve. Les chemins des commandes doivent etre absolus (ex: /bin/cat).",
+  "difficulty": 5,
+  "points": 50,
+  "estimatedTime": 45,
+  "learningObjectives": [
+    "Combiner fork, pipe, dup2 et execve dans un programme complet",
+    "Savoir rediriger des fichiers vers stdin/stdout",
+    "Gerer la creation et la fermeture correcte de tous les descripteurs",
+    "Implementer la gestion d'erreurs complete (fichiers, commandes)",
+    "Demontrer la maitrise des concepts de la Phase 4"
+  ],
+  "learningContent": {
+    "lesson": {
+      "introduction": "Cet exercice d'examen combine tous les concepts de la semaine : processus, pipes, redirections et execution de commandes. C'est une version simplifiee du projet pipex de 42. Le programme prend un fichier d'entree, deux commandes et un fichier de sortie, et reproduit le comportement du shell. C'est le test ultime de votre comprehension de la programmation systeme.",
+      "steps": [
+        {
+          "id": 1,
+          "title": "Rappel de l'architecture",
+          "content": "Le programme doit reproduire :\n`< infile cmd1 | cmd2 > outfile`\n\n**Architecture :**\n1. Ouvrir infile et outfile\n2. Creer un pipe\n3. Fork fils 1 : stdin=infile, stdout=pipe, execve(cmd1)\n4. Fork fils 2 : stdin=pipe, stdout=outfile, execve(cmd2)\n5. Parent : fermer tout, attendre les 2 fils\n\nC'est le meme pattern que l'exercice du jour 57 mais en conditions d'examen.",
+          "codeExample": "// Schema du flux de donnees :\n//\n// infile -> [Fils 1: cmd1] -> [PIPE] -> [Fils 2: cmd2] -> outfile\n//\n// Fils 1 :\n//   dup2(fd_in, 0)   -> stdin = infile\n//   dup2(pfd[1], 1)  -> stdout = pipe (ecriture)\n//   close(fd_in, fd_out, pfd[0], pfd[1])\n//   execve(cmd1)\n//\n// Fils 2 :\n//   dup2(pfd[0], 0)  -> stdin = pipe (lecture)\n//   dup2(fd_out, 1)  -> stdout = outfile\n//   close(fd_in, fd_out, pfd[0], pfd[1])\n//   execve(cmd2)",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Quels appels systeme sont necessaires pour ce programme ?",
+            "starterCode": "// Liste des appels systeme :\n// 1. ???\n// 2. ???\n// 3. ???",
+            "solution": "// open() - ouvrir infile et outfile\n// pipe() - creer le canal de communication\n// fork() - creer les 2 processus fils\n// dup2() - rediriger stdin/stdout\n// execve() - lancer les commandes\n// close() - fermer les descripteurs\n// wait/waitpid() - attendre les fils"
+          }
+        },
+        {
+          "id": 2,
+          "title": "Gestion des erreurs d'examen",
+          "content": "En examen, la gestion des erreurs doit etre complete :\n\n1. **argc != 5** : afficher un message d'usage\n2. **infile inexistant** : afficher une erreur et quitter\n3. **outfile non creeable** : afficher une erreur\n4. **commande introuvable** : afficher une erreur et exit(127)\n5. **pipe/fork echoue** : quitter proprement\n\nChaque erreur doit etre geree AVANT de continuer.",
+          "codeExample": "int\tmain(int argc, char **argv)\n{\n\tif (argc != 5)\n\t{\n\t\twrite(2, \"Usage: ./pipex infile cmd1 cmd2 outfile\\n\", 39);\n\t\treturn (1);\n\t}\n\tint fd_in = open(argv[1], O_RDONLY);\n\tif (fd_in == -1)\n\t{\n\t\twrite(2, \"Erreur: \", 8);\n\t\twrite(2, argv[1], ft_strlen(argv[1]));\n\t\twrite(2, \"\\n\", 1);\n\t\treturn (1);\n\t}\n\tint fd_out = open(argv[4], O_WRONLY | O_CREAT | O_TRUNC, 0644);\n\tif (fd_out == -1)\n\t{\n\t\tclose(fd_in);\n\t\twrite(2, \"Erreur: outfile\\n\", 16);\n\t\treturn (1);\n\t}\n\t// Continuer...\n}",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Pourquoi faut-il fermer fd_in si l'ouverture de fd_out echoue ?",
+            "starterCode": "// fd_in est ouvert, open(outfile) echoue\n// Si on ne ferme pas fd_in : ???\n// C'est une fuite de : ???",
+            "solution": "// Si on ne ferme pas fd_in : le descripteur reste ouvert\n// C'est une fuite de descripteur de fichier\n// Il faut toujours nettoyer les ressources deja allouees"
+          }
+        },
+        {
+          "id": 3,
+          "title": "Les deux processus fils",
+          "content": "Chaque fils doit :\n1. Faire les redirections avec dup2\n2. Fermer TOUS les descripteurs inutiles\n3. Construire argv pour execve\n4. Appeler execve\n5. Si execve echoue : message d'erreur et exit(127)\n\n**Point crucial :** Fermer tous les fd AVANT execve, car execve herite des descripteurs ouverts.",
+          "codeExample": "void\tchild_one(int fd_in, int *pfd, char *cmd)\n{\n\tdup2(fd_in, STDIN_FILENO);\n\tdup2(pfd[1], STDOUT_FILENO);\n\tclose(fd_in);\n\tclose(pfd[0]);\n\tclose(pfd[1]);\n\tchar *argv[2];\n\targv[0] = cmd;\n\targv[1] = NULL;\n\tchar *envp[] = {NULL};\n\texecve(cmd, argv, envp);\n\twrite(2, \"Commande introuvable\\n\", 21);\n\texit(127);\n}\n\nvoid\tchild_two(int fd_out, int *pfd, char *cmd)\n{\n\tdup2(pfd[0], STDIN_FILENO);\n\tdup2(fd_out, STDOUT_FILENO);\n\tclose(fd_out);\n\tclose(pfd[0]);\n\tclose(pfd[1]);\n\tchar *argv[2];\n\targv[0] = cmd;\n\targv[1] = NULL;\n\tchar *envp[] = {NULL};\n\texecve(cmd, argv, envp);\n\twrite(2, \"Commande introuvable\\n\", 21);\n\texit(127);\n}",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Pourquoi le fils 1 doit-il aussi fermer pfd[0] alors qu'il ne l'utilise pas ?",
+            "starterCode": "// Le fils 1 utilise pfd[1] (ecriture)\n// Il ne ferme pas pfd[0] : ???",
+            "solution": "// Si le fils 1 ne ferme pas pfd[0], le pipe a un lecteur en trop\n// Le fils 2 ne recevra jamais EOF car pfd[0] est ouvert quelque part\n// Tous les fd du pipe doivent etre fermes dans chaque processus"
+          }
+        },
+        {
+          "id": 4,
+          "title": "Le parent et l'attente",
+          "content": "Le parent doit :\n1. Fermer fd_in, fd_out, pfd[0] et pfd[1]\n2. Attendre les deux fils avec wait() ou waitpid()\n3. Retourner le code de sortie du dernier fils (cmd2)\n\n**Ordre des fermetures :** Fermer les fd du pipe AVANT d'attendre, sinon le fils 2 ne recevra jamais EOF et le programme bloquera.\n\nLe code de sortie du programme doit etre celui de cmd2 (comme le fait bash).",
+          "codeExample": "// Dans le parent, apres les deux fork :\nclose(fd_in);\nclose(fd_out);\nclose(pfd[0]);\nclose(pfd[1]);\n\n// Attendre les deux fils :\nint status1, status2;\nwaitpid(pid1, &status1, 0);\nwaitpid(pid2, &status2, 0);\n\n// Retourner le code de cmd2 (comme bash) :\nif (WIFEXITED(status2))\n\treturn (WEXITSTATUS(status2));\nreturn (1);",
+          "language": "c"
+        }
+      ]
+    },
+    "theory": [
+      {
+        "title": "Resume des appels systeme de pipex",
+        "content": "pipex utilise une combinaison de tous les appels systeme vus cette semaine. Voici un resume de chacun avec son role dans le programme.",
+        "codeExamples": [
+          {
+            "title": "Tous les appels systeme de pipex",
+            "code": "// open(path, flags, mode) - Ouvrir un fichier\nint fd = open(\"file\", O_RDONLY);\nint fd = open(\"file\", O_WRONLY | O_CREAT | O_TRUNC, 0644);\n\n// pipe(fd) - Creer un canal de communication\nint pfd[2];\npipe(pfd); // pfd[0]=lecture, pfd[1]=ecriture\n\n// fork() - Creer un processus fils\npid_t pid = fork(); // 0=fils, >0=parent\n\n// dup2(old, new) - Rediriger un descripteur\ndup2(fd_in, 0);  // stdin <- fichier\ndup2(pfd[1], 1); // stdout -> pipe\n\n// execve(path, argv, envp) - Executer un programme\nexecve(\"/bin/ls\", argv, envp);\n\n// close(fd) - Fermer un descripteur\nclose(fd);\n\n// wait/waitpid - Attendre un fils\nwaitpid(pid, &status, 0);",
+            "explanation": "Chaque appel systeme a un role precis dans l'architecture de pipex"
+          }
+        ],
+        "keyPoints": [
+          "open() pour les fichiers d'entree/sortie",
+          "pipe() pour la communication entre les deux commandes",
+          "fork() + execve() pour lancer chaque commande",
+          "dup2() pour les redirections stdin/stdout"
+        ],
+        "commonMistakes": [
+          "Ouvrir les fichiers dans les fils au lieu du parent",
+          "Creer le pipe apres le fork (les processus ont des pipes differents)",
+          "Oublier de fermer des descripteurs (deadlock ou fuite)"
+        ]
+      },
+      {
+        "title": "Fermeture correcte des descripteurs",
+        "content": "La regle la plus importante de pipex est la fermeture des descripteurs. Chaque processus doit fermer les descripteurs qu'il n'utilise pas.",
+        "codeExamples": [
+          {
+            "title": "Tableau des fermetures",
+            "code": "// Descripteurs ouverts apres pipe + fork :\n// fd_in, fd_out, pfd[0], pfd[1]\n// Chaque processus (parent + 2 fils) a une copie\n\n// Fils 1 (cmd1) :\n//   Utilise : fd_in (stdin), pfd[1] (stdout)\n//   Ferme  : fd_out, pfd[0], fd_in (apres dup2), pfd[1] (apres dup2)\n\n// Fils 2 (cmd2) :\n//   Utilise : pfd[0] (stdin), fd_out (stdout)\n//   Ferme  : fd_in, pfd[1], pfd[0] (apres dup2), fd_out (apres dup2)\n\n// Parent :\n//   Utilise : rien\n//   Ferme  : fd_in, fd_out, pfd[0], pfd[1]\n//   Attend : les deux fils",
+            "explanation": "Chaque processus ferme tous les descripteurs sauf ceux qu'il utilise"
+          }
+        ],
+        "keyPoints": [
+          "Chaque processus a sa propre copie de tous les descripteurs",
+          "Apres dup2, l'original n'est plus necessaire (le fermer)",
+          "Le parent ferme TOUT avant d'attendre les fils",
+          "Si un fd reste ouvert, le pipe ne recevra jamais EOF"
+        ],
+        "commonMistakes": [
+          "Oublier de fermer fd_out dans le fils 1 (fuite)",
+          "Oublier de fermer pfd[1] dans le parent (deadlock)",
+          "Fermer un fd avant de l'utiliser"
+        ]
+      },
+      {
+        "title": "Codes de retour et conventions",
+        "content": "Les codes de retour suivent les conventions Unix. Le programme doit retourner le code du dernier processus comme le fait bash.",
+        "codeExamples": [
+          {
+            "title": "Convention des codes de retour",
+            "code": "// Codes de retour standards :\n// 0   : succes\n// 1   : erreur generique\n// 126 : commande trouvee mais pas executable\n// 127 : commande introuvable\n// 128+N : tue par le signal N\n\n// Dans pipex, le code de retour est celui de cmd2 :\n// ./pipex infile cat wc outfile\n// Le code de retour = code de retour de wc\n\n// Si cmd2 n'existe pas :\n// Code de retour = 127\n\n// Bash fait pareil :\n// cat | wc\n// echo $? -> code de retour de wc",
+            "explanation": "Le code de retour de pipex est celui de la derniere commande"
+          }
+        ],
+        "keyPoints": [
+          "Le code de retour est celui de la derniere commande (cmd2)",
+          "127 = commande introuvable, 126 = pas executable",
+          "WEXITSTATUS extrait le code de retour du status",
+          "Le parent retourne le code du dernier fils"
+        ],
+        "commonMistakes": [
+          "Retourner toujours 0 au lieu du code de cmd2",
+          "Retourner 1 au lieu de 127 quand la commande est introuvable",
+          "Ne pas utiliser WEXITSTATUS pour extraire le code"
+        ]
+      },
+      {
+        "title": "Checklist d'examen pipex",
+        "content": "Une checklist pour ne rien oublier lors de l'implementation de pipex en conditions d'examen.",
+        "codeExamples": [
+          {
+            "title": "Checklist complete",
+            "code": "// 1. VERIFICATION DES ARGUMENTS\n//    [ ] argc == 5 ?\n//    [ ] Message d'usage si non\n\n// 2. OUVERTURE DES FICHIERS\n//    [ ] open(infile, O_RDONLY)\n//    [ ] open(outfile, O_WRONLY | O_CREAT | O_TRUNC, 0644)\n//    [ ] Gerer les erreurs d'ouverture\n\n// 3. CREATION DU PIPE\n//    [ ] pipe(pfd)\n//    [ ] Gerer l'erreur\n\n// 4. FILS 1\n//    [ ] fork()\n//    [ ] dup2(fd_in, 0) + dup2(pfd[1], 1)\n//    [ ] close(fd_in, fd_out, pfd[0], pfd[1])\n//    [ ] execve(cmd1)\n//    [ ] exit(127) si echec\n\n// 5. FILS 2\n//    [ ] fork()\n//    [ ] dup2(pfd[0], 0) + dup2(fd_out, 1)\n//    [ ] close(fd_in, fd_out, pfd[0], pfd[1])\n//    [ ] execve(cmd2)\n//    [ ] exit(127) si echec\n\n// 6. PARENT\n//    [ ] close(fd_in, fd_out, pfd[0], pfd[1])\n//    [ ] waitpid x2\n//    [ ] Retourner le code de cmd2",
+            "explanation": "Suivre cette checklist pour ne rien oublier"
+          }
+        ],
+        "keyPoints": [
+          "Toujours verifier argc en premier",
+          "Ouvrir les fichiers et gerer les erreurs AVANT pipe/fork",
+          "Chaque fils ferme TOUS les fd avant execve",
+          "Le parent ferme tout PUIS attend les fils"
+        ],
+        "commonMistakes": [
+          "Oublier un close dans un des trois processus",
+          "Attendre les fils AVANT de fermer le pipe dans le parent",
+          "Ne pas gerer le cas ou une commande echoue"
+        ]
+      }
+    ],
+    "prepExercises": [
+      {
+        "id": 1,
+        "title": "Open + dup2 basique",
+        "instruction": "Redirige stdin depuis un fichier et stdout vers un autre fichier.",
+        "starterCode": "#include <fcntl.h>\n#include <unistd.h>\n\nint\tmain(void)\n{\n\t// stdin <- \"in.txt\", stdout -> \"out.txt\"\n\t// Lis stdin, ecris stdout (cat)\n\t// TON CODE ICI\n\treturn (0);\n}",
+        "solution": "#include <fcntl.h>\n#include <unistd.h>\n\nint\tmain(void)\n{\n\tint fd_in = open(\"in.txt\", O_RDONLY);\n\tint fd_out = open(\"out.txt\", O_WRONLY | O_CREAT | O_TRUNC, 0644);\n\tchar buf[1024];\n\tint n;\n\n\tif (fd_in == -1 || fd_out == -1)\n\t\treturn (1);\n\tdup2(fd_in, 0);\n\tdup2(fd_out, 1);\n\tclose(fd_in);\n\tclose(fd_out);\n\twhile ((n = read(0, buf, 1024)) > 0)\n\t\twrite(1, buf, n);\n\treturn (0);\n}",
+        "hint": "dup2(fd_in, 0) et dup2(fd_out, 1). Puis read(0)/write(1) utilisent les fichiers.",
+        "difficulty": 2
+      },
+      {
+        "id": 2,
+        "title": "Fork + execve avec redirection",
+        "instruction": "Fork un fils qui redirige stdout vers un fichier et execute /bin/ls.",
+        "starterCode": "#include <fcntl.h>\n#include <unistd.h>\n#include <sys/wait.h>\n#include <stdlib.h>\n\nint\tmain(void)\n{\n\t// Fork, fils redirige stdout vers output.txt, execve ls\n\t// TON CODE ICI\n\treturn (0);\n}",
+        "solution": "#include <fcntl.h>\n#include <unistd.h>\n#include <sys/wait.h>\n#include <stdlib.h>\n\nint\tmain(void)\n{\n\tif (fork() == 0)\n\t{\n\t\tint fd = open(\"output.txt\", O_WRONLY | O_CREAT | O_TRUNC, 0644);\n\t\tdup2(fd, 1);\n\t\tclose(fd);\n\t\tchar *a[] = {\"ls\", NULL};\n\t\tchar *e[] = {NULL};\n\t\texecve(\"/bin/ls\", a, e);\n\t\texit(1);\n\t}\n\twait(NULL);\n\treturn (0);\n}",
+        "hint": "Fils : open output, dup2(fd, 1), close(fd), execve ls. Parent : wait.",
+        "difficulty": 2
+      },
+      {
+        "id": 3,
+        "title": "Pipe entre deux fils",
+        "instruction": "Cree un pipe et connecte echo 'hello' avec wc -c via deux fils.",
+        "starterCode": "#include <unistd.h>\n#include <sys/wait.h>\n#include <stdlib.h>\n\nint\tmain(void)\n{\n\tint pfd[2];\n\t// echo hello | wc -c\n\t// TON CODE ICI\n\treturn (0);\n}",
+        "solution": "#include <unistd.h>\n#include <sys/wait.h>\n#include <stdlib.h>\n\nint\tmain(void)\n{\n\tint pfd[2];\n\tchar *e[] = {NULL};\n\n\tpipe(pfd);\n\tif (fork() == 0)\n\t{\n\t\tdup2(pfd[1], 1);\n\t\tclose(pfd[0]);\n\t\tclose(pfd[1]);\n\t\tchar *a[] = {\"echo\", \"hello\", NULL};\n\t\texecve(\"/bin/echo\", a, e);\n\t\texit(1);\n\t}\n\tif (fork() == 0)\n\t{\n\t\tdup2(pfd[0], 0);\n\t\tclose(pfd[0]);\n\t\tclose(pfd[1]);\n\t\tchar *a[] = {\"wc\", \"-c\", NULL};\n\t\texecve(\"/usr/bin/wc\", a, e);\n\t\texit(1);\n\t}\n\tclose(pfd[0]);\n\tclose(pfd[1]);\n\twait(NULL);\n\twait(NULL);\n\treturn (0);\n}",
+        "hint": "Fils 1: dup2(pfd[1],1)+execve echo. Fils 2: dup2(pfd[0],0)+execve wc. Parent: close+wait.",
+        "difficulty": 3
+      },
+      {
+        "id": 4,
+        "title": "Pipex sans fichiers",
+        "instruction": "Connecte deux commandes via un pipe (sans redirections de fichier).",
+        "starterCode": "#include <unistd.h>\n#include <sys/wait.h>\n#include <stdlib.h>\n\nvoid\tpipe_cmds(char *c1, char *c2)\n{\n\t// Connecte c1 | c2 avec chemins absolus\n\t// TON CODE ICI\n}\n\nint\tmain(void)\n{\n\tpipe_cmds(\"/bin/ls\", \"/usr/bin/wc\");\n\treturn (0);\n}",
+        "solution": "#include <unistd.h>\n#include <sys/wait.h>\n#include <stdlib.h>\n\nvoid\tpipe_cmds(char *c1, char *c2)\n{\n\tint pfd[2];\n\tchar *e[] = {NULL};\n\n\tpipe(pfd);\n\tif (fork() == 0)\n\t{\n\t\tdup2(pfd[1], 1);\n\t\tclose(pfd[0]);\n\t\tclose(pfd[1]);\n\t\tchar *a[] = {c1, NULL};\n\t\texecve(c1, a, e);\n\t\texit(127);\n\t}\n\tif (fork() == 0)\n\t{\n\t\tdup2(pfd[0], 0);\n\t\tclose(pfd[0]);\n\t\tclose(pfd[1]);\n\t\tchar *a[] = {c2, NULL};\n\t\texecve(c2, a, e);\n\t\texit(127);\n\t}\n\tclose(pfd[0]);\n\tclose(pfd[1]);\n\twait(NULL);\n\twait(NULL);\n}\n\nint\tmain(void)\n{\n\tpipe_cmds(\"/bin/ls\", \"/usr/bin/wc\");\n\treturn (0);\n}",
+        "hint": "Pattern standard : pipe, fork fils 1 (stdout->pipe), fork fils 2 (stdin<-pipe), parent close+wait.",
+        "difficulty": 3
+      },
+      {
+        "id": 5,
+        "title": "Pipex complet avec fichiers",
+        "instruction": "Le mini pipex complet : < infile cmd1 | cmd2 > outfile.",
+        "starterCode": "#include <fcntl.h>\n#include <unistd.h>\n#include <sys/wait.h>\n#include <stdlib.h>\n\nint\tmain(int argc, char **argv)\n{\n\t// Usage: ./pipex infile cmd1 cmd2 outfile\n\t// TON CODE ICI\n\t(void)argc;\n\t(void)argv;\n\treturn (0);\n}",
+        "solution": "#include <fcntl.h>\n#include <unistd.h>\n#include <sys/wait.h>\n#include <stdlib.h>\n\nint\tmain(int argc, char **argv)\n{\n\tint pfd[2];\n\tint fi, fo;\n\tchar *e[] = {NULL};\n\n\tif (argc != 5) return (1);\n\tfi = open(argv[1], O_RDONLY);\n\tfo = open(argv[4], O_WRONLY | O_CREAT | O_TRUNC, 0644);\n\tif (fi == -1 || fo == -1) return (1);\n\tpipe(pfd);\n\tif (fork() == 0)\n\t{\n\t\tdup2(fi, 0); dup2(pfd[1], 1);\n\t\tclose(fi); close(fo); close(pfd[0]); close(pfd[1]);\n\t\tchar *a[] = {argv[2], NULL};\n\t\texecve(argv[2], a, e); exit(127);\n\t}\n\tif (fork() == 0)\n\t{\n\t\tdup2(pfd[0], 0); dup2(fo, 1);\n\t\tclose(fi); close(fo); close(pfd[0]); close(pfd[1]);\n\t\tchar *a[] = {argv[3], NULL};\n\t\texecve(argv[3], a, e); exit(127);\n\t}\n\tclose(fi); close(fo); close(pfd[0]); close(pfd[1]);\n\twait(NULL); wait(NULL);\n\treturn (0);\n}",
+        "hint": "Ouvre les fichiers, pipe, fork x2 avec dup2 et execve, parent ferme tout et wait x2.",
+        "difficulty": 4
+      }
+    ]
+  },
+  "starterCode": "#include <fcntl.h>\n#include <unistd.h>\n#include <sys/wait.h>\n#include <stdlib.h>\n\nint\tft_strlen(char *s)\n{\n\tint i = 0;\n\twhile (s[i]) i++;\n\treturn (i);\n}\n\nint\tmain(int argc, char **argv)\n{\n\tint\t\tpfd[2];\n\tint\t\tfd_in;\n\tint\t\tfd_out;\n\tchar\t*envp[] = {NULL};\n\n\t// Usage: ./ft_pipex_exam infile cmd1 cmd2 outfile\n\t// 1. Verifier argc == 5\n\t// 2. Ouvrir infile (O_RDONLY) et outfile (O_WRONLY|O_CREAT|O_TRUNC)\n\t// 3. pipe(pfd)\n\t// 4. Fork fils 1 : stdin=infile, stdout=pipe, execve(cmd1)\n\t// 5. Fork fils 2 : stdin=pipe, stdout=outfile, execve(cmd2)\n\t// 6. Parent : close tout, wait x2\n\t(void)argc;\n\t(void)argv;\n\t(void)envp;\n\treturn (0);\n}",
+  "solution": "#include <fcntl.h>\n#include <unistd.h>\n#include <sys/wait.h>\n#include <stdlib.h>\n\nint\tft_strlen(char *s)\n{\n\tint\ti;\n\n\ti = 0;\n\twhile (s[i])\n\t\ti++;\n\treturn (i);\n}\n\nvoid\tft_putstr_fd(char *s, int fd)\n{\n\twrite(fd, s, ft_strlen(s));\n}\n\nvoid\tchild1(int fd_in, int *pfd, char *cmd, char **envp)\n{\n\tdup2(fd_in, STDIN_FILENO);\n\tdup2(pfd[1], STDOUT_FILENO);\n\tclose(fd_in);\n\tclose(pfd[0]);\n\tclose(pfd[1]);\n\tchar\t*argv[2];\n\targv[0] = cmd;\n\targv[1] = NULL;\n\texecve(cmd, argv, envp);\n\tft_putstr_fd(\"Erreur: commande introuvable: \", 2);\n\tft_putstr_fd(cmd, 2);\n\tft_putstr_fd(\"\\n\", 2);\n\texit(127);\n}\n\nvoid\tchild2(int fd_out, int *pfd, char *cmd, char **envp)\n{\n\tdup2(pfd[0], STDIN_FILENO);\n\tdup2(fd_out, STDOUT_FILENO);\n\tclose(fd_out);\n\tclose(pfd[0]);\n\tclose(pfd[1]);\n\tchar\t*argv[2];\n\targv[0] = cmd;\n\targv[1] = NULL;\n\texecve(cmd, argv, envp);\n\tft_putstr_fd(\"Erreur: commande introuvable: \", 2);\n\tft_putstr_fd(cmd, 2);\n\tft_putstr_fd(\"\\n\", 2);\n\texit(127);\n}\n\nint\tmain(int argc, char **argv)\n{\n\tint\t\tpfd[2];\n\tint\t\tfd_in;\n\tint\t\tfd_out;\n\tchar\t*envp[] = {NULL};\n\tint\t\tstatus;\n\n\tif (argc != 5)\n\t{\n\t\tft_putstr_fd(\"Usage: ./pipex infile cmd1 cmd2 outfile\\n\", 2);\n\t\treturn (1);\n\t}\n\tfd_in = open(argv[1], O_RDONLY);\n\tif (fd_in == -1)\n\t{\n\t\tft_putstr_fd(\"Erreur: \", 2);\n\t\tft_putstr_fd(argv[1], 2);\n\t\tft_putstr_fd(\"\\n\", 2);\n\t\treturn (1);\n\t}\n\tfd_out = open(argv[4], O_WRONLY | O_CREAT | O_TRUNC, 0644);\n\tif (fd_out == -1)\n\t{\n\t\tclose(fd_in);\n\t\tft_putstr_fd(\"Erreur: outfile\\n\", 2);\n\t\treturn (1);\n\t}\n\tif (pipe(pfd) == -1)\n\t\treturn (1);\n\tpid_t pid1 = fork();\n\tif (pid1 == 0)\n\t\tchild1(fd_in, pfd, argv[2], envp);\n\tpid_t pid2 = fork();\n\tif (pid2 == 0)\n\t\tchild2(fd_out, pfd, argv[3], envp);\n\tclose(fd_in);\n\tclose(fd_out);\n\tclose(pfd[0]);\n\tclose(pfd[1]);\n\twaitpid(pid1, NULL, 0);\n\twaitpid(pid2, &status, 0);\n\tif (WIFEXITED(status))\n\t\treturn (WEXITSTATUS(status));\n\treturn (1);\n}",
+  "hints": [
+    "Commence par verifier argc, puis ouvre les deux fichiers. Gere les erreurs avant de creer le pipe.",
+    "Separe le code de chaque fils dans une fonction. Chaque fils fait dup2, close tout, execve, exit(127) si erreur.",
+    "Le parent ferme fd_in, fd_out, pfd[0] et pfd[1] AVANT d'appeler wait. Retourne le code de cmd2."
+  ],
+  "testCases": [
+    {
+      "id": 1,
+      "description": "Pipe basique : cat | wc avec fichiers",
+      "stdin": "",
+      "expectedStdout": "outfile contient le resultat correct",
+      "expectedExitCode": 0,
+      "visible": true
+    },
+    {
+      "id": 2,
+      "description": "Commande inexistante retourne 127",
+      "stdin": "",
+      "expectedStdout": "message d'erreur sur stderr",
+      "expectedExitCode": 127,
+      "visible": false
+    },
+    {
+      "id": 3,
+      "description": "Fichier d'entree inexistant",
+      "stdin": "",
+      "expectedStdout": "message d'erreur sur stderr",
+      "expectedExitCode": 1,
+      "visible": false
+    }
+  ],
+  "constraints": {
+    "allowedFunctions": ["write", "read", "open", "close", "pipe", "fork", "dup2", "execve", "wait", "waitpid", "exit", "access"],
+    "forbiddenFunctions": ["printf", "system", "popen", "execvp"],
+    "maxExecutionTime": 5000,
+    "maxMemory": 128
+  },
+  "relatedExercises": ["c-day60-ex00-ft-mini-sort", "c-day60-ex02-ft-phase4-review"],
+  "resources": [
+    {
+      "title": "Man pipe(2) - Linux manual page",
+      "url": "https://man7.org/linux/man-pages/man2/pipe.2.html",
+      "type": "documentation"
+    },
+    {
+      "title": "Tutoriel pipex complet pour 42",
+      "url": "https://csnotes.medium.com/pipex-tutorial-42-project-4469f5dd5901",
+      "type": "article"
+    }
+  ]
+}

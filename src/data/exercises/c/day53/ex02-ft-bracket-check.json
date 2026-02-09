@@ -1,0 +1,257 @@
+{
+  "id": "c-day53-ex02-ft-bracket-check",
+  "category": "c",
+  "day": 53,
+  "order": 2,
+  "title": "Verifier l'equilibrage des parentheses",
+  "description": "Ecris une fonction ft_bracket_check qui verifie si une chaine contient des parentheses, crochets et accolades correctement equilibres. La fonction utilise une pile pour empiler chaque caractere ouvrant et verifier que le caractere fermant correspond. Prototype : int ft_bracket_check(char *str); Retourne 1 si equilibre, 0 sinon.",
+  "difficulty": 4,
+  "points": 40,
+  "estimatedTime": 35,
+  "learningObjectives": [
+    "Utiliser une pile pour verifier l'equilibrage de symboles",
+    "Maitriser la correspondance entre caracteres ouvrants et fermants",
+    "Comprendre l'application des piles dans le parsing syntaxique",
+    "Gerer les cas limites (chaine vide, caracteres non-brackets)",
+    "Preparer les bases du parsing pour minishell"
+  ],
+  "learningContent": {
+    "lesson": {
+      "introduction": "Verifier que les parentheses sont correctement equilibrees est un probleme classique en informatique. C'est utilise partout : compilateurs, editeurs de code, linters, et meme dans le shell pour verifier la syntaxe. L'algorithme utilise une pile : chaque caractere ouvrant est empile, et quand on rencontre un fermant, on verifie qu'il correspond au dernier ouvrant empile. Si la pile est vide a la fin et que tous les fermants correspondaient, la chaine est equilibree.",
+      "steps": [
+        {
+          "id": 1,
+          "title": "Le probleme d'equilibrage",
+          "content": "Trois types de brackets doivent etre verifies :\n- Parentheses : `(` et `)`\n- Crochets : `[` et `]`\n- Accolades : `{` et `}`\n\n**Regles d'equilibrage :**\n1. Chaque ouvrant doit avoir un fermant correspondant\n2. Les brackets doivent etre correctement imbriques\n3. Un fermant ne peut pas apparaitre avant son ouvrant\n\n`{[()]}` est valide, `{[(])}` ne l'est pas (mauvaise imbrication).",
+          "codeExample": "// Exemples valides :\n// \"()\"        -> OK\n// \"({[]})\"    -> OK\n// \"[a+(b*c)]\" -> OK\n// \"\"          -> OK (chaine vide)\n// \"abc\"       -> OK (pas de brackets)\n\n// Exemples invalides :\n// \"(\"         -> NON (pas ferme)\n// \")\"         -> NON (pas ouvert)\n// \"(]\"        -> NON (mauvais type)\n// \"({)}\"      -> NON (mauvaise imbrication)\n// \"([)]\"      -> NON (croisement)",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "La chaine '{[}]' est-elle equilibree ? Pourquoi ?",
+            "starterCode": "// Chaine : \"{[}]\"\n// '{' ouvrant -> OK\n// '[' ouvrant -> OK\n// '}' fermant de '{' -> mais le dernier ouvrant est '['\n// Resultat : ???",
+            "solution": "// \"{[}]\" est NON equilibree\n// Le '}' ferme '{', mais '[' est encore ouvert\n// entre les deux. C'est un croisement.\n// L'ordre correct serait \"{[]}\" ou \"[{}]\"."
+          }
+        },
+        {
+          "id": 2,
+          "title": "Algorithme avec une pile",
+          "content": "L'algorithme parcourt la chaine caractere par caractere :\n\n1. Si c'est un **ouvrant** (`(`, `[`, `{`) : empiler\n2. Si c'est un **fermant** (`)`, `]`, `}`) :\n   a. Si la pile est vide : ERREUR (fermant sans ouvrant)\n   b. Depiler et verifier que l'ouvrant correspond au fermant\n   c. Si ca ne correspond pas : ERREUR\n3. Si c'est un autre caractere : ignorer\n4. A la fin : si la pile est vide -> EQUILIBRE, sinon ERREUR",
+          "codeExample": "// Trace pour \"({[]})\"\n\n// '(' -> push('(')     pile: ['(']\n// '{' -> push('{')     pile: ['(', '{']\n// '[' -> push('[')     pile: ['(', '{', '[']\n// ']' -> pop() = '[', match '[' et ']' -> OK\n//                      pile: ['(', '{']\n// '}' -> pop() = '{', match '{' et '}' -> OK\n//                      pile: ['(']\n// ')' -> pop() = '(', match '(' et ')' -> OK\n//                      pile: []\n// Fin : pile vide -> EQUILIBRE !",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Trace l'algorithme pour la chaine '([)]'. A quel moment l'erreur est detectee ?",
+            "starterCode": "// Chaine : \"([)]\"\n// '(' -> push     pile: ???\n// '[' -> push     pile: ???\n// ')' -> pop = ???, match avec ')' ? ???\n// Erreur a quel caractere ?",
+            "solution": "// '(' -> push     pile: ['(']\n// '[' -> push     pile: ['(', '[']\n// ')' -> pop = '[', match '[' et ')' ?\n// NON ! '[' ne correspond pas a ')'\n// Erreur au 3eme caractere ')'\n// L'algorithme retourne 0 immediatement"
+          }
+        },
+        {
+          "id": 3,
+          "title": "Implementation de la correspondance",
+          "content": "Pour verifier la correspondance entre ouvrant et fermant, on peut utiliser une fonction simple qui retourne l'ouvrant correspondant a un fermant donne. Si le caractere depile correspond, c'est bon.\n\nLa pile peut etre un simple tableau de char avec un index top.",
+          "codeExample": "char\tft_matching_open(char close)\n{\n\tif (close == ')')\n\t\treturn ('(');\n\tif (close == ']')\n\t\treturn ('[');\n\tif (close == '}')\n\t\treturn ('{');\n\treturn (0);\n}\n\nint\tft_is_open(char c)\n{\n\treturn (c == '(' || c == '[' || c == '{');\n}\n\nint\tft_is_close(char c)\n{\n\treturn (c == ')' || c == ']' || c == '}');\n}\n\n// Verification :\n// Si ft_is_close(c) :\n//   Si pile vide -> erreur\n//   depiled = pop()\n//   Si depiled != ft_matching_open(c) -> erreur",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Ecris la condition complete pour verifier un fermant.",
+            "starterCode": "// c est un caractere fermant\n// top est l'index du sommet de la pile\n// stack est le tableau de char\n\nif (ft_is_close(c))\n{\n\t// Condition 1 : pile vide ?\n\t// Condition 2 : correspondance ?\n\t// Si erreur : retourner 0\n}",
+            "solution": "if (ft_is_close(c))\n{\n\tif (top == -1)\n\t\treturn (0); // Pile vide : fermant sans ouvrant\n\tif (stack[top--] != ft_matching_open(c))\n\t\treturn (0); // Mauvaise correspondance\n}"
+          }
+        },
+        {
+          "id": 4,
+          "title": "Programme complet",
+          "content": "Le programme prend une chaine en argument et affiche \"OK\" si les brackets sont equilibres, \"Error\" sinon. Les caracteres qui ne sont pas des brackets sont ignores.\n\n**Cas limites :**\n- Chaine vide : equilibre (pas de brackets)\n- Que des lettres : equilibre (pas de brackets)\n- Un seul ouvrant : non equilibre (reste dans la pile)\n- Un seul fermant : non equilibre (pile vide quand on veut depiler)",
+          "codeExample": "#include <unistd.h>\n\n#define MAX_STACK 1024\n\nint\tft_bracket_check(char *str)\n{\n\tchar\tstack[MAX_STACK];\n\tint\t\ttop;\n\tint\t\ti;\n\n\ttop = -1;\n\ti = 0;\n\twhile (str[i])\n\t{\n\t\tif (ft_is_open(str[i]))\n\t\t\tstack[++top] = str[i];\n\t\telse if (ft_is_close(str[i]))\n\t\t{\n\t\t\tif (top == -1 || stack[top--] != ft_matching_open(str[i]))\n\t\t\t\treturn (0);\n\t\t}\n\t\ti++;\n\t}\n\treturn (top == -1);\n}",
+          "language": "c"
+        }
+      ]
+    },
+    "theory": [
+      {
+        "title": "Le principe LIFO pour le matching",
+        "content": "Le dernier ouvrant empile doit correspondre au premier fermant rencontre. C'est exactement le comportement LIFO d'une pile : le dernier empile est le premier depile.",
+        "codeExamples": [
+          {
+            "title": "Pourquoi une pile est parfaite",
+            "code": "// Chaine : \"({[]})\"\n// Les brackets s'imbriquent comme des poupees russes\n\n// Le dernier ouvrant '[' doit etre ferme en premier ']'\n// Puis '{' doit etre ferme ensuite '}'\n// Puis '(' en dernier ')'\n\n// C'est l'ordre LIFO !\n// push '(' -> push '{' -> push '['\n// pop '[' match ']' -> pop '{' match '}' -> pop '(' match ')'",
+            "explanation": "L'imbrication des brackets suit naturellement le principe LIFO de la pile"
+          }
+        ],
+        "keyPoints": [
+          "Le dernier ouvrant doit etre ferme en premier (LIFO)",
+          "La pile garantit le bon ordre de verification",
+          "Un croisement est detecte car le sommet ne correspond pas",
+          "La pile vide a la fin signifie que tout est ferme"
+        ],
+        "commonMistakes": [
+          "Utiliser une file au lieu d'une pile (FIFO ne detecte pas les croisements)",
+          "Verifier seulement le nombre d'ouvrants vs fermants (ne detecte pas les croisements)",
+          "Comparer les ouvrants entre eux au lieu d'ouvrant vs fermant"
+        ]
+      },
+      {
+        "title": "Applications du bracket matching",
+        "content": "La verification de l'equilibrage est utilisee dans de nombreux outils : editeurs de code (coloration, autocompletion), compilateurs (analyse syntaxique), linters, et shells (detection de commandes incompletes).",
+        "codeExamples": [
+          {
+            "title": "Exemples d'utilisation",
+            "code": "// Compilateur C :\n// int main() {      <- ouvrant\n//   if (x) {        <- ouvrant imbrique\n//     printf(\"hi\"); <- parentheses dans les accolades\n//   }               <- fermant\n// }                 <- fermant\n// Tout est equilibre -> compilation OK\n\n// Shell bash :\n// echo $(( 1 + $(echo 2) ))\n// Les $() et (()) doivent etre equilibres\n\n// JSON :\n// {\"key\": [1, {\"nested\": true}]}\n// Les {} et [] doivent etre equilibres",
+            "explanation": "L'equilibrage de brackets est fondamental dans tous les langages et formats"
+          }
+        ],
+        "keyPoints": [
+          "Les compilateurs utilisent le bracket matching dans l'analyse syntaxique",
+          "Les editeurs de code l'utilisent pour la coloration et l'indentation",
+          "Le shell verifie l'equilibrage pour les sous-shells et les guillemets",
+          "JSON et XML necessitent un equilibrage correct pour etre valides"
+        ],
+        "commonMistakes": [
+          "Oublier que les guillemets (quotes) sont aussi des paires a equilibrer",
+          "Ne pas gerer les brackets dans les commentaires ou les chaines",
+          "Confondre l'equilibrage (structure) et la validite syntaxique (semantique)"
+        ]
+      },
+      {
+        "title": "Gestion des cas d'erreur",
+        "content": "Il y a 3 types d'erreurs possibles dans l'equilibrage : un fermant sans ouvrant (pile vide), un fermant qui ne correspond pas a l'ouvrant (mauvais type), et des ouvrants non fermes (pile non vide a la fin).",
+        "codeExamples": [
+          {
+            "title": "Les 3 types d'erreurs",
+            "code": "// Type 1 : Fermant sans ouvrant\n// \"]\" -> pop sur pile vide -> ERREUR\n// Solution : verifier top != -1 avant pop\n\n// Type 2 : Mauvais type de fermant\n// \"(]\" -> pop '(', mais ']' attend '[' -> ERREUR\n// Solution : comparer avec ft_matching_open\n\n// Type 3 : Ouvrants non fermes\n// \"((\" -> fin de chaine, pile non vide -> ERREUR\n// Solution : verifier top == -1 a la fin\n\n// Les 3 verifications :\nif (is_close(c))\n{\n\tif (top == -1)              // Type 1\n\t\treturn (0);\n\tif (stack[top--] != match)  // Type 2\n\t\treturn (0);\n}\n// Fin de la chaine :\nreturn (top == -1);             // Type 3",
+            "explanation": "Les 3 conditions couvrent toutes les erreurs possibles d'equilibrage"
+          }
+        ],
+        "keyPoints": [
+          "Erreur 1 : fermant quand la pile est vide (pas d'ouvrant correspondant)",
+          "Erreur 2 : le fermant ne correspond pas au dernier ouvrant",
+          "Erreur 3 : il reste des ouvrants non fermes a la fin",
+          "Les 3 verifications ensemble garantissent un equilibrage correct"
+        ],
+        "commonMistakes": [
+          "Oublier de verifier que la pile est vide a la fin (Type 3)",
+          "Ne verifier que le nombre sans verifier la correspondance de type",
+          "Retourner 1 des que la pile est vide au milieu de la chaine"
+        ]
+      },
+      {
+        "title": "Optimisations et extensions",
+        "content": "L'algorithme de base peut etre etendu pour gerer les guillemets, les commentaires, les chaines de caracteres, et meme fournir des messages d'erreur precis (position et type d'erreur).",
+        "codeExamples": [
+          {
+            "title": "Extensions possibles",
+            "code": "// Extension 1 : gerer les guillemets\n// \"hello (world)\" -> les () dans les guillemets sont ignores\n// Il faut un flag 'in_quotes'\n\n// Extension 2 : position de l'erreur\nint\tft_bracket_check_verbose(char *str)\n{\n\t// ...\n\tif (top == -1)\n\t{\n\t\twrite(2, \"Erreur: fermant sans ouvrant a pos \", 35);\n\t\tft_putnbr(i);\n\t\treturn (0);\n\t}\n\t// ...\n}\n\n// Extension 3 : auto-completion\n// \"({[\" -> il manque \"]})\" pour equilibrer\n// On peut lire la pile pour savoir quoi ajouter",
+            "explanation": "L'algorithme de base est extensible pour des cas d'usage plus complexes"
+          }
+        ],
+        "keyPoints": [
+          "Les guillemets desactivent le bracket matching a l'interieur",
+          "On peut retourner la position exacte de l'erreur",
+          "La pile restante indique quels ouvrants ne sont pas fermes",
+          "Ces extensions sont utiles pour un shell ou un editeur"
+        ],
+        "commonMistakes": [
+          "Oublier que les brackets dans les chaines/guillemets ne comptent pas",
+          "Ne pas echapper les brackets precedes d'un backslash",
+          "Rendre l'algorithme trop complexe en ajoutant trop d'extensions d'un coup"
+        ]
+      }
+    ],
+    "prepExercises": [
+      {
+        "id": 1,
+        "title": "Identifier ouvrant ou fermant",
+        "instruction": "Ecris ft_is_open et ft_is_close qui retournent 1 si le caractere est un bracket ouvrant ou fermant.",
+        "starterCode": "int\tft_is_open(char c)\n{\n\t// TON CODE ICI\n}\n\nint\tft_is_close(char c)\n{\n\t// TON CODE ICI\n}",
+        "solution": "int\tft_is_open(char c)\n{\n\treturn (c == '(' || c == '[' || c == '{');\n}\n\nint\tft_is_close(char c)\n{\n\treturn (c == ')' || c == ']' || c == '}');\n}",
+        "hint": "Trois comparaisons avec || pour chaque fonction.",
+        "difficulty": 1
+      },
+      {
+        "id": 2,
+        "title": "Trouver l'ouvrant correspondant",
+        "instruction": "Ecris ft_matching_open qui retourne l'ouvrant correspondant a un fermant.",
+        "starterCode": "char\tft_matching_open(char close)\n{\n\t// ')' -> '('\n\t// ']' -> '['\n\t// '}' -> '{'\n\t// TON CODE ICI\n}",
+        "solution": "char\tft_matching_open(char close)\n{\n\tif (close == ')')\n\t\treturn ('(');\n\tif (close == ']')\n\t\treturn ('[');\n\tif (close == '}')\n\t\treturn ('{');\n\treturn (0);\n}",
+        "hint": "Trois if/return pour les trois paires de brackets.",
+        "difficulty": 1
+      },
+      {
+        "id": 3,
+        "title": "Verifier uniquement les parentheses",
+        "instruction": "Ecris une version simplifiee qui ne verifie que les parentheses '(' et ')'.",
+        "starterCode": "int\tft_paren_check(char *str)\n{\n\tint\tcount;\n\tint\ti;\n\n\t// Utilise un compteur au lieu d'une pile\n\t// '(' incremente, ')' decremente\n\t// Si count < 0 : erreur\n\t// A la fin : count doit etre 0\n\t// TON CODE ICI\n}",
+        "solution": "int\tft_paren_check(char *str)\n{\n\tint\tcount;\n\tint\ti;\n\n\tcount = 0;\n\ti = 0;\n\twhile (str[i])\n\t{\n\t\tif (str[i] == '(')\n\t\t\tcount++;\n\t\telse if (str[i] == ')')\n\t\t{\n\t\t\tcount--;\n\t\t\tif (count < 0)\n\t\t\t\treturn (0);\n\t\t}\n\t\ti++;\n\t}\n\treturn (count == 0);\n}",
+        "hint": "Pour un seul type de bracket, un compteur suffit. Mais pour plusieurs types, il faut une pile.",
+        "difficulty": 2
+      },
+      {
+        "id": 4,
+        "title": "Pile de char avec tableau",
+        "instruction": "Implemente push et pop pour une pile de char utilisant un tableau.",
+        "starterCode": "#define MAX 1024\nchar\tstack[MAX];\nint\ttop = -1;\n\nvoid\tpush_char(char c)\n{\n\t// TON CODE ICI\n}\n\nchar\tpop_char(void)\n{\n\t// TON CODE ICI\n}",
+        "solution": "#define MAX 1024\nchar\tstack[MAX];\nint\ttop = -1;\n\nvoid\tpush_char(char c)\n{\n\tstack[++top] = c;\n}\n\nchar\tpop_char(void)\n{\n\treturn (stack[top--]);\n}",
+        "hint": "Meme principe que la pile d'int : ++top pour push, top-- pour pop.",
+        "difficulty": 1
+      },
+      {
+        "id": 5,
+        "title": "Combiner pile et matching",
+        "instruction": "Ecris ft_bracket_check complet en combinant la pile et les fonctions de matching.",
+        "starterCode": "int\tft_bracket_check(char *str)\n{\n\tchar\tstack[1024];\n\tint\t\ttop;\n\tint\t\ti;\n\n\ttop = -1;\n\ti = 0;\n\twhile (str[i])\n\t{\n\t\t// Si ouvrant : push\n\t\t// Si fermant : verifier et pop\n\t\t// TON CODE ICI\n\t\ti++;\n\t}\n\treturn (top == -1);\n}",
+        "solution": "int\tft_bracket_check(char *str)\n{\n\tchar\tstack[1024];\n\tint\t\ttop;\n\tint\t\ti;\n\n\ttop = -1;\n\ti = 0;\n\twhile (str[i])\n\t{\n\t\tif (ft_is_open(str[i]))\n\t\t\tstack[++top] = str[i];\n\t\telse if (ft_is_close(str[i]))\n\t\t{\n\t\t\tif (top == -1 || stack[top--] != ft_matching_open(str[i]))\n\t\t\t\treturn (0);\n\t\t}\n\t\ti++;\n\t}\n\treturn (top == -1);\n}",
+        "hint": "Push les ouvrants, pour les fermants verifie que le pop correspond. A la fin, la pile doit etre vide.",
+        "difficulty": 3
+      }
+    ]
+  },
+  "starterCode": "#include <unistd.h>\n\nvoid\tft_putstr(char *str)\n{\n\twhile (*str)\n\t\twrite(1, str++, 1);\n}\n\nint\tft_is_open(char c)\n{\n\treturn (c == '(' || c == '[' || c == '{');\n}\n\nint\tft_is_close(char c)\n{\n\treturn (c == ')' || c == ']' || c == '}');\n}\n\nchar\tft_matching_open(char close)\n{\n\tif (close == ')') return ('(');\n\tif (close == ']') return ('[');\n\tif (close == '}') return ('{');\n\treturn (0);\n}\n\nint\tft_bracket_check(char *str)\n{\n\tchar\tstack[1024];\n\tint\t\ttop;\n\tint\t\ti;\n\n\ttop = -1;\n\ti = 0;\n\t// Parcourir str :\n\t// - Ouvrant : push sur la pile\n\t// - Fermant : verifier correspondance et pop\n\t// - Autre : ignorer\n\t// A la fin : verifier que la pile est vide\n\treturn (0);\n}\n\nint\tmain(int argc, char **argv)\n{\n\tif (argc != 2)\n\t\treturn (1);\n\tif (ft_bracket_check(argv[1]))\n\t\tft_putstr(\"OK\\n\");\n\telse\n\t\tft_putstr(\"Error\\n\");\n\treturn (0);\n}",
+  "solution": "#include <unistd.h>\n\nvoid\tft_putstr(char *str)\n{\n\twhile (*str)\n\t\twrite(1, str++, 1);\n}\n\nint\tft_is_open(char c)\n{\n\treturn (c == '(' || c == '[' || c == '{');\n}\n\nint\tft_is_close(char c)\n{\n\treturn (c == ')' || c == ']' || c == '}');\n}\n\nchar\tft_matching_open(char close)\n{\n\tif (close == ')') return ('(');\n\tif (close == ']') return ('[');\n\tif (close == '}') return ('{');\n\treturn (0);\n}\n\nint\tft_bracket_check(char *str)\n{\n\tchar\tstack[1024];\n\tint\t\ttop;\n\tint\t\ti;\n\n\ttop = -1;\n\ti = 0;\n\twhile (str[i])\n\t{\n\t\tif (ft_is_open(str[i]))\n\t\t\tstack[++top] = str[i];\n\t\telse if (ft_is_close(str[i]))\n\t\t{\n\t\t\tif (top == -1 || stack[top--] != ft_matching_open(str[i]))\n\t\t\t\treturn (0);\n\t\t}\n\t\ti++;\n\t}\n\treturn (top == -1);\n}\n\nint\tmain(int argc, char **argv)\n{\n\tif (argc != 2)\n\t\treturn (1);\n\tif (ft_bracket_check(argv[1]))\n\t\tft_putstr(\"OK\\n\");\n\telse\n\t\tft_putstr(\"Error\\n\");\n\treturn (0);\n}",
+  "hints": [
+    "Pour chaque ouvrant, empile-le. Pour chaque fermant, depile et verifie que ca correspond avec ft_matching_open.",
+    "N'oublie pas de verifier que la pile n'est pas vide avant de depiler (fermant sans ouvrant).",
+    "A la fin de la chaine, la pile doit etre vide (top == -1). Si elle ne l'est pas, il reste des ouvrants non fermes."
+  ],
+  "testCases": [
+    {
+      "id": 1,
+      "description": "'({[]})' : imbrication correcte",
+      "stdin": "",
+      "expectedStdout": "OK\n",
+      "expectedExitCode": 0,
+      "visible": true
+    },
+    {
+      "id": 2,
+      "description": "'([)]' : croisement invalide",
+      "stdin": "",
+      "expectedStdout": "Error\n",
+      "expectedExitCode": 0,
+      "visible": false
+    },
+    {
+      "id": 3,
+      "description": "'int main() { if (a[0]) { return (1); } }' : code C valide",
+      "stdin": "",
+      "expectedStdout": "OK\n",
+      "expectedExitCode": 0,
+      "visible": false
+    }
+  ],
+  "constraints": {
+    "allowedFunctions": ["write"],
+    "forbiddenFunctions": ["printf", "puts", "malloc"],
+    "maxExecutionTime": 5000,
+    "maxMemory": 128
+  },
+  "relatedExercises": ["c-day53-ex00-ft-queue-init", "c-day53-ex01-ft-stack-calc"],
+  "resources": [
+    {
+      "title": "Verification de parentheses avec pile",
+      "url": "https://www.geeksforgeeks.org/check-for-balanced-parentheses-in-an-expression/",
+      "type": "article"
+    },
+    {
+      "title": "Pile (informatique)",
+      "url": "https://fr.wikipedia.org/wiki/Pile_(informatique)",
+      "type": "documentation"
+    }
+  ]
+}

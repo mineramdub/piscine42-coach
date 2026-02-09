@@ -1,0 +1,257 @@
+{
+  "id": "c-day51-ex00-ft-sort-three",
+  "category": "c",
+  "day": 51,
+  "order": 0,
+  "title": "Trier une pile de 3 elements",
+  "description": "Ecris une fonction ft_sort_three qui trie une pile de 3 elements en utilisant uniquement les operations sa (swap les 2 premiers elements), ra (rotation vers le haut) et rra (rotation vers le bas). Tu dois trier avec un maximum de 2 operations. La pile est representee par un tableau de 3 entiers. Prototype : void ft_sort_three(int *stack, int size);",
+  "difficulty": 3,
+  "points": 30,
+  "estimatedTime": 30,
+  "learningObjectives": [
+    "Comprendre le concept de pile (stack) et ses operations de base",
+    "Maitriser les operations sa, ra et rra du projet push_swap",
+    "Analyser les 6 permutations possibles de 3 elements",
+    "Optimiser le tri pour utiliser le minimum d'operations",
+    "Preparer la base algorithmique du projet push_swap"
+  ],
+  "learningContent": {
+    "lesson": {
+      "introduction": "Le projet push_swap de 42 te demande de trier une pile d'entiers en utilisant un ensemble limite d'operations. Avant de s'attaquer au tri de grandes piles, il faut maitriser le cas le plus simple : trier 3 elements. Avec 3 elements, il n'y a que 6 permutations possibles, et chacune peut etre resolue en au maximum 2 operations. Comprendre ce cas de base est essentiel car il sera utilise comme sous-routine dans les algorithmes de tri plus complexes.",
+      "steps": [
+        {
+          "id": 1,
+          "title": "Les operations de pile dans push_swap",
+          "content": "Dans push_swap, on manipule des piles avec des operations specifiques :\n\n**sa (swap a)** : Echange les 2 premiers elements du sommet de la pile a.\n**ra (rotate a)** : Rotation vers le haut - le premier element va a la fin.\n**rra (reverse rotate a)** : Rotation vers le bas - le dernier element va au debut.\n\nCes operations sont les seuls outils pour trier la pile. Il faut les combiner intelligemment.",
+          "codeExample": "// Pile initiale : [3, 1, 2] (3 est au sommet)\n\n// sa : swap les 2 premiers\n// [3, 1, 2] -> [1, 3, 2]\n\n// ra : le premier va a la fin\n// [3, 1, 2] -> [1, 2, 3]\n\n// rra : le dernier va au debut\n// [3, 1, 2] -> [2, 3, 1]\n\nvoid\tft_sa(int *stack)\n{\n\tint\ttmp;\n\n\ttmp = stack[0];\n\tstack[0] = stack[1];\n\tstack[1] = tmp;\n}\n\nvoid\tft_ra(int *stack, int size)\n{\n\tint\ttmp;\n\tint\ti;\n\n\ttmp = stack[0];\n\ti = 0;\n\twhile (i < size - 1)\n\t{\n\t\tstack[i] = stack[i + 1];\n\t\ti++;\n\t}\n\tstack[size - 1] = tmp;\n}",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Quelle operation faut-il appliquer pour transformer [2, 1, 3] en [1, 2, 3] ?",
+            "starterCode": "// Pile : [2, 1, 3]\n// On veut : [1, 2, 3]\n// sa -> echange les 2 premiers\n// ra -> premier va a la fin\n// rra -> dernier va au debut\n// Reponse : ???",
+            "solution": "// Reponse : sa\n// [2, 1, 3] -> sa -> [1, 2, 3]\n// Un seul swap suffit car seuls les 2 premiers\n// sont dans le mauvais ordre."
+          }
+        },
+        {
+          "id": 2,
+          "title": "Les 6 permutations de 3 elements",
+          "content": "Avec 3 elements (a, b, c ou a < b < c), il y a exactement 6 permutations possibles :\n\n1. `[a, b, c]` -> Deja trie, 0 operations\n2. `[a, c, b]` -> sa + ra (ou rra + sa)\n3. `[b, a, c]` -> sa\n4. `[b, c, a]` -> rra\n5. `[c, a, b]` -> ra\n6. `[c, b, a]` -> sa + rra (ou ra + sa)\n\nChaque cas necessite au plus 2 operations. L'astuce est d'identifier dans quel cas on se trouve en comparant les 3 valeurs.",
+          "codeExample": "// Les 6 cas avec des nombres concrets (1 < 2 < 3) :\n\n// Cas 1 : [1, 2, 3] -> rien (deja trie)\n// Cas 2 : [1, 3, 2] -> sa + ra -> [3, 1, 2] -> [1, 2, 3]\n// Cas 3 : [2, 1, 3] -> sa -> [1, 2, 3]\n// Cas 4 : [2, 3, 1] -> rra -> [1, 2, 3]\n// Cas 5 : [3, 1, 2] -> ra -> [1, 2, 3]\n// Cas 6 : [3, 2, 1] -> sa + rra -> [2, 3, 1] -> [1, 2, 3]\n\n// Pour identifier le cas, on compare stack[0], stack[1], stack[2]\n// On regarde ou est le max et le min",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "La pile est [3, 2, 1]. Quelles 2 operations faut-il faire pour la trier ?",
+            "starterCode": "// Pile : [3, 2, 1]\n// Etape 1 : appliquer ???\n// Resultat intermediaire : ???\n// Etape 2 : appliquer ???\n// Resultat final : [1, 2, 3]",
+            "solution": "// Pile : [3, 2, 1]\n// Etape 1 : sa -> [2, 3, 1]\n// Etape 2 : rra -> [1, 2, 3]\n// Ou alternativement :\n// Etape 1 : ra -> [2, 1, 3]\n// Etape 2 : sa -> [1, 2, 3]"
+          }
+        },
+        {
+          "id": 3,
+          "title": "Implementer la logique de tri",
+          "content": "Pour coder ft_sort_three, on compare les 3 elements pour determiner le cas, puis on applique les operations correspondantes.\n\n**Strategie :** On identifie la position du plus grand element :\n- Si max est en position 0 : ra puis verifier si sa est necessaire\n- Si max est en position 1 : rra puis verifier si sa est necessaire\n- Si max est en position 2 : verifier si sa est necessaire\n\nCette approche est plus simple que de coder les 6 cas separement.",
+          "codeExample": "void\tft_sort_three(int *stack, int size)\n{\n\tif (size != 3)\n\t\treturn ;\n\t// Si le max est au sommet (position 0)\n\tif (stack[0] > stack[1] && stack[0] > stack[2])\n\t\tft_ra(stack, size);\n\t// Si le max est au milieu (position 1)\n\telse if (stack[1] > stack[0] && stack[1] > stack[2])\n\t\tft_rra(stack, size);\n\t// Maintenant le max est forcement en position 2\n\t// Il reste a verifier si les 2 premiers sont dans l'ordre\n\tif (stack[0] > stack[1])\n\t\tft_sa(stack);\n}",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Trace l'execution de ft_sort_three sur la pile [2, 3, 1]. Ou est le max ?",
+            "starterCode": "// Pile : [2, 3, 1]\n// stack[0]=2, stack[1]=3, stack[2]=1\n// Ou est le max (3) ? Position ???\n// Quelle branche du if est executee ? ???\n// Resultat apres la premiere operation : ???\n// Faut-il faire sa ensuite ? ???",
+            "solution": "// Pile : [2, 3, 1]\n// Le max (3) est en position 1\n// -> On execute rra : [1, 2, 3]\n// stack[0]=1 < stack[1]=2 ? Oui\n// -> Pas besoin de sa\n// Resultat final : [1, 2, 3] (2 operations: rra)"
+          }
+        },
+        {
+          "id": 4,
+          "title": "Affichage des operations et programme complet",
+          "content": "Dans push_swap, il faut afficher chaque operation effectuee sur la sortie standard. Chaque operation est affichee sur une ligne separee.\n\nLe programme complet doit :\n1. Recevoir 3 nombres en arguments\n2. Les mettre dans une pile (tableau)\n3. Appliquer ft_sort_three\n4. Afficher les operations effectuees\n\n**Important :** Dans le vrai push_swap, les operations sont affichees au moment ou elles sont executees. Ici on simplifie en integrant le write dans chaque fonction d'operation.",
+          "codeExample": "#include <unistd.h>\n\nvoid\tft_sa(int *stack)\n{\n\tint\ttmp;\n\n\ttmp = stack[0];\n\tstack[0] = stack[1];\n\tstack[1] = tmp;\n\twrite(1, \"sa\\n\", 3);\n}\n\nvoid\tft_ra(int *stack, int size)\n{\n\tint\ttmp;\n\tint\ti;\n\n\ttmp = stack[0];\n\ti = 0;\n\twhile (i < size - 1)\n\t{\n\t\tstack[i] = stack[i + 1];\n\t\ti++;\n\t}\n\tstack[size - 1] = tmp;\n\twrite(1, \"ra\\n\", 3);\n}\n\nvoid\tft_rra(int *stack, int size)\n{\n\tint\ttmp;\n\tint\ti;\n\n\ttmp = stack[size - 1];\n\ti = size - 1;\n\twhile (i > 0)\n\t{\n\t\tstack[i] = stack[i - 1];\n\t\ti--;\n\t}\n\tstack[0] = tmp;\n\twrite(1, \"rra\\n\", 4);\n}",
+          "language": "c"
+        }
+      ]
+    },
+    "theory": [
+      {
+        "title": "Les piles (stacks) en informatique",
+        "content": "Une pile est une structure de donnees LIFO (Last In, First Out). Le dernier element ajoute est le premier retire. On peut la visualiser comme une pile d'assiettes : on pose et on retire toujours par le dessus.",
+        "codeExamples": [
+          {
+            "title": "Representation d'une pile avec un tableau",
+            "code": "// Pile representee par un tableau\n// stack[0] = sommet de la pile\n// stack[size-1] = fond de la pile\n\nint\tstack[3] = {3, 1, 2};\n// Visualisation :\n// | 3 | <- sommet (stack[0])\n// | 1 |\n// | 2 | <- fond (stack[2])\n\n// Push : ajouter au sommet\n// Pop : retirer du sommet\n// Peek : regarder le sommet sans retirer",
+            "explanation": "Le tableau represente la pile, index 0 etant le sommet"
+          }
+        ],
+        "keyPoints": [
+          "Une pile suit le principe LIFO : dernier entre, premier sorti",
+          "Dans push_swap, stack[0] est le sommet de la pile",
+          "Les operations modifient la pile sur place (in-place)",
+          "La taille de la pile est fixe dans cet exercice"
+        ],
+        "commonMistakes": [
+          "Confondre le sommet et le fond de la pile (stack[0] vs stack[size-1])",
+          "Oublier de decaler tous les elements lors d'une rotation",
+          "Ne pas sauvegarder l'element temporaire avant de decaler"
+        ]
+      },
+      {
+        "title": "Les operations de push_swap",
+        "content": "Le projet push_swap definit un ensemble precis d'operations pour manipuler deux piles a et b. Pour cet exercice, on se concentre sur les 3 operations de la pile a : sa, ra et rra.",
+        "codeExamples": [
+          {
+            "title": "Les 3 operations fondamentales",
+            "code": "// sa (swap a) :\n// [3, 1, 2] -> [1, 3, 2]\n// Echange stack[0] et stack[1]\n\n// ra (rotate a) :\n// [3, 1, 2] -> [1, 2, 3]\n// Tout monte, le premier va a la fin\n\n// rra (reverse rotate a) :\n// [3, 1, 2] -> [2, 3, 1]\n// Tout descend, le dernier va au debut",
+            "explanation": "Chaque operation modifie la pile d'une maniere precise et reversible"
+          }
+        ],
+        "keyPoints": [
+          "sa echange uniquement les 2 premiers elements",
+          "ra fait une rotation : le sommet va au fond",
+          "rra fait une rotation inverse : le fond va au sommet",
+          "ra et rra sont des operations inverses l'une de l'autre"
+        ],
+        "commonMistakes": [
+          "Confondre ra et rra (rotation vers le haut vs vers le bas)",
+          "Implementer ra/rra avec un simple swap au lieu de decaler tout le tableau",
+          "Oublier que sa ne fait rien si la pile a moins de 2 elements"
+        ]
+      },
+      {
+        "title": "Analyse des permutations",
+        "content": "Pour 3 elements, il y a 3! = 6 permutations possibles. Chaque permutation correspond a un ordre specifique des elements et necessite une sequence d'operations differente pour etre triee.",
+        "codeExamples": [
+          {
+            "title": "Tableau de toutes les permutations",
+            "code": "// Soit a < b < c :\n// Permutation    | Operations  | Nombre\n// [a, b, c]     | (rien)      | 0\n// [a, c, b]     | sa, ra      | 2\n// [b, a, c]     | sa          | 1\n// [b, c, a]     | rra         | 1\n// [c, a, b]     | ra          | 1\n// [c, b, a]     | sa, rra     | 2\n\n// Moyenne : (0+2+1+1+1+2)/6 = 1.17 operations\n// Maximum : 2 operations",
+            "explanation": "Chaque permutation de 3 elements peut etre triee en au plus 2 operations"
+          }
+        ],
+        "keyPoints": [
+          "3 elements = 6 permutations possibles (3! = 6)",
+          "Toutes les permutations sont triables en 2 operations maximum",
+          "Une seule permutation est deja triee (meilleur cas)",
+          "L'identification du cas se fait par comparaison des 3 valeurs"
+        ],
+        "commonMistakes": [
+          "Oublier de gerer le cas ou la pile est deja triee",
+          "Utiliser plus de 2 operations pour un cas qui n'en necessite qu'une",
+          "Ne pas tester toutes les 6 permutations possibles"
+        ]
+      },
+      {
+        "title": "Strategie de tri par position du maximum",
+        "content": "Plutot que de coder les 6 cas separement, on peut adopter une strategie plus elegante : d'abord placer le maximum a la fin (position 2), puis verifier si les 2 premiers elements sont dans l'ordre.",
+        "codeExamples": [
+          {
+            "title": "Algorithme en 2 etapes",
+            "code": "void\tft_sort_three(int *stack, int size)\n{\n\t// Etape 1 : Mettre le max en position 2\n\tif (stack[0] > stack[1] && stack[0] > stack[2])\n\t\tft_ra(stack, size);   // max en pos 0 -> ra\n\telse if (stack[1] > stack[0] && stack[1] > stack[2])\n\t\tft_rra(stack, size);  // max en pos 1 -> rra\n\t// Si max deja en pos 2, rien a faire\n\n\t// Etape 2 : Trier les 2 premiers si necessaire\n\tif (stack[0] > stack[1])\n\t\tft_sa(stack);\n}",
+            "explanation": "En 2 etapes simples, on couvre les 6 permutations avec au plus 2 operations"
+          }
+        ],
+        "keyPoints": [
+          "Trouver la position du max est la premiere etape",
+          "ra et rra servent a placer le max en derniere position",
+          "Apres placement du max, un simple swap suffit si necessaire",
+          "Cette strategie generalise mieux que le codage cas par cas"
+        ],
+        "commonMistakes": [
+          "Confondre la comparaison pour trouver le max (> vs >=)",
+          "Oublier le cas ou le max est deja en derniere position",
+          "Ne pas verifier le swap final apres la rotation"
+        ]
+      }
+    ],
+    "prepExercises": [
+      {
+        "id": 1,
+        "title": "Implementer ft_sa",
+        "instruction": "Ecris la fonction ft_sa qui echange les 2 premiers elements de la pile et affiche 'sa'.",
+        "starterCode": "#include <unistd.h>\n\nvoid\tft_sa(int *stack)\n{\n\t// Echange stack[0] et stack[1]\n\t// Affiche \"sa\\n\"\n\t// TON CODE ICI\n}",
+        "solution": "#include <unistd.h>\n\nvoid\tft_sa(int *stack)\n{\n\tint\ttmp;\n\n\ttmp = stack[0];\n\tstack[0] = stack[1];\n\tstack[1] = tmp;\n\twrite(1, \"sa\\n\", 3);\n}",
+        "hint": "C'est un simple swap de stack[0] et stack[1] avec une variable temporaire.",
+        "difficulty": 1
+      },
+      {
+        "id": 2,
+        "title": "Implementer ft_ra",
+        "instruction": "Ecris la fonction ft_ra qui effectue une rotation vers le haut : le premier element va a la fin.",
+        "starterCode": "#include <unistd.h>\n\nvoid\tft_ra(int *stack, int size)\n{\n\t// Le premier element va a la fin\n\t// Tous les autres montent d'une position\n\t// Affiche \"ra\\n\"\n\t// TON CODE ICI\n}",
+        "solution": "#include <unistd.h>\n\nvoid\tft_ra(int *stack, int size)\n{\n\tint\ttmp;\n\tint\ti;\n\n\ttmp = stack[0];\n\ti = 0;\n\twhile (i < size - 1)\n\t{\n\t\tstack[i] = stack[i + 1];\n\t\ti++;\n\t}\n\tstack[size - 1] = tmp;\n\twrite(1, \"ra\\n\", 3);\n}",
+        "hint": "Sauvegarde stack[0], decale tout vers la gauche, puis place l'ancien stack[0] a la fin.",
+        "difficulty": 1
+      },
+      {
+        "id": 3,
+        "title": "Implementer ft_rra",
+        "instruction": "Ecris la fonction ft_rra qui effectue une rotation inverse : le dernier element va au debut.",
+        "starterCode": "#include <unistd.h>\n\nvoid\tft_rra(int *stack, int size)\n{\n\t// Le dernier element va au debut\n\t// Tous les autres descendent d'une position\n\t// Affiche \"rra\\n\"\n\t// TON CODE ICI\n}",
+        "solution": "#include <unistd.h>\n\nvoid\tft_rra(int *stack, int size)\n{\n\tint\ttmp;\n\tint\ti;\n\n\ttmp = stack[size - 1];\n\ti = size - 1;\n\twhile (i > 0)\n\t{\n\t\tstack[i] = stack[i - 1];\n\t\ti--;\n\t}\n\tstack[0] = tmp;\n\twrite(1, \"rra\\n\", 4);\n}",
+        "hint": "Sauvegarde stack[size-1], decale tout vers la droite, place l'ancien dernier au debut.",
+        "difficulty": 1
+      },
+      {
+        "id": 4,
+        "title": "Trouver le max de 3 elements",
+        "instruction": "Ecris une fonction qui retourne la position (0, 1 ou 2) du plus grand element dans un tableau de 3.",
+        "starterCode": "int\tft_max_pos(int *stack)\n{\n\t// Retourne 0, 1 ou 2 selon la position du max\n\t// TON CODE ICI\n}",
+        "solution": "int\tft_max_pos(int *stack)\n{\n\tif (stack[0] > stack[1] && stack[0] > stack[2])\n\t\treturn (0);\n\tif (stack[1] > stack[0] && stack[1] > stack[2])\n\t\treturn (1);\n\treturn (2);\n}",
+        "hint": "Compare stack[0] avec les deux autres, puis stack[1] avec les deux autres.",
+        "difficulty": 2
+      },
+      {
+        "id": 5,
+        "title": "Verifier si une pile est triee",
+        "instruction": "Ecris une fonction qui verifie si un tableau de n entiers est trie en ordre croissant.",
+        "starterCode": "int\tft_is_sorted(int *stack, int size)\n{\n\t// Retourne 1 si trie en ordre croissant, 0 sinon\n\t// TON CODE ICI\n}",
+        "solution": "int\tft_is_sorted(int *stack, int size)\n{\n\tint\ti;\n\n\ti = 0;\n\twhile (i < size - 1)\n\t{\n\t\tif (stack[i] > stack[i + 1])\n\t\t\treturn (0);\n\t\ti++;\n\t}\n\treturn (1);\n}",
+        "hint": "Parcours le tableau et verifie que chaque element est <= au suivant.",
+        "difficulty": 2
+      }
+    ]
+  },
+  "starterCode": "#include <unistd.h>\n\nvoid\tft_sa(int *stack)\n{\n\t// Echange les 2 premiers elements\n\t// Affiche \"sa\\n\"\n}\n\nvoid\tft_ra(int *stack, int size)\n{\n\t// Rotation vers le haut : premier -> dernier\n\t// Affiche \"ra\\n\"\n}\n\nvoid\tft_rra(int *stack, int size)\n{\n\t// Rotation inverse : dernier -> premier\n\t// Affiche \"rra\\n\"\n}\n\nvoid\tft_sort_three(int *stack, int size)\n{\n\t// 1. Trouve ou est le max\n\t// 2. Si max en position 0 : ra\n\t// 3. Si max en position 1 : rra\n\t// 4. Si les 2 premiers ne sont pas tries : sa\n}\n\nint\tmain(void)\n{\n\tint\tstack[3] = {3, 1, 2};\n\tft_sort_three(stack, 3);\n\treturn (0);\n}",
+  "solution": "#include <unistd.h>\n\nvoid\tft_sa(int *stack)\n{\n\tint\ttmp;\n\n\ttmp = stack[0];\n\tstack[0] = stack[1];\n\tstack[1] = tmp;\n\twrite(1, \"sa\\n\", 3);\n}\n\nvoid\tft_ra(int *stack, int size)\n{\n\tint\ttmp;\n\tint\ti;\n\n\ttmp = stack[0];\n\ti = 0;\n\twhile (i < size - 1)\n\t{\n\t\tstack[i] = stack[i + 1];\n\t\ti++;\n\t}\n\tstack[size - 1] = tmp;\n\twrite(1, \"ra\\n\", 3);\n}\n\nvoid\tft_rra(int *stack, int size)\n{\n\tint\ttmp;\n\tint\ti;\n\n\ttmp = stack[size - 1];\n\ti = size - 1;\n\twhile (i > 0)\n\t{\n\t\tstack[i] = stack[i - 1];\n\t\ti--;\n\t}\n\tstack[0] = tmp;\n\twrite(1, \"rra\\n\", 4);\n}\n\nvoid\tft_sort_three(int *stack, int size)\n{\n\tif (size != 3)\n\t\treturn ;\n\tif (stack[0] > stack[1] && stack[0] > stack[2])\n\t\tft_ra(stack, size);\n\telse if (stack[1] > stack[0] && stack[1] > stack[2])\n\t\tft_rra(stack, size);\n\tif (stack[0] > stack[1])\n\t\tft_sa(stack);\n}\n\nint\tmain(void)\n{\n\tint\tstack[3] = {3, 1, 2};\n\tft_sort_three(stack, 3);\n\treturn (0);\n}",
+  "hints": [
+    "Avec 3 elements, il n'y a que 6 permutations possibles. Commence par les lister toutes.",
+    "Astuce : place d'abord le maximum en derniere position avec ra ou rra, puis fais un sa si necessaire.",
+    "Compare stack[0] > stack[1] et stack[0] > stack[2] pour savoir si le max est en position 0."
+  ],
+  "testCases": [
+    {
+      "id": 1,
+      "description": "Pile [3, 1, 2] : le max est au sommet",
+      "stdin": "",
+      "expectedStdout": "ra\n",
+      "expectedExitCode": 0,
+      "visible": true
+    },
+    {
+      "id": 2,
+      "description": "Pile [3, 2, 1] : cas necessitant 2 operations",
+      "stdin": "",
+      "expectedStdout": "ra\nsa\n",
+      "expectedExitCode": 0,
+      "visible": false
+    },
+    {
+      "id": 3,
+      "description": "Pile [1, 2, 3] : deja triee, aucune operation",
+      "stdin": "",
+      "expectedStdout": "",
+      "expectedExitCode": 0,
+      "visible": false
+    }
+  ],
+  "constraints": {
+    "allowedFunctions": ["write"],
+    "forbiddenFunctions": ["printf", "puts", "sort", "qsort"],
+    "maxExecutionTime": 5000,
+    "maxMemory": 128
+  },
+  "relatedExercises": ["c-day51-ex01-ft-sort-five", "c-day51-ex02-ft-find-index"],
+  "resources": [
+    {
+      "title": "Push_swap - Comprendre les operations de pile",
+      "url": "https://medium.com/@jamierobertdawson/push-swap-the-least-amount-of-moves-with-two-stacks-d1e76a71789a",
+      "type": "article"
+    },
+    {
+      "title": "Structures de donnees : les piles",
+      "url": "https://fr.wikipedia.org/wiki/Pile_(informatique)",
+      "type": "documentation"
+    }
+  ]
+}

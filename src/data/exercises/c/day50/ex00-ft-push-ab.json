@@ -1,0 +1,257 @@
+{
+  "id": "c-day50-ex00-ft-push-ab",
+  "category": "c",
+  "day": 50,
+  "order": 0,
+  "title": "Operations pa et pb (push entre piles)",
+  "description": "Implemente les operations pa et pb de push_swap. pa prend le premier element de la pile b et le met au sommet de la pile a. pb prend le premier element de la pile a et le met au sommet de la pile b. Si la pile source est vide, l'operation ne fait rien. Prototypes : void ft_pa(t_stack *a, t_stack *b); void ft_pb(t_stack *a, t_stack *b);",
+  "difficulty": 4,
+  "points": 40,
+  "estimatedTime": 35,
+  "learningObjectives": [
+    "Implementer les operations push entre deux piles",
+    "Comprendre le transfert d'elements entre piles",
+    "Gerer correctement les indices top des deux piles",
+    "Verifier les pre-conditions (pile source non vide)",
+    "Factoriser le code avec une fonction push generique"
+  ],
+  "learningContent": {
+    "lesson": {
+      "introduction": "Les operations pa et pb sont essentielles dans push_swap car elles permettent de deplacer des elements entre les deux piles. Pa prend le sommet de b et le place au sommet de a. Pb fait l'inverse : prend le sommet de a et le place au sommet de b. Ces operations combinent un pop sur la pile source et un push sur la pile destination. Il faut gerer correctement les deux indices top et verifier que la pile source n'est pas vide.",
+      "steps": [
+        {
+          "id": 1,
+          "title": "Le concept de push entre piles",
+          "content": "Dans push_swap, les operations de push transferent un element entre les deux piles :\n\n- **pa (push a)** : prend le sommet de b, le place au sommet de a\n  - Pop b -> Push a\n- **pb (push b)** : prend le sommet de a, le place au sommet de b\n  - Pop a -> Push b\n\n**Attention au nom !** 'pa' signifie 'push vers a' (la destination), pas 'push depuis a'. C'est source de confusion.\n\nSi la pile source est vide, l'operation ne fait rien (pas d'erreur).",
+          "codeExample": "// pa : prend le sommet de B, le met au sommet de A\n// Avant pa :\n//   Pile a : [3, 5, 1]    (3 au sommet)\n//   Pile b : [8, 2, 4]    (8 au sommet)\n// Apres pa :\n//   Pile a : [8, 3, 5, 1] (8 au sommet)\n//   Pile b : [2, 4]       (2 au sommet)\n\n// pb : prend le sommet de A, le met au sommet de B\n// Avant pb :\n//   Pile a : [3, 5, 1]    (3 au sommet)\n//   Pile b : [8, 2, 4]    (8 au sommet)\n// Apres pb :\n//   Pile a : [5, 1]       (5 au sommet)\n//   Pile b : [3, 8, 2, 4] (3 au sommet)",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Pile a = [7, 2, 9], pile b = [4, 6]. Que donnent pb puis pa ?",
+            "starterCode": "// a = [7, 2, 9], b = [4, 6]\n// Apres pb (sommet de a -> b) :\n//   a = ???, b = ???\n// Apres pa (sommet de b -> a) :\n//   a = ???, b = ???",
+            "solution": "// Apres pb : 7 va de a vers b\n//   a = [2, 9], b = [7, 4, 6]\n// Apres pa : 7 revient de b vers a\n//   a = [7, 2, 9], b = [4, 6]\n// pb puis pa annulent l'effet l'un de l'autre !"
+          }
+        },
+        {
+          "id": 2,
+          "title": "Implementation de pa",
+          "content": "Pa se decompose en deux etapes :\n\n1. **Pop le sommet de b** : lire b->data[b->top] et decrementer b->top\n2. **Push sur a** : incrementer a->top et ecrire la valeur dans a->data[a->top]\n\nC'est equivalent a un pop suivi d'un push, mais on peut optimiser en evitant la variable intermediaire.\n\n**Pre-condition :** b ne doit pas etre vide (b->top >= 0). Si b est vide, on ne fait rien.",
+          "codeExample": "void\tft_pa(t_stack *a, t_stack *b)\n{\n\tif (!a || !b || b->top < 0)\n\t\treturn ;\n\ta->top++;\n\ta->data[a->top] = b->data[b->top];\n\tb->top--;\n}\n\n// Decomposition :\n// 1. a->top++ : prepare la place au sommet de a\n// 2. a->data[a->top] = b->data[b->top] : copie la valeur\n// 3. b->top-- : retire l'element de b\n\n// Equivalent a :\n// int val;\n// ft_stack_pop(b, &val);\n// ft_stack_push(a, val);",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Si a->top = 1 et b->top = 2, que valent a->top et b->top apres pa ?",
+            "starterCode": "// Avant pa :\n// a->top = 1 (2 elements dans a)\n// b->top = 2 (3 elements dans b)\n// Apres pa :\n// a->top = ???\n// b->top = ???",
+            "solution": "// Apres pa :\n// a->top = 2 (un element de plus dans a)\n// b->top = 1 (un element de moins dans b)\n// Le nombre total d'elements reste le meme !"
+          }
+        },
+        {
+          "id": 3,
+          "title": "Implementation de pb et factorisation",
+          "content": "Pb est symetrique de pa : il prend le sommet de a et le place au sommet de b. Les operations sont identiques avec les piles inversees.\n\nPour eviter la duplication, on peut ecrire une fonction generique `ft_push_to` qui prend la pile source et la pile destination, et l'utiliser pour pa et pb.",
+          "codeExample": "// Version factorisee :\nvoid\tft_push_to(t_stack *dst, t_stack *src)\n{\n\tif (!dst || !src || src->top < 0)\n\t\treturn ;\n\tdst->top++;\n\tdst->data[dst->top] = src->data[src->top];\n\tsrc->top--;\n}\n\nvoid\tft_pa(t_stack *a, t_stack *b)\n{\n\tft_push_to(a, b); // destination = a, source = b\n}\n\nvoid\tft_pb(t_stack *a, t_stack *b)\n{\n\tft_push_to(b, a); // destination = b, source = a\n}",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Dans ft_pa, quelle pile est la source et quelle pile est la destination ?",
+            "starterCode": "// pa = 'push vers a'\n// On prend de ??? (source)\n// On met dans ??? (destination)\n\n// Donc ft_push_to(???, ???);",
+            "solution": "// pa = 'push vers a'\n// Source = b (on prend de b)\n// Destination = a (on met dans a)\n// ft_push_to(a, b);"
+          }
+        },
+        {
+          "id": 4,
+          "title": "Verification de capacite",
+          "content": "En theorie, il faudrait aussi verifier que la pile destination n'est pas pleine. Cependant, dans push_swap, les deux piles ont une capacite totale egale au nombre d'elements a trier. Comme les elements sont simplement deplaces entre les deux piles, la somme des tailles reste constante et aucune pile ne peut deborder si la capacite est correctement definie.\n\nEn pratique, on initialise chaque pile avec une capacite egale au nombre total d'elements, ce qui garantit qu'aucun push ne debordera.\n\n**Conservation des elements :** Pa et pb ne creent ni ne detruisent d'elements. Ils les deplacent. Le nombre total d'elements dans les deux piles reste toujours constant.",
+          "codeExample": "// Initialisation correcte pour push_swap :\nint n = 5; // nombre d'elements a trier\nt_stack *a = ft_stack_init(n); // capacite = n\nt_stack *b = ft_stack_init(n); // capacite = n\n\n// Au debut : a a n elements, b est vide\n// total = n\n// Apres des pb : a a (n-k) elements, b a k elements\n// total = n-k + k = n -> toujours n\n// Aucune pile ne depassera n elements\n\n// Donc pas besoin de verifier a->top < a->capacity - 1\n// si les capacites sont correctement definies",
+          "language": "c"
+        }
+      ]
+    },
+    "theory": [
+      {
+        "title": "Transfert entre structures de donnees",
+        "content": "Le transfert d'elements entre deux structures de donnees est une operation courante. Pour les piles, c'est un pop suivi d'un push. L'element est retire de la source et ajoute a la destination.",
+        "codeExamples": [
+          {
+            "title": "Pop + Push = Transfer",
+            "code": "// Methode 1 : Pop puis Push (avec variable intermediaire)\nint val;\nft_stack_pop(source, &val);\nft_stack_push(destination, val);\n\n// Methode 2 : Direct (sans variable intermediaire)\ndst->top++;\ndst->data[dst->top] = src->data[src->top];\nsrc->top--;\n\n// La methode 2 est plus efficace car elle evite\n// les appels de fonctions et la variable intermediaire",
+            "explanation": "Le transfert direct est plus efficace que pop + push separes"
+          }
+        ],
+        "keyPoints": [
+          "Un transfert = un pop de la source + un push vers la destination",
+          "Le nombre total d'elements est conserve",
+          "La methode directe evite la variable intermediaire",
+          "Il faut verifier que la source n'est pas vide"
+        ],
+        "commonMistakes": [
+          "Oublier de verifier que la source n'est pas vide",
+          "Decrementer top de la source avant de copier la valeur",
+          "Incrementer top de la destination apres avoir ecrit la valeur"
+        ]
+      },
+      {
+        "title": "Conservation des elements",
+        "content": "Dans push_swap, les operations ne creent ni ne detruisent d'elements. Le nombre total d'elements dans les deux piles est toujours constant. C'est une propriete importante pour verifier la correction du programme.",
+        "codeExamples": [
+          {
+            "title": "Invariant de conservation",
+            "code": "// Invariant : |a| + |b| = n (constant)\n// Ou |a| = nombre d'elements dans a\n\n// Debut : |a| = 5, |b| = 0 -> total = 5\n// pb    : |a| = 4, |b| = 1 -> total = 5\n// pb    : |a| = 3, |b| = 2 -> total = 5\n// pa    : |a| = 4, |b| = 1 -> total = 5\n// sa    : |a| = 4, |b| = 1 -> total = 5\n// ra    : |a| = 4, |b| = 1 -> total = 5\n\n// Les swap et rotate ne changent pas les tailles\n// Seuls pa et pb les modifient (mais la somme est constante)",
+            "explanation": "Cet invariant peut servir de verification de debug"
+          }
+        ],
+        "keyPoints": [
+          "La somme des tailles des deux piles est toujours constante",
+          "Pa et pb transferent (pas de creation ni de destruction)",
+          "Sa, sb, ra, rb ne changent pas la taille des piles",
+          "Cet invariant aide a detecter les bugs"
+        ],
+        "commonMistakes": [
+          "Perdre un element lors du transfert (oublier de copier avant de decrementer)",
+          "Dupliquer un element (incrementer dst->top sans decrementer src->top)",
+          "Croire que pa cree un nouvel element dans a"
+        ]
+      },
+      {
+        "title": "Ordre des operations dans le transfert",
+        "content": "L'ordre dans lequel on effectue les operations est crucial. Si on modifie src->top avant de copier la valeur, on perd l'acces a l'element. Si on modifie dst->top apres avoir ecrit, on ecrase un element existant.",
+        "codeExamples": [
+          {
+            "title": "Ordre correct vs incorrect",
+            "code": "// CORRECT :\ndst->top++;                              // 1. Prepare la place\ndst->data[dst->top] = src->data[src->top]; // 2. Copie\nsrc->top--;                              // 3. Retire\n\n// INCORRECT (ordre 1) :\nsrc->top--;                              // 1. Retire d'abord\ndst->top++;\ndst->data[dst->top] = src->data[src->top]; // 2. Copie le MAUVAIS element !\n// src->top a deja ete decremente, on copie l'element en dessous\n\n// INCORRECT (ordre 2) :\ndst->data[dst->top] = src->data[src->top]; // 1. Ecrase dst->data[dst->top]\ndst->top++;                              // Trop tard !\n// On a ecrase un element existant de dst",
+            "explanation": "L'ordre correct est : incrementer dst, copier, decrementer src"
+          }
+        ],
+        "keyPoints": [
+          "D'abord incrementer dst->top pour preparer la place",
+          "Ensuite copier la valeur de src vers dst",
+          "Enfin decrementer src->top pour retirer l'element",
+          "Ne jamais modifier src->top avant d'avoir copie la valeur"
+        ],
+        "commonMistakes": [
+          "Decrementer src->top avant de copier (perd la valeur)",
+          "Ecrire a dst->data[dst->top] avant d'incrementer dst->top",
+          "Inverser l'ordre des modifications de top"
+        ]
+      },
+      {
+        "title": "Le role de pa et pb dans push_swap",
+        "content": "Dans les algorithmes de tri pour push_swap, pa et pb servent a deplacer strategiquement des elements entre les deux piles. La pile b sert de zone de stockage temporaire pendant le tri.",
+        "codeExamples": [
+          {
+            "title": "Strategie de tri basique",
+            "code": "// Strategie simple pour 3 elements :\n// a = [3, 1, 2]\n// Il suffit de swap et rotate, pas de push\n\n// Strategie pour 5 elements :\n// a = [5, 3, 1, 4, 2]\n// 1. pb les 2 plus petits vers b\n// 2. Trier les 3 restants dans a\n// 3. pa pour remettre les elements de b dans a\n\n// Pour de grandes tailles (>5) :\n// Utiliser un algorithme comme le 'radix sort'\n// ou le 'chunk sort' qui utilise pb pour deplacer\n// des groupes d'elements vers b, puis pa pour\n// les remettre dans l'ordre",
+            "explanation": "Pb deplace vers le stockage temporaire, pa recupere dans l'ordre"
+          }
+        ],
+        "keyPoints": [
+          "Pb sert a deplacer des elements vers la zone de stockage (pile b)",
+          "Pa sert a recuperer les elements tries dans la pile a",
+          "La pile b est utilisee comme espace de travail temporaire",
+          "Les algorithmes efficaces minimisent le nombre total d'operations"
+        ],
+        "commonMistakes": [
+          "Confondre la direction : pa = b vers a, pb = a vers b",
+          "Oublier de verifier que la pile source n'est pas vide",
+          "Ne pas remettre tous les elements dans a a la fin du tri"
+        ]
+      }
+    ],
+    "prepExercises": [
+      {
+        "id": 1,
+        "title": "Pop et push separes",
+        "instruction": "Ecris le code pour pop depuis b et push dans a en utilisant une variable intermediaire.",
+        "starterCode": "// b->top = 2, b->data = [10, 20, 30] (30 au sommet)\n// a->top = 0, a->data = [5]\nint val;\n// Pop b, push a\n// TON CODE ICI",
+        "solution": "int val;\nval = b->data[b->top];\nb->top--;\na->top++;\na->data[a->top] = val;\n// a = [5, 30], b = [10, 20]",
+        "hint": "Lis b->data[b->top] dans val, decremente b->top, incremente a->top, ecris val.",
+        "difficulty": 1
+      },
+      {
+        "id": 2,
+        "title": "Transfert direct sans variable",
+        "instruction": "Ecris le transfert de b vers a sans variable intermediaire.",
+        "starterCode": "// Transfert direct de b vers a\n// TON CODE ICI",
+        "solution": "a->top++;\na->data[a->top] = b->data[b->top];\nb->top--;",
+        "hint": "Incremente a->top, copie, decremente b->top. Pas besoin de variable tmp.",
+        "difficulty": 2
+      },
+      {
+        "id": 3,
+        "title": "ft_push_to generique",
+        "instruction": "Ecris ft_push_to(t_stack *dst, t_stack *src) qui transfere le sommet de src vers dst.",
+        "starterCode": "void\tft_push_to(t_stack *dst, t_stack *src)\n{\n\t// Verifie que src n'est pas vide\n\t// Transfere le sommet de src vers dst\n\t// TON CODE ICI\n}",
+        "solution": "void\tft_push_to(t_stack *dst, t_stack *src)\n{\n\tif (!dst || !src || src->top < 0)\n\t\treturn ;\n\tdst->top++;\n\tdst->data[dst->top] = src->data[src->top];\n\tsrc->top--;\n}",
+        "hint": "Verifie src->top >= 0, puis dst->top++, copie, src->top--.",
+        "difficulty": 2
+      },
+      {
+        "id": 4,
+        "title": "ft_pa et ft_pb",
+        "instruction": "Ecris ft_pa et ft_pb en utilisant ft_push_to.",
+        "starterCode": "void\tft_pa(t_stack *a, t_stack *b)\n{\n\t// TON CODE ICI\n}\n\nvoid\tft_pb(t_stack *a, t_stack *b)\n{\n\t// TON CODE ICI\n}",
+        "solution": "void\tft_pa(t_stack *a, t_stack *b)\n{\n\tft_push_to(a, b);\n}\n\nvoid\tft_pb(t_stack *a, t_stack *b)\n{\n\tft_push_to(b, a);\n}",
+        "hint": "pa : destination = a, source = b. pb : destination = b, source = a.",
+        "difficulty": 1
+      },
+      {
+        "id": 5,
+        "title": "Test pa et pb",
+        "instruction": "Ecris un main qui teste pb (a vers b) puis pa (b vers a).",
+        "starterCode": "int\tmain(void)\n{\n\tt_stack\t*a = ft_stack_init(5);\n\tt_stack\t*b = ft_stack_init(5);\n\t// Push des valeurs, teste pb et pa, affiche\n\t// TON CODE ICI\n\tft_stack_free(a);\n\tft_stack_free(b);\n\treturn (0);\n}",
+        "solution": "int\tmain(void)\n{\n\tt_stack\t*a = ft_stack_init(5);\n\tt_stack\t*b = ft_stack_init(5);\n\n\tft_stack_push(a, 1);\n\tft_stack_push(a, 2);\n\tft_stack_push(a, 3);\n\tft_pb(a, b);\n\tft_putnbr(b->data[b->top]);\n\twrite(1, \"\\n\", 1);\n\tft_pa(a, b);\n\tft_putnbr(a->data[a->top]);\n\twrite(1, \"\\n\", 1);\n\tft_stack_free(a);\n\tft_stack_free(b);\n\treturn (0);\n}",
+        "hint": "Push 1, 2, 3 dans a. pb envoie 3 vers b. pa le ramene vers a.",
+        "difficulty": 2
+      }
+    ]
+  },
+  "starterCode": "#include <stdlib.h>\n#include <unistd.h>\n\ntypedef struct s_stack\n{\n\tint\t*data;\n\tint\ttop;\n\tint\tcapacity;\n}\t\t\tt_stack;\n\nvoid\tft_putnbr(int n)\n{\n\tchar\tc;\n\n\tif (n == -2147483648)\n\t{\n\t\twrite(1, \"-2147483648\", 11);\n\t\treturn ;\n\t}\n\tif (n < 0)\n\t{\n\t\twrite(1, \"-\", 1);\n\t\tn = -n;\n\t}\n\tif (n >= 10)\n\t\tft_putnbr(n / 10);\n\tc = (n % 10) + '0';\n\twrite(1, &c, 1);\n}\n\nt_stack\t*ft_stack_init(int capacity)\n{\n\tt_stack\t*stack;\n\n\tstack = malloc(sizeof(t_stack));\n\tif (!stack)\n\t\treturn (NULL);\n\tstack->data = malloc(sizeof(int) * capacity);\n\tif (!stack->data)\n\t{\n\t\tfree(stack);\n\t\treturn (NULL);\n\t}\n\tstack->top = -1;\n\tstack->capacity = capacity;\n\treturn (stack);\n}\n\nvoid\tft_stack_free(t_stack *stack)\n{\n\tif (!stack)\n\t\treturn ;\n\tif (stack->data)\n\t\tfree(stack->data);\n\tfree(stack);\n}\n\nint\tft_stack_push(t_stack *stack, int value)\n{\n\tif (!stack || stack->top >= stack->capacity - 1)\n\t\treturn (-1);\n\tstack->top++;\n\tstack->data[stack->top] = value;\n\treturn (0);\n}\n\nvoid\tft_pa(t_stack *a, t_stack *b)\n{\n\t// Prend le sommet de b et le met au sommet de a\n\t// Ne fait rien si b est vide\n\t// TON CODE ICI\n}\n\nvoid\tft_pb(t_stack *a, t_stack *b)\n{\n\t// Prend le sommet de a et le met au sommet de b\n\t// Ne fait rien si a est vide\n\t// TON CODE ICI\n}\n\nint\tmain(void)\n{\n\tt_stack\t*a;\n\tt_stack\t*b;\n\n\ta = ft_stack_init(5);\n\tb = ft_stack_init(5);\n\tft_stack_push(a, 1);\n\tft_stack_push(a, 2);\n\tft_stack_push(a, 3);\n\tft_pb(a, b);\n\tft_pb(a, b);\n\tft_putnbr(a->data[a->top]);\n\twrite(1, \"\\n\", 1);\n\tft_putnbr(b->data[b->top]);\n\twrite(1, \"\\n\", 1);\n\tft_pa(a, b);\n\tft_putnbr(a->data[a->top]);\n\twrite(1, \"\\n\", 1);\n\tft_stack_free(a);\n\tft_stack_free(b);\n\treturn (0);\n}",
+  "solution": "#include <stdlib.h>\n#include <unistd.h>\n\ntypedef struct s_stack\n{\n\tint\t*data;\n\tint\ttop;\n\tint\tcapacity;\n}\t\t\tt_stack;\n\nvoid\tft_putnbr(int n)\n{\n\tchar\tc;\n\n\tif (n == -2147483648)\n\t{\n\t\twrite(1, \"-2147483648\", 11);\n\t\treturn ;\n\t}\n\tif (n < 0)\n\t{\n\t\twrite(1, \"-\", 1);\n\t\tn = -n;\n\t}\n\tif (n >= 10)\n\t\tft_putnbr(n / 10);\n\tc = (n % 10) + '0';\n\twrite(1, &c, 1);\n}\n\nt_stack\t*ft_stack_init(int capacity)\n{\n\tt_stack\t*stack;\n\n\tstack = malloc(sizeof(t_stack));\n\tif (!stack)\n\t\treturn (NULL);\n\tstack->data = malloc(sizeof(int) * capacity);\n\tif (!stack->data)\n\t{\n\t\tfree(stack);\n\t\treturn (NULL);\n\t}\n\tstack->top = -1;\n\tstack->capacity = capacity;\n\treturn (stack);\n}\n\nvoid\tft_stack_free(t_stack *stack)\n{\n\tif (!stack)\n\t\treturn ;\n\tif (stack->data)\n\t\tfree(stack->data);\n\tfree(stack);\n}\n\nint\tft_stack_push(t_stack *stack, int value)\n{\n\tif (!stack || stack->top >= stack->capacity - 1)\n\t\treturn (-1);\n\tstack->top++;\n\tstack->data[stack->top] = value;\n\treturn (0);\n}\n\nvoid\tft_push_to(t_stack *dst, t_stack *src)\n{\n\tif (!dst || !src || src->top < 0)\n\t\treturn ;\n\tdst->top++;\n\tdst->data[dst->top] = src->data[src->top];\n\tsrc->top--;\n}\n\nvoid\tft_pa(t_stack *a, t_stack *b)\n{\n\tft_push_to(a, b);\n}\n\nvoid\tft_pb(t_stack *a, t_stack *b)\n{\n\tft_push_to(b, a);\n}\n\nint\tmain(void)\n{\n\tt_stack\t*a;\n\tt_stack\t*b;\n\n\ta = ft_stack_init(5);\n\tb = ft_stack_init(5);\n\tft_stack_push(a, 1);\n\tft_stack_push(a, 2);\n\tft_stack_push(a, 3);\n\tft_pb(a, b);\n\tft_pb(a, b);\n\tft_putnbr(a->data[a->top]);\n\twrite(1, \"\\n\", 1);\n\tft_putnbr(b->data[b->top]);\n\twrite(1, \"\\n\", 1);\n\tft_pa(a, b);\n\tft_putnbr(a->data[a->top]);\n\twrite(1, \"\\n\", 1);\n\tft_stack_free(a);\n\tft_stack_free(b);\n\treturn (0);\n}",
+  "hints": [
+    "Ecris une fonction ft_push_to(dst, src) qui incremente dst->top, copie src->data[src->top] dans dst, et decremente src->top.",
+    "pa appelle ft_push_to(a, b) car la destination est a et la source est b.",
+    "pb appelle ft_push_to(b, a) car la destination est b et la source est a."
+  ],
+  "testCases": [
+    {
+      "id": 1,
+      "description": "2 pb puis 1 pa",
+      "stdin": "",
+      "expectedStdout": "1\n2\n2\n",
+      "expectedExitCode": 0,
+      "visible": true
+    },
+    {
+      "id": 2,
+      "description": "pb sur pile vide (pas de crash)",
+      "stdin": "",
+      "expectedStdout": "1\n2\n2\n",
+      "expectedExitCode": 0,
+      "visible": false
+    },
+    {
+      "id": 3,
+      "description": "pa sur pile vide (pas de crash)",
+      "stdin": "",
+      "expectedStdout": "1\n2\n2\n",
+      "expectedExitCode": 0,
+      "visible": false
+    }
+  ],
+  "constraints": {
+    "allowedFunctions": ["write", "malloc", "free"],
+    "forbiddenFunctions": ["printf", "calloc", "realloc"],
+    "maxExecutionTime": 5000,
+    "maxMemory": 128
+  },
+  "relatedExercises": ["c-day50-ex01-ft-rotate", "c-day50-ex02-ft-reverse-rotate"],
+  "resources": [
+    {
+      "title": "push_swap - Operations expliquees",
+      "url": "https://medium.com/@jamierobertdawson/push-swap-the-least-amount-of-moves-with-two-stacks-d1e76a71789a",
+      "type": "documentation"
+    },
+    {
+      "title": "Manipulation de piles en C",
+      "url": "https://www.geeksforgeeks.org/stack-data-structure/",
+      "type": "article"
+    }
+  ]
+}

@@ -1,0 +1,257 @@
+{
+  "id": "c-day54-ex01-ft-power-recursive",
+  "category": "c",
+  "day": 54,
+  "order": 1,
+  "title": "Exponentiation rapide recursive",
+  "description": "Ecris une fonction ft_power qui calcule a puissance n (a^n) de maniere recursive en utilisant l'exponentiation rapide. L'astuce : si n est pair, a^n = (a^(n/2))^2. Si n est impair, a^n = a * a^(n-1). Cet algorithme est en O(log n) au lieu de O(n) pour l'approche naive. Prototype : long long ft_power(long long a, int n);",
+  "difficulty": 3,
+  "points": 30,
+  "estimatedTime": 25,
+  "learningObjectives": [
+    "Comprendre l'exponentiation rapide (fast exponentiation)",
+    "Maitriser la recursion avec division du probleme par 2",
+    "Analyser la complexite O(log n) vs O(n)",
+    "Gerer les cas de base (n = 0, n = 1, n negatif)",
+    "Appliquer le paradigme diviser pour regner"
+  ],
+  "learningContent": {
+    "lesson": {
+      "introduction": "Calculer a^n semble simple : multiplier a par lui-meme n fois. Mais si n est grand (ex: 10^9), cette approche en O(n) est trop lente. L'exponentiation rapide exploite une propriete mathematique : a^n = (a^(n/2))^2 quand n est pair. Cela divise le probleme par 2 a chaque etape, donnant une complexite en O(log n). C'est une application du paradigme 'diviser pour regner', fondamental en algorithmique. Cette technique est utilisee en cryptographie (RSA) et dans de nombreux algorithmes.",
+      "steps": [
+        {
+          "id": 1,
+          "title": "L'approche naive en O(n)",
+          "content": "L'approche naive multiplie a par lui-meme n fois dans une boucle. C'est simple mais lent pour de grandes valeurs de n.\n\n**Probleme :** Si n = 1 000 000 000, il faudrait 1 milliard de multiplications. Meme a 10^9 operations/seconde, ca prend 1 seconde. Avec l'exponentiation rapide, seulement ~30 multiplications suffisent (log2(10^9) ~ 30).",
+          "codeExample": "// Approche naive : O(n)\nlong long\tft_power_naive(long long a, int n)\n{\n\tlong long\tresult;\n\tint\t\t\ti;\n\n\tif (n < 0)\n\t\treturn (0); // Non gere pour les entiers\n\tresult = 1;\n\ti = 0;\n\twhile (i < n)\n\t{\n\t\tresult *= a;\n\t\ti++;\n\t}\n\treturn (result);\n}\n\n// 2^10 : 10 multiplications\n// 2^1000 : 1000 multiplications\n// 2^1000000000 : 1 milliard... trop lent !",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Combien de multiplications fait l'approche naive pour calculer 2^20 ?",
+            "starterCode": "// 2^20 avec l'approche naive :\n// result = 1\n// result *= 2 (x1)\n// result *= 2 (x2)\n// ...\n// Combien de multiplications ? ???",
+            "solution": "// 20 multiplications\n// Une pour chaque puissance de 1 a 20\n// Avec l'exponentiation rapide : ~5 multiplications\n// car log2(20) ~ 4.3"
+          }
+        },
+        {
+          "id": 2,
+          "title": "Le principe de l'exponentiation rapide",
+          "content": "L'idee cle est de diviser l'exposant par 2 a chaque etape :\n\n- **Si n est pair :** a^n = (a^(n/2))^2 = (a^(n/2)) * (a^(n/2))\n- **Si n est impair :** a^n = a * a^(n-1) (et n-1 est pair)\n- **Cas de base :** a^0 = 1, a^1 = a\n\nA chaque etape, n est divise par 2, donc il y a O(log n) etapes.",
+          "codeExample": "// 2^10 avec exponentiation rapide :\n// 2^10 = (2^5)^2\n// 2^5 = 2 * 2^4\n// 2^4 = (2^2)^2\n// 2^2 = (2^1)^2\n// 2^1 = 2\n// Remonter : 2^1=2, 2^2=4, 2^4=16, 2^5=32, 2^10=1024\n// Seulement 4 multiplications au lieu de 10 !\n\n// Formule :\n// n pair : power(a, n) = power(a, n/2) * power(a, n/2)\n// n impair : power(a, n) = a * power(a, n-1)\n\n// ATTENTION : ne pas appeler power(a, n/2) deux fois !\n// Stocker le resultat : half = power(a, n/2); return half * half;",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Decompose 3^8 avec l'exponentiation rapide. Combien de multiplications ?",
+            "starterCode": "// 3^8 = ???\n// 3^? = ???\n// 3^? = ???\n// 3^? = ???\n// Nombre de multiplications : ???",
+            "solution": "// 3^8 = (3^4)^2\n// 3^4 = (3^2)^2\n// 3^2 = (3^1)^2\n// 3^1 = 3\n// Remonter : 3, 3*3=9, 9*9=81, 81*81=6561\n// 3 multiplications (au lieu de 8 !)\n// car log2(8) = 3"
+          }
+        },
+        {
+          "id": 3,
+          "title": "Implementation recursive",
+          "content": "L'implementation recursive est naturelle grace a la decomposition du probleme.\n\n**Point crucial :** Calculer `half = ft_power(a, n/2)` une seule fois et retourner `half * half`. Si on ecrit `ft_power(a, n/2) * ft_power(a, n/2)`, on fait deux appels recursifs, ce qui donne une complexite O(n) au lieu de O(log n) !",
+          "codeExample": "long long\tft_power(long long a, int n)\n{\n\tlong long\thalf;\n\n\tif (n < 0)\n\t\treturn (0);\n\tif (n == 0)\n\t\treturn (1);\n\tif (n == 1)\n\t\treturn (a);\n\tif (n % 2 == 0)\n\t{\n\t\thalf = ft_power(a, n / 2);\n\t\treturn (half * half);\n\t}\n\telse\n\t\treturn (a * ft_power(a, n - 1));\n}\n\n// ERREUR COURANTE :\n// return ft_power(a, n/2) * ft_power(a, n/2);\n// -> 2 appels recursifs = O(n) !\n// Il faut stocker : half = ft_power(a, n/2);\n// Puis retourner : half * half;",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Pourquoi 'return ft_power(a, n/2) * ft_power(a, n/2)' est-il en O(n) et non O(log n) ?",
+            "starterCode": "// Si on appelle ft_power(a, n/2) deux fois :\n// T(n) = 2 * T(n/2) + O(1)\n// Par le master theorem : T(n) = ???\n// Avec un seul appel :\n// T(n) = T(n/2) + O(1)\n// T(n) = ???",
+            "solution": "// Deux appels : T(n) = 2*T(n/2) + O(1)\n// = O(n) (chaque niveau double le travail)\n// Un seul appel : T(n) = T(n/2) + O(1)\n// = O(log n) (chaque niveau a un seul appel)\n// La difference est enorme pour grand n !"
+          }
+        },
+        {
+          "id": 4,
+          "title": "Cas limites et programme complet",
+          "content": "Il faut gerer plusieurs cas limites :\n- a^0 = 1 (pour tout a, meme 0^0 = 1 par convention)\n- a^1 = a\n- 0^n = 0 (pour n > 0)\n- Exposant negatif : pour les entiers, on retourne 0 (car 1/a^n serait un flottant)\n- Overflow possible pour de grandes valeurs (long long peut stocker jusqu'a ~9.2 * 10^18)",
+          "codeExample": "#include <unistd.h>\n\nvoid\tft_putnbr_ll(long long n)\n{\n\tchar\tc;\n\n\tif (n < 0)\n\t{\n\t\twrite(1, \"-\", 1);\n\t\tn = -n;\n\t}\n\tif (n >= 10)\n\t\tft_putnbr_ll(n / 10);\n\tc = (n % 10) + '0';\n\twrite(1, &c, 1);\n}\n\nint\tmain(void)\n{\n\tft_putnbr_ll(ft_power(2, 10));\n\twrite(1, \"\\n\", 1);\n\t// 1024\n\tft_putnbr_ll(ft_power(3, 20));\n\twrite(1, \"\\n\", 1);\n\t// 3486784401\n\tft_putnbr_ll(ft_power(5, 0));\n\twrite(1, \"\\n\", 1);\n\t// 1\n\treturn (0);\n}",
+          "language": "c"
+        }
+      ]
+    },
+    "theory": [
+      {
+        "title": "Diviser pour regner",
+        "content": "L'exponentiation rapide est un exemple classique du paradigme 'diviser pour regner' : on divise le probleme en sous-problemes plus petits, on les resout recursivement, et on combine les solutions.",
+        "codeExamples": [
+          {
+            "title": "Principe general",
+            "code": "// Diviser pour regner :\n// 1. Diviser : couper le probleme en parties plus petites\n// 2. Regner : resoudre chaque partie recursivement\n// 3. Combiner : assembler les sous-solutions\n\n// Exponentiation rapide :\n// 1. Diviser : a^n -> a^(n/2)\n// 2. Regner : calculer half = a^(n/2)\n// 3. Combiner : half * half\n\n// Autres exemples :\n// Tri fusion : diviser le tableau en 2, trier chaque moitie, fusionner\n// Recherche binaire : diviser l'intervalle en 2 a chaque etape",
+            "explanation": "Le paradigme diviser pour regner est la base de nombreux algorithmes efficaces"
+          }
+        ],
+        "keyPoints": [
+          "Diviser le probleme en sous-problemes de taille n/2",
+          "La combinaison est une simple multiplication (O(1))",
+          "La profondeur de recursion est O(log n)",
+          "Ce paradigme est utilise dans le tri fusion, la recherche binaire, etc."
+        ],
+        "commonMistakes": [
+          "Creer deux sous-problemes au lieu d'un (complexite O(n) au lieu de O(log n))",
+          "Oublier le cas de base (recursion infinie)",
+          "Ne pas stocker le resultat intermediaire (appel double)"
+        ]
+      },
+      {
+        "title": "Complexite O(log n)",
+        "content": "L'exponentiation rapide est en O(log n) car a chaque etape, l'exposant est divise par 2. Apres k etapes, l'exposant est n/(2^k). Quand n/(2^k) = 1, on a k = log2(n) etapes.",
+        "codeExamples": [
+          {
+            "title": "Comparaison des complexites",
+            "code": "// n = 1000 :\n// O(n) naive : 1000 multiplications\n// O(log n) rapide : ~10 multiplications (log2(1000) ~ 10)\n\n// n = 1 000 000 :\n// O(n) : 1 000 000 multiplications\n// O(log n) : ~20 multiplications\n\n// n = 1 000 000 000 :\n// O(n) : 1 milliard (~1 seconde)\n// O(log n) : ~30 multiplications (~instantane)\n\n// La difference est exponentielle !\n// C'est la puissance du logarithme",
+            "explanation": "O(log n) est drastiquement plus rapide que O(n) pour de grands exposants"
+          }
+        ],
+        "keyPoints": [
+          "O(log n) signifie que le probleme est divise par 2 a chaque etape",
+          "log2(1000000000) ~ 30 : seulement 30 etapes pour un milliard",
+          "C'est la meme complexite que la recherche binaire",
+          "La difference avec O(n) est enorme pour de grandes valeurs"
+        ],
+        "commonMistakes": [
+          "Confondre O(log n) et O(n log n) (ce sont des complexites differentes)",
+          "Ne pas realiser que log2 est en base 2 (pas base 10)",
+          "Penser que O(log n) est toujours mieux (pour petit n, la constante compte)"
+        ]
+      },
+      {
+        "title": "Gestion des cas de base",
+        "content": "Les cas de base sont essentiels pour arreter la recursion et pour la correction mathematique. Il faut gerer a^0, a^1, et le cas de l'exposant negatif.",
+        "codeExamples": [
+          {
+            "title": "Les cas de base mathematiques",
+            "code": "// a^0 = 1 pour tout a (meme 0^0 = 1 par convention)\nif (n == 0)\n\treturn (1);\n\n// a^1 = a (optimisation, pas strictement necessaire)\nif (n == 1)\n\treturn (a);\n\n// Exposant negatif : a^(-n) = 1 / a^n\n// En arithmetique entiere, 1/a^n = 0 (sauf si a=1)\nif (n < 0)\n\treturn (0); // ou gerer avec des flottants\n\n// 0^n = 0 pour n > 0\n// Gere naturellement : 0 * 0 * ... = 0",
+            "explanation": "Les cas de base definissent les valeurs connues qui arretent la recursion"
+          }
+        ],
+        "keyPoints": [
+          "a^0 = 1 est le cas de base principal",
+          "a^1 = a est une optimisation (evite une multiplication inutile)",
+          "Les exposants negatifs donnent 0 en arithmetique entiere",
+          "0^0 = 1 par convention en informatique"
+        ],
+        "commonMistakes": [
+          "Oublier le cas n = 0 (recursion infinie si n est pair)",
+          "Retourner 0 pour a^0 au lieu de 1",
+          "Ne pas gerer les exposants negatifs (comportement indefini)"
+        ]
+      },
+      {
+        "title": "Applications de l'exponentiation rapide",
+        "content": "L'exponentiation rapide est utilisee en cryptographie (RSA, Diffie-Hellman), en mathematiques (calcul de grandes puissances modulo un nombre premier), et en programmation competitive.",
+        "codeExamples": [
+          {
+            "title": "Exponentiation modulaire",
+            "code": "// En cryptographie RSA :\n// On calcule a^n mod m pour de tres grands nombres\n// L'exponentiation rapide est indispensable\n\nlong long\tft_power_mod(long long a, int n, long long m)\n{\n\tlong long\thalf;\n\n\tif (n == 0)\n\t\treturn (1);\n\tif (n % 2 == 0)\n\t{\n\t\thalf = ft_power_mod(a, n / 2, m);\n\t\treturn ((half * half) % m);\n\t}\n\treturn ((a * ft_power_mod(a, n - 1, m)) % m);\n}\n\n// Le modulo a chaque etape empeche l'overflow\n// Car (a*b) % m = ((a%m) * (b%m)) % m",
+            "explanation": "L'exponentiation modulaire est la base de la cryptographie asymetrique"
+          }
+        ],
+        "keyPoints": [
+          "RSA utilise l'exponentiation modulaire rapide",
+          "Le modulo a chaque etape empeche les overflows",
+          "La programmation competitive utilise souvent a^n mod (10^9+7)",
+          "C'est un des algorithmes les plus utiles en mathematiques computationnelles"
+        ],
+        "commonMistakes": [
+          "Ne pas appliquer le modulo a chaque etape (overflow)",
+          "Oublier que la multiplication peut aussi overflow avant le modulo",
+          "Confondre exponentiation rapide et multiplication rapide"
+        ]
+      }
+    ],
+    "prepExercises": [
+      {
+        "id": 1,
+        "title": "Puissance naive recursive",
+        "instruction": "Ecris ft_power_naive en version recursive simple (O(n)).",
+        "starterCode": "long long\tft_power_naive(long long a, int n)\n{\n\t// Cas de base : n == 0\n\t// Recursion : a * ft_power_naive(a, n - 1)\n\t// TON CODE ICI\n}",
+        "solution": "long long\tft_power_naive(long long a, int n)\n{\n\tif (n == 0)\n\t\treturn (1);\n\treturn (a * ft_power_naive(a, n - 1));\n}",
+        "hint": "Si n == 0, retourne 1. Sinon, retourne a * ft_power_naive(a, n-1).",
+        "difficulty": 1
+      },
+      {
+        "id": 2,
+        "title": "Verifier pair ou impair",
+        "instruction": "Ecris une fonction qui retourne 1 si n est pair, 0 sinon.",
+        "starterCode": "int\tft_is_even(int n)\n{\n\t// TON CODE ICI\n}",
+        "solution": "int\tft_is_even(int n)\n{\n\treturn (n % 2 == 0);\n}",
+        "hint": "n est pair si n % 2 == 0.",
+        "difficulty": 1
+      },
+      {
+        "id": 3,
+        "title": "Stocker le resultat intermediaire",
+        "instruction": "Calcule a^n pour n pair en stockant le resultat de a^(n/2) dans une variable.",
+        "starterCode": "long long\tft_power_even(long long a, int n)\n{\n\tlong long\thalf;\n\n\tif (n == 0)\n\t\treturn (1);\n\t// Calculer half = a^(n/2)\n\t// Retourner half * half\n\t// TON CODE ICI\n}",
+        "solution": "long long\tft_power_even(long long a, int n)\n{\n\tlong long\thalf;\n\n\tif (n == 0)\n\t\treturn (1);\n\tif (n == 1)\n\t\treturn (a);\n\thalf = ft_power_even(a, n / 2);\n\treturn (half * half);\n}",
+        "hint": "half = ft_power_even(a, n/2); return half * half; Ne PAS appeler la fonction deux fois.",
+        "difficulty": 2
+      },
+      {
+        "id": 4,
+        "title": "Gerer le cas impair",
+        "instruction": "Ajoute la gestion du cas impair : a^n = a * a^(n-1).",
+        "starterCode": "long long\tft_power(long long a, int n)\n{\n\tlong long\thalf;\n\n\tif (n == 0)\n\t\treturn (1);\n\tif (n == 1)\n\t\treturn (a);\n\t// Si n pair : half = power(a, n/2), return half * half\n\t// Si n impair : return a * power(a, n-1)\n\t// TON CODE ICI\n}",
+        "solution": "long long\tft_power(long long a, int n)\n{\n\tlong long\thalf;\n\n\tif (n == 0)\n\t\treturn (1);\n\tif (n == 1)\n\t\treturn (a);\n\tif (n % 2 == 0)\n\t{\n\t\thalf = ft_power(a, n / 2);\n\t\treturn (half * half);\n\t}\n\treturn (a * ft_power(a, n - 1));\n}",
+        "hint": "Si n % 2 == 0 : utilise la methode half. Sinon : return a * ft_power(a, n-1).",
+        "difficulty": 2
+      },
+      {
+        "id": 5,
+        "title": "Compter les appels recursifs",
+        "instruction": "Modifie ft_power pour compter le nombre d'appels recursifs et verifie que c'est O(log n).",
+        "starterCode": "int\tg_count = 0;\n\nlong long\tft_power_count(long long a, int n)\n{\n\tg_count++;\n\t// Meme code que ft_power\n\t// TON CODE ICI\n}\n\n// Apres ft_power_count(2, 1000)\n// g_count devrait etre environ 11 (log2(1000) ~ 10)",
+        "solution": "int\tg_count = 0;\n\nlong long\tft_power_count(long long a, int n)\n{\n\tlong long\thalf;\n\n\tg_count++;\n\tif (n == 0)\n\t\treturn (1);\n\tif (n == 1)\n\t\treturn (a);\n\tif (n % 2 == 0)\n\t{\n\t\thalf = ft_power_count(a, n / 2);\n\t\treturn (half * half);\n\t}\n\treturn (a * ft_power_count(a, n - 1));\n}",
+        "hint": "Ajoute g_count++ au debut de la fonction et verifie la valeur apres l'appel.",
+        "difficulty": 2
+      }
+    ]
+  },
+  "starterCode": "#include <unistd.h>\n\nvoid\tft_putnbr_ll(long long n)\n{\n\tchar c;\n\tif (n < 0) { write(1, \"-\", 1); n = -n; }\n\tif (n >= 10) ft_putnbr_ll(n / 10);\n\tc = (n % 10) + '0';\n\twrite(1, &c, 1);\n}\n\nlong long\tft_power(long long a, int n)\n{\n\tlong long\thalf;\n\n\t// Cas de base : n < 0 -> 0, n == 0 -> 1, n == 1 -> a\n\t// Si n pair : half = ft_power(a, n/2), return half * half\n\t// Si n impair : return a * ft_power(a, n-1)\n\treturn (0);\n}\n\nint\tmain(void)\n{\n\tft_putnbr_ll(ft_power(2, 10));\n\twrite(1, \"\\n\", 1);\n\tft_putnbr_ll(ft_power(3, 5));\n\twrite(1, \"\\n\", 1);\n\tft_putnbr_ll(ft_power(5, 0));\n\twrite(1, \"\\n\", 1);\n\treturn (0);\n}",
+  "solution": "#include <unistd.h>\n\nvoid\tft_putnbr_ll(long long n)\n{\n\tchar c;\n\tif (n < 0) { write(1, \"-\", 1); n = -n; }\n\tif (n >= 10) ft_putnbr_ll(n / 10);\n\tc = (n % 10) + '0';\n\twrite(1, &c, 1);\n}\n\nlong long\tft_power(long long a, int n)\n{\n\tlong long\thalf;\n\n\tif (n < 0)\n\t\treturn (0);\n\tif (n == 0)\n\t\treturn (1);\n\tif (n == 1)\n\t\treturn (a);\n\tif (n % 2 == 0)\n\t{\n\t\thalf = ft_power(a, n / 2);\n\t\treturn (half * half);\n\t}\n\treturn (a * ft_power(a, n - 1));\n}\n\nint\tmain(void)\n{\n\tft_putnbr_ll(ft_power(2, 10));\n\twrite(1, \"\\n\", 1);\n\tft_putnbr_ll(ft_power(3, 5));\n\twrite(1, \"\\n\", 1);\n\tft_putnbr_ll(ft_power(5, 0));\n\twrite(1, \"\\n\", 1);\n\treturn (0);\n}",
+  "hints": [
+    "Cas de base : n == 0 retourne 1, n == 1 retourne a, n < 0 retourne 0.",
+    "Si n est pair : calcule half = ft_power(a, n/2) puis retourne half * half. Ne PAS appeler ft_power deux fois.",
+    "Si n est impair : retourne a * ft_power(a, n-1). Le n-1 est pair, donc l'etape suivante divise par 2."
+  ],
+  "testCases": [
+    {
+      "id": 1,
+      "description": "2^10 = 1024, 3^5 = 243, 5^0 = 1",
+      "stdin": "",
+      "expectedStdout": "1024\n243\n1\n",
+      "expectedExitCode": 0,
+      "visible": true
+    },
+    {
+      "id": 2,
+      "description": "Grands exposants : 2^30 = 1073741824",
+      "stdin": "",
+      "expectedStdout": "1073741824\n",
+      "expectedExitCode": 0,
+      "visible": false
+    },
+    {
+      "id": 3,
+      "description": "Cas limites : 0^5 = 0, 1^100 = 1, n negatif = 0",
+      "stdin": "",
+      "expectedStdout": "0\n1\n0\n",
+      "expectedExitCode": 0,
+      "visible": false
+    }
+  ],
+  "constraints": {
+    "allowedFunctions": ["write"],
+    "forbiddenFunctions": ["printf", "pow", "math.h"],
+    "maxExecutionTime": 5000,
+    "maxMemory": 128
+  },
+  "relatedExercises": ["c-day54-ex00-ft-flood-fill", "c-day54-ex02-ft-fibonacci-memo"],
+  "resources": [
+    {
+      "title": "Exponentiation rapide",
+      "url": "https://fr.wikipedia.org/wiki/Exponentiation_rapide",
+      "type": "documentation"
+    },
+    {
+      "title": "Fast Exponentiation Algorithm",
+      "url": "https://www.geeksforgeeks.org/write-a-c-program-to-calculate-powxn/",
+      "type": "article"
+    }
+  ]
+}

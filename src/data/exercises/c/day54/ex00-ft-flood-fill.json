@@ -1,0 +1,257 @@
+{
+  "id": "c-day54-ex00-ft-flood-fill",
+  "category": "c",
+  "day": 54,
+  "order": 0,
+  "title": "Remplissage par diffusion d'une grille 2D",
+  "description": "Ecris une fonction ft_flood_fill qui remplit une zone connectee d'une grille 2D. A partir d'une position (x, y), la fonction remplace tous les caracteres adjacents identiques au caractere de depart par un nouveau caractere. L'adjacence se fait sur les 4 directions (haut, bas, gauche, droite). Prototype : void ft_flood_fill(char **tab, t_point size, t_point begin);",
+  "difficulty": 4,
+  "points": 40,
+  "estimatedTime": 35,
+  "learningObjectives": [
+    "Comprendre le flood fill et la recursion sur une grille 2D",
+    "Maitriser la recursion sur 4 directions (haut, bas, gauche, droite)",
+    "Gerer les conditions d'arret pour eviter les boucles infinies",
+    "Manipuler un tableau 2D de caracteres (char **)",
+    "Preparer les concepts de parcours de graphe (BFS/DFS)"
+  ],
+  "learningContent": {
+    "lesson": {
+      "introduction": "Le flood fill (remplissage par diffusion) est un algorithme classique utilise dans les editeurs graphiques (l'outil 'pot de peinture' de Paint). Il part d'un point et remplit tous les pixels adjacents de meme couleur avec une nouvelle couleur. L'implementation recursive est elegante : depuis chaque case, on appelle recursivement les 4 voisins. C'est un exemple de DFS (parcours en profondeur) sur une grille 2D. Cet algorithme est propose comme exercice dans les sujets de l'exam 42.",
+      "steps": [
+        {
+          "id": 1,
+          "title": "Le principe du flood fill",
+          "content": "Le flood fill part d'une case de depart et se propage a toutes les cases adjacentes qui ont le meme caractere que la case de depart. Il les remplace par un nouveau caractere.\n\n**Adjacence 4-connexe :** On propage vers le haut, le bas, la gauche et la droite (pas les diagonales).\n\n**Condition d'arret :** On s'arrete quand on sort de la grille, ou quand la case n'a pas le caractere recherche (soit c'est un mur, soit elle a deja ete remplie).",
+          "codeExample": "// Grille avant flood fill (depart = (1,1), 'F' remplacement) :\n// 1 1 1 1 1\n// 1 0 0 0 1\n// 1 0 0 0 1\n// 1 1 1 1 1\n\n// Apres flood fill depuis (1,1) :\n// 1 1 1 1 1\n// 1 F F F 1\n// 1 F F F 1\n// 1 1 1 1 1\n\n// Les '0' connectes a (1,1) sont remplaces par 'F'\n// Les '1' ne sont pas touches (murs)",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Si on lance le flood fill depuis (0,0) sur la grille, que se passe-t-il ?",
+            "starterCode": "// Grille :\n// 1 1 1 1\n// 1 0 0 1\n// 1 0 0 1\n// 1 1 1 1\n// Flood fill depuis (0,0) avec 'F' :\n// Resultat : ???",
+            "solution": "// Le caractere en (0,0) est '1'\n// Tous les '1' connectes a (0,0) sont remplaces par 'F'\n// F F F F\n// F 0 0 F\n// F 0 0 F\n// F F F F\n// Le contour entier est rempli car tous les '1' sont connectes"
+          }
+        },
+        {
+          "id": 2,
+          "title": "Implementation recursive",
+          "content": "L'implementation recursive est naturelle : depuis chaque case valide, on appelle la fonction sur les 4 voisins.\n\n**Cle pour eviter la boucle infinie :** On remplace le caractere AVANT de faire les appels recursifs. Ainsi, quand un voisin revient sur cette case, il voit le nouveau caractere et s'arrete.\n\nSi on remplace APRES les appels, on cree une boucle infinie (A appelle B qui rappelle A qui rappelle B...).",
+          "codeExample": "typedef struct s_point\n{\n\tint\tx;\n\tint\ty;\n}\t\tt_point;\n\nvoid\tft_fill(char **tab, t_point size, t_point cur, char target)\n{\n\t// Conditions d'arret :\n\tif (cur.x < 0 || cur.x >= size.x\n\t\t|| cur.y < 0 || cur.y >= size.y)\n\t\treturn ;\n\tif (tab[cur.y][cur.x] != target)\n\t\treturn ;\n\t// Remplacer AVANT les appels recursifs\n\ttab[cur.y][cur.x] = 'F';\n\t// Propager dans les 4 directions\n\tft_fill(tab, size, (t_point){cur.x + 1, cur.y}, target);\n\tft_fill(tab, size, (t_point){cur.x - 1, cur.y}, target);\n\tft_fill(tab, size, (t_point){cur.x, cur.y + 1}, target);\n\tft_fill(tab, size, (t_point){cur.x, cur.y - 1}, target);\n}",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Pourquoi faut-il remplacer le caractere AVANT les appels recursifs ?",
+            "starterCode": "// Si on remplace APRES :\ntab[y][x] = target; // Pas encore remplace\nft_fill(tab, size, (t_point){x+1, y}, target);\n// Le voisin voit toujours target -> il revient ici\n// -> boucle infinie ! Pourquoi ?",
+            "solution": "// Si on ne remplace pas d'abord :\n// Case A appelle Case B\n// Case B voit que A est encore 'target' (pas remplace)\n// Case B appelle Case A\n// Case A voit que B est encore 'target'\n// -> Boucle infinie entre A et B\n// En remplacant AVANT, B voit que A est deja 'F'\n// donc B ne rappelle pas A -> pas de boucle"
+          }
+        },
+        {
+          "id": 3,
+          "title": "Structures et paramètres",
+          "content": "Le sujet de l'exam 42 utilise une structure t_point pour les coordonnees et la taille de la grille. La grille est un `char **` (tableau de chaines).\n\n**Convention :** `size.x` est le nombre de colonnes (largeur), `size.y` est le nombre de lignes (hauteur). `cur.x` est la colonne, `cur.y` est la ligne. Donc on accede a `tab[y][x]` (ligne puis colonne).",
+          "codeExample": "typedef struct s_point\n{\n\tint\tx; // colonne (largeur)\n\tint\ty; // ligne (hauteur)\n}\t\tt_point;\n\n// tab[y][x] : tab[ligne][colonne]\n\n// Grille 5 colonnes x 4 lignes :\n// size.x = 5, size.y = 4\n// tab[0] = \"11111\"  (ligne 0)\n// tab[1] = \"10001\"  (ligne 1)\n// tab[2] = \"10001\"  (ligne 2)\n// tab[3] = \"11111\"  (ligne 3)\n\nvoid\tft_flood_fill(char **tab, t_point size, t_point begin)\n{\n\tchar\ttarget;\n\n\ttarget = tab[begin.y][begin.x];\n\tif (target == 'F') // Deja le caractere de remplacement\n\t\treturn ;\n\tft_fill(tab, size, begin, target);\n}",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Si begin = {2, 1} et size = {5, 4}, a quoi correspond tab[begin.y][begin.x] ?",
+            "starterCode": "// tab[0] = \"11111\"\n// tab[1] = \"10001\"\n// tab[2] = \"10001\"\n// tab[3] = \"11111\"\n// begin = {x=2, y=1}\n// tab[begin.y][begin.x] = tab[???][???] = ???",
+            "solution": "// tab[begin.y][begin.x] = tab[1][2] = '0'\n// C'est la case au centre de la ligne 1\n// (colonne 2, ligne 1)"
+          }
+        },
+        {
+          "id": 4,
+          "title": "Programme complet avec affichage",
+          "content": "Le programme cree une grille, applique le flood fill, et affiche le resultat. On utilise des chaines modifiables (char[]) et non des litteraux (char *) car le flood fill modifie la grille en place.\n\n**Profondeur de recursion :** Pour une grille de n cases, la recursion peut aller jusqu'a n niveaux de profondeur. Sur de tres grandes grilles, cela peut causer un stack overflow. Pour les tailles de l'exam (< 100x100), ce n'est pas un probleme.",
+          "codeExample": "#include <unistd.h>\n\nvoid\tft_putstr(char *str)\n{\n\twhile (*str)\n\t\twrite(1, str++, 1);\n}\n\nint\tmain(void)\n{\n\tchar\tl0[] = \"11111\";\n\tchar\tl1[] = \"10001\";\n\tchar\tl2[] = \"10001\";\n\tchar\tl3[] = \"11111\";\n\tchar\t*tab[] = {l0, l1, l2, l3};\n\tt_point\tsize = {5, 4};\n\tt_point\tbegin = {1, 1};\n\n\tft_flood_fill(tab, size, begin);\n\tint i = 0;\n\twhile (i < 4)\n\t{\n\t\tft_putstr(tab[i]);\n\t\twrite(1, \"\\n\", 1);\n\t\ti++;\n\t}\n\t// Affiche :\n\t// 11111\n\t// 1FFF1\n\t// 1FFF1\n\t// 11111\n\treturn (0);\n}",
+          "language": "c"
+        }
+      ]
+    },
+    "theory": [
+      {
+        "title": "Recursion sur grille 2D",
+        "content": "La recursion sur grille 2D est un paradigme puissant pour explorer des zones connectees. Depuis chaque case, on propage vers les voisins. C'est la base du DFS (Depth-First Search) sur grille.",
+        "codeExamples": [
+          {
+            "title": "Pattern general de la recursion 2D",
+            "code": "void\texplore(char **grid, int x, int y, int w, int h)\n{\n\t// Conditions d'arret\n\tif (x < 0 || x >= w || y < 0 || y >= h)\n\t\treturn ;\n\tif (grid[y][x] == VISITED)\n\t\treturn ;\n\t// Marquer comme visite\n\tgrid[y][x] = VISITED;\n\t// Propager aux 4 voisins\n\texplore(grid, x + 1, y, w, h); // droite\n\texplore(grid, x - 1, y, w, h); // gauche\n\texplore(grid, x, y + 1, w, h); // bas\n\texplore(grid, x, y - 1, w, h); // haut\n}",
+            "explanation": "Ce pattern est reutilisable pour le flood fill, le comptage d'iles, le pathfinding, etc."
+          }
+        ],
+        "keyPoints": [
+          "Verifier les bornes de la grille en premier (eviter l'acces hors limites)",
+          "Marquer la case AVANT les appels recursifs (eviter les boucles infinies)",
+          "4 appels recursifs pour les 4 directions (8 si on inclut les diagonales)",
+          "La profondeur de recursion peut etre egale au nombre de cases"
+        ],
+        "commonMistakes": [
+          "Oublier de verifier les bornes de la grille (segfault)",
+          "Marquer la case apres les appels recursifs (boucle infinie)",
+          "Confondre x/y avec ligne/colonne (tab[y][x] et non tab[x][y])"
+        ]
+      },
+      {
+        "title": "Conditions d'arret de la recursion",
+        "content": "Les conditions d'arret sont cruciales pour eviter les boucles infinies et les segfaults. Elles doivent etre verifiees en premier, avant toute autre operation.",
+        "codeExamples": [
+          {
+            "title": "Les 3 conditions d'arret",
+            "code": "// Condition 1 : hors limites\nif (x < 0 || x >= size.x || y < 0 || y >= size.y)\n\treturn ;\n// Empeche l'acces a des indices invalides\n\n// Condition 2 : pas le bon caractere\nif (tab[y][x] != target)\n\treturn ;\n// Le caractere est different -> c'est un mur ou une autre zone\n\n// Condition 3 (implicite) : deja visite\n// Si tab[y][x] a ete remplace par 'F',\n// alors tab[y][x] != target -> condition 2 s'en charge",
+            "explanation": "Les deux conditions explicites suffisent car le remplacement sert de marquage"
+          }
+        ],
+        "keyPoints": [
+          "Toujours verifier les bornes avant d'acceder au tableau",
+          "Verifier que le caractere correspond au target",
+          "Le remplacement agit comme un marquage 'visite'",
+          "Les conditions d'arret doivent etre en debut de fonction"
+        ],
+        "commonMistakes": [
+          "Verifier les bornes apres l'acces au tableau (crash si hors limites)",
+          "Oublier de verifier le caractere (remplissage de toute la grille)",
+          "Utiliser un tableau 'visited' separe alors que le remplacement suffit"
+        ]
+      },
+      {
+        "title": "DFS vs BFS sur grille",
+        "content": "Le flood fill recursif est un DFS (Depth-First Search). On peut aussi l'implementer en BFS (Breadth-First Search) avec une file. Le resultat est le meme, mais l'ordre de remplissage differe.",
+        "codeExamples": [
+          {
+            "title": "DFS recursif vs BFS iteratif",
+            "code": "// DFS (recursion) :\n// Va le plus profond possible dans une direction\n// avant de revenir et d'explorer les autres\n// Simple a coder, mais profondeur de recursion = O(n)\n\n// BFS (file) :\n// Explore tous les voisins de distance 1, puis distance 2, etc.\n// Pas de probleme de profondeur de recursion\n// Mais necessite une file (plus de code)\n\n// Pour l'exam 42 : DFS recursif est suffisant\n// Les grilles sont petites (pas de stack overflow)",
+            "explanation": "DFS et BFS produisent le meme resultat pour le flood fill, seul l'ordre d'exploration differe"
+          }
+        ],
+        "keyPoints": [
+          "DFS recursif est plus simple a coder (4 appels recursifs)",
+          "BFS iteratif evite le risque de stack overflow",
+          "Le resultat final est identique pour les deux approches",
+          "Pour l'exam 42, DFS recursif est la solution attendue"
+        ],
+        "commonMistakes": [
+          "Utiliser BFS quand DFS est demande (ou inversement)",
+          "Ne pas considerer le risque de stack overflow pour de grandes grilles",
+          "Confondre DFS et BFS dans le contexte du flood fill"
+        ]
+      },
+      {
+        "title": "Applications du flood fill",
+        "content": "Le flood fill est utilise dans de nombreux domaines : editeurs graphiques (outil pot de peinture), jeux video (detection de zones), analyse d'images (segmentation), et algorithmes de graphe (composantes connexes).",
+        "codeExamples": [
+          {
+            "title": "Exemples d'applications",
+            "code": "// 1. Outil pot de peinture (Paint)\n// Remplace tous les pixels de meme couleur connectes\n\n// 2. Comptage d'iles (leetcode)\n// Grille avec '1' (terre) et '0' (eau)\n// Combien d'iles (groupes de '1' connectes) ?\n// Solution : parcourir, a chaque '1' non visite, flood fill\n\n// 3. Resolution de labyrinthe\n// Flood fill pour marquer toutes les cases accessibles\n\n// 4. Minesweeper (demineur)\n// Quand on clique sur une case vide, reveler toutes\n// les cases vides connectees (flood fill)",
+            "explanation": "Le flood fill est un algorithme fondamental avec de nombreuses applications pratiques"
+          }
+        ],
+        "keyPoints": [
+          "Le pot de peinture des editeurs graphiques utilise le flood fill",
+          "Le comptage d'iles est un probleme classique resolu avec flood fill",
+          "Le flood fill detecte les composantes connexes d'un graphe/grille",
+          "L'algorithme est fondamental en traitement d'image et jeux video"
+        ],
+        "commonMistakes": [
+          "Appliquer le flood fill 8-connexe quand 4-connexe est demande",
+          "Oublier de marquer les cases visitees (boucle infinie)",
+          "Ne pas adapter le flood fill au probleme specifique (target, replacement)"
+        ]
+      }
+    ],
+    "prepExercises": [
+      {
+        "id": 1,
+        "title": "Verifier les bornes de la grille",
+        "instruction": "Ecris une fonction qui verifie si une position (x, y) est dans les bornes de la grille.",
+        "starterCode": "int\tin_bounds(int x, int y, t_point size)\n{\n\t// Retourne 1 si (x,y) est dans la grille, 0 sinon\n\t// TON CODE ICI\n}",
+        "solution": "int\tin_bounds(int x, int y, t_point size)\n{\n\treturn (x >= 0 && x < size.x && y >= 0 && y < size.y);\n}",
+        "hint": "x doit etre entre 0 et size.x-1, y entre 0 et size.y-1.",
+        "difficulty": 1
+      },
+      {
+        "id": 2,
+        "title": "Afficher une grille 2D",
+        "instruction": "Ecris une fonction qui affiche une grille char ** ligne par ligne.",
+        "starterCode": "void\tprint_grid(char **tab, int height)\n{\n\t// Affiche chaque ligne suivie d'un \\n\n\t// TON CODE ICI\n}",
+        "solution": "void\tprint_grid(char **tab, int height)\n{\n\tint\ti;\n\n\ti = 0;\n\twhile (i < height)\n\t{\n\t\tft_putstr(tab[i]);\n\t\twrite(1, \"\\n\", 1);\n\t\ti++;\n\t}\n}",
+        "hint": "Boucle sur les lignes, ft_putstr pour chaque ligne, \\n apres chaque.",
+        "difficulty": 1
+      },
+      {
+        "id": 3,
+        "title": "Remplacer un caractere en position",
+        "instruction": "Ecris une fonction qui remplace le caractere a la position (x, y) par un nouveau caractere.",
+        "starterCode": "void\treplace_char(char **tab, int x, int y, char new_char)\n{\n\t// Remplace tab[y][x] par new_char\n\t// TON CODE ICI\n}",
+        "solution": "void\treplace_char(char **tab, int x, int y, char new_char)\n{\n\ttab[y][x] = new_char;\n}",
+        "hint": "tab[y][x] = new_char. Attention : c'est tab[y][x] et non tab[x][y].",
+        "difficulty": 1
+      },
+      {
+        "id": 4,
+        "title": "Recursion simple sur une ligne",
+        "instruction": "Ecris une fonction recursive qui remplace tous les '0' consecutifs a partir de la position x dans une chaine.",
+        "starterCode": "void\tfill_line(char *line, int x, int len)\n{\n\t// Remplace line[x] et les '0' adjacents par 'F'\n\t// Recursion vers la droite uniquement\n\t// TON CODE ICI\n}",
+        "solution": "void\tfill_line(char *line, int x, int len)\n{\n\tif (x < 0 || x >= len || line[x] != '0')\n\t\treturn ;\n\tline[x] = 'F';\n\tfill_line(line, x + 1, len);\n}",
+        "hint": "Condition d'arret : hors bornes ou pas '0'. Remplace puis appel recursif vers x+1.",
+        "difficulty": 2
+      },
+      {
+        "id": 5,
+        "title": "Flood fill sur 4 directions",
+        "instruction": "Ecris la fonction recursive ft_fill qui propage dans les 4 directions.",
+        "starterCode": "void\tft_fill(char **tab, t_point size, t_point cur, char target)\n{\n\t// Conditions d'arret\n\t// Remplacer\n\t// 4 appels recursifs\n\t// TON CODE ICI\n}",
+        "solution": "void\tft_fill(char **tab, t_point size, t_point cur, char target)\n{\n\tif (cur.x < 0 || cur.x >= size.x || cur.y < 0 || cur.y >= size.y)\n\t\treturn ;\n\tif (tab[cur.y][cur.x] != target)\n\t\treturn ;\n\ttab[cur.y][cur.x] = 'F';\n\tft_fill(tab, size, (t_point){cur.x + 1, cur.y}, target);\n\tft_fill(tab, size, (t_point){cur.x - 1, cur.y}, target);\n\tft_fill(tab, size, (t_point){cur.x, cur.y + 1}, target);\n\tft_fill(tab, size, (t_point){cur.x, cur.y - 1}, target);\n}",
+        "hint": "2 conditions d'arret (bornes et caractere), remplacer, puis 4 appels recursifs (droite, gauche, bas, haut).",
+        "difficulty": 3
+      }
+    ]
+  },
+  "starterCode": "#include <unistd.h>\n\ntypedef struct s_point\n{\n\tint\tx;\n\tint\ty;\n}\t\tt_point;\n\nvoid\tft_putstr(char *s) { while (*s) write(1, s++, 1); }\n\nvoid\tft_fill(char **tab, t_point size, t_point cur, char target)\n{\n\t// Conditions d'arret : hors bornes, mauvais caractere\n\t// Remplacer par 'F'\n\t// 4 appels recursifs (droite, gauche, bas, haut)\n}\n\nvoid\tft_flood_fill(char **tab, t_point size, t_point begin)\n{\n\t// Sauvegarder le caractere cible\n\t// Appeler ft_fill\n}\n\nint\tmain(void)\n{\n\tchar\tl0[] = \"11111\";\n\tchar\tl1[] = \"10001\";\n\tchar\tl2[] = \"10001\";\n\tchar\tl3[] = \"11111\";\n\tchar\t*tab[] = {l0, l1, l2, l3};\n\tt_point\tsize = {5, 4};\n\tt_point\tbegin = {1, 1};\n\tint\t\ti;\n\n\tft_flood_fill(tab, size, begin);\n\ti = 0;\n\twhile (i < 4)\n\t{\n\t\tft_putstr(tab[i]);\n\t\twrite(1, \"\\n\", 1);\n\t\ti++;\n\t}\n\treturn (0);\n}",
+  "solution": "#include <unistd.h>\n\ntypedef struct s_point\n{\n\tint\tx;\n\tint\ty;\n}\t\tt_point;\n\nvoid\tft_putstr(char *s) { while (*s) write(1, s++, 1); }\n\nvoid\tft_fill(char **tab, t_point size, t_point cur, char target)\n{\n\tif (cur.x < 0 || cur.x >= size.x\n\t\t|| cur.y < 0 || cur.y >= size.y)\n\t\treturn ;\n\tif (tab[cur.y][cur.x] != target)\n\t\treturn ;\n\ttab[cur.y][cur.x] = 'F';\n\tft_fill(tab, size, (t_point){cur.x + 1, cur.y}, target);\n\tft_fill(tab, size, (t_point){cur.x - 1, cur.y}, target);\n\tft_fill(tab, size, (t_point){cur.x, cur.y + 1}, target);\n\tft_fill(tab, size, (t_point){cur.x, cur.y - 1}, target);\n}\n\nvoid\tft_flood_fill(char **tab, t_point size, t_point begin)\n{\n\tchar\ttarget;\n\n\ttarget = tab[begin.y][begin.x];\n\tif (target == 'F')\n\t\treturn ;\n\tft_fill(tab, size, begin, target);\n}\n\nint\tmain(void)\n{\n\tchar\tl0[] = \"11111\";\n\tchar\tl1[] = \"10001\";\n\tchar\tl2[] = \"10001\";\n\tchar\tl3[] = \"11111\";\n\tchar\t*tab[] = {l0, l1, l2, l3};\n\tt_point\tsize = {5, 4};\n\tt_point\tbegin = {1, 1};\n\tint\t\ti;\n\n\tft_flood_fill(tab, size, begin);\n\ti = 0;\n\twhile (i < 4)\n\t{\n\t\tft_putstr(tab[i]);\n\t\twrite(1, \"\\n\", 1);\n\t\ti++;\n\t}\n\treturn (0);\n}",
+  "hints": [
+    "Sauvegarde le caractere en (begin.y, begin.x) comme 'target'. Remplace chaque case qui a ce caractere par 'F'.",
+    "Condition d'arret : si hors bornes OU si tab[y][x] != target, on retourne. Cela gere aussi les cases deja remplies.",
+    "Remplace tab[y][x] AVANT les appels recursifs pour eviter les boucles infinies (la case marquee ne sera plus visitee)."
+  ],
+  "testCases": [
+    {
+      "id": 1,
+      "description": "Remplir la zone interieure d'un rectangle",
+      "stdin": "",
+      "expectedStdout": "11111\n1FFF1\n1FFF1\n11111\n",
+      "expectedExitCode": 0,
+      "visible": true
+    },
+    {
+      "id": 2,
+      "description": "Remplir depuis un coin (zone connectee au bord)",
+      "stdin": "",
+      "expectedStdout": "FFFFF\nF000F\nF000F\nFFFFF\n",
+      "expectedExitCode": 0,
+      "visible": false
+    },
+    {
+      "id": 3,
+      "description": "Zone deja remplie (pas de changement)",
+      "stdin": "",
+      "expectedStdout": "FFFFF\nFFFFF\n",
+      "expectedExitCode": 0,
+      "visible": false
+    }
+  ],
+  "constraints": {
+    "allowedFunctions": ["write"],
+    "forbiddenFunctions": ["printf", "puts", "malloc"],
+    "maxExecutionTime": 5000,
+    "maxMemory": 128
+  },
+  "relatedExercises": ["c-day54-ex01-ft-power-recursive", "c-day54-ex02-ft-fibonacci-memo"],
+  "resources": [
+    {
+      "title": "Algorithme de remplissage par diffusion",
+      "url": "https://fr.wikipedia.org/wiki/Algorithme_de_remplissage_par_diffusion",
+      "type": "documentation"
+    },
+    {
+      "title": "Flood Fill Algorithm en C",
+      "url": "https://www.geeksforgeeks.org/flood-fill-algorithm/",
+      "type": "article"
+    }
+  ]
+}

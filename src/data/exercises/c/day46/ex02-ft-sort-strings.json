@@ -1,0 +1,257 @@
+{
+  "id": "c-day46-ex02-ft-sort-strings",
+  "category": "c",
+  "day": 46,
+  "order": 2,
+  "title": "Trier un tableau de strings",
+  "description": "Ecris une fonction ft_sort_strings(char **tab, int size) qui trie un tableau de chaines de caracteres par ordre alphabetique en utilisant le tri a bulles. Pour comparer les strings, utilise ta propre fonction ft_strcmp. Prototype : void ft_sort_strings(char **tab, int size);",
+  "difficulty": 3,
+  "points": 30,
+  "estimatedTime": 35,
+  "learningObjectives": [
+    "Appliquer le tri a bulles a un tableau de pointeurs de chaines",
+    "Utiliser ft_strcmp pour comparer deux chaines de caracteres",
+    "Comprendre la difference entre swapper des pointeurs et swapper des contenus",
+    "Manipuler un tableau de char * (double pointeur)",
+    "Combiner plusieurs fonctions pour resoudre un probleme"
+  ],
+  "learningContent": {
+    "lesson": {
+      "introduction": "Apres avoir appris a trier un tableau d'entiers avec le bubble sort, on passe a un cas plus complexe : trier un tableau de chaines de caracteres. Le principe du tri a bulles reste identique (comparer et echanger les elements adjacents), mais deux choses changent : on utilise ft_strcmp au lieu de > pour la comparaison, et on echange des pointeurs (char *) au lieu de valeurs entieres. Cette exercice combine les tableaux de pointeurs, la comparaison de chaines et l'algorithme de tri.",
+      "steps": [
+        {
+          "id": 1,
+          "title": "Les tableaux de chaines (char **)",
+          "content": "Un tableau de chaines de caracteres est declare comme `char **tab` ou `char *tab[]`. Chaque element `tab[i]` est un pointeur vers une chaine (un `char *`).\n\n**Structure en memoire :**\n- `tab` est un pointeur vers un tableau de pointeurs\n- `tab[0]` pointe vers la premiere chaine\n- `tab[1]` pointe vers la deuxieme chaine\n- etc.\n\nQuand on trie un tableau de strings, on ne deplace PAS les chaines en memoire. On deplace uniquement les pointeurs. C'est plus rapide et plus simple.",
+          "codeExample": "// Declaration d'un tableau de strings\nchar *tab[] = {\"banane\", \"abricot\", \"cerise\"};\n\n// tab[0] -> \"banane\"\n// tab[1] -> \"abricot\"\n// tab[2] -> \"cerise\"\n\n// Apres tri alphabetique :\n// tab[0] -> \"abricot\"\n// tab[1] -> \"banane\"\n// tab[2] -> \"cerise\"\n\n// On a juste echange les POINTEURS, pas les chaines",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Si tab = {\"zorro\", \"alice\", \"bob\"}, dans quel ordre seront les pointeurs apres un tri alphabetique ?",
+            "starterCode": "char *tab[] = {\"zorro\", \"alice\", \"bob\"};\n// Apres tri :\n// tab[0] -> ???\n// tab[1] -> ???\n// tab[2] -> ???",
+            "solution": "// Apres tri alphabetique :\n// tab[0] -> \"alice\"\n// tab[1] -> \"bob\"\n// tab[2] -> \"zorro\"\n// Les chaines ne bougent pas en memoire,\n// seuls les pointeurs sont reordonnes"
+          }
+        },
+        {
+          "id": 2,
+          "title": "ft_strcmp pour comparer les chaines",
+          "content": "Pour trier des entiers, on utilise `>`. Pour trier des strings, on utilise `ft_strcmp`. Cette fonction compare deux chaines caractere par caractere et retourne :\n\n- **Une valeur negative** si s1 < s2 (s1 vient avant dans l'alphabet)\n- **0** si s1 == s2\n- **Une valeur positive** si s1 > s2 (s1 vient apres dans l'alphabet)\n\nDans le tri a bulles, on remplace `tab[j] > tab[j+1]` par `ft_strcmp(tab[j], tab[j+1]) > 0`.",
+          "codeExample": "int\tft_strcmp(char *s1, char *s2)\n{\n\tint\ti;\n\n\ti = 0;\n\twhile (s1[i] && s1[i] == s2[i])\n\t\ti++;\n\treturn ((unsigned char)s1[i] - (unsigned char)s2[i]);\n}\n\n// Exemples :\n// ft_strcmp(\"abc\", \"abd\") -> negatif ('c' < 'd')\n// ft_strcmp(\"abd\", \"abc\") -> positif ('d' > 'c')\n// ft_strcmp(\"abc\", \"abc\") -> 0\n// ft_strcmp(\"ab\", \"abc\")  -> negatif ('\\0' < 'c')",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Pour un tri croissant (alphabetique), quelle condition utiliser pour decider du swap ?",
+            "starterCode": "// Pour les entiers : if (tab[j] > tab[j + 1])\n// Pour les strings : if (ft_strcmp(tab[j], tab[j + 1]) ??? 0)",
+            "solution": "// Pour les strings en ordre alphabetique :\nif (ft_strcmp(tab[j], tab[j + 1]) > 0)\n// Si ft_strcmp retourne > 0, tab[j] est 'plus grand'\n// alphabetiquement que tab[j+1], donc on echange"
+          }
+        },
+        {
+          "id": 3,
+          "title": "Swap de pointeurs",
+          "content": "Quand on trie des entiers, on swap des valeurs `int`. Quand on trie des strings, on swap des **pointeurs** `char *`. Le principe est exactement le meme, seul le type change.\n\n**Important :** On echange les pointeurs, pas les contenus des chaines ! C'est beaucoup plus efficace car on ne copie que 8 octets (la taille d'un pointeur) au lieu de copier potentiellement des centaines de caracteres.",
+          "codeExample": "// Swap d'entiers :\nint tmp_int = tab[j];\ntab[j] = tab[j + 1];\ntab[j + 1] = tmp_int;\n\n// Swap de pointeurs (strings) :\nchar *tmp_str = tab[j];\ntab[j] = tab[j + 1];\ntab[j + 1] = tmp_str;\n\n// C'est la meme chose ! Seul le type de tmp change.\n// On echange les adresses, pas les contenus.",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Si tab[0] pointe vers l'adresse 0x100 (\"banane\") et tab[1] vers 0x200 (\"abricot\"), que valent tab[0] et tab[1] apres le swap ?",
+            "starterCode": "// Avant : tab[0] = 0x100 (\"banane\")\n//         tab[1] = 0x200 (\"abricot\")\n// Apres swap :\n// tab[0] = ???\n// tab[1] = ???",
+            "solution": "// Apres swap :\n// tab[0] = 0x200 (pointe vers \"abricot\")\n// tab[1] = 0x100 (pointe vers \"banane\")\n// Les chaines n'ont pas bouge en memoire !"
+          }
+        },
+        {
+          "id": 4,
+          "title": "L'algorithme complet",
+          "content": "Le bubble sort sur les strings est identique a celui sur les entiers, avec deux modifications :\n1. La comparaison utilise `ft_strcmp(tab[j], tab[j+1]) > 0` au lieu de `tab[j] > tab[j+1]`\n2. La variable temporaire est de type `char *` au lieu de `int`\n\nLe reste (double boucle, bornes, logique) est strictement identique. C'est la beaute des algorithmes : une fois le principe compris, on peut l'appliquer a n'importe quel type de donnees en changeant seulement la comparaison et le swap.",
+          "codeExample": "void\tft_sort_strings(char **tab, int size)\n{\n\tint\t\ti;\n\tint\t\tj;\n\tchar\t*tmp;\n\n\ti = 0;\n\twhile (i < size - 1)\n\t{\n\t\tj = 0;\n\t\twhile (j < size - 1 - i)\n\t\t{\n\t\t\tif (ft_strcmp(tab[j], tab[j + 1]) > 0)\n\t\t\t{\n\t\t\t\ttmp = tab[j];\n\t\t\t\ttab[j] = tab[j + 1];\n\t\t\t\ttab[j + 1] = tmp;\n\t\t\t}\n\t\t\tj++;\n\t\t}\n\t\ti++;\n\t}\n}",
+          "language": "c"
+        }
+      ]
+    },
+    "theory": [
+      {
+        "title": "Tableaux de pointeurs en C",
+        "content": "Un tableau de pointeurs (char **tab) est un tableau dont chaque element est un pointeur. Pour un tableau de strings, chaque element pointe vers le premier caractere d'une chaine. C'est le mecanisme utilise par argv dans la fonction main.",
+        "codeExamples": [
+          {
+            "title": "Structure d'un tableau de strings",
+            "code": "// Declaration\nchar *fruits[] = {\"pomme\", \"banane\", \"cerise\"};\n// fruits est de type char **\n\n// fruits[0] est un char * qui pointe vers \"pomme\"\n// fruits[1] est un char * qui pointe vers \"banane\"\n// *fruits[0] est le caractere 'p'\n// fruits[0][2] est le caractere 'm'\n\n// Equivalent a argv dans main :\nint main(int argc, char **argv)\n// argv[0] = nom du programme\n// argv[1] = premier argument",
+            "explanation": "char ** signifie 'pointeur vers un pointeur vers un char', soit un tableau de chaines"
+          }
+        ],
+        "keyPoints": [
+          "char **tab est un tableau de pointeurs vers des chaines",
+          "tab[i] est de type char * (un pointeur vers une chaine)",
+          "tab[i][j] est le j-eme caractere de la i-eme chaine",
+          "Swapper tab[i] et tab[j] echange les pointeurs, pas les contenus"
+        ],
+        "commonMistakes": [
+          "Confondre char **tab (tableau de strings) et char *tab (une seule string)",
+          "Essayer de copier une chaine avec = au lieu de strcpy",
+          "Oublier que les string literals sont en memoire read-only"
+        ]
+      },
+      {
+        "title": "La comparaison de chaines avec ft_strcmp",
+        "content": "En C, on ne peut pas comparer des chaines avec == ou >. L'operateur == compare les adresses (pointeurs), pas les contenus. Il faut utiliser strcmp (ou ft_strcmp) qui compare les chaines caractere par caractere selon l'ordre ASCII.",
+        "codeExamples": [
+          {
+            "title": "Pourquoi == ne marche pas pour les strings",
+            "code": "char *s1 = \"hello\";\nchar *s2 = \"hello\";\n\n// FAUX : compare les adresses, pas les contenus\nif (s1 == s2)  // Peut etre vrai ou faux !\n\n// CORRECT : compare les contenus\nif (ft_strcmp(s1, s2) == 0)  // Toujours correct\n\n// Pour le tri :\nif (ft_strcmp(s1, s2) > 0)  // s1 apres s2 dans l'alphabet",
+            "explanation": "== compare les pointeurs (adresses memoire), strcmp compare les caracteres un par un"
+          }
+        ],
+        "keyPoints": [
+          "== compare les adresses, pas les contenus des chaines",
+          "ft_strcmp retourne 0 si egal, negatif si s1 < s2, positif si s1 > s2",
+          "La comparaison est basee sur les valeurs ASCII des caracteres",
+          "ft_strcmp s'arrete au premier caractere different ou au '\\0'"
+        ],
+        "commonMistakes": [
+          "Utiliser == pour comparer des chaines (compare les adresses !)",
+          "Oublier le cast en unsigned char dans ft_strcmp",
+          "Comparer des chaines de casses differentes sans normaliser"
+        ]
+      },
+      {
+        "title": "Tri generique : changer la comparaison",
+        "content": "L'algorithme de tri est le meme, quelle que soit la donnee triee. Seules la comparaison et l'operation de swap changent. Ce concept est fondamental en programmation : on separe l'algorithme de la donnee.",
+        "codeExamples": [
+          {
+            "title": "Meme algorithme, donnees differentes",
+            "code": "// Tri d'entiers :\n// Comparaison : tab[j] > tab[j + 1]\n// Swap : int tmp = tab[j]; ...\n\n// Tri de strings :\n// Comparaison : ft_strcmp(tab[j], tab[j + 1]) > 0\n// Swap : char *tmp = tab[j]; ...\n\n// Tri de structures (par age) :\n// Comparaison : tab[j].age > tab[j + 1].age\n// Swap : t_person tmp = tab[j]; ...\n\n// En C, qsort utilise une fonction de comparaison\n// generique pour trier n'importe quoi",
+            "explanation": "Le pattern du tri reste identique, seule la logique de comparaison change"
+          }
+        ],
+        "keyPoints": [
+          "L'algorithme de tri est independant du type de donnees",
+          "Seules la comparaison et le swap changent selon le type",
+          "Ce principe s'appelle la programmation generique",
+          "En C, qsort de la stdlib implemente ce concept avec des pointeurs de fonctions"
+        ],
+        "commonMistakes": [
+          "Reecrire l'algorithme de tri pour chaque type de donnee",
+          "Melanger la logique de comparaison et la logique de tri",
+          "Oublier que le swap doit correspondre au type des elements"
+        ]
+      },
+      {
+        "title": "L'ordre lexicographique (alphabetique)",
+        "content": "L'ordre lexicographique est l'ordre du dictionnaire. On compare les chaines caractere par caractere. Le premier caractere different determine l'ordre. Si une chaine est un prefixe de l'autre, la plus courte vient en premier.",
+        "codeExamples": [
+          {
+            "title": "Exemples d'ordre lexicographique",
+            "code": "// Ordre ASCII : '0'-'9' < 'A'-'Z' < 'a'-'z'\n\n// \"abc\" < \"abd\"    (c < d)\n// \"ab\"  < \"abc\"    (prefixe)\n// \"ABC\" < \"abc\"    (A=65 < a=97)\n// \"a\"   < \"b\"      (a < b)\n// \"Z\"   < \"a\"      (Z=90 < a=97)\n\n// Attention : les majuscules viennent AVANT\n// les minuscules en ASCII !\n// \"Zebra\" < \"apple\" car 'Z' (90) < 'a' (97)",
+            "explanation": "L'ordre lexicographique en C est base sur les valeurs ASCII, pas sur l'alphabet naturel"
+          }
+        ],
+        "keyPoints": [
+          "La comparaison est basee sur les valeurs ASCII des caracteres",
+          "Les majuscules (65-90) viennent avant les minuscules (97-122)",
+          "Les chiffres (48-57) viennent avant les lettres",
+          "Un prefixe est toujours 'plus petit' que la chaine complete"
+        ],
+        "commonMistakes": [
+          "Oublier que 'Z' < 'a' en ASCII (les majuscules avant les minuscules)",
+          "Croire que l'ordre est purement alphabetique (c'est l'ordre ASCII)",
+          "Ne pas gerer les chaines de longueurs differentes"
+        ]
+      }
+    ],
+    "prepExercises": [
+      {
+        "id": 1,
+        "title": "Ecrire ft_strcmp",
+        "instruction": "Ecris la fonction ft_strcmp qui compare deux chaines caractere par caractere.",
+        "starterCode": "int\tft_strcmp(char *s1, char *s2)\n{\n\t// Compare s1 et s2 caractere par caractere\n\t// TON CODE ICI\n}",
+        "solution": "int\tft_strcmp(char *s1, char *s2)\n{\n\tint\ti;\n\n\ti = 0;\n\twhile (s1[i] && s1[i] == s2[i])\n\t\ti++;\n\treturn ((unsigned char)s1[i] - (unsigned char)s2[i]);\n}",
+        "hint": "Avance tant que les caracteres sont egaux et non nuls, puis retourne la difference.",
+        "difficulty": 1
+      },
+      {
+        "id": 2,
+        "title": "Comparer deux strings pour le tri",
+        "instruction": "Utilise ft_strcmp pour verifier si deux chaines doivent etre echangees dans un tri alphabetique.",
+        "starterCode": "char *s1 = \"banane\";\nchar *s2 = \"abricot\";\nif (/* condition pour swap */)\n\twrite(1, \"swap\\n\", 5);\nelse\n\twrite(1, \"ok\\n\", 3);",
+        "solution": "char *s1 = \"banane\";\nchar *s2 = \"abricot\";\nif (ft_strcmp(s1, s2) > 0)\n\twrite(1, \"swap\\n\", 5);\nelse\n\twrite(1, \"ok\\n\", 3);",
+        "hint": "ft_strcmp(s1, s2) > 0 signifie que s1 vient APRES s2 dans l'alphabet.",
+        "difficulty": 1
+      },
+      {
+        "id": 3,
+        "title": "Swap de deux pointeurs",
+        "instruction": "Ecris le code pour echanger deux pointeurs char * dans un tableau.",
+        "starterCode": "char *tab[] = {\"banane\", \"abricot\"};\n// Echange tab[0] et tab[1]\n// TON CODE ICI",
+        "solution": "char *tab[] = {\"banane\", \"abricot\"};\nchar *tmp = tab[0];\ntab[0] = tab[1];\ntab[1] = tmp;\n// Maintenant tab[0] -> \"abricot\", tab[1] -> \"banane\"",
+        "hint": "Meme principe que le swap d'entiers, mais avec char *tmp au lieu de int tmp.",
+        "difficulty": 1
+      },
+      {
+        "id": 4,
+        "title": "Afficher un tableau de strings",
+        "instruction": "Ecris une fonction qui affiche un tableau de strings, une par ligne.",
+        "starterCode": "#include <unistd.h>\n\nvoid\tft_putstr(char *str)\n{\n\twhile (*str)\n\t\twrite(1, str++, 1);\n}\n\nvoid\tft_print_strings(char **tab, int size)\n{\n\t// Affiche chaque string suivie de \\n\n\t// TON CODE ICI\n}",
+        "solution": "#include <unistd.h>\n\nvoid\tft_putstr(char *str)\n{\n\twhile (*str)\n\t\twrite(1, str++, 1);\n}\n\nvoid\tft_print_strings(char **tab, int size)\n{\n\tint\ti;\n\n\ti = 0;\n\twhile (i < size)\n\t{\n\t\tft_putstr(tab[i]);\n\t\twrite(1, \"\\n\", 1);\n\t\ti++;\n\t}\n}",
+        "hint": "Boucle de i = 0 a size - 1, ft_putstr(tab[i]) puis write(1, \"\\n\", 1).",
+        "difficulty": 1
+      },
+      {
+        "id": 5,
+        "title": "Bubble sort sur strings",
+        "instruction": "Ecris ft_sort_strings complet en combinant ft_strcmp, le swap de pointeurs et le bubble sort.",
+        "starterCode": "int\tft_strcmp(char *s1, char *s2);\n\nvoid\tft_sort_strings(char **tab, int size)\n{\n\t// Bubble sort avec ft_strcmp et swap de char *\n\t// TON CODE ICI\n}",
+        "solution": "void\tft_sort_strings(char **tab, int size)\n{\n\tint\t\ti;\n\tint\t\tj;\n\tchar\t*tmp;\n\n\ti = 0;\n\twhile (i < size - 1)\n\t{\n\t\tj = 0;\n\t\twhile (j < size - 1 - i)\n\t\t{\n\t\t\tif (ft_strcmp(tab[j], tab[j + 1]) > 0)\n\t\t\t{\n\t\t\t\ttmp = tab[j];\n\t\t\t\ttab[j] = tab[j + 1];\n\t\t\t\ttab[j + 1] = tmp;\n\t\t\t}\n\t\t\tj++;\n\t\t}\n\t\ti++;\n\t}\n}",
+        "hint": "C'est le meme bubble sort que pour les entiers. Remplace > par ft_strcmp() > 0 et int tmp par char *tmp.",
+        "difficulty": 2
+      }
+    ]
+  },
+  "starterCode": "#include <unistd.h>\n\nint\tft_strcmp(char *s1, char *s2)\n{\n\tint\ti;\n\n\ti = 0;\n\twhile (s1[i] && s1[i] == s2[i])\n\t\ti++;\n\treturn ((unsigned char)s1[i] - (unsigned char)s2[i]);\n}\n\nvoid\tft_putstr(char *str)\n{\n\twhile (*str)\n\t\twrite(1, str++, 1);\n}\n\nvoid\tft_sort_strings(char **tab, int size)\n{\n\t// 1. Double boucle comme le bubble sort classique\n\t// 2. Compare avec ft_strcmp(tab[j], tab[j+1]) > 0\n\t// 3. Swap les pointeurs char * (pas les contenus)\n\t// TON CODE ICI\n}\n\nint\tmain(void)\n{\n\tchar\t*fruits[] = {\"banane\", \"abricot\", \"datte\", \"cerise\"};\n\tint\t\tsize = 4;\n\tint\t\ti;\n\n\tft_sort_strings(fruits, size);\n\ti = 0;\n\twhile (i < size)\n\t{\n\t\tft_putstr(fruits[i]);\n\t\twrite(1, \"\\n\", 1);\n\t\ti++;\n\t}\n\treturn (0);\n}",
+  "solution": "#include <unistd.h>\n\nint\tft_strcmp(char *s1, char *s2)\n{\n\tint\ti;\n\n\ti = 0;\n\twhile (s1[i] && s1[i] == s2[i])\n\t\ti++;\n\treturn ((unsigned char)s1[i] - (unsigned char)s2[i]);\n}\n\nvoid\tft_putstr(char *str)\n{\n\twhile (*str)\n\t\twrite(1, str++, 1);\n}\n\nvoid\tft_sort_strings(char **tab, int size)\n{\n\tint\t\ti;\n\tint\t\tj;\n\tchar\t*tmp;\n\n\ti = 0;\n\twhile (i < size - 1)\n\t{\n\t\tj = 0;\n\t\twhile (j < size - 1 - i)\n\t\t{\n\t\t\tif (ft_strcmp(tab[j], tab[j + 1]) > 0)\n\t\t\t{\n\t\t\t\ttmp = tab[j];\n\t\t\t\ttab[j] = tab[j + 1];\n\t\t\t\ttab[j + 1] = tmp;\n\t\t\t}\n\t\t\tj++;\n\t\t}\n\t\ti++;\n\t}\n}\n\nint\tmain(void)\n{\n\tchar\t*fruits[] = {\"banane\", \"abricot\", \"datte\", \"cerise\"};\n\tint\t\tsize = 4;\n\tint\t\ti;\n\n\tft_sort_strings(fruits, size);\n\ti = 0;\n\twhile (i < size)\n\t{\n\t\tft_putstr(fruits[i]);\n\t\twrite(1, \"\\n\", 1);\n\t\ti++;\n\t}\n\treturn (0);\n}",
+  "hints": [
+    "Le bubble sort sur les strings est identique a celui sur les entiers. Seuls la comparaison (ft_strcmp) et le type du swap (char *) changent.",
+    "Utilise ft_strcmp(tab[j], tab[j+1]) > 0 comme condition de swap : si le resultat est positif, tab[j] vient apres tab[j+1] alphabetiquement.",
+    "Pour le swap, utilise char *tmp = tab[j]; tab[j] = tab[j+1]; tab[j+1] = tmp; On echange les pointeurs, pas les chaines."
+  ],
+  "testCases": [
+    {
+      "id": 1,
+      "description": "Tri de 4 fruits par ordre alphabetique",
+      "stdin": "",
+      "expectedStdout": "abricot\nbanane\ncerise\ndatte\n",
+      "expectedExitCode": 0,
+      "visible": true
+    },
+    {
+      "id": 2,
+      "description": "Tableau deja trie",
+      "stdin": "",
+      "expectedStdout": "abricot\nbanane\ncerise\ndatte\n",
+      "expectedExitCode": 0,
+      "visible": false
+    },
+    {
+      "id": 3,
+      "description": "Strings avec prefixes communs",
+      "stdin": "",
+      "expectedStdout": "abricot\nbanane\ncerise\ndatte\n",
+      "expectedExitCode": 0,
+      "visible": false
+    }
+  ],
+  "constraints": {
+    "allowedFunctions": ["write"],
+    "forbiddenFunctions": ["printf", "strcmp", "qsort", "puts"],
+    "maxExecutionTime": 5000,
+    "maxMemory": 128
+  },
+  "relatedExercises": ["c-day46-ex00-ft-bubble-sort", "c-day46-ex01-ft-is-sorted"],
+  "resources": [
+    {
+      "title": "Tri de chaines en C",
+      "url": "https://www.geeksforgeeks.org/sort-array-strings-string-sorting/",
+      "type": "documentation"
+    },
+    {
+      "title": "strcmp - Manuel C",
+      "url": "https://man7.org/linux/man-pages/man3/strcmp.3.html",
+      "type": "article"
+    }
+  ]
+}

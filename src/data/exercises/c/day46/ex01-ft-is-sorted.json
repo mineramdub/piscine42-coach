@@ -1,0 +1,257 @@
+{
+  "id": "c-day46-ex01-ft-is-sorted",
+  "category": "c",
+  "day": 46,
+  "order": 1,
+  "title": "Verifier si un tableau est trie",
+  "description": "Ecris une fonction ft_is_sorted(int *tab, int size) qui retourne 1 si le tableau est trie par ordre croissant (ou egal), et 0 sinon. Un tableau vide ou de taille 1 est considere comme trie. Prototype : int ft_is_sorted(int *tab, int size);",
+  "difficulty": 3,
+  "points": 30,
+  "estimatedTime": 25,
+  "learningObjectives": [
+    "Savoir verifier une propriete sur un tableau par parcours lineaire",
+    "Comprendre la notion de tableau trie en ordre croissant",
+    "Maitriser la comparaison d'elements adjacents",
+    "Gerer les cas limites (tableau vide, un seul element)",
+    "Utiliser un retour premature pour optimiser la verification"
+  ],
+  "learningContent": {
+    "lesson": {
+      "introduction": "Verifier si un tableau est trie est une operation fondamentale en programmation. C'est utile pour valider le resultat d'un algorithme de tri, pour decider si un tri est necessaire, ou comme condition d'arret dans une boucle. L'idee est simple : on parcourt le tableau et on verifie que chaque element est inferieur ou egal au suivant. Si on trouve un seul cas ou ce n'est pas vrai, le tableau n'est pas trie. Cette verification se fait en O(n) avec un seul parcours.",
+      "steps": [
+        {
+          "id": 1,
+          "title": "La definition d'un tableau trie",
+          "content": "Un tableau est trie en ordre croissant si pour tout indice i, `tab[i] <= tab[i + 1]`. Autrement dit, chaque element est inferieur ou egal a celui qui le suit.\n\n**Cas particuliers :**\n- Un tableau vide (size = 0) est considere comme trie\n- Un tableau d'un seul element (size = 1) est toujours trie\n- Un tableau avec des doublons peut etre trie ({1, 1, 2, 2, 3})\n\n**Attention :** Trie en ordre croissant signifie `<=` (croissant au sens large), pas `<` (strictement croissant).",
+          "codeExample": "// Exemples de tableaux tries :\n// {1, 2, 3, 4, 5}    -> trie (croissant)\n// {1, 1, 2, 3, 3}    -> trie (avec doublons)\n// {5}                 -> trie (1 element)\n// {}                  -> trie (vide)\n\n// Exemples de tableaux NON tries :\n// {1, 3, 2, 4, 5}    -> pas trie (3 > 2)\n// {5, 4, 3, 2, 1}    -> pas trie (decroissant)\n// {1, 2, 5, 3, 4}    -> pas trie (5 > 3)",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Le tableau {3, 5, 5, 7, 2, 9} est-il trie ? Si non, a quel indice trouve-t-on le probleme ?",
+            "starterCode": "// tab = {3, 5, 5, 7, 2, 9}\n// tab[0]=3 <= tab[1]=5 ? ???\n// tab[1]=5 <= tab[2]=5 ? ???\n// tab[2]=5 <= tab[3]=7 ? ???\n// tab[3]=7 <= tab[4]=2 ? ???\n// Conclusion : ???",
+            "solution": "// tab = {3, 5, 5, 7, 2, 9}\n// tab[0]=3 <= tab[1]=5 ? Oui\n// tab[1]=5 <= tab[2]=5 ? Oui\n// tab[2]=5 <= tab[3]=7 ? Oui\n// tab[3]=7 <= tab[4]=2 ? Non ! 7 > 2\n// Conclusion : pas trie, probleme a l'indice 3"
+          }
+        },
+        {
+          "id": 2,
+          "title": "Parcours lineaire avec retour premature",
+          "content": "Pour verifier si un tableau est trie, on le parcourt de gauche a droite en comparant chaque element avec le suivant. Des qu'on trouve un element plus grand que son successeur, on sait que le tableau n'est PAS trie et on retourne 0 immediatement.\n\n**Retour premature (early return) :** C'est une technique d'optimisation tres courante. Au lieu de continuer a parcourir le tableau apres avoir trouve un probleme, on retourne immediatement. Cela evite des comparaisons inutiles.\n\nSi on arrive a la fin du parcours sans trouver de probleme, le tableau est trie et on retourne 1.",
+          "codeExample": "int\tft_is_sorted(int *tab, int size)\n{\n\tint\ti;\n\n\ti = 0;\n\twhile (i < size - 1)\n\t{\n\t\tif (tab[i] > tab[i + 1])\n\t\t\treturn (0);\n\t\ti++;\n\t}\n\treturn (1);\n}\n\n// Avec {3, 5, 5, 7, 2, 9} :\n// i=0 : 3 > 5 ? Non -> continue\n// i=1 : 5 > 5 ? Non -> continue\n// i=2 : 5 > 7 ? Non -> continue\n// i=3 : 7 > 2 ? Oui -> return 0",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Combien de comparaisons fait ft_is_sorted sur le tableau {1, 2, 3, 4, 5} de taille 5 ? Et sur {5, 1, 2, 3, 4} ?",
+            "starterCode": "// Tableau {1, 2, 3, 4, 5} :\n// Nombre de comparaisons = ???\n\n// Tableau {5, 1, 2, 3, 4} :\n// Nombre de comparaisons = ???",
+            "solution": "// Tableau {1, 2, 3, 4, 5} :\n// 4 comparaisons (parcours complet, tout est ok)\n\n// Tableau {5, 1, 2, 3, 4} :\n// 1 seule comparaison ! (5 > 1 -> return 0 immediatement)"
+          }
+        },
+        {
+          "id": 3,
+          "title": "Gestion des cas limites",
+          "content": "Les cas limites sont souvent source de bugs. Pour ft_is_sorted, les cas a considerer sont :\n\n1. **size <= 0** : tableau vide, considere comme trie (return 1)\n2. **size == 1** : un seul element, toujours trie (return 1)\n3. **tab == NULL** : pointeur nul, securite\n\nNotre boucle `while (i < size - 1)` gere deja les cas 1 et 2 naturellement : si size est 0 ou 1, la condition `0 < -1` ou `0 < 0` est fausse, donc la boucle ne s'execute pas et on retourne 1.\n\n**Attention avec size - 1 :** Si size est de type `unsigned`, size - 1 quand size vaut 0 donne un tres grand nombre (underflow) ! Avec int, pas de probleme.",
+          "codeExample": "int\tft_is_sorted(int *tab, int size)\n{\n\tint\ti;\n\n\tif (size <= 1)\n\t\treturn (1);\n\ti = 0;\n\twhile (i < size - 1)\n\t{\n\t\tif (tab[i] > tab[i + 1])\n\t\t\treturn (0);\n\t\ti++;\n\t}\n\treturn (1);\n}\n\n// size = 0 -> return 1 (vide = trie)\n// size = 1 -> return 1 (un element = trie)\n// size = 2 -> une seule comparaison",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Pourquoi est-il dangereux d'ecrire while (i < size - 1) si size est un unsigned int et vaut 0 ?",
+            "starterCode": "unsigned int size = 0;\n// size - 1 = ???\n// La boucle while (i < size - 1) fait quoi ???",
+            "solution": "unsigned int size = 0;\n// size - 1 = 4294967295 (underflow unsigned !)\n// La boucle while (i < 4294967295) s'execute\n// quasi infiniment -> bug !\n// Solution : utiliser int ou tester size <= 1 avant"
+          }
+        },
+        {
+          "id": 4,
+          "title": "Applications de ft_is_sorted",
+          "content": "La verification de tri est utile dans de nombreux contextes :\n\n1. **Validation** : Verifier que ton algorithme de tri fonctionne correctement\n2. **Optimisation** : Ne pas trier un tableau deja trie (comme le flag dans le bubble sort)\n3. **Pre-condition** : Certains algorithmes (comme la recherche binaire) necessitent un tableau trie\n4. **Debug** : Afficher l'etat du tableau a chaque etape pour verifier le tri\n\n**Complexite :** O(n) dans le pire cas (tableau trie), O(1) dans le meilleur cas (premier element deja mal place). C'est optimal car il faut regarder chaque element au moins une fois pour etre sur.",
+          "codeExample": "// Utilisation pour valider un tri :\nint tab[] = {5, 3, 1, 4, 2};\nft_bubble_sort(tab, 5);\nif (ft_is_sorted(tab, 5))\n\twrite(1, \"Tri OK\\n\", 6);\nelse\n\twrite(1, \"Erreur de tri\\n\", 14);\n\n// Utilisation comme pre-condition :\nint\tft_binary_search(int *tab, int size, int target)\n{\n\tif (!ft_is_sorted(tab, size))\n\t\treturn (-1); // Erreur : tableau non trie\n\t// ... recherche binaire ...\n}",
+          "language": "c"
+        }
+      ]
+    },
+    "theory": [
+      {
+        "title": "Parcours lineaire de tableau",
+        "content": "Le parcours lineaire est la technique la plus basique pour examiner un tableau. On visite chaque element exactement une fois, de l'indice 0 a l'indice size-1. C'est la base de nombreux algorithmes de recherche et de verification.",
+        "codeExamples": [
+          {
+            "title": "Parcours avec verification de propriete",
+            "code": "// Patron general : verifier une propriete\nint\tcheck_property(int *tab, int size)\n{\n\tint\ti;\n\n\ti = 0;\n\twhile (i < size)\n\t{\n\t\tif (!property(tab[i]))\n\t\t\treturn (0);\n\t\ti++;\n\t}\n\treturn (1);\n}\n\n// Pour is_sorted, la propriete est :\n// tab[i] <= tab[i + 1]",
+            "explanation": "Le patron est toujours le meme : boucle, test, retour premature si le test echoue"
+          }
+        ],
+        "keyPoints": [
+          "Un parcours lineaire visite chaque element une seule fois",
+          "La complexite est O(n) dans le pire cas",
+          "Le retour premature (early return) optimise les cas negatifs",
+          "La borne de la boucle depend du contexte (size vs size-1)"
+        ],
+        "commonMistakes": [
+          "Acceder a tab[i+1] quand i == size-1 (depassement de tableau)",
+          "Oublier de gerer le cas size == 0",
+          "Utiliser < au lieu de <= pour la comparaison de tri"
+        ]
+      },
+      {
+        "title": "La notion d'ordre en programmation",
+        "content": "L'ordre est un concept fondamental. En C, on distingue l'ordre croissant (chaque element <= suivant), decroissant (chaque element >= suivant), strict ou large. La fonction de comparaison determine l'ordre du tri.",
+        "codeExamples": [
+          {
+            "title": "Differents ordres",
+            "code": "// Ordre croissant (large) : tab[i] <= tab[i+1]\n// {1, 2, 2, 3, 5} -> trie croissant\n\n// Ordre strictement croissant : tab[i] < tab[i+1]\n// {1, 2, 3, 4, 5} -> trie strict\n// {1, 2, 2, 3, 5} -> PAS trie strict\n\n// Ordre decroissant : tab[i] >= tab[i+1]\n// {5, 3, 2, 2, 1} -> trie decroissant\n\n// Pour verifier l'ordre decroissant :\nint\tis_sorted_desc(int *tab, int size)\n{\n\tint\ti = 0;\n\twhile (i < size - 1)\n\t{\n\t\tif (tab[i] < tab[i + 1])\n\t\t\treturn (0);\n\t\ti++;\n\t}\n\treturn (1);\n}",
+            "explanation": "Changer la condition de comparaison change l'ordre verifie"
+          }
+        ],
+        "keyPoints": [
+          "Croissant large : tab[i] <= tab[i+1] (autorise les doublons)",
+          "Strictement croissant : tab[i] < tab[i+1] (pas de doublons)",
+          "Decroissant : inverser la condition de comparaison",
+          "La definition de l'ordre doit etre coherente dans tout le programme"
+        ],
+        "commonMistakes": [
+          "Confondre ordre strict et ordre large",
+          "Ne pas gerer les doublons correctement",
+          "Verifier un ordre alors que l'algorithme trie dans l'autre sens"
+        ]
+      },
+      {
+        "title": "Les retours booleens en C",
+        "content": "En C, il n'y a pas de type booleen natif (avant C99). On utilise conventionnellement 0 pour faux et 1 (ou tout non-zero) pour vrai. La fonction ft_is_sorted retourne un int qui agit comme un booleen.",
+        "codeExamples": [
+          {
+            "title": "Conventions booleennes en C",
+            "code": "// Convention C : 0 = faux, non-zero = vrai\nint\tft_is_sorted(int *tab, int size);\n\n// Utilisation :\nif (ft_is_sorted(tab, size))\n\t// Le tableau EST trie\nelse\n\t// Le tableau N'EST PAS trie\n\n// Equivalent a :\nif (ft_is_sorted(tab, size) != 0)\n\t// trie\n\n// Negation :\nif (!ft_is_sorted(tab, size))\n\t// PAS trie",
+            "explanation": "En C, if(x) teste si x est different de 0"
+          }
+        ],
+        "keyPoints": [
+          "0 signifie faux en C, tout autre valeur signifie vrai",
+          "Par convention, on retourne 1 pour vrai dans les fonctions booleennes",
+          "if(f()) teste si f() retourne une valeur non nulle",
+          "!f() est vrai si et seulement si f() retourne 0"
+        ],
+        "commonMistakes": [
+          "Retourner -1 au lieu de 0 pour faux (ca vaut vrai !)",
+          "Comparer explicitement avec 1 : if (f() == 1) au lieu de if (f())",
+          "Oublier que tout non-zero est vrai, pas seulement 1"
+        ]
+      },
+      {
+        "title": "Relation entre tri et recherche",
+        "content": "Un tableau trie permet d'utiliser des algorithmes de recherche beaucoup plus efficaces. La recherche lineaire fonctionne sur n'importe quel tableau en O(n), mais la recherche binaire (dichotomique) necessite un tableau trie et fonctionne en O(log n).",
+        "codeExamples": [
+          {
+            "title": "Recherche lineaire vs binaire",
+            "code": "// Recherche lineaire : O(n), tableau quelconque\nint\tlinear_search(int *tab, int size, int val)\n{\n\tint\ti = 0;\n\twhile (i < size)\n\t{\n\t\tif (tab[i] == val)\n\t\t\treturn (i);\n\t\ti++;\n\t}\n\treturn (-1);\n}\n\n// Recherche binaire : O(log n), TABLEAU TRIE requis\n// Pour n = 1000000 :\n//   lineaire : jusqu'a 1000000 comparaisons\n//   binaire  : environ 20 comparaisons !",
+            "explanation": "Trier un tableau est un investissement qui rend les recherches futures beaucoup plus rapides"
+          }
+        ],
+        "keyPoints": [
+          "Un tableau trie permet la recherche binaire en O(log n)",
+          "La recherche lineaire est O(n) quel que soit l'ordre",
+          "ft_is_sorted sert de pre-condition pour la recherche binaire",
+          "Trier puis rechercher est souvent plus efficace que chercher a chaque fois"
+        ],
+        "commonMistakes": [
+          "Utiliser la recherche binaire sur un tableau non trie",
+          "Oublier de verifier que le tableau est trie avant une recherche binaire",
+          "Ne pas comprendre l'interet de trier un tableau qu'on va chercher souvent"
+        ]
+      }
+    ],
+    "prepExercises": [
+      {
+        "id": 1,
+        "title": "Comparer deux elements adjacents",
+        "instruction": "Ecris un bout de code qui verifie si tab[0] <= tab[1] et affiche le resultat.",
+        "starterCode": "int tab[] = {3, 5};\nif (/* condition */)\n\twrite(1, \"OK\\n\", 3);\nelse\n\twrite(1, \"KO\\n\", 3);",
+        "solution": "int tab[] = {3, 5};\nif (tab[0] <= tab[1])\n\twrite(1, \"OK\\n\", 3);\nelse\n\twrite(1, \"KO\\n\", 3);",
+        "hint": "Compare tab[0] et tab[1] avec l'operateur <=.",
+        "difficulty": 1
+      },
+      {
+        "id": 2,
+        "title": "Parcourir et verifier toutes les paires",
+        "instruction": "Ecris une boucle qui parcourt un tableau et affiche 'OK' pour chaque paire adjacente triee et 'KO' sinon.",
+        "starterCode": "int tab[] = {1, 3, 2, 5};\nint i = 0;\nwhile (i < 3)\n{\n\t// Compare tab[i] et tab[i + 1]\n\t// TON CODE ICI\n\ti++;\n}",
+        "solution": "int tab[] = {1, 3, 2, 5};\nint i = 0;\nwhile (i < 3)\n{\n\tif (tab[i] <= tab[i + 1])\n\t\twrite(1, \"OK\\n\", 3);\n\telse\n\t\twrite(1, \"KO\\n\", 3);\n\ti++;\n}",
+        "hint": "Dans la boucle, compare tab[i] <= tab[i+1].",
+        "difficulty": 1
+      },
+      {
+        "id": 3,
+        "title": "Retour premature",
+        "instruction": "Ecris une fonction qui retourne 0 des qu'elle trouve une paire non triee.",
+        "starterCode": "int\tcheck(int *tab, int size)\n{\n\tint\ti;\n\n\ti = 0;\n\twhile (i < size - 1)\n\t{\n\t\t// Si tab[i] > tab[i+1], retourne 0\n\t\t// TON CODE ICI\n\t\ti++;\n\t}\n\treturn (1);\n}",
+        "solution": "int\tcheck(int *tab, int size)\n{\n\tint\ti;\n\n\ti = 0;\n\twhile (i < size - 1)\n\t{\n\t\tif (tab[i] > tab[i + 1])\n\t\t\treturn (0);\n\t\ti++;\n\t}\n\treturn (1);\n}",
+        "hint": "return (0) immediatement quand tab[i] > tab[i + 1].",
+        "difficulty": 2
+      },
+      {
+        "id": 4,
+        "title": "Gerer le cas vide",
+        "instruction": "Que retourne ft_is_sorted si size vaut 0 ? Verifie que ta boucle gere ce cas.",
+        "starterCode": "int\tft_is_sorted(int *tab, int size)\n{\n\t// Que se passe-t-il si size = 0 ?\n\t// while (i < size - 1) avec size = 0 ?\n\t// size - 1 = ???\n\tint i = 0;\n\twhile (i < size - 1)\n\t{\n\t\tif (tab[i] > tab[i + 1])\n\t\t\treturn (0);\n\t\ti++;\n\t}\n\treturn (1);\n}",
+        "solution": "int\tft_is_sorted(int *tab, int size)\n{\n\t// Si size = 0, size - 1 = -1 (int)\n\t// 0 < -1 est faux -> la boucle ne s'execute pas\n\t// On retourne 1 -> correct, un tableau vide est trie\n\tint i = 0;\n\twhile (i < size - 1)\n\t{\n\t\tif (tab[i] > tab[i + 1])\n\t\t\treturn (0);\n\t\ti++;\n\t}\n\treturn (1);\n}",
+        "hint": "Avec int, size - 1 quand size = 0 donne -1, et 0 < -1 est faux.",
+        "difficulty": 2
+      },
+      {
+        "id": 5,
+        "title": "ft_is_sorted complet",
+        "instruction": "Ecris la fonction ft_is_sorted complete avec un main de test.",
+        "starterCode": "#include <unistd.h>\n\nint\tft_is_sorted(int *tab, int size)\n{\n\t// TON CODE ICI\n}\n\nint\tmain(void)\n{\n\tint t1[] = {1, 2, 3, 4, 5};\n\tint t2[] = {1, 3, 2, 4, 5};\n\tif (ft_is_sorted(t1, 5))\n\t\twrite(1, \"1\\n\", 2);\n\telse\n\t\twrite(1, \"0\\n\", 2);\n\tif (ft_is_sorted(t2, 5))\n\t\twrite(1, \"1\\n\", 2);\n\telse\n\t\twrite(1, \"0\\n\", 2);\n\treturn (0);\n}",
+        "solution": "#include <unistd.h>\n\nint\tft_is_sorted(int *tab, int size)\n{\n\tint\ti;\n\n\ti = 0;\n\twhile (i < size - 1)\n\t{\n\t\tif (tab[i] > tab[i + 1])\n\t\t\treturn (0);\n\t\ti++;\n\t}\n\treturn (1);\n}\n\nint\tmain(void)\n{\n\tint t1[] = {1, 2, 3, 4, 5};\n\tint t2[] = {1, 3, 2, 4, 5};\n\tif (ft_is_sorted(t1, 5))\n\t\twrite(1, \"1\\n\", 2);\n\telse\n\t\twrite(1, \"0\\n\", 2);\n\tif (ft_is_sorted(t2, 5))\n\t\twrite(1, \"1\\n\", 2);\n\telse\n\t\twrite(1, \"0\\n\", 2);\n\treturn (0);\n}",
+        "hint": "Parcours de i = 0 a size - 2, retourne 0 si tab[i] > tab[i+1], sinon retourne 1.",
+        "difficulty": 2
+      }
+    ]
+  },
+  "starterCode": "#include <unistd.h>\n\nvoid\tft_putnbr(int n)\n{\n\tchar\tc;\n\n\tif (n == -2147483648)\n\t{\n\t\twrite(1, \"-2147483648\", 11);\n\t\treturn ;\n\t}\n\tif (n < 0)\n\t{\n\t\twrite(1, \"-\", 1);\n\t\tn = -n;\n\t}\n\tif (n >= 10)\n\t\tft_putnbr(n / 10);\n\tc = (n % 10) + '0';\n\twrite(1, &c, 1);\n}\n\nint\tft_is_sorted(int *tab, int size)\n{\n\t// 1. Parcours le tableau de i = 0 a size - 2\n\t// 2. Si tab[i] > tab[i + 1], retourne 0\n\t// 3. Si la boucle finit sans probleme, retourne 1\n\t// TON CODE ICI\n}\n\nint\tmain(void)\n{\n\tint\tt1[] = {1, 2, 3, 4, 5};\n\tint\tt2[] = {5, 3, 1, 2, 4};\n\tint\tt3[] = {1, 1, 2, 2, 3};\n\n\tft_putnbr(ft_is_sorted(t1, 5));\n\twrite(1, \"\\n\", 1);\n\tft_putnbr(ft_is_sorted(t2, 5));\n\twrite(1, \"\\n\", 1);\n\tft_putnbr(ft_is_sorted(t3, 5));\n\twrite(1, \"\\n\", 1);\n\treturn (0);\n}",
+  "solution": "#include <unistd.h>\n\nvoid\tft_putnbr(int n)\n{\n\tchar\tc;\n\n\tif (n == -2147483648)\n\t{\n\t\twrite(1, \"-2147483648\", 11);\n\t\treturn ;\n\t}\n\tif (n < 0)\n\t{\n\t\twrite(1, \"-\", 1);\n\t\tn = -n;\n\t}\n\tif (n >= 10)\n\t\tft_putnbr(n / 10);\n\tc = (n % 10) + '0';\n\twrite(1, &c, 1);\n}\n\nint\tft_is_sorted(int *tab, int size)\n{\n\tint\ti;\n\n\ti = 0;\n\twhile (i < size - 1)\n\t{\n\t\tif (tab[i] > tab[i + 1])\n\t\t\treturn (0);\n\t\ti++;\n\t}\n\treturn (1);\n}\n\nint\tmain(void)\n{\n\tint\tt1[] = {1, 2, 3, 4, 5};\n\tint\tt2[] = {5, 3, 1, 2, 4};\n\tint\tt3[] = {1, 1, 2, 2, 3};\n\n\tft_putnbr(ft_is_sorted(t1, 5));\n\twrite(1, \"\\n\", 1);\n\tft_putnbr(ft_is_sorted(t2, 5));\n\twrite(1, \"\\n\", 1);\n\tft_putnbr(ft_is_sorted(t3, 5));\n\twrite(1, \"\\n\", 1);\n\treturn (0);\n}",
+  "hints": [
+    "Parcours le tableau avec une boucle while de i = 0 a i < size - 1 et compare tab[i] avec tab[i + 1].",
+    "Des que tu trouves tab[i] > tab[i + 1], retourne 0 immediatement (retour premature).",
+    "Si la boucle se termine sans avoir retourne 0, c'est que le tableau est trie : retourne 1."
+  ],
+  "testCases": [
+    {
+      "id": 1,
+      "description": "Tableau trie, non trie, et avec doublons",
+      "stdin": "",
+      "expectedStdout": "1\n0\n1\n",
+      "expectedExitCode": 0,
+      "visible": true
+    },
+    {
+      "id": 2,
+      "description": "Tableau d'un seul element",
+      "stdin": "",
+      "expectedStdout": "1\n0\n1\n",
+      "expectedExitCode": 0,
+      "visible": false
+    },
+    {
+      "id": 3,
+      "description": "Tableau en ordre decroissant",
+      "stdin": "",
+      "expectedStdout": "1\n0\n1\n",
+      "expectedExitCode": 0,
+      "visible": false
+    }
+  ],
+  "constraints": {
+    "allowedFunctions": ["write"],
+    "forbiddenFunctions": ["printf", "puts", "qsort"],
+    "maxExecutionTime": 5000,
+    "maxMemory": 128
+  },
+  "relatedExercises": ["c-day46-ex00-ft-bubble-sort", "c-day46-ex02-ft-sort-strings"],
+  "resources": [
+    {
+      "title": "Algorithmes de verification de tableau",
+      "url": "https://www.geeksforgeeks.org/check-if-an-array-is-sorted/",
+      "type": "documentation"
+    },
+    {
+      "title": "Complexite algorithmique pour les debutants",
+      "url": "https://www.freecodecamp.org/news/big-o-notation-why-it-matters-and-why-it-doesnt/",
+      "type": "article"
+    }
+  ]
+}

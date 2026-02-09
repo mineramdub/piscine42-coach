@@ -1,0 +1,257 @@
+{
+  "id": "c-day52-ex02-ft-dlst-remove",
+  "category": "c",
+  "day": 52,
+  "order": 2,
+  "title": "Supprimer un noeud d'une liste doublement chainee",
+  "description": "Ecris une fonction ft_dlst_remove qui supprime un noeud specifique d'une liste doublement chainee. La fonction doit relier les noeuds voisins entre eux (prev->next et next->prev), liberer le noeud supprime, et mettre a jour le pointeur de tete si necessaire. Prototype : void ft_dlst_remove(t_dlist **head, t_dlist *node, void (*del)(void *));",
+  "difficulty": 4,
+  "points": 40,
+  "estimatedTime": 35,
+  "learningObjectives": [
+    "Maitriser la suppression d'un noeud dans une liste doublement chainee",
+    "Comprendre le relinking des pointeurs prev et next",
+    "Savoir gerer la suppression du premier ou du dernier noeud",
+    "Utiliser un pointeur de fonction pour liberer le contenu",
+    "Eviter les fuites memoire lors de la suppression"
+  ],
+  "learningContent": {
+    "lesson": {
+      "introduction": "La suppression d'un noeud est l'operation la plus delicate sur une liste doublement chainee. Il faut relier les noeuds voisins entre eux pour ne pas casser la chaine, puis liberer la memoire du noeud supprime. L'avantage de la double liaison est qu'on peut supprimer un noeud en O(1) si on a directement le pointeur vers ce noeud, sans avoir a parcourir la liste pour trouver le predecesseur (ce qui serait necessaire avec une liste simplement chainee).",
+      "steps": [
+        {
+          "id": 1,
+          "title": "Principe du relinking",
+          "content": "Quand on supprime un noeud, il faut 'reconnecter' ses voisins entre eux. Le noeud precedent doit pointer vers le noeud suivant, et inversement.\n\n**Avant suppression de B :**\n`[A] <-> [B] <-> [C]`\n\n**Apres suppression de B :**\n`[A] <-> [C]`\n\nCela revient a :\n- A->next = C (au lieu de B)\n- C->prev = A (au lieu de B)\n- free(B)",
+          "codeExample": "// Suppression du noeud 'node' :\n\n// Cas general (node a un prev ET un next) :\n// node->prev->next = node->next\n// node->next->prev = node->prev\n\n// Illustration :\n// Avant : [A] <-> [B] <-> [C]\n//          A->next = B, B->prev = A\n//          B->next = C, C->prev = B\n\n// Apres suppression de B :\n// A->next = C  (etait B)\n// C->prev = A  (etait B)\n// [A] <-> [C]\n// B est libere",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Si on supprime le noeud C dans [A] <-> [B] <-> [C], quels pointeurs faut-il modifier ?",
+            "starterCode": "// Liste : [A] <-> [B] <-> [C] -> NULL\n// Supprimer C (le dernier)\n// C->prev = B, C->next = NULL\n// Quels pointeurs modifier ?\n// ???",
+            "solution": "// C est le dernier noeud (next = NULL)\n// Il faut modifier :\n// B->next = NULL (au lieu de C)\n// Pas de C->next->prev car C->next est NULL\n// Puis free(C)\n// Resultat : [A] <-> [B] -> NULL"
+          }
+        },
+        {
+          "id": 2,
+          "title": "Les 4 cas de suppression",
+          "content": "Il y a 4 cas possibles selon la position du noeud dans la liste :\n\n1. **Noeud au milieu** : relier prev et next entre eux\n2. **Premier noeud (tete)** : mettre a jour head, le suivant n'a plus de prev\n3. **Dernier noeud (queue)** : le precedent n'a plus de next\n4. **Seul noeud** : head devient NULL\n\nChaque cas necessite un traitement different des pointeurs.",
+          "codeExample": "void\tft_dlst_remove(t_dlist **head, t_dlist *node, void (*del)(void *))\n{\n\tif (!head || !*head || !node)\n\t\treturn ;\n\t// Cas : noeud a un predecesseur\n\tif (node->prev)\n\t\tnode->prev->next = node->next;\n\telse\n\t\t*head = node->next; // C'etait la tete\n\t// Cas : noeud a un successeur\n\tif (node->next)\n\t\tnode->next->prev = node->prev;\n\t// Liberer le contenu puis le noeud\n\tif (del)\n\t\tdel(node->content);\n\tfree(node);\n}",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Trace la suppression du premier noeud dans [A] <-> [B] <-> [C]. Que vaut head apres ?",
+            "starterCode": "// Liste : head -> [A] <-> [B] <-> [C]\n// Supprimer A (la tete)\n// A->prev = NULL, A->next = B\n// Etape 1 : node->prev existe ? ???\n// Etape 2 : node->next existe ? ???\n// head = ???",
+            "solution": "// A->prev = NULL -> on est dans le else\n// *head = A->next = B\n// A->next (B) existe -> B->prev = A->prev = NULL\n// free(A)\n// head -> [B] <-> [C] -> NULL\n//  NULL <-\n// B est la nouvelle tete, B->prev = NULL"
+          }
+        },
+        {
+          "id": 3,
+          "title": "Pointeur de fonction pour liberer le contenu",
+          "content": "Le parametre `void (*del)(void *)` est un pointeur de fonction qui sert a liberer le contenu du noeud. C'est necessaire car le contenu peut etre alloue dynamiquement (avec malloc).\n\n**Pourquoi un pointeur de fonction ?** Parce que la fonction de liberation depend du type de contenu. Si c'est un simple int sur la pile, pas besoin de free. Si c'est une string allouee avec malloc, il faut la free. Le pointeur de fonction permet cette flexibilite.",
+          "codeExample": "// Fonction de suppression pour du contenu malloc'e\nvoid\tdel_content(void *content)\n{\n\tfree(content);\n}\n\n// Fonction de suppression qui ne fait rien\n// (pour du contenu sur la pile)\nvoid\tdel_nothing(void *content)\n{\n\t(void)content; // Eviter le warning unused\n}\n\n// Utilisation :\n// Contenu alloue :\nchar *str = malloc(10);\nt_dlist *node = ft_dlst_new(str);\nft_dlst_remove(&head, node, del_content);\n\n// Contenu sur la pile :\nint val = 42;\nt_dlist *node2 = ft_dlst_new(&val);\nft_dlst_remove(&head, node2, del_nothing);\n\n// Ou avec NULL si on ne veut pas liberer :\nft_dlst_remove(&head, node2, NULL);",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Ecris une fonction del qui libere une string allouee avec malloc.",
+            "starterCode": "void\tft_del_str(void *content)\n{\n\t// Libere la string pointee par content\n\t// TON CODE ICI\n}",
+            "solution": "void\tft_del_str(void *content)\n{\n\tfree(content);\n\t// C'est tout ! free accepte void *\n\t// donc pas besoin de cast\n}"
+          }
+        },
+        {
+          "id": 4,
+          "title": "Programme complet et verification",
+          "content": "Le programme complet cree une liste, supprime des noeuds a differentes positions (debut, milieu, fin), et affiche la liste apres chaque suppression pour verifier.\n\n**Points cles pour le test :**\n- Apres suppression de la tete, head doit pointer vers le nouveau premier noeud\n- Apres suppression du dernier, l'avant-dernier doit avoir next = NULL\n- Apres suppression au milieu, les voisins doivent etre relies directement\n- La liste vide apres toutes les suppressions doit avoir head = NULL",
+          "codeExample": "#include <unistd.h>\n#include <stdlib.h>\n\nvoid\tft_print_dlist(t_dlist *head)\n{\n\twhile (head)\n\t{\n\t\tft_putnbr(*(int *)head->content);\n\t\tif (head->next)\n\t\t\twrite(1, \" \", 1);\n\t\thead = head->next;\n\t}\n\twrite(1, \"\\n\", 1);\n}\n\nint\tmain(void)\n{\n\tt_dlist\t*head = NULL;\n\tt_dlist\t*second;\n\tint\t\tv[] = {1, 2, 3, 4};\n\n\tft_dlst_add_back(&head, ft_dlst_new(&v[0]));\n\tft_dlst_add_back(&head, ft_dlst_new(&v[1]));\n\tft_dlst_add_back(&head, ft_dlst_new(&v[2]));\n\tft_dlst_add_back(&head, ft_dlst_new(&v[3]));\n\tft_print_dlist(head); // 1 2 3 4\n\n\tsecond = head->next;\n\tft_dlst_remove(&head, second, NULL);\n\tft_print_dlist(head); // 1 3 4\n\n\tft_dlst_remove(&head, head, NULL);\n\tft_print_dlist(head); // 3 4\n\treturn (0);\n}",
+          "language": "c"
+        }
+      ]
+    },
+    "theory": [
+      {
+        "title": "Avantage de la double liaison pour la suppression",
+        "content": "Dans une liste simplement chainee, supprimer un noeud necessite de connaitre son predecesseur (pour modifier prev->next). Il faut donc parcourir la liste depuis le debut. Avec une liste doublement chainee, le predecesseur est accessible directement via node->prev.",
+        "codeExamples": [
+          {
+            "title": "Comparaison simple vs double",
+            "code": "// Liste simplement chainee : suppression en O(n)\n// Il faut trouver le predecesseur\nvoid\tremove_simple(t_list **head, t_list *node)\n{\n\tt_list *prev = *head;\n\tif (prev == node) { *head = node->next; free(node); return; }\n\twhile (prev->next != node) // O(n) !\n\t\tprev = prev->next;\n\tprev->next = node->next;\n\tfree(node);\n}\n\n// Liste doublement chainee : suppression en O(1)\n// Le predecesseur est node->prev\nvoid\tremove_double(t_dlist **head, t_dlist *node)\n{\n\tif (node->prev) node->prev->next = node->next;\n\telse *head = node->next;\n\tif (node->next) node->next->prev = node->prev;\n\tfree(node);\n}",
+            "explanation": "La double liaison elimine le besoin de parcourir la liste pour trouver le predecesseur"
+          }
+        ],
+        "keyPoints": [
+          "Suppression en O(1) avec un double chainage vs O(n) en simple",
+          "node->prev donne acces direct au predecesseur",
+          "Pas besoin de parcourir depuis la tete",
+          "C'est l'avantage principal des listes doublement chainees"
+        ],
+        "commonMistakes": [
+          "Parcourir la liste pour trouver le predecesseur alors qu'on a prev",
+          "Oublier que la suppression en O(1) necessite le pointeur direct vers le noeud",
+          "Confondre la recherche du noeud (O(n)) et la suppression elle-meme (O(1))"
+        ]
+      },
+      {
+        "title": "Relinking : reconnecter les voisins",
+        "content": "Le relinking est le coeur de la suppression. Il consiste a modifier les pointeurs des noeuds voisins pour qu'ils se pointent mutuellement, excluant le noeud supprime de la chaine.",
+        "codeExamples": [
+          {
+            "title": "Le relinking en detail",
+            "code": "// Avant : [A] <-> [B] <-> [C]\n// Supprimer B :\n\n// Etape 1 : A doit pointer vers C\nnode->prev->next = node->next;\n// A->next = C (au lieu de B)\n\n// Etape 2 : C doit pointer vers A\nnode->next->prev = node->prev;\n// C->prev = A (au lieu de B)\n\n// Etape 3 : liberer B\nfree(node);\n\n// Apres : [A] <-> [C]",
+            "explanation": "Le relinking modifie exactement 2 pointeurs pour exclure le noeud de la chaine"
+          }
+        ],
+        "keyPoints": [
+          "Le relinking modifie prev->next et next->prev",
+          "L'ordre des modifications n'a pas d'importance (pas de perte de reference)",
+          "Le noeud supprime est completement deconnecte avant d'etre libere",
+          "En double chainage, 2 pointeurs suffisent pour le relinking"
+        ],
+        "commonMistakes": [
+          "Liberer le noeud avant de faire le relinking (perte des pointeurs)",
+          "Oublier de modifier l'un des deux pointeurs (chaine cassee dans un sens)",
+          "Acceder a prev->next quand prev est NULL (premier noeud)"
+        ]
+      },
+      {
+        "title": "Pointeurs de fonction en C",
+        "content": "Un pointeur de fonction stocke l'adresse d'une fonction. Il permet de passer une fonction en parametre a une autre fonction, rendant le code generique et reutilisable.",
+        "codeExamples": [
+          {
+            "title": "Syntaxe des pointeurs de fonction",
+            "code": "// Declaration d'un pointeur de fonction :\nvoid (*del)(void *);\n// 'del' est un pointeur vers une fonction\n// qui prend un void * et ne retourne rien\n\n// Assignation :\nvoid my_free(void *ptr) { free(ptr); }\ndel = my_free;\n\n// Appel via le pointeur :\ndel(some_pointer); // Appelle my_free(some_pointer)\n\n// Utilisation comme parametre :\nvoid remove(t_dlist *node, void (*del)(void *))\n{\n\tif (del)\n\t\tdel(node->content);\n\tfree(node);\n}",
+            "explanation": "Les pointeurs de fonction permettent de parametrer le comportement d'une fonction"
+          }
+        ],
+        "keyPoints": [
+          "Un pointeur de fonction stocke l'adresse d'une fonction",
+          "La syntaxe est : type_retour (*nom)(parametres)",
+          "On peut passer NULL si aucune liberation n'est necessaire",
+          "Toujours verifier si le pointeur de fonction est NULL avant de l'appeler"
+        ],
+        "commonMistakes": [
+          "Appeler un pointeur de fonction NULL (segfault)",
+          "Confondre la syntaxe du pointeur de fonction avec celle d'une declaration",
+          "Oublier les parentheses autour de (*del) dans la declaration"
+        ]
+      },
+      {
+        "title": "Gestion memoire et fuites",
+        "content": "Lors de la suppression d'un noeud, il faut liberer toute la memoire associee : le contenu (si alloue dynamiquement) ET le noeud lui-meme. Oublier l'un ou l'autre cause une fuite memoire.",
+        "codeExamples": [
+          {
+            "title": "Ordre de liberation",
+            "code": "// CORRECT : liberer le contenu puis le noeud\nif (del)\n\tdel(node->content); // Libere le contenu d'abord\nfree(node);             // Puis libere le noeud\n\n// INCORRECT : liberer le noeud d'abord\nfree(node);             // node est libere\ndel(node->content);     // ERREUR : node n'existe plus !\n\n// INCORRECT : oublier de liberer le contenu\nfree(node);             // Fuite memoire si content est malloc'e\n\n// Verifier avec valgrind :\n// valgrind --leak-check=full ./programme\n// Doit afficher : All heap blocks were freed",
+            "explanation": "Toujours liberer le contenu avant le noeud pour eviter les use-after-free"
+          }
+        ],
+        "keyPoints": [
+          "Liberer le contenu AVANT le noeud (sinon use-after-free)",
+          "Utiliser le pointeur de fonction del pour liberer le contenu",
+          "Chaque malloc doit avoir exactement un free correspondant",
+          "Utiliser valgrind pour verifier l'absence de fuites"
+        ],
+        "commonMistakes": [
+          "Liberer le noeud avant son contenu",
+          "Oublier de liberer le contenu (fuite memoire)",
+          "Double free : liberer un noeud deja libere"
+        ]
+      }
+    ],
+    "prepExercises": [
+      {
+        "id": 1,
+        "title": "Supprimer le premier noeud",
+        "instruction": "Ecris le code pour supprimer le premier noeud d'une liste et mettre a jour head.",
+        "starterCode": "void\tremove_first(t_dlist **head)\n{\n\tt_dlist\t*tmp;\n\n\tif (!*head)\n\t\treturn ;\n\t// Sauvegarde le premier noeud\n\t// Met a jour head et le prev du nouveau premier\n\t// Libere l'ancien premier\n\t// TON CODE ICI\n}",
+        "solution": "void\tremove_first(t_dlist **head)\n{\n\tt_dlist\t*tmp;\n\n\tif (!*head)\n\t\treturn ;\n\ttmp = *head;\n\t*head = tmp->next;\n\tif (*head)\n\t\t(*head)->prev = NULL;\n\tfree(tmp);\n}",
+        "hint": "Sauvegarde *head dans tmp, avance *head, mets le prev du nouveau head a NULL, free tmp.",
+        "difficulty": 2
+      },
+      {
+        "id": 2,
+        "title": "Supprimer le dernier noeud",
+        "instruction": "Ecris le code pour supprimer le dernier noeud d'une liste.",
+        "starterCode": "void\tremove_last(t_dlist **head)\n{\n\tt_dlist\t*last;\n\n\tif (!*head)\n\t\treturn ;\n\t// Trouve le dernier noeud\n\t// Modifie le next de l'avant-dernier\n\t// Libere le dernier\n\t// TON CODE ICI\n}",
+        "solution": "void\tremove_last(t_dlist **head)\n{\n\tt_dlist\t*last;\n\n\tif (!*head)\n\t\treturn ;\n\tlast = *head;\n\twhile (last->next)\n\t\tlast = last->next;\n\tif (last->prev)\n\t\tlast->prev->next = NULL;\n\telse\n\t\t*head = NULL;\n\tfree(last);\n}",
+        "hint": "Parcours jusqu'au dernier, puis last->prev->next = NULL. Si le dernier est aussi le premier, head = NULL.",
+        "difficulty": 2
+      },
+      {
+        "id": 3,
+        "title": "Relier deux noeuds voisins",
+        "instruction": "Ecris le code de relinking pour supprimer un noeud au milieu de la liste.",
+        "starterCode": "// node est entre prev_node et next_node\n// Relie prev_node et next_node directement\nvoid\trelink(t_dlist *node)\n{\n\t// TON CODE ICI\n}",
+        "solution": "void\trelink(t_dlist *node)\n{\n\tif (node->prev)\n\t\tnode->prev->next = node->next;\n\tif (node->next)\n\t\tnode->next->prev = node->prev;\n}",
+        "hint": "node->prev->next = node->next et node->next->prev = node->prev. Verifie les NULL.",
+        "difficulty": 2
+      },
+      {
+        "id": 4,
+        "title": "Utiliser un pointeur de fonction",
+        "instruction": "Ecris une fonction del_int qui libere un int malloc'e, et utilise-la comme parametre.",
+        "starterCode": "#include <stdlib.h>\n\nvoid\tdel_int(void *content)\n{\n\t// Libere le contenu\n\t// TON CODE ICI\n}\n\nint\tmain(void)\n{\n\tint\t*n = malloc(sizeof(int));\n\t*n = 42;\n\t// Appelle del_int via un pointeur de fonction\n\tvoid (*del)(void *) = del_int;\n\tdel(n);\n\treturn (0);\n}",
+        "solution": "#include <stdlib.h>\n\nvoid\tdel_int(void *content)\n{\n\tfree(content);\n}\n\nint\tmain(void)\n{\n\tint\t*n = malloc(sizeof(int));\n\t*n = 42;\n\tvoid (*del)(void *) = del_int;\n\tdel(n);\n\treturn (0);\n}",
+        "hint": "del_int fait simplement free(content). Le pointeur de fonction del appelle del_int.",
+        "difficulty": 2
+      },
+      {
+        "id": 5,
+        "title": "Supprimer un noeud generique",
+        "instruction": "Combine relinking + liberation pour ecrire ft_dlst_remove complete.",
+        "starterCode": "void\tft_dlst_remove(t_dlist **head, t_dlist *node, void (*del)(void *))\n{\n\t// 1. Verifications NULL\n\t// 2. Relinking (gerer tete et queue)\n\t// 3. Liberer contenu avec del\n\t// 4. Liberer le noeud\n\t// TON CODE ICI\n}",
+        "solution": "void\tft_dlst_remove(t_dlist **head, t_dlist *node, void (*del)(void *))\n{\n\tif (!head || !*head || !node)\n\t\treturn ;\n\tif (node->prev)\n\t\tnode->prev->next = node->next;\n\telse\n\t\t*head = node->next;\n\tif (node->next)\n\t\tnode->next->prev = node->prev;\n\tif (del)\n\t\tdel(node->content);\n\tfree(node);\n}",
+        "hint": "Si node->prev existe, relie prev->next a node->next. Sinon, c'est la tete : *head = node->next.",
+        "difficulty": 3
+      }
+    ]
+  },
+  "starterCode": "#include <unistd.h>\n#include <stdlib.h>\n\ntypedef struct s_dlist\n{\n\tvoid\t\t\t*content;\n\tstruct s_dlist\t*prev;\n\tstruct s_dlist\t*next;\n}\t\t\t\t\tt_dlist;\n\nvoid\tft_putnbr(int n)\n{\n\tchar c;\n\tif (n == -2147483648) { write(1, \"-2147483648\", 11); return ; }\n\tif (n < 0) { write(1, \"-\", 1); n = -n; }\n\tif (n >= 10) ft_putnbr(n / 10);\n\tc = (n % 10) + '0';\n\twrite(1, &c, 1);\n}\n\nt_dlist\t*ft_dlst_new(void *content)\n{\n\tt_dlist *node = (t_dlist *)malloc(sizeof(t_dlist));\n\tif (!node) return (NULL);\n\tnode->content = content; node->prev = NULL; node->next = NULL;\n\treturn (node);\n}\n\nvoid\tft_dlst_add_back(t_dlist **head, t_dlist *new)\n{\n\tt_dlist *last;\n\tif (!new) return ;\n\tif (!*head) { *head = new; return ; }\n\tlast = *head;\n\twhile (last->next) last = last->next;\n\tlast->next = new; new->prev = last; new->next = NULL;\n}\n\nvoid\tft_dlst_remove(t_dlist **head, t_dlist *node, void (*del)(void *))\n{\n\t// 1. Verifier head, *head, node non NULL\n\t// 2. Si node->prev existe : node->prev->next = node->next\n\t//    Sinon : *head = node->next (c'etait la tete)\n\t// 3. Si node->next existe : node->next->prev = node->prev\n\t// 4. Si del non NULL : del(node->content)\n\t// 5. free(node)\n}\n\nint\tmain(void)\n{\n\tt_dlist\t*head = NULL;\n\tt_dlist\t*second;\n\tint\t\tv[] = {1, 2, 3, 4};\n\n\tft_dlst_add_back(&head, ft_dlst_new(&v[0]));\n\tft_dlst_add_back(&head, ft_dlst_new(&v[1]));\n\tft_dlst_add_back(&head, ft_dlst_new(&v[2]));\n\tft_dlst_add_back(&head, ft_dlst_new(&v[3]));\n\tsecond = head->next;\n\tft_dlst_remove(&head, second, NULL);\n\twhile (head)\n\t{\n\t\tft_putnbr(*(int *)head->content);\n\t\twrite(1, \"\\n\", 1);\n\t\thead = head->next;\n\t}\n\treturn (0);\n}",
+  "solution": "#include <unistd.h>\n#include <stdlib.h>\n\ntypedef struct s_dlist\n{\n\tvoid\t\t\t*content;\n\tstruct s_dlist\t*prev;\n\tstruct s_dlist\t*next;\n}\t\t\t\t\tt_dlist;\n\nvoid\tft_putnbr(int n)\n{\n\tchar c;\n\tif (n == -2147483648) { write(1, \"-2147483648\", 11); return ; }\n\tif (n < 0) { write(1, \"-\", 1); n = -n; }\n\tif (n >= 10) ft_putnbr(n / 10);\n\tc = (n % 10) + '0';\n\twrite(1, &c, 1);\n}\n\nt_dlist\t*ft_dlst_new(void *content)\n{\n\tt_dlist *node = (t_dlist *)malloc(sizeof(t_dlist));\n\tif (!node) return (NULL);\n\tnode->content = content; node->prev = NULL; node->next = NULL;\n\treturn (node);\n}\n\nvoid\tft_dlst_add_back(t_dlist **head, t_dlist *new)\n{\n\tt_dlist *last;\n\tif (!new) return ;\n\tif (!*head) { *head = new; return ; }\n\tlast = *head;\n\twhile (last->next) last = last->next;\n\tlast->next = new; new->prev = last; new->next = NULL;\n}\n\nvoid\tft_dlst_remove(t_dlist **head, t_dlist *node, void (*del)(void *))\n{\n\tif (!head || !*head || !node)\n\t\treturn ;\n\tif (node->prev)\n\t\tnode->prev->next = node->next;\n\telse\n\t\t*head = node->next;\n\tif (node->next)\n\t\tnode->next->prev = node->prev;\n\tif (del)\n\t\tdel(node->content);\n\tfree(node);\n}\n\nint\tmain(void)\n{\n\tt_dlist\t*head = NULL;\n\tt_dlist\t*second;\n\tint\t\tv[] = {1, 2, 3, 4};\n\n\tft_dlst_add_back(&head, ft_dlst_new(&v[0]));\n\tft_dlst_add_back(&head, ft_dlst_new(&v[1]));\n\tft_dlst_add_back(&head, ft_dlst_new(&v[2]));\n\tft_dlst_add_back(&head, ft_dlst_new(&v[3]));\n\tsecond = head->next;\n\tft_dlst_remove(&head, second, NULL);\n\twhile (head)\n\t{\n\t\tft_putnbr(*(int *)head->content);\n\t\twrite(1, \"\\n\", 1);\n\t\thead = head->next;\n\t}\n\treturn (0);\n}",
+  "hints": [
+    "Verifie d'abord si node->prev existe : si oui, relie prev->next a node->next. Sinon, *head = node->next.",
+    "Fais pareil pour node->next : si next existe, relie next->prev a node->prev.",
+    "Libere le contenu avec del(node->content) si del n'est pas NULL, puis free(node)."
+  ],
+  "testCases": [
+    {
+      "id": 1,
+      "description": "Supprimer le 2eme element de [1, 2, 3, 4] -> [1, 3, 4]",
+      "stdin": "",
+      "expectedStdout": "1\n3\n4\n",
+      "expectedExitCode": 0,
+      "visible": true
+    },
+    {
+      "id": 2,
+      "description": "Supprimer la tete de [1, 2, 3] -> [2, 3]",
+      "stdin": "",
+      "expectedStdout": "2\n3\n",
+      "expectedExitCode": 0,
+      "visible": false
+    },
+    {
+      "id": 3,
+      "description": "Supprimer le seul element -> liste vide",
+      "stdin": "",
+      "expectedStdout": "",
+      "expectedExitCode": 0,
+      "visible": false
+    }
+  ],
+  "constraints": {
+    "allowedFunctions": ["write", "malloc", "free"],
+    "forbiddenFunctions": ["printf", "calloc", "realloc"],
+    "maxExecutionTime": 5000,
+    "maxMemory": 128
+  },
+  "relatedExercises": ["c-day52-ex00-ft-dlst-new", "c-day52-ex01-ft-dlst-add"],
+  "resources": [
+    {
+      "title": "Suppression dans une liste doublement chainee",
+      "url": "https://www.geeksforgeeks.org/delete-a-node-in-a-doubly-linked-list/",
+      "type": "article"
+    },
+    {
+      "title": "Pointeurs de fonction en C",
+      "url": "https://en.cppreference.com/w/c/language/pointer",
+      "type": "documentation"
+    }
+  ]
+}

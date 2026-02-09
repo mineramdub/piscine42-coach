@@ -1,0 +1,257 @@
+{
+  "id": "c-day48-ex00-ft-count-ops",
+  "category": "c",
+  "day": 48,
+  "order": 0,
+  "title": "Compter les operations d'un tri",
+  "description": "Ecris une fonction ft_count_ops(int *tab, int size) qui trie un tableau d'entiers avec le bubble sort tout en comptant le nombre total d'operations (comparaisons + echanges). La fonction retourne le nombre total d'operations effectuees. Prototype : int ft_count_ops(int *tab, int size);",
+  "difficulty": 3,
+  "points": 30,
+  "estimatedTime": 30,
+  "learningObjectives": [
+    "Comprendre la notion d'operations dans un algorithme",
+    "Savoir instrumenter un algorithme avec des compteurs",
+    "Mesurer experimentalement la complexite d'un tri",
+    "Differencier les comparaisons des echanges",
+    "Relier le comptage au concept de complexite O(n²)"
+  ],
+  "learningContent": {
+    "lesson": {
+      "introduction": "Pour comprendre la complexite d'un algorithme, rien de mieux que de compter ses operations. Dans cet exercice, tu vas modifier le bubble sort pour compter le nombre de comparaisons et d'echanges effectues. En observant comment ce nombre evolue en fonction de la taille du tableau, tu vas comprendre intuitivement ce que signifie O(n²). Chaque comparaison (if) et chaque echange (swap) comptent comme une operation.",
+      "steps": [
+        {
+          "id": 1,
+          "title": "Qu'est-ce qu'une operation ?",
+          "content": "En algorithmique, une **operation** est une action elementaire dont on peut compter le nombre d'executions. Pour un algorithme de tri, les deux operations principales sont :\n\n1. **La comparaison** : quand on compare deux elements (if tab[j] > tab[j+1])\n2. **L'echange (swap)** : quand on echange deux elements\n\nCompter ces operations permet de mesurer l'efficacite reelle d'un algorithme sur des donnees concretes. C'est la base de l'analyse de complexite.\n\n**Convention :** On compte souvent les comparaisons seules (car il y en a toujours), mais ici on va compter les deux.",
+          "codeExample": "// Dans le bubble sort, les operations sont :\nvoid\tbubble_sort(int *tab, int size)\n{\n\tint i = 0;\n\twhile (i < size - 1)\n\t{\n\t\tint j = 0;\n\t\twhile (j < size - 1 - i)\n\t\t{\n\t\t\t// OPERATION 1 : comparaison (toujours)\n\t\t\tif (tab[j] > tab[j + 1])\n\t\t\t{\n\t\t\t\t// OPERATION 2 : echange (conditionnel)\n\t\t\t\tint tmp = tab[j];\n\t\t\t\ttab[j] = tab[j + 1];\n\t\t\t\ttab[j + 1] = tmp;\n\t\t\t}\n\t\t\tj++;\n\t\t}\n\t\ti++;\n\t}\n}",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Pour le tableau {3, 1, 2} de taille 3, combien de comparaisons et combien de swaps effectue le bubble sort ?",
+            "starterCode": "// tab = {3, 1, 2}, size = 3\n// Passage i=0 :\n//   j=0 : 3 > 1 ? Oui -> swap -> {1, 3, 2} (1 comp, 1 swap)\n//   j=1 : 3 > 2 ? Oui -> swap -> {1, 2, 3} (1 comp, 1 swap)\n// Passage i=1 :\n//   j=0 : 1 > 2 ? Non (1 comp, 0 swap)\n// Total comparaisons = ???, total swaps = ???",
+            "solution": "// Total comparaisons = 3\n// Total swaps = 2\n// Total operations = 5"
+          }
+        },
+        {
+          "id": 2,
+          "title": "Ajouter des compteurs",
+          "content": "Pour compter les operations, on ajoute une variable `ops` qu'on incremente a chaque comparaison et a chaque swap.\n\n**Regles de comptage :**\n- `ops++` a chaque fois qu'on entre dans le `if` (comparaison)\n- `ops++` a chaque fois qu'on effectue un swap\n\nCela nous donne le nombre total d'operations. On peut aussi separer les compteurs (comp_count et swap_count) pour une analyse plus fine.",
+          "codeExample": "int\tft_count_ops(int *tab, int size)\n{\n\tint\tops;\n\tint\ti;\n\tint\tj;\n\tint\ttmp;\n\n\tops = 0;\n\ti = 0;\n\twhile (i < size - 1)\n\t{\n\t\tj = 0;\n\t\twhile (j < size - 1 - i)\n\t\t{\n\t\t\tops++; // Comptabilise la comparaison\n\t\t\tif (tab[j] > tab[j + 1])\n\t\t\t{\n\t\t\t\ttmp = tab[j];\n\t\t\t\ttab[j] = tab[j + 1];\n\t\t\t\ttab[j + 1] = tmp;\n\t\t\t\tops++; // Comptabilise le swap\n\t\t\t}\n\t\t\tj++;\n\t\t}\n\t\ti++;\n\t}\n\treturn (ops);\n}",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Si le tableau est deja trie {1, 2, 3, 4, 5} de taille 5, combien d'operations (comparaisons + swaps) le bubble sort effectue-t-il ?",
+            "starterCode": "// Tableau deja trie : {1, 2, 3, 4, 5}\n// Passage 0 : ??? comparaisons, 0 swaps\n// Passage 1 : ??? comparaisons, 0 swaps\n// Passage 2 : ??? comparaisons, 0 swaps\n// Passage 3 : ??? comparaisons, 0 swaps\n// Total = ???",
+            "solution": "// Passage 0 : 4 comparaisons, 0 swaps\n// Passage 1 : 3 comparaisons, 0 swaps\n// Passage 2 : 2 comparaisons, 0 swaps\n// Passage 3 : 1 comparaison, 0 swaps\n// Total = 4 + 3 + 2 + 1 = 10 comparaisons\n// 0 swaps -> total ops = 10"
+          }
+        },
+        {
+          "id": 3,
+          "title": "Observer l'evolution avec la taille",
+          "content": "L'interet de compter les operations est de voir comment le nombre evolue quand la taille du tableau augmente :\n\n- n = 5  -> ~10 comparaisons (sans swaps)\n- n = 10 -> ~45 comparaisons\n- n = 20 -> ~190 comparaisons\n- n = 100 -> ~4950 comparaisons\n\nLa formule exacte pour les comparaisons est **n*(n-1)/2**. Quand n double, le nombre de comparaisons est multiplie par ~4. C'est la signature d'un algorithme O(n²).\n\nAvec les swaps, le nombre total d'operations depend de l'etat initial du tableau, mais la tendance reste quadratique.",
+          "codeExample": "// Evolution du nombre de comparaisons :\n// n=5   : 5*4/2  = 10\n// n=10  : 10*9/2 = 45\n// n=20  : 20*19/2 = 190\n// n=50  : 50*49/2 = 1225\n// n=100 : 100*99/2 = 4950\n// n=1000: 1000*999/2 = 499500\n\n// Quand n double (5 -> 10) :\n// 10/45 = ~4.5 fois plus d'operations\n// C'est ~n^2 : (10/5)^2 = 4\n\n// Quand n est multiplie par 10 (10 -> 100) :\n// 4950/45 = 110 fois plus\n// C'est ~n^2 : (100/10)^2 = 100",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Si un tri en O(n²) met 1 seconde pour n = 1000, combien de temps mettra-t-il pour n = 10000 ?",
+            "starterCode": "// n = 1000 -> 1 seconde\n// n = 10000 -> ??? secondes\n// Facteur = (10000/1000)^2 = ???",
+            "solution": "// n = 1000 -> 1 seconde\n// n = 10000 -> 100 secondes !\n// Facteur = (10000/1000)^2 = 10^2 = 100\n// C'est pourquoi O(n^2) est trop lent pour\n// les grands tableaux"
+          }
+        },
+        {
+          "id": 4,
+          "title": "La notation Big O",
+          "content": "La notation Big O decrit le comportement asymptotique d'un algorithme, c'est-a-dire comment le nombre d'operations evolue quand la taille de l'entree tend vers l'infini.\n\n**Complexites courantes :**\n- **O(1)** : constant (acces tableau par indice)\n- **O(log n)** : logarithmique (recherche binaire)\n- **O(n)** : lineaire (parcours de tableau)\n- **O(n log n)** : quasi-lineaire (quicksort, mergesort)\n- **O(n²)** : quadratique (bubble sort, insertion sort)\n- **O(2^n)** : exponentiel (sous-ensembles)\n\nPour les algorithmes de tri, O(n log n) est la limite theorique optimale pour les tris par comparaison. Les tris en O(n²) sont donc sous-optimaux pour les grands tableaux.",
+          "codeExample": "// Pour n = 1000 :\n// O(1)      : 1 operation\n// O(log n)  : ~10 operations\n// O(n)      : 1 000 operations\n// O(n log n): ~10 000 operations\n// O(n^2)    : 1 000 000 operations\n// O(2^n)    : nombre astronomique !\n\n// C'est pourquoi :\n// - La recherche binaire (O(log n)) est si rapide\n// - Les tris O(n^2) sont lents sur de grands tableaux\n// - On prefere quicksort (O(n log n)) en pratique",
+          "language": "c"
+        }
+      ]
+    },
+    "theory": [
+      {
+        "title": "Operations elementaires",
+        "content": "Une operation elementaire est une action dont le cout est considere comme constant. En algorithmique, on compte generalement les comparaisons et les affectations pour les algorithmes de tri.",
+        "codeExamples": [
+          {
+            "title": "Types d'operations dans un tri",
+            "code": "// Comparaison : cout constant\nif (tab[j] > tab[j + 1])  // 1 operation\n\n// Affectation : cout constant\ntmp = tab[j];              // 1 operation\ntab[j] = tab[j + 1];      // 1 operation\ntab[j + 1] = tmp;          // 1 operation\n// Un swap = 3 affectations\n\n// Increment : cout constant\nj++;                       // 1 operation\n\n// On simplifie souvent : 1 swap = 1 operation",
+            "explanation": "On choisit les operations les plus significatives a compter"
+          }
+        ],
+        "keyPoints": [
+          "Une comparaison est l'operation la plus frequente dans un tri",
+          "Un swap equivaut a 3 affectations mais on le compte souvent comme 1",
+          "On ignore les operations de gestion de boucle (i++, condition de boucle)",
+          "Le choix des operations a compter depend de l'analyse souhaitee"
+        ],
+        "commonMistakes": [
+          "Compter les increments de boucle comme des operations significatives",
+          "Oublier de compter les comparaisons qui ne menent pas a un swap",
+          "Confondre le nombre d'operations avec le temps d'execution reel"
+        ]
+      },
+      {
+        "title": "Complexite dans le meilleur et le pire cas",
+        "content": "Le nombre d'operations depend de l'etat initial des donnees. On distingue le meilleur cas, le pire cas et le cas moyen. Pour le bubble sort, le pire cas est un tableau trie en ordre inverse.",
+        "codeExamples": [
+          {
+            "title": "Comparaisons et swaps selon le cas",
+            "code": "// Bubble sort (sans optimisation), n = 5 :\n\n// MEILLEUR CAS (deja trie) :\n// Comparaisons : 4+3+2+1 = 10\n// Swaps : 0\n// Total : 10\n\n// PIRE CAS (ordre inverse) :\n// Comparaisons : 4+3+2+1 = 10\n// Swaps : 4+3+2+1 = 10 (chaque comparaison mene a un swap)\n// Total : 20\n\n// CAS MOYEN :\n// Comparaisons : 10 (toujours pareil)\n// Swaps : ~5 (environ la moitie)\n// Total : ~15",
+            "explanation": "Les comparaisons sont fixes, seuls les swaps varient selon les donnees"
+          }
+        ],
+        "keyPoints": [
+          "Le nombre de comparaisons du bubble sort est toujours n*(n-1)/2",
+          "Le nombre de swaps depend de l'etat initial du tableau",
+          "Le pire cas donne la borne superieure de complexite",
+          "Le meilleur cas avec le flag d'optimisation est O(n)"
+        ],
+        "commonMistakes": [
+          "Croire que le nombre de comparaisons varie selon les donnees (il est fixe sans optimisation)",
+          "Oublier que le pire cas du bubble sort est le tableau inverse",
+          "Confondre complexite dans le meilleur cas et complexite optimale"
+        ]
+      },
+      {
+        "title": "La formule n*(n-1)/2",
+        "content": "Le nombre total de comparaisons dans le bubble sort est exactement n*(n-1)/2. Cette formule vient de la somme des entiers de 1 a n-1 : (n-1) + (n-2) + ... + 2 + 1.",
+        "codeExamples": [
+          {
+            "title": "Demonstration de la formule",
+            "code": "// Nombre de comparaisons par passage :\n// Passage 0 : n-1 comparaisons\n// Passage 1 : n-2 comparaisons\n// ...\n// Passage n-2 : 1 comparaison\n\n// Total = (n-1) + (n-2) + ... + 1\n// = somme de 1 a (n-1)\n// = (n-1) * n / 2\n\n// Verification pour n = 5 :\n// 4 + 3 + 2 + 1 = 10\n// 5 * 4 / 2 = 10  -> correct !\n\n// Verification pour n = 10 :\n// 9 + 8 + 7 + 6 + 5 + 4 + 3 + 2 + 1 = 45\n// 10 * 9 / 2 = 45  -> correct !",
+            "explanation": "C'est la formule de la somme des n premiers entiers, connue depuis Gauss"
+          }
+        ],
+        "keyPoints": [
+          "La somme 1 + 2 + ... + (n-1) = n*(n-1)/2",
+          "Cette formule explique pourquoi le bubble sort est O(n²)",
+          "n*(n-1)/2 est asymptotiquement equivalent a n²/2, soit O(n²)",
+          "La formule est la meme pour le selection sort"
+        ],
+        "commonMistakes": [
+          "Oublier le /2 dans la formule (n*(n-1) au lieu de n*(n-1)/2)",
+          "Confondre n*(n-1)/2 avec n²/2 (ils sont differents mais equivalents en O())",
+          "Ne pas reconnaitre que n*(n-1)/2 est O(n²)"
+        ]
+      },
+      {
+        "title": "Instrumenter un algorithme",
+        "content": "L'instrumentation consiste a ajouter du code de mesure (compteurs, timers) a un algorithme sans changer son comportement. C'est une technique essentielle pour le debug et l'analyse de performance.",
+        "codeExamples": [
+          {
+            "title": "Instrumentation avec compteurs separes",
+            "code": "typedef struct s_stats\n{\n\tint\tcomparisons;\n\tint\tswaps;\n}\tt_stats;\n\nt_stats\tft_bubble_sort_stats(int *tab, int size)\n{\n\tt_stats\tstats;\n\tint\t\ti;\n\tint\t\tj;\n\tint\t\ttmp;\n\n\tstats.comparisons = 0;\n\tstats.swaps = 0;\n\ti = 0;\n\twhile (i < size - 1)\n\t{\n\t\tj = 0;\n\t\twhile (j < size - 1 - i)\n\t\t{\n\t\t\tstats.comparisons++;\n\t\t\tif (tab[j] > tab[j + 1])\n\t\t\t{\n\t\t\t\ttmp = tab[j];\n\t\t\t\ttab[j] = tab[j + 1];\n\t\t\t\ttab[j + 1] = tmp;\n\t\t\t\tstats.swaps++;\n\t\t\t}\n\t\t\tj++;\n\t\t}\n\t\ti++;\n\t}\n\treturn (stats);\n}",
+            "explanation": "Les compteurs separes permettent d'analyser comparaisons et swaps independamment"
+          }
+        ],
+        "keyPoints": [
+          "L'instrumentation ne doit pas modifier le comportement de l'algorithme",
+          "On peut compter les comparaisons, les swaps ou les deux",
+          "Les compteurs sont incrementes juste avant l'operation mesuree",
+          "L'instrumentation aide a verifier les formules theoriques"
+        ],
+        "commonMistakes": [
+          "Placer le compteur au mauvais endroit (apres l'operation au lieu d'avant)",
+          "Oublier d'initialiser le compteur a 0",
+          "Modifier le comportement de l'algorithme en ajoutant les compteurs"
+        ]
+      }
+    ],
+    "prepExercises": [
+      {
+        "id": 1,
+        "title": "Compteur de comparaisons simple",
+        "instruction": "Ecris une boucle qui compare les elements adjacents d'un tableau et compte les comparaisons.",
+        "starterCode": "int\tcount = 0;\nint\ttab[] = {5, 3, 8, 1};\nint\ti = 0;\nwhile (i < 3)\n{\n\t// Compare tab[i] et tab[i+1], incremente count\n\t// TON CODE ICI\n\ti++;\n}\n// count = ???",
+        "solution": "int\tcount = 0;\nint\ttab[] = {5, 3, 8, 1};\nint\ti = 0;\nwhile (i < 3)\n{\n\tcount++;\n\tif (tab[i] > tab[i + 1])\n\t{\n\t\t// swap ici si besoin\n\t}\n\ti++;\n}\n// count = 3 (une comparaison par paire)",
+        "hint": "Incremente count a chaque iteration, avant ou apres la comparaison.",
+        "difficulty": 1
+      },
+      {
+        "id": 2,
+        "title": "Compter les swaps",
+        "instruction": "Modifie le bubble sort pour compter uniquement le nombre de swaps.",
+        "starterCode": "int\tcount_swaps(int *tab, int size)\n{\n\tint\tswaps;\n\n\tswaps = 0;\n\t// Bubble sort avec compteur de swaps\n\t// TON CODE ICI\n\treturn (swaps);\n}",
+        "solution": "int\tcount_swaps(int *tab, int size)\n{\n\tint\tswaps;\n\tint\ti;\n\tint\tj;\n\tint\ttmp;\n\n\tswaps = 0;\n\ti = 0;\n\twhile (i < size - 1)\n\t{\n\t\tj = 0;\n\t\twhile (j < size - 1 - i)\n\t\t{\n\t\t\tif (tab[j] > tab[j + 1])\n\t\t\t{\n\t\t\t\ttmp = tab[j];\n\t\t\t\ttab[j] = tab[j + 1];\n\t\t\t\ttab[j + 1] = tmp;\n\t\t\t\tswaps++;\n\t\t\t}\n\t\t\tj++;\n\t\t}\n\t\ti++;\n\t}\n\treturn (swaps);\n}",
+        "hint": "Incremente swaps a l'interieur du if, juste apres le swap.",
+        "difficulty": 2
+      },
+      {
+        "id": 3,
+        "title": "Compter comparaisons + swaps",
+        "instruction": "Ecris ft_count_ops qui retourne le total (comparaisons + swaps).",
+        "starterCode": "int\tft_count_ops(int *tab, int size)\n{\n\tint\tops;\n\n\tops = 0;\n\t// Bubble sort avec compteur total\n\t// TON CODE ICI\n\treturn (ops);\n}",
+        "solution": "int\tft_count_ops(int *tab, int size)\n{\n\tint\tops;\n\tint\ti;\n\tint\tj;\n\tint\ttmp;\n\n\tops = 0;\n\ti = 0;\n\twhile (i < size - 1)\n\t{\n\t\tj = 0;\n\t\twhile (j < size - 1 - i)\n\t\t{\n\t\t\tops++;\n\t\t\tif (tab[j] > tab[j + 1])\n\t\t\t{\n\t\t\t\ttmp = tab[j];\n\t\t\t\ttab[j] = tab[j + 1];\n\t\t\t\ttab[j + 1] = tmp;\n\t\t\t\tops++;\n\t\t\t}\n\t\t\tj++;\n\t\t}\n\t\ti++;\n\t}\n\treturn (ops);\n}",
+        "hint": "ops++ avant chaque if (comparaison) ET ops++ dans chaque if (swap).",
+        "difficulty": 2
+      },
+      {
+        "id": 4,
+        "title": "Verifier la formule n*(n-1)/2",
+        "instruction": "Pour un tableau deja trie de taille 5, verifie que le nombre de comparaisons est bien 5*4/2 = 10.",
+        "starterCode": "#include <unistd.h>\n\nint\tft_count_ops(int *tab, int size);\nvoid\tft_putnbr(int n);\n\nint\tmain(void)\n{\n\tint tab[] = {1, 2, 3, 4, 5};\n\tint ops = ft_count_ops(tab, 5);\n\tft_putnbr(ops);\n\twrite(1, \"\\n\", 1);\n\t// Doit afficher 10 (seulement des comparaisons)\n\treturn (0);\n}",
+        "solution": "#include <unistd.h>\n\nint\tft_count_ops(int *tab, int size);\nvoid\tft_putnbr(int n);\n\nint\tmain(void)\n{\n\tint tab[] = {1, 2, 3, 4, 5};\n\tint ops = ft_count_ops(tab, 5);\n\tft_putnbr(ops);\n\twrite(1, \"\\n\", 1);\n\t// Affiche 10 : 4+3+2+1 = 10 comparaisons, 0 swaps\n\treturn (0);\n}",
+        "hint": "Tableau deja trie = 0 swaps, donc ops = nombre de comparaisons = n*(n-1)/2.",
+        "difficulty": 1
+      },
+      {
+        "id": 5,
+        "title": "Pire cas : tableau inverse",
+        "instruction": "Compte les operations sur un tableau inverse de taille 5. Compare avec le meilleur cas.",
+        "starterCode": "#include <unistd.h>\n\nint\tft_count_ops(int *tab, int size);\nvoid\tft_putnbr(int n);\n\nint\tmain(void)\n{\n\tint t_best[] = {1, 2, 3, 4, 5};\n\tint t_worst[] = {5, 4, 3, 2, 1};\n\t// Affiche les ops pour les deux cas\n\t// TON CODE ICI\n\treturn (0);\n}",
+        "solution": "#include <unistd.h>\n\nint\tft_count_ops(int *tab, int size);\nvoid\tft_putnbr(int n);\n\nint\tmain(void)\n{\n\tint t_best[] = {1, 2, 3, 4, 5};\n\tint t_worst[] = {5, 4, 3, 2, 1};\n\n\tft_putnbr(ft_count_ops(t_best, 5));\n\twrite(1, \"\\n\", 1);\n\tft_putnbr(ft_count_ops(t_worst, 5));\n\twrite(1, \"\\n\", 1);\n\t// Affiche 10 puis 20\n\t// Meilleur : 10 comp + 0 swap = 10\n\t// Pire : 10 comp + 10 swap = 20\n\treturn (0);\n}",
+        "hint": "Le pire cas a autant de swaps que de comparaisons (chaque comparaison mene a un swap).",
+        "difficulty": 2
+      }
+    ]
+  },
+  "starterCode": "#include <unistd.h>\n\nvoid\tft_putnbr(int n)\n{\n\tchar\tc;\n\n\tif (n == -2147483648)\n\t{\n\t\twrite(1, \"-2147483648\", 11);\n\t\treturn ;\n\t}\n\tif (n < 0)\n\t{\n\t\twrite(1, \"-\", 1);\n\t\tn = -n;\n\t}\n\tif (n >= 10)\n\t\tft_putnbr(n / 10);\n\tc = (n % 10) + '0';\n\twrite(1, &c, 1);\n}\n\nint\tft_count_ops(int *tab, int size)\n{\n\t// 1. Declare un compteur ops = 0\n\t// 2. Bubble sort classique\n\t// 3. ops++ avant chaque comparaison (if)\n\t// 4. ops++ apres chaque swap\n\t// 5. Retourne ops\n\t// TON CODE ICI\n}\n\nint\tmain(void)\n{\n\tint\tt1[] = {1, 2, 3, 4, 5};\n\tint\tt2[] = {5, 4, 3, 2, 1};\n\tint\tt3[] = {3, 1, 4, 1, 5};\n\n\tft_putnbr(ft_count_ops(t1, 5));\n\twrite(1, \"\\n\", 1);\n\tft_putnbr(ft_count_ops(t2, 5));\n\twrite(1, \"\\n\", 1);\n\tft_putnbr(ft_count_ops(t3, 5));\n\twrite(1, \"\\n\", 1);\n\treturn (0);\n}",
+  "solution": "#include <unistd.h>\n\nvoid\tft_putnbr(int n)\n{\n\tchar\tc;\n\n\tif (n == -2147483648)\n\t{\n\t\twrite(1, \"-2147483648\", 11);\n\t\treturn ;\n\t}\n\tif (n < 0)\n\t{\n\t\twrite(1, \"-\", 1);\n\t\tn = -n;\n\t}\n\tif (n >= 10)\n\t\tft_putnbr(n / 10);\n\tc = (n % 10) + '0';\n\twrite(1, &c, 1);\n}\n\nint\tft_count_ops(int *tab, int size)\n{\n\tint\tops;\n\tint\ti;\n\tint\tj;\n\tint\ttmp;\n\n\tops = 0;\n\ti = 0;\n\twhile (i < size - 1)\n\t{\n\t\tj = 0;\n\t\twhile (j < size - 1 - i)\n\t\t{\n\t\t\tops++;\n\t\t\tif (tab[j] > tab[j + 1])\n\t\t\t{\n\t\t\t\ttmp = tab[j];\n\t\t\t\ttab[j] = tab[j + 1];\n\t\t\t\ttab[j + 1] = tmp;\n\t\t\t\tops++;\n\t\t\t}\n\t\t\tj++;\n\t\t}\n\t\ti++;\n\t}\n\treturn (ops);\n}\n\nint\tmain(void)\n{\n\tint\tt1[] = {1, 2, 3, 4, 5};\n\tint\tt2[] = {5, 4, 3, 2, 1};\n\tint\tt3[] = {3, 1, 4, 1, 5};\n\n\tft_putnbr(ft_count_ops(t1, 5));\n\twrite(1, \"\\n\", 1);\n\tft_putnbr(ft_count_ops(t2, 5));\n\twrite(1, \"\\n\", 1);\n\tft_putnbr(ft_count_ops(t3, 5));\n\twrite(1, \"\\n\", 1);\n\treturn (0);\n}",
+  "hints": [
+    "Ajoute une variable ops initialisee a 0. Incremente-la avant chaque comparaison (if) et apres chaque swap.",
+    "Pour un tableau deja trie de taille 5, il y a 10 comparaisons et 0 swaps, donc ops = 10.",
+    "Pour un tableau inverse de taille 5, il y a 10 comparaisons et 10 swaps, donc ops = 20."
+  ],
+  "testCases": [
+    {
+      "id": 1,
+      "description": "Meilleur cas, pire cas et cas moyen",
+      "stdin": "",
+      "expectedStdout": "10\n20\n14\n",
+      "expectedExitCode": 0,
+      "visible": true
+    },
+    {
+      "id": 2,
+      "description": "Tableau de taille 1",
+      "stdin": "",
+      "expectedStdout": "10\n20\n14\n",
+      "expectedExitCode": 0,
+      "visible": false
+    },
+    {
+      "id": 3,
+      "description": "Tableau avec doublons",
+      "stdin": "",
+      "expectedStdout": "10\n20\n14\n",
+      "expectedExitCode": 0,
+      "visible": false
+    }
+  ],
+  "constraints": {
+    "allowedFunctions": ["write"],
+    "forbiddenFunctions": ["printf", "qsort", "puts"],
+    "maxExecutionTime": 5000,
+    "maxMemory": 128
+  },
+  "relatedExercises": ["c-day48-ex01-ft-is-big-o-n2", "c-day48-ex02-ft-binary-search"],
+  "resources": [
+    {
+      "title": "Complexite algorithmique - Introduction",
+      "url": "https://www.geeksforgeeks.org/analysis-of-algorithms-set-1-asymptotic-analysis/",
+      "type": "documentation"
+    },
+    {
+      "title": "Notation Big O expliquee",
+      "url": "https://www.freecodecamp.org/news/big-o-notation-why-it-matters-and-why-it-doesnt/",
+      "type": "article"
+    }
+  ]
+}

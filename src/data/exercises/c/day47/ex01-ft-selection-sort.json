@@ -1,0 +1,257 @@
+{
+  "id": "c-day47-ex01-ft-selection-sort",
+  "category": "c",
+  "day": 47,
+  "order": 1,
+  "title": "Tri par selection (Selection Sort)",
+  "description": "Ecris une fonction ft_selection_sort(int *tab, int size) qui trie un tableau d'entiers par ordre croissant en utilisant l'algorithme du tri par selection. Le principe : a chaque etape, on cherche le minimum dans la partie non triee et on le place a sa position finale par un swap. Prototype : void ft_selection_sort(int *tab, int size);",
+  "difficulty": 3,
+  "points": 30,
+  "estimatedTime": 30,
+  "learningObjectives": [
+    "Comprendre le principe du tri par selection (trouver le min et le placer)",
+    "Savoir trouver l'indice du minimum dans un sous-tableau",
+    "Maitriser la separation zone triee / zone non triee",
+    "Comparer le tri par selection avec le bubble sort et l'insertion sort",
+    "Implementer un algorithme de tri avec un nombre minimal de swaps"
+  ],
+  "learningContent": {
+    "lesson": {
+      "introduction": "Le tri par selection est un algorithme simple et intuitif. A chaque etape, on selectionne le plus petit element de la partie non triee et on le place a la bonne position. Contrairement au bubble sort qui fait beaucoup de swaps, le selection sort fait exactement n-1 swaps (un par passage). Cela le rend interessant quand les swaps sont couteux. Sa complexite est toujours O(n²) (meme dans le meilleur cas), mais il est tres simple a comprendre et a implementer.",
+      "steps": [
+        {
+          "id": 1,
+          "title": "Le principe : trouver le minimum",
+          "content": "Le tri par selection fonctionne en **selectionnant** le minimum a chaque etape :\n\n1. Chercher le minimum dans tout le tableau -> le placer en position 0\n2. Chercher le minimum dans le reste (indices 1 a n-1) -> le placer en position 1\n3. Chercher le minimum dans les indices 2 a n-1 -> le placer en position 2\n4. Etc.\n\nA chaque etape, on **echange** le minimum trouve avec l'element a la position courante. Apres i passages, les i plus petits elements sont a leur place finale.\n\n**Analogie :** C'est comme choisir toujours le plus petit livre dans un tas et le mettre a la suite sur l'etagere.",
+          "codeExample": "// tab = {5, 3, 8, 1, 4}\n// Passage 0 : min de [5,3,8,1,4] = 1 (indice 3)\n//   swap tab[0] et tab[3] -> {1, 3, 8, 5, 4}\n// Passage 1 : min de [3,8,5,4] = 3 (indice 1)\n//   tab[1] est deja 3 -> pas de swap -> {1, 3, 8, 5, 4}\n// Passage 2 : min de [8,5,4] = 4 (indice 4)\n//   swap tab[2] et tab[4] -> {1, 3, 4, 5, 8}\n// Passage 3 : min de [5,8] = 5 (indice 3)\n//   tab[3] est deja 5 -> {1, 3, 4, 5, 8}\n// Trie !",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Avec le tableau {9, 2, 7, 4}, execute les passages du tri par selection. Quels swaps se produisent ?",
+            "starterCode": "// tab = {9, 2, 7, 4}\n// Passage 0 : min de [9,2,7,4] = ??? (indice ???)\n//   swap tab[0] et tab[???] -> {?, ?, ?, ?}\n// Passage 1 : min de [?,?,?] = ???\n//   -> {?, ?, ?, ?}\n// Passage 2 : min de [?,?] = ???\n//   -> {?, ?, ?, ?}",
+            "solution": "// tab = {9, 2, 7, 4}\n// Passage 0 : min de [9,2,7,4] = 2 (indice 1)\n//   swap tab[0] et tab[1] -> {2, 9, 7, 4}\n// Passage 1 : min de [9,7,4] = 4 (indice 3)\n//   swap tab[1] et tab[3] -> {2, 4, 7, 9}\n// Passage 2 : min de [7,9] = 7 (indice 2)\n//   tab[2] est deja 7 -> {2, 4, 7, 9}"
+          }
+        },
+        {
+          "id": 2,
+          "title": "Trouver l'indice du minimum",
+          "content": "Pour chaque passage, on doit trouver l'**indice** du minimum dans le sous-tableau non trie (de l'indice i a size - 1). On retient l'indice plutot que la valeur car on a besoin de l'indice pour le swap.\n\n**Algorithme :**\n1. On suppose que le minimum est a l'indice i (debut du sous-tableau)\n2. On parcourt de i + 1 a size - 1\n3. Si on trouve un element plus petit, on met a jour l'indice du minimum\n4. A la fin, on a l'indice du minimum",
+          "codeExample": "// Trouver l'indice du min dans tab[i..size-1]\nint\tmin_idx;\nint\tj;\n\nmin_idx = i;\nj = i + 1;\nwhile (j < size)\n{\n\tif (tab[j] < tab[min_idx])\n\t\tmin_idx = j;\n\tj++;\n}\n// min_idx contient l'indice du minimum\n\n// Exemple : tab = {1, 3, 8, 5, 4}, i = 2\n// min_idx = 2 (tab[2] = 8)\n// j=3 : tab[3]=5 < tab[2]=8 -> min_idx = 3\n// j=4 : tab[4]=4 < tab[3]=5 -> min_idx = 4\n// Resultat : min_idx = 4 (minimum = 4)",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Dans le tableau {7, 2, 9, 1, 5}, quel est l'indice du minimum entre les indices 1 et 4 ?",
+            "starterCode": "// tab = {7, 2, 9, 1, 5}, recherche min de i=1 a 4\n// min_idx = 1 (tab[1] = 2)\n// j=2 : tab[2]=9 < tab[1]=2 ? ???\n// j=3 : tab[3]=1 < tab[???]=??? ? ???\n// j=4 : tab[4]=5 < tab[???]=??? ? ???\n// min_idx final = ???",
+            "solution": "// tab = {7, 2, 9, 1, 5}, recherche min de i=1 a 4\n// min_idx = 1 (tab[1] = 2)\n// j=2 : 9 < 2 ? Non -> min_idx reste 1\n// j=3 : 1 < 2 ? Oui -> min_idx = 3\n// j=4 : 5 < 1 ? Non -> min_idx reste 3\n// min_idx = 3, minimum = tab[3] = 1"
+          }
+        },
+        {
+          "id": 3,
+          "title": "L'algorithme complet",
+          "content": "L'algorithme complet combine la recherche du minimum et le swap :\n\n1. Boucle i de 0 a size - 2\n2. Trouver min_idx dans tab[i..size-1]\n3. Si min_idx != i, swap tab[i] et tab[min_idx]\n4. Incrementer i\n\n**Nombre de swaps :** Au maximum n-1 swaps (un par passage). C'est le minimum possible pour un tri par comparaison. C'est l'avantage principal du selection sort.",
+          "codeExample": "void\tft_selection_sort(int *tab, int size)\n{\n\tint\ti;\n\tint\tj;\n\tint\tmin_idx;\n\tint\ttmp;\n\n\ti = 0;\n\twhile (i < size - 1)\n\t{\n\t\tmin_idx = i;\n\t\tj = i + 1;\n\t\twhile (j < size)\n\t\t{\n\t\t\tif (tab[j] < tab[min_idx])\n\t\t\t\tmin_idx = j;\n\t\t\tj++;\n\t\t}\n\t\tif (min_idx != i)\n\t\t{\n\t\t\ttmp = tab[i];\n\t\t\ttab[i] = tab[min_idx];\n\t\t\ttab[min_idx] = tmp;\n\t\t}\n\t\ti++;\n\t}\n}",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Pourquoi teste-t-on min_idx != i avant de faire le swap ?",
+            "starterCode": "// Si min_idx == i, cela signifie que ???\n// Le swap serait ???\n// Donc on peut l'eviter pour ???",
+            "solution": "// Si min_idx == i, cela signifie que tab[i]\n// est deja le minimum du sous-tableau.\n// Le swap echangerait l'element avec lui-meme.\n// On peut l'eviter pour gagner du temps\n// (meme si ca marche quand meme)."
+          }
+        },
+        {
+          "id": 4,
+          "title": "Complexite et limites du selection sort",
+          "content": "Le tri par selection a une particularite : sa complexite est **toujours** O(n²), que le tableau soit deja trie ou non. Il n'est pas adaptatif.\n\n**Complexite :**\n- Meilleur cas : O(n²) comparaisons, O(1) swaps (deja trie)\n- Pire cas : O(n²) comparaisons, O(n) swaps\n- Cas moyen : O(n²) comparaisons, O(n) swaps\n- Espace : O(1)\n\n**Avantages :**\n- Nombre minimal de swaps (au plus n-1)\n- Simple a implementer\n- Bon si les ecritures sont couteuses (ex: memoire flash)\n\n**Inconvenients :**\n- Pas adaptatif (toujours O(n²))\n- Pas stable (un swap peut changer l'ordre d'elements egaux)",
+          "codeExample": "// Meme sur un tableau deja trie :\n// tab = {1, 2, 3, 4, 5}\n// Passage 0 : parcourt 4 elements pour trouver min=1\n// Passage 1 : parcourt 3 elements pour trouver min=2\n// Passage 2 : parcourt 2 elements pour trouver min=3\n// Passage 3 : parcourt 1 element pour trouver min=4\n// Total : 4+3+2+1 = 10 comparaisons = O(n^2)\n// Mais 0 swaps ! (chaque min est deja a sa place)\n\n// Comparaison :\n// Bubble sort (opti) : O(n) meilleur, O(n^2) pire\n// Insertion sort     : O(n) meilleur, O(n^2) pire\n// Selection sort     : O(n^2) TOUJOURS",
+          "language": "c"
+        }
+      ]
+    },
+    "theory": [
+      {
+        "title": "Recherche du minimum dans un tableau",
+        "content": "Trouver le minimum (ou le maximum) d'un tableau est une operation fondamentale. On parcourt le tableau en gardant trace du plus petit element trouve jusqu'a present.",
+        "codeExamples": [
+          {
+            "title": "Trouver le minimum et son indice",
+            "code": "int\tft_min_index(int *tab, int start, int end)\n{\n\tint\tmin_idx;\n\tint\ti;\n\n\tmin_idx = start;\n\ti = start + 1;\n\twhile (i <= end)\n\t{\n\t\tif (tab[i] < tab[min_idx])\n\t\t\tmin_idx = i;\n\t\ti++;\n\t}\n\treturn (min_idx);\n}",
+            "explanation": "On retient l'indice plutot que la valeur pour pouvoir faire le swap ensuite"
+          }
+        ],
+        "keyPoints": [
+          "On initialise min_idx a l'indice du premier element",
+          "On compare chaque element avec tab[min_idx]",
+          "On met a jour min_idx si on trouve un element plus petit",
+          "La complexite est O(n) pour un seul parcours"
+        ],
+        "commonMistakes": [
+          "Retenir la valeur au lieu de l'indice (on a besoin de l'indice pour le swap)",
+          "Initialiser min_idx a 0 au lieu de i (debut du sous-tableau)",
+          "Oublier que la boucle interne commence a i + 1, pas a i"
+        ]
+      },
+      {
+        "title": "Le swap conditionnel",
+        "content": "Dans le selection sort, le swap n'est effectue qu'une seule fois par passage (apres avoir trouve le minimum). On peut aussi conditionner le swap : ne l'effectuer que si min_idx est different de i.",
+        "codeExamples": [
+          {
+            "title": "Swap conditionnel",
+            "code": "// Sans condition (fonctionne mais inutile si egal)\nint tmp = tab[i];\ntab[i] = tab[min_idx];\ntab[min_idx] = tmp;\n\n// Avec condition (optimisation mineure)\nif (min_idx != i)\n{\n\tint tmp = tab[i];\n\ttab[i] = tab[min_idx];\n\ttab[min_idx] = tmp;\n}\n\n// Un seul swap par passage = au plus n-1 swaps total\n// C'est beaucoup moins que le bubble sort !",
+            "explanation": "Le selection sort minimise le nombre de swaps"
+          }
+        ],
+        "keyPoints": [
+          "Un seul swap par passage (apres avoir trouve le minimum)",
+          "Au total : au plus n-1 swaps pour trier n elements",
+          "Le test min_idx != i evite un swap inutile",
+          "Le bubble sort peut faire jusqu'a n*(n-1)/2 swaps"
+        ],
+        "commonMistakes": [
+          "Faire le swap a l'interieur de la boucle de recherche du minimum",
+          "Oublier de sauvegarder dans tmp avant de swapper",
+          "Confondre le swap du selection sort avec les multiples swaps du bubble sort"
+        ]
+      },
+      {
+        "title": "Instabilite du selection sort",
+        "content": "Le tri par selection est instable : il peut changer l'ordre relatif d'elements egaux. Cela est du au fait que le swap peut deplacer un element loin de sa position originale.",
+        "codeExamples": [
+          {
+            "title": "Exemple d'instabilite",
+            "code": "// Paires (valeur, id) pour distinguer les elements egaux\n// Original : (2,a) (3,b) (2,c) (1,d)\n\n// Passage 0 : min = (1,d) a l'indice 3\n//   swap tab[0] et tab[3]\n//   -> (1,d) (3,b) (2,c) (2,a)\n//   (2,a) est maintenant APRES (2,c) !\n//   L'ordre des 2 est inverse -> INSTABLE\n\n// Resultat final : (1,d) (2,c) (2,a) (3,b)\n// Les deux 2 ont ete inverses par rapport a l'original",
+            "explanation": "Le swap longue distance du selection sort peut casser la stabilite"
+          }
+        ],
+        "keyPoints": [
+          "Le selection sort est instable a cause des swaps longue distance",
+          "Le bubble sort et l'insertion sort sont stables",
+          "La stabilite est importante quand on trie sur plusieurs criteres",
+          "On peut rendre le selection sort stable mais au prix de la complexite"
+        ],
+        "commonMistakes": [
+          "Croire que tous les tris simples sont stables",
+          "Ignorer l'instabilite quand on trie des structures complexes",
+          "Confondre stabilite et determinisme (un tri instable donne toujours le meme resultat)"
+        ]
+      },
+      {
+        "title": "Comparaison des trois tris simples",
+        "content": "Le bubble sort, l'insertion sort et le selection sort sont les trois algorithmes de tri les plus simples. Chacun a ses forces et ses faiblesses, et il est important de savoir les comparer.",
+        "codeExamples": [
+          {
+            "title": "Tableau comparatif",
+            "code": "// +------------------+--------+--------+--------+\n// |                  | Bubble | Insert | Select |\n// +------------------+--------+--------+--------+\n// | Meilleur cas     | O(n)   | O(n)   | O(n^2) |\n// | Pire cas         | O(n^2) | O(n^2) | O(n^2) |\n// | Stable           | Oui    | Oui    | Non    |\n// | Adaptatif        | Oui*   | Oui    | Non    |\n// | Swaps (pire)     | O(n^2) | O(n^2) | O(n)   |\n// | Espace           | O(1)   | O(1)   | O(1)   |\n// +------------------+--------+--------+--------+\n// * avec optimisation du flag\n\n// En pratique, l'insertion sort est generalement\n// le meilleur choix parmi les trois.",
+            "explanation": "L'insertion sort est le plus versatile des trois tris simples"
+          }
+        ],
+        "keyPoints": [
+          "L'insertion sort est generalement le plus rapide des trois en pratique",
+          "Le selection sort minimise les swaps mais n'est pas adaptatif",
+          "Le bubble sort est le plus simple mais souvent le moins efficace",
+          "Les trois sont en O(n²) dans le pire cas et O(1) en espace"
+        ],
+        "commonMistakes": [
+          "Choisir le bubble sort par defaut alors que l'insertion sort est meilleur",
+          "Oublier que le selection sort est toujours O(n²) meme sur un tableau trie",
+          "Ne pas connaitre les differences pratiques entre ces trois algorithmes"
+        ]
+      }
+    ],
+    "prepExercises": [
+      {
+        "id": 1,
+        "title": "Trouver l'indice du minimum",
+        "instruction": "Ecris une fonction qui retourne l'indice du minimum dans un tableau entre start et size - 1.",
+        "starterCode": "int\tmin_index(int *tab, int start, int size)\n{\n\t// TON CODE ICI\n}",
+        "solution": "int\tmin_index(int *tab, int start, int size)\n{\n\tint\tmin_idx;\n\tint\tj;\n\n\tmin_idx = start;\n\tj = start + 1;\n\twhile (j < size)\n\t{\n\t\tif (tab[j] < tab[min_idx])\n\t\t\tmin_idx = j;\n\t\tj++;\n\t}\n\treturn (min_idx);\n}",
+        "hint": "Initialise min_idx = start, puis parcours de start + 1 a size - 1.",
+        "difficulty": 1
+      },
+      {
+        "id": 2,
+        "title": "Swap de deux elements par indice",
+        "instruction": "Ecris une fonction qui echange tab[i] et tab[j].",
+        "starterCode": "void\tswap(int *tab, int i, int j)\n{\n\t// TON CODE ICI\n}",
+        "solution": "void\tswap(int *tab, int i, int j)\n{\n\tint\ttmp;\n\n\ttmp = tab[i];\n\ttab[i] = tab[j];\n\ttab[j] = tmp;\n}",
+        "hint": "Variable temporaire : tmp = tab[i]; tab[i] = tab[j]; tab[j] = tmp;",
+        "difficulty": 1
+      },
+      {
+        "id": 3,
+        "title": "Un passage du selection sort",
+        "instruction": "Ecris le code pour un seul passage du selection sort : trouve le minimum dans tab[i..size-1] et echange-le avec tab[i].",
+        "starterCode": "// i = 0, tab = {5, 3, 8, 1, 4}, size = 5\nint min_idx = i;\nint j = i + 1;\n// Trouve le minimum et fais le swap\n// TON CODE ICI",
+        "solution": "int min_idx = i;\nint j = i + 1;\nwhile (j < size)\n{\n\tif (tab[j] < tab[min_idx])\n\t\tmin_idx = j;\n\tj++;\n}\nif (min_idx != i)\n{\n\tint tmp = tab[i];\n\ttab[i] = tab[min_idx];\n\ttab[min_idx] = tmp;\n}",
+        "hint": "Boucle pour trouver min_idx, puis swap si min_idx != i.",
+        "difficulty": 2
+      },
+      {
+        "id": 4,
+        "title": "Selection sort complet",
+        "instruction": "Ecris ft_selection_sort complet avec la double boucle.",
+        "starterCode": "void\tft_selection_sort(int *tab, int size)\n{\n\tint\ti;\n\tint\tj;\n\tint\tmin_idx;\n\t// TON CODE ICI\n}",
+        "solution": "void\tft_selection_sort(int *tab, int size)\n{\n\tint\ti;\n\tint\tj;\n\tint\tmin_idx;\n\tint\ttmp;\n\n\ti = 0;\n\twhile (i < size - 1)\n\t{\n\t\tmin_idx = i;\n\t\tj = i + 1;\n\t\twhile (j < size)\n\t\t{\n\t\t\tif (tab[j] < tab[min_idx])\n\t\t\t\tmin_idx = j;\n\t\t\tj++;\n\t\t}\n\t\tif (min_idx != i)\n\t\t{\n\t\t\ttmp = tab[i];\n\t\t\ttab[i] = tab[min_idx];\n\t\t\ttab[min_idx] = tmp;\n\t\t}\n\t\ti++;\n\t}\n}",
+        "hint": "Boucle i de 0 a size - 2, boucle interne j de i + 1 a size - 1 pour trouver le min.",
+        "difficulty": 2
+      },
+      {
+        "id": 5,
+        "title": "Compter les swaps",
+        "instruction": "Modifie ft_selection_sort pour compter et retourner le nombre de swaps effectues.",
+        "starterCode": "int\tft_selection_sort_count(int *tab, int size)\n{\n\tint\tswaps;\n\n\tswaps = 0;\n\t// Selection sort avec compteur de swaps\n\t// TON CODE ICI\n\treturn (swaps);\n}",
+        "solution": "int\tft_selection_sort_count(int *tab, int size)\n{\n\tint\ti;\n\tint\tj;\n\tint\tmin_idx;\n\tint\ttmp;\n\tint\tswaps;\n\n\tswaps = 0;\n\ti = 0;\n\twhile (i < size - 1)\n\t{\n\t\tmin_idx = i;\n\t\tj = i + 1;\n\t\twhile (j < size)\n\t\t{\n\t\t\tif (tab[j] < tab[min_idx])\n\t\t\t\tmin_idx = j;\n\t\t\tj++;\n\t\t}\n\t\tif (min_idx != i)\n\t\t{\n\t\t\ttmp = tab[i];\n\t\t\ttab[i] = tab[min_idx];\n\t\t\ttab[min_idx] = tmp;\n\t\t\tswaps++;\n\t\t}\n\t\ti++;\n\t}\n\treturn (swaps);\n}",
+        "hint": "Incremente un compteur swaps a chaque fois qu'un swap est effectue.",
+        "difficulty": 2
+      }
+    ]
+  },
+  "starterCode": "#include <unistd.h>\n\nvoid\tft_putnbr(int n)\n{\n\tchar\tc;\n\n\tif (n == -2147483648)\n\t{\n\t\twrite(1, \"-2147483648\", 11);\n\t\treturn ;\n\t}\n\tif (n < 0)\n\t{\n\t\twrite(1, \"-\", 1);\n\t\tn = -n;\n\t}\n\tif (n >= 10)\n\t\tft_putnbr(n / 10);\n\tc = (n % 10) + '0';\n\twrite(1, &c, 1);\n}\n\nvoid\tft_selection_sort(int *tab, int size)\n{\n\t// 1. Boucle i de 0 a size - 2\n\t// 2. Initialise min_idx = i\n\t// 3. Boucle j de i + 1 a size - 1 pour trouver le minimum\n\t// 4. Si min_idx != i, swap tab[i] et tab[min_idx]\n\t// TON CODE ICI\n}\n\nint\tmain(void)\n{\n\tint\ttab[] = {8, 3, 5, 1, 9, 2, 7};\n\tint\tsize = 7;\n\tint\ti;\n\n\tft_selection_sort(tab, size);\n\ti = 0;\n\twhile (i < size)\n\t{\n\t\tft_putnbr(tab[i]);\n\t\twrite(1, \"\\n\", 1);\n\t\ti++;\n\t}\n\treturn (0);\n}",
+  "solution": "#include <unistd.h>\n\nvoid\tft_putnbr(int n)\n{\n\tchar\tc;\n\n\tif (n == -2147483648)\n\t{\n\t\twrite(1, \"-2147483648\", 11);\n\t\treturn ;\n\t}\n\tif (n < 0)\n\t{\n\t\twrite(1, \"-\", 1);\n\t\tn = -n;\n\t}\n\tif (n >= 10)\n\t\tft_putnbr(n / 10);\n\tc = (n % 10) + '0';\n\twrite(1, &c, 1);\n}\n\nvoid\tft_selection_sort(int *tab, int size)\n{\n\tint\ti;\n\tint\tj;\n\tint\tmin_idx;\n\tint\ttmp;\n\n\ti = 0;\n\twhile (i < size - 1)\n\t{\n\t\tmin_idx = i;\n\t\tj = i + 1;\n\t\twhile (j < size)\n\t\t{\n\t\t\tif (tab[j] < tab[min_idx])\n\t\t\t\tmin_idx = j;\n\t\t\tj++;\n\t\t}\n\t\tif (min_idx != i)\n\t\t{\n\t\t\ttmp = tab[i];\n\t\t\ttab[i] = tab[min_idx];\n\t\t\ttab[min_idx] = tmp;\n\t\t}\n\t\ti++;\n\t}\n}\n\nint\tmain(void)\n{\n\tint\ttab[] = {8, 3, 5, 1, 9, 2, 7};\n\tint\tsize = 7;\n\tint\ti;\n\n\tft_selection_sort(tab, size);\n\ti = 0;\n\twhile (i < size)\n\t{\n\t\tft_putnbr(tab[i]);\n\t\twrite(1, \"\\n\", 1);\n\t\ti++;\n\t}\n\treturn (0);\n}",
+  "hints": [
+    "A chaque passage i, cherche l'indice du minimum entre i et size - 1 en comparant tab[j] < tab[min_idx].",
+    "Apres avoir trouve le minimum, echange-le avec tab[i] en utilisant une variable temporaire.",
+    "La boucle externe va de i = 0 a i < size - 1 (le dernier element est automatiquement a sa place)."
+  ],
+  "testCases": [
+    {
+      "id": 1,
+      "description": "Tri d'un tableau de 7 elements",
+      "stdin": "",
+      "expectedStdout": "1\n2\n3\n5\n7\n8\n9\n",
+      "expectedExitCode": 0,
+      "visible": true
+    },
+    {
+      "id": 2,
+      "description": "Tableau deja trie",
+      "stdin": "",
+      "expectedStdout": "1\n2\n3\n5\n7\n8\n9\n",
+      "expectedExitCode": 0,
+      "visible": false
+    },
+    {
+      "id": 3,
+      "description": "Tableau en ordre inverse",
+      "stdin": "",
+      "expectedStdout": "1\n2\n3\n5\n7\n8\n9\n",
+      "expectedExitCode": 0,
+      "visible": false
+    }
+  ],
+  "constraints": {
+    "allowedFunctions": ["write"],
+    "forbiddenFunctions": ["printf", "qsort", "puts"],
+    "maxExecutionTime": 5000,
+    "maxMemory": 128
+  },
+  "relatedExercises": ["c-day47-ex00-ft-insertion-sort", "c-day47-ex02-ft-sort-int-tab"],
+  "resources": [
+    {
+      "title": "Selection Sort - Visualisation",
+      "url": "https://visualgo.net/en/sorting",
+      "type": "documentation"
+    },
+    {
+      "title": "Tri par selection - GeeksforGeeks",
+      "url": "https://www.geeksforgeeks.org/selection-sort/",
+      "type": "article"
+    }
+  ]
+}

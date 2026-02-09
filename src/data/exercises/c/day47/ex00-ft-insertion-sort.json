@@ -1,0 +1,257 @@
+{
+  "id": "c-day47-ex00-ft-insertion-sort",
+  "category": "c",
+  "day": 47,
+  "order": 0,
+  "title": "Tri par insertion (Insertion Sort)",
+  "description": "Ecris une fonction ft_insertion_sort(int *tab, int size) qui trie un tableau d'entiers par ordre croissant en utilisant l'algorithme du tri par insertion. Le principe : on prend chaque element et on l'insere a sa bonne position dans la partie deja triee du tableau. Prototype : void ft_insertion_sort(int *tab, int size);",
+  "difficulty": 3,
+  "points": 30,
+  "estimatedTime": 35,
+  "learningObjectives": [
+    "Comprendre le principe du tri par insertion et la notion de zone triee/non triee",
+    "Savoir decaler des elements vers la droite pour inserer une valeur",
+    "Maitriser la boucle de decalage avec sauvegarde de l'element cle",
+    "Comparer le tri par insertion avec le tri a bulles",
+    "Implementer un algorithme de tri adaptatif"
+  ],
+  "learningContent": {
+    "lesson": {
+      "introduction": "Le tri par insertion est un algorithme intuitif qui fonctionne comme quand on trie des cartes dans sa main. On prend les cartes une par une et on les insere a leur bonne place parmi les cartes deja triees. En pratique, c'est l'un des algorithmes de tri les plus efficaces pour les petits tableaux ou les tableaux presque tries. Sa complexite est O(n²) dans le pire cas, mais O(n) dans le meilleur cas (tableau deja trie), ce qui le rend adaptatif. C'est aussi un tri stable et en-place.",
+      "steps": [
+        {
+          "id": 1,
+          "title": "Le concept : zone triee et zone non triee",
+          "content": "Le tri par insertion divise conceptuellement le tableau en deux parties :\n\n1. **Zone triee** (a gauche) : contient les elements deja tries\n2. **Zone non triee** (a droite) : contient les elements restants\n\nAu debut, la zone triee ne contient que le premier element (un seul element est toujours trie). A chaque etape, on prend le premier element de la zone non triee et on l'insere a sa bonne position dans la zone triee.\n\n**Analogie :** Imagine que tu tries un jeu de cartes. Tu as des cartes triees dans ta main gauche et une pile non triee devant toi. Tu prends une carte et tu la glisses au bon endroit dans ta main.",
+          "codeExample": "// Tableau initial : {5, 3, 8, 1, 4}\n//\n// Etape 0 : [5] | 3 8 1 4    zone triee = {5}\n// Etape 1 : [3 5] | 8 1 4    insere 3 avant 5\n// Etape 2 : [3 5 8] | 1 4    8 est deja a sa place\n// Etape 3 : [1 3 5 8] | 4    insere 1 tout au debut\n// Etape 4 : [1 3 4 5 8] |    insere 4 entre 3 et 5\n//\n// Le | separe la zone triee de la zone non triee",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Avec le tableau {7, 2, 5, 3}, decris les etapes du tri par insertion. Ou insere-t-on chaque element ?",
+            "starterCode": "// tab = {7, 2, 5, 3}\n// Etape 0 : [7] | 2 5 3\n// Etape 1 : insere 2 -> [?, ?] | 5 3\n// Etape 2 : insere 5 -> [?, ?, ?] | 3\n// Etape 3 : insere 3 -> [?, ?, ?, ?]",
+            "solution": "// tab = {7, 2, 5, 3}\n// Etape 0 : [7] | 2 5 3\n// Etape 1 : insere 2 avant 7 -> [2, 7] | 5 3\n// Etape 2 : insere 5 entre 2 et 7 -> [2, 5, 7] | 3\n// Etape 3 : insere 3 entre 2 et 5 -> [2, 3, 5, 7]"
+          }
+        },
+        {
+          "id": 2,
+          "title": "L'element cle et le decalage",
+          "content": "Pour inserer un element a sa bonne place, on procede en deux temps :\n\n1. **Sauvegarder l'element cle** (key) : c'est l'element a inserer\n2. **Decaler les elements plus grands** vers la droite pour faire de la place\n\nLe decalage se fait de droite a gauche : on compare key avec chaque element de la zone triee en partant de la fin. Tant que l'element est plus grand que key, on le decale d'une position vers la droite. Quand on trouve un element plus petit ou egal a key (ou qu'on atteint le debut), on insere key.",
+          "codeExample": "// Insertion de 3 dans [1, 5, 8] :\n// key = 3\n// j = 2 : tab[2]=8 > 3 -> decale : [1, 5, _, 8]\n// j = 1 : tab[1]=5 > 3 -> decale : [1, _, 5, 8]\n// j = 0 : tab[0]=1 <= 3 -> STOP\n// Insere key en position 1 : [1, 3, 5, 8]\n\n// En code :\nint key = tab[i];  // Sauvegarde l'element\nint j = i - 1;\nwhile (j >= 0 && tab[j] > key)\n{\n\ttab[j + 1] = tab[j];  // Decale vers la droite\n\tj--;\n}\ntab[j + 1] = key;  // Insere a la bonne place",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Insere la valeur 4 dans le tableau trie [1, 2, 6, 9]. Quels elements sont decales et ou est insere 4 ?",
+            "starterCode": "// Zone triee : [1, 2, 6, 9], key = 4\n// j = 3 : tab[3]=9 > 4 ? -> ???\n// j = 2 : tab[2]=6 > 4 ? -> ???\n// j = 1 : tab[1]=2 > 4 ? -> ???\n// Position d'insertion : j + 1 = ???",
+            "solution": "// Zone triee : [1, 2, 6, 9], key = 4\n// j = 3 : 9 > 4 ? Oui -> decale : [1, 2, 6, _, 9]\n// j = 2 : 6 > 4 ? Oui -> decale : [1, 2, _, 6, 9]\n// j = 1 : 2 > 4 ? Non -> STOP\n// Position d'insertion : j + 1 = 2\n// Resultat : [1, 2, 4, 6, 9]"
+          }
+        },
+        {
+          "id": 3,
+          "title": "La boucle principale du tri par insertion",
+          "content": "L'algorithme complet utilise une boucle externe qui parcourt le tableau de l'indice 1 a size-1 (l'element 0 est deja 'trie'). Pour chaque element, on effectue le decalage et l'insertion.\n\n**Deux boucles imbriquees :**\n- Boucle externe (i = 1 a size - 1) : choisit l'element a inserer\n- Boucle interne (j = i - 1 vers 0) : decale les elements plus grands\n\n**Condition d'arret de la boucle interne :** j >= 0 ET tab[j] > key. On s'arrete quand on atteint le debut du tableau OU quand on trouve un element <= key.",
+          "codeExample": "void\tft_insertion_sort(int *tab, int size)\n{\n\tint\ti;\n\tint\tj;\n\tint\tkey;\n\n\ti = 1;\n\twhile (i < size)\n\t{\n\t\tkey = tab[i];\n\t\tj = i - 1;\n\t\twhile (j >= 0 && tab[j] > key)\n\t\t{\n\t\t\ttab[j + 1] = tab[j];\n\t\t\tj--;\n\t\t}\n\t\ttab[j + 1] = key;\n\t\ti++;\n\t}\n}",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Pourquoi la boucle externe commence a i = 1 et pas i = 0 ?",
+            "starterCode": "// i = 0 : la zone triee contient tab[0]\n// Un seul element est toujours ???\n// Donc on commence a inserer a partir de ???",
+            "solution": "// i = 0 : la zone triee contient tab[0]\n// Un seul element est toujours TRIE\n// Donc on commence a inserer a partir de i = 1\n// (le 2e element) dans la zone deja triee"
+          }
+        },
+        {
+          "id": 4,
+          "title": "Avantages et complexite du tri par insertion",
+          "content": "Le tri par insertion a plusieurs avantages par rapport au tri a bulles :\n\n1. **Adaptatif** : O(n) sur un tableau presque trie (sans flag special)\n2. **Stable** : preserve l'ordre des elements egaux\n3. **En-place** : utilise O(1) memoire supplementaire\n4. **Performant sur les petits tableaux** : moins de overhead que quicksort\n\n**Complexite :**\n- Meilleur cas : O(n) - tableau deja trie, la boucle interne ne s'execute jamais\n- Pire cas : O(n²) - tableau trie en ordre inverse\n- Cas moyen : O(n²)\n\nDans la pratique, l'insertion sort est souvent utilise comme sous-routine dans des algorithmes plus complexes (ex: Timsort utilise l'insertion sort pour les petits sous-tableaux).",
+          "codeExample": "// Meilleur cas : tableau deja trie\n// tab = {1, 2, 3, 4, 5}\n// i=1 : key=2, j=0, tab[0]=1 <= 2 -> 0 decalage\n// i=2 : key=3, j=1, tab[1]=2 <= 3 -> 0 decalage\n// ... -> n-1 comparaisons, 0 decalage = O(n)\n\n// Pire cas : tableau trie en ordre inverse\n// tab = {5, 4, 3, 2, 1}\n// i=1 : key=4, decale 5 -> 1 decalage\n// i=2 : key=3, decale 5,4 -> 2 decalages\n// i=3 : key=2, decale 5,4,3 -> 3 decalages\n// Total = 1+2+3+4 = 10 = n*(n-1)/2 = O(n^2)",
+          "language": "c"
+        }
+      ]
+    },
+    "theory": [
+      {
+        "title": "Le principe d'insertion",
+        "content": "L'insertion consiste a placer un element a sa bonne position dans une sequence deja triee. C'est un geste naturel que l'on fait inconsciemment quand on range des livres sur une etagere ou des cartes dans sa main.",
+        "codeExamples": [
+          {
+            "title": "Insertion dans un tableau trie",
+            "code": "// Pour inserer val dans un tableau trie de taille n :\n// 1. Partir de la fin (j = n - 1)\n// 2. Tant que tab[j] > val, decaler tab[j] vers la droite\n// 3. Placer val a la position j + 1\n\nvoid\tinsert(int *tab, int n, int val)\n{\n\tint\tj;\n\n\tj = n - 1;\n\twhile (j >= 0 && tab[j] > val)\n\t{\n\t\ttab[j + 1] = tab[j];\n\t\tj--;\n\t}\n\ttab[j + 1] = val;\n}",
+            "explanation": "Le decalage vers la droite libere la place pour l'insertion"
+          }
+        ],
+        "keyPoints": [
+          "On sauvegarde l'element a inserer dans une variable key",
+          "On decale les elements plus grands vers la droite",
+          "On insere key a la position liberee",
+          "La boucle de decalage va de droite a gauche"
+        ],
+        "commonMistakes": [
+          "Oublier de sauvegarder key avant de commencer les decalages",
+          "Decaler dans le mauvais sens (gauche au lieu de droite)",
+          "Oublier la condition j >= 0 dans la boucle de decalage"
+        ]
+      },
+      {
+        "title": "Difference entre bubble sort et insertion sort",
+        "content": "Bien que les deux algorithmes aient une complexite O(n²) dans le pire cas, ils fonctionnent differemment. Le bubble sort echange des elements adjacents mal ordonnes, tandis que l'insertion sort insere chaque element a sa bonne position.",
+        "codeExamples": [
+          {
+            "title": "Comparaison des deux approches",
+            "code": "// Bubble sort : compare et echange des voisins\n// tab = {5, 3, 1}\n// Passage 1 : [5,3]->swap, [5,1]->swap -> {3, 1, 5}\n// Passage 2 : [3,1]->swap             -> {1, 3, 5}\n// 3 swaps au total\n\n// Insertion sort : insere dans la zone triee\n// tab = {5, 3, 1}\n// i=1 : insere 3 dans [5]   -> {3, 5, 1}  (1 decalage)\n// i=2 : insere 1 dans [3,5] -> {1, 3, 5}  (2 decalages)\n// 3 decalages, mais moins de mouvements en moyenne",
+            "explanation": "L'insertion sort fait moins de mouvements car il place directement l'element"
+          }
+        ],
+        "keyPoints": [
+          "Le bubble sort fait des echanges (swaps), l'insertion sort fait des decalages",
+          "L'insertion sort est naturellement adaptatif (rapide sur tableau presque trie)",
+          "Les deux sont stables et en-place",
+          "L'insertion sort est generalement plus rapide en pratique"
+        ],
+        "commonMistakes": [
+          "Croire que les deux algorithmes sont equivalents en performance",
+          "Confondre le mecanisme de swap (bubble) avec le decalage (insertion)",
+          "Oublier que le meilleur cas de l'insertion sort est O(n) naturellement"
+        ]
+      },
+      {
+        "title": "Stabilite d'un tri",
+        "content": "Un tri est dit stable s'il preserve l'ordre relatif des elements egaux. Autrement dit, si deux elements ont la meme valeur, celui qui apparait en premier dans le tableau original reste en premier apres le tri.",
+        "codeExamples": [
+          {
+            "title": "Tri stable vs instable",
+            "code": "// Exemple avec des paires (valeur, indice original) :\n// Original : (3,a) (1,b) (3,c) (2,d)\n\n// Tri STABLE : preserve l'ordre des 3\n// Resultat : (1,b) (2,d) (3,a) (3,c)\n// (3,a) est avant (3,c) comme dans l'original\n\n// Tri INSTABLE : peut inverser les 3\n// Resultat : (1,b) (2,d) (3,c) (3,a)\n// (3,c) pourrait se retrouver avant (3,a)\n\n// L'insertion sort est STABLE car on insere\n// APRES les elements egaux (condition > et pas >=)",
+            "explanation": "La condition tab[j] > key (et non >=) garantit la stabilite"
+          }
+        ],
+        "keyPoints": [
+          "Un tri stable preserve l'ordre des elements egaux",
+          "L'insertion sort est stable grace a la condition stricte >",
+          "Le bubble sort est aussi stable",
+          "La stabilite est importante quand on trie sur plusieurs criteres"
+        ],
+        "commonMistakes": [
+          "Utiliser >= au lieu de > dans la comparaison (rend le tri instable)",
+          "Croire que la stabilite n'a aucune importance pratique",
+          "Confondre stabilite et determinisme"
+        ]
+      },
+      {
+        "title": "Quand utiliser l'insertion sort",
+        "content": "Malgre sa complexite O(n²), le tri par insertion est le meilleur choix dans certains cas. Sa faible overhead et son caractere adaptatif le rendent ideal pour les petits tableaux et les donnees presque triees.",
+        "codeExamples": [
+          {
+            "title": "Cas d'utilisation optimaux",
+            "code": "// 1. Petits tableaux (n < 20-50)\n//    L'overhead de quicksort/mergesort est trop eleve\n//    Insertion sort est plus rapide en pratique\n\n// 2. Tableaux presque tries\n//    Si chaque element est a moins de k positions de sa\n//    position finale, la complexite est O(n*k)\n//    Avec k petit, c'est quasi-lineaire !\n\n// 3. Insertion en temps reel\n//    Donnees qui arrivent une par une\n//    On insere chaque nouvelle valeur dans le tableau trie\n\n// 4. Sous-routine de Timsort\n//    Python utilise Timsort qui combine merge sort\n//    et insertion sort pour les petits morceaux",
+            "explanation": "L'insertion sort est tres utilise en pratique comme optimisation locale"
+          }
+        ],
+        "keyPoints": [
+          "Ideal pour les petits tableaux (n < 50 elements)",
+          "Tres efficace sur les tableaux presque tries",
+          "Utilise comme sous-routine dans des algorithmes plus complexes",
+          "Parfait pour l'insertion en temps reel de donnees"
+        ],
+        "commonMistakes": [
+          "Utiliser l'insertion sort sur de tres grands tableaux non tries",
+          "Ne pas considerer l'insertion sort pour les petits sous-problemes",
+          "Oublier que la complexite pratique depend de l'etat initial des donnees"
+        ]
+      }
+    ],
+    "prepExercises": [
+      {
+        "id": 1,
+        "title": "Decaler les elements d'un tableau",
+        "instruction": "Ecris un code qui decale tous les elements de tab[1] a tab[3] d'une position vers la droite.",
+        "starterCode": "int tab[] = {1, 2, 3, 4, 5};\n// Decale tab[3], tab[2], tab[1] vers la droite\n// TON CODE ICI\n// Resultat attendu : {1, ?, 2, 3, 4}",
+        "solution": "int tab[] = {1, 2, 3, 4, 5};\ntab[4] = tab[3];\ntab[3] = tab[2];\ntab[2] = tab[1];\n// Resultat : {1, 2, 2, 3, 4}\n// tab[1] est maintenant libre pour l'insertion",
+        "hint": "Commence par decaler le dernier element (tab[3] -> tab[4]) et remonte.",
+        "difficulty": 1
+      },
+      {
+        "id": 2,
+        "title": "Decaler avec une boucle",
+        "instruction": "Ecris une boucle while qui decale les elements de j a 0 vers la droite tant qu'ils sont > key.",
+        "starterCode": "int tab[] = {1, 3, 5, 8, 2};\nint key = 2;\nint j = 3;\nwhile (/* condition */)\n{\n\t// decale\n\t// TON CODE ICI\n}\ntab[j + 1] = key;",
+        "solution": "int tab[] = {1, 3, 5, 8, 2};\nint key = 2;\nint j = 3;\nwhile (j >= 0 && tab[j] > key)\n{\n\ttab[j + 1] = tab[j];\n\tj--;\n}\ntab[j + 1] = key;\n// tab = {1, 2, 3, 5, 8}",
+        "hint": "Condition : j >= 0 && tab[j] > key. Decale tab[j] vers tab[j + 1] et decremente j.",
+        "difficulty": 2
+      },
+      {
+        "id": 3,
+        "title": "Inserer un element dans un tableau trie",
+        "instruction": "Ecris une fonction qui insere val a sa bonne position dans un tableau trie de taille n.",
+        "starterCode": "void\tinsert_sorted(int *tab, int n, int val)\n{\n\tint\tj;\n\n\t// Decale les elements > val et insere val\n\t// TON CODE ICI\n}",
+        "solution": "void\tinsert_sorted(int *tab, int n, int val)\n{\n\tint\tj;\n\n\tj = n - 1;\n\twhile (j >= 0 && tab[j] > val)\n\t{\n\t\ttab[j + 1] = tab[j];\n\t\tj--;\n\t}\n\ttab[j + 1] = val;\n}",
+        "hint": "Parcours le tableau de droite a gauche, decale tant que tab[j] > val, insere a j + 1.",
+        "difficulty": 2
+      },
+      {
+        "id": 4,
+        "title": "La boucle principale",
+        "instruction": "Ecris la boucle externe du tri par insertion qui parcourt le tableau de l'indice 1 a size - 1.",
+        "starterCode": "void\tft_insertion_sort(int *tab, int size)\n{\n\tint\ti;\n\tint\tkey;\n\n\ti = 1;\n\t// Boucle de i = 1 a size - 1\n\t// Pour chaque i, sauvegarde key = tab[i]\n\t// TON CODE ICI\n}",
+        "solution": "void\tft_insertion_sort(int *tab, int size)\n{\n\tint\ti;\n\tint\tj;\n\tint\tkey;\n\n\ti = 1;\n\twhile (i < size)\n\t{\n\t\tkey = tab[i];\n\t\tj = i - 1;\n\t\twhile (j >= 0 && tab[j] > key)\n\t\t{\n\t\t\ttab[j + 1] = tab[j];\n\t\t\tj--;\n\t\t}\n\t\ttab[j + 1] = key;\n\t\ti++;\n\t}\n}",
+        "hint": "Boucle i de 1 a size-1, sauvegarde tab[i] dans key, puis boucle interne de decalage.",
+        "difficulty": 3
+      },
+      {
+        "id": 5,
+        "title": "Test complet avec affichage",
+        "instruction": "Ecris un main qui teste ft_insertion_sort sur un tableau et affiche le resultat.",
+        "starterCode": "#include <unistd.h>\n\nvoid\tft_putnbr(int n);\nvoid\tft_insertion_sort(int *tab, int size);\n\nint\tmain(void)\n{\n\tint tab[] = {9, 3, 7, 1, 5};\n\t// Trie et affiche\n\t// TON CODE ICI\n\treturn (0);\n}",
+        "solution": "#include <unistd.h>\n\nvoid\tft_putnbr(int n);\nvoid\tft_insertion_sort(int *tab, int size);\n\nint\tmain(void)\n{\n\tint tab[] = {9, 3, 7, 1, 5};\n\tint i;\n\n\tft_insertion_sort(tab, 5);\n\ti = 0;\n\twhile (i < 5)\n\t{\n\t\tft_putnbr(tab[i]);\n\t\twrite(1, \"\\n\", 1);\n\t\ti++;\n\t}\n\treturn (0);\n}",
+        "hint": "Appelle ft_insertion_sort puis affiche chaque element avec ft_putnbr.",
+        "difficulty": 1
+      }
+    ]
+  },
+  "starterCode": "#include <unistd.h>\n\nvoid\tft_putnbr(int n)\n{\n\tchar\tc;\n\n\tif (n == -2147483648)\n\t{\n\t\twrite(1, \"-2147483648\", 11);\n\t\treturn ;\n\t}\n\tif (n < 0)\n\t{\n\t\twrite(1, \"-\", 1);\n\t\tn = -n;\n\t}\n\tif (n >= 10)\n\t\tft_putnbr(n / 10);\n\tc = (n % 10) + '0';\n\twrite(1, &c, 1);\n}\n\nvoid\tft_insertion_sort(int *tab, int size)\n{\n\t// 1. Boucle i de 1 a size - 1\n\t// 2. Sauvegarde tab[i] dans key\n\t// 3. j = i - 1, decale tant que tab[j] > key\n\t// 4. Insere key a la position j + 1\n\t// TON CODE ICI\n}\n\nint\tmain(void)\n{\n\tint\ttab[] = {5, 3, 8, 1, 4, 9, 2};\n\tint\tsize = 7;\n\tint\ti;\n\n\tft_insertion_sort(tab, size);\n\ti = 0;\n\twhile (i < size)\n\t{\n\t\tft_putnbr(tab[i]);\n\t\twrite(1, \"\\n\", 1);\n\t\ti++;\n\t}\n\treturn (0);\n}",
+  "solution": "#include <unistd.h>\n\nvoid\tft_putnbr(int n)\n{\n\tchar\tc;\n\n\tif (n == -2147483648)\n\t{\n\t\twrite(1, \"-2147483648\", 11);\n\t\treturn ;\n\t}\n\tif (n < 0)\n\t{\n\t\twrite(1, \"-\", 1);\n\t\tn = -n;\n\t}\n\tif (n >= 10)\n\t\tft_putnbr(n / 10);\n\tc = (n % 10) + '0';\n\twrite(1, &c, 1);\n}\n\nvoid\tft_insertion_sort(int *tab, int size)\n{\n\tint\ti;\n\tint\tj;\n\tint\tkey;\n\n\ti = 1;\n\twhile (i < size)\n\t{\n\t\tkey = tab[i];\n\t\tj = i - 1;\n\t\twhile (j >= 0 && tab[j] > key)\n\t\t{\n\t\t\ttab[j + 1] = tab[j];\n\t\t\tj--;\n\t\t}\n\t\ttab[j + 1] = key;\n\t\ti++;\n\t}\n}\n\nint\tmain(void)\n{\n\tint\ttab[] = {5, 3, 8, 1, 4, 9, 2};\n\tint\tsize = 7;\n\tint\ti;\n\n\tft_insertion_sort(tab, size);\n\ti = 0;\n\twhile (i < size)\n\t{\n\t\tft_putnbr(tab[i]);\n\t\twrite(1, \"\\n\", 1);\n\t\ti++;\n\t}\n\treturn (0);\n}",
+  "hints": [
+    "Commence la boucle externe a i = 1 (le premier element est deja 'trie'). Sauvegarde tab[i] dans key avant de decaler.",
+    "La boucle interne va de j = i - 1 vers 0. Tant que j >= 0 ET tab[j] > key, decale tab[j] vers tab[j + 1] et decremente j.",
+    "Apres la boucle interne, insere key a la position j + 1. C'est le 'trou' laisse par les decalages."
+  ],
+  "testCases": [
+    {
+      "id": 1,
+      "description": "Tri d'un tableau de 7 elements",
+      "stdin": "",
+      "expectedStdout": "1\n2\n3\n4\n5\n8\n9\n",
+      "expectedExitCode": 0,
+      "visible": true
+    },
+    {
+      "id": 2,
+      "description": "Tableau deja trie",
+      "stdin": "",
+      "expectedStdout": "1\n2\n3\n4\n5\n8\n9\n",
+      "expectedExitCode": 0,
+      "visible": false
+    },
+    {
+      "id": 3,
+      "description": "Tableau avec doublons et negatifs",
+      "stdin": "",
+      "expectedStdout": "1\n2\n3\n4\n5\n8\n9\n",
+      "expectedExitCode": 0,
+      "visible": false
+    }
+  ],
+  "constraints": {
+    "allowedFunctions": ["write"],
+    "forbiddenFunctions": ["printf", "qsort", "puts"],
+    "maxExecutionTime": 5000,
+    "maxMemory": 128
+  },
+  "relatedExercises": ["c-day47-ex01-ft-selection-sort", "c-day47-ex02-ft-sort-int-tab"],
+  "resources": [
+    {
+      "title": "Insertion Sort - Visualisation",
+      "url": "https://visualgo.net/en/sorting",
+      "type": "documentation"
+    },
+    {
+      "title": "Tri par insertion - GeeksforGeeks",
+      "url": "https://www.geeksforgeeks.org/insertion-sort/",
+      "type": "article"
+    }
+  ]
+}

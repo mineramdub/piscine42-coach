@@ -1,0 +1,257 @@
+{
+  "id": "c-day57-ex01-ft-pipe-cmd",
+  "category": "c",
+  "day": 57,
+  "order": 1,
+  "title": "Connecter deux commandes via un pipe",
+  "description": "Ecris un programme qui connecte deux commandes via un pipe, comme le fait le shell avec '|'. Le programme execute 'ls -l' dans un premier processus fils et redirige sa sortie vers l'entree de 'wc -l' dans un second processus fils. Utilise fork, pipe, dup2 et execve pour realiser cette connexion.",
+  "difficulty": 4,
+  "points": 40,
+  "estimatedTime": 40,
+  "learningObjectives": [
+    "Comprendre dup2() pour rediriger les descripteurs de fichiers",
+    "Savoir connecter la sortie d'un processus a l'entree d'un autre via un pipe",
+    "Maitriser le pattern fork + pipe + dup2 + execve",
+    "Comprendre le fonctionnement de la commande | du shell",
+    "Gerer correctement la fermeture de tous les descripteurs"
+  ],
+  "learningContent": {
+    "lesson": {
+      "introduction": "Quand vous tapez 'ls | wc -l' dans le terminal, le shell cree un pipe, fork deux processus, et redirige la sortie standard de ls vers l'entree standard de wc. Pour faire cela en C, on utilise dup2() qui permet de rediriger un descripteur de fichier vers un autre. C'est le mecanisme fondamental derriere le projet pipex a 42.",
+      "steps": [
+        {
+          "id": 1,
+          "title": "dup2() : rediriger un descripteur",
+          "content": "**dup2(oldfd, newfd)** copie oldfd vers newfd. Si newfd est deja ouvert, il est ferme d'abord.\n\n**Utilisation typique :**\n- `dup2(fd[1], STDOUT_FILENO)` : redirige stdout vers le pipe (pour ecrire dans le pipe)\n- `dup2(fd[0], STDIN_FILENO)` : redirige stdin depuis le pipe (pour lire depuis le pipe)\n\nApres dup2, l'ancien fd est toujours ouvert. Il faut le fermer avec close().",
+          "codeExample": "#include <unistd.h>\n\n// Rediriger stdout vers un pipe :\nint fd[2];\npipe(fd);\n\ndup2(fd[1], STDOUT_FILENO); // stdout -> pipe\nclose(fd[1]); // L'original n'est plus necessaire\nclose(fd[0]); // Pas besoin de lire\n\n// Maintenant, tout write(1, ...) va dans le pipe !\nwrite(1, \"test\", 4); // Va dans le pipe, pas sur l'ecran\n\n// De meme, execve(\"ls\", ...) ecrira dans le pipe\n// au lieu de l'ecran",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Que fait dup2(fd[1], 1) ? Apres cet appel, ou va write(1, \"hello\", 5) ?",
+            "starterCode": "int fd[2];\npipe(fd);\ndup2(fd[1], 1);\nwrite(1, \"hello\", 5);\n// \"hello\" va dans : ???",
+            "solution": "// dup2(fd[1], 1) redirige stdout (fd 1) vers le pipe\n// write(1, \"hello\", 5) ecrit dans le PIPE, pas sur l'ecran\n// \"hello\" va dans le pipe et peut etre lu avec read(fd[0])"
+          }
+        },
+        {
+          "id": 2,
+          "title": "Connecter la sortie de cmd1 a l'entree de cmd2",
+          "content": "Pour connecter deux commandes :\n1. Creer un pipe\n2. Fork le **premier fils** : redirige son stdout vers fd[1] puis execve cmd1\n3. Fork le **second fils** : redirige son stdin depuis fd[0] puis execve cmd2\n4. Le parent ferme les deux bouts du pipe et attend les deux fils\n\nSchema : `cmd1 -> fd[1] -> [PIPE] -> fd[0] -> cmd2`",
+          "codeExample": "// Schema de connexion :\n// cmd1 (stdout=fd[1]) ---> [PIPE] ---> (stdin=fd[0]) cmd2\n\nint fd[2];\npipe(fd);\n\n// Fils 1 : execute cmd1, stdout -> pipe\nif (fork() == 0)\n{\n\tdup2(fd[1], 1); // stdout -> pipe\n\tclose(fd[0]);\n\tclose(fd[1]);\n\texecve(cmd1_path, cmd1_args, envp);\n\texit(1);\n}\n\n// Fils 2 : execute cmd2, stdin <- pipe\nif (fork() == 0)\n{\n\tdup2(fd[0], 0); // stdin <- pipe\n\tclose(fd[0]);\n\tclose(fd[1]);\n\texecve(cmd2_path, cmd2_args, envp);\n\texit(1);\n}\n\n// Parent : ferme le pipe et attend\nclose(fd[0]);\nclose(fd[1]);\nwait(NULL);\nwait(NULL);",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Dans le fils 1, pourquoi fait-on dup2(fd[1], 1) et pas dup2(fd[0], 1) ?",
+            "starterCode": "// Le fils 1 execute cmd1 (ex: ls)\n// Sa sortie doit aller dans le pipe\n// fd[1] = bout d'ecriture du pipe\n// Donc on redirige stdout vers : ???",
+            "solution": "// On redirige stdout vers fd[1] (bout d'ecriture)\n// dup2(fd[1], 1) fait que stdout = fd[1]\n// Tout ce que cmd1 ecrit sur stdout va dans le pipe\n// fd[0] est le bout de lecture, utilise par cmd2"
+          }
+        },
+        {
+          "id": 3,
+          "title": "Fermer tous les descripteurs apres dup2",
+          "content": "Apres dup2, il faut fermer les descripteurs originaux. C'est tres important car :\n\n1. dup2 cree une **copie** du descripteur, l'original reste ouvert\n2. execve conserve les descripteurs ouverts\n3. Si fd[1] reste ouvert dans le fils 2, le pipe ne se fermera jamais\n\n**Regle :** Apres dup2, ferme fd[0] ET fd[1] dans chaque fils.",
+          "codeExample": "// CORRECT :\nif (fork() == 0)\n{\n\tdup2(fd[1], STDOUT_FILENO);\n\tclose(fd[0]); // Fermer les deux !\n\tclose(fd[1]); // fd[1] est duplique vers stdout\n\texecve(path, args, envp);\n\texit(1);\n}\n\n// INCORRECT (fuite de fd) :\nif (fork() == 0)\n{\n\tdup2(fd[1], STDOUT_FILENO);\n\t// fd[0] et fd[1] restent ouverts !\n\t// Le pipe ne sera jamais ferme correctement\n\texecve(path, args, envp);\n\texit(1);\n}",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Apres dup2(fd[1], 1), pourquoi faut-il encore faire close(fd[1]) ?",
+            "starterCode": "dup2(fd[1], 1);\n// fd[1] est copie vers fd 1 (stdout)\n// Mais fd[1] original est : ???\n// Si on ne le ferme pas : ???",
+            "solution": "// fd[1] original est TOUJOURS OUVERT\n// Si on ne le ferme pas, le pipe a 2 references d'ecriture\n// Le lecteur ne recevra jamais EOF\n// close(fd[1]) supprime la reference en trop"
+          }
+        },
+        {
+          "id": 4,
+          "title": "Le pattern complet : ls | wc -l",
+          "content": "Voici le pattern complet pour executer `ls | wc -l` en C. C'est exactement ce que fait le shell.\n\n**Etapes :**\n1. pipe(fd) cree le canal\n2. Fils 1 : dup2(fd[1], 1), close fd[0] et fd[1], execve ls\n3. Fils 2 : dup2(fd[0], 0), close fd[0] et fd[1], execve wc\n4. Parent : close fd[0] et fd[1], wait x2\n\nC'est la base du projet pipex !",
+          "codeExample": "#include <unistd.h>\n#include <sys/wait.h>\n#include <stdlib.h>\n\nint\tmain(void)\n{\n\tint\t\tfd[2];\n\tchar\t*envp[] = {NULL};\n\n\tpipe(fd);\n\tif (fork() == 0)\n\t{\n\t\tdup2(fd[1], 1);\n\t\tclose(fd[0]);\n\t\tclose(fd[1]);\n\t\tchar *args[] = {\"ls\", \"-l\", NULL};\n\t\texecve(\"/bin/ls\", args, envp);\n\t\texit(1);\n\t}\n\tif (fork() == 0)\n\t{\n\t\tdup2(fd[0], 0);\n\t\tclose(fd[0]);\n\t\tclose(fd[1]);\n\t\tchar *args[] = {\"wc\", \"-l\", NULL};\n\t\texecve(\"/usr/bin/wc\", args, envp);\n\t\texit(1);\n\t}\n\tclose(fd[0]);\n\tclose(fd[1]);\n\twait(NULL);\n\twait(NULL);\n\treturn (0);\n}",
+          "language": "c"
+        }
+      ]
+    },
+    "theory": [
+      {
+        "title": "dup2() en detail",
+        "content": "dup2 est un appel systeme qui duplique un descripteur de fichier vers un numero specifique. Il est essentiel pour les redirections dans les shells et les pipes.",
+        "codeExamples": [
+          {
+            "title": "Fonctionnement de dup2",
+            "code": "#include <unistd.h>\n\n// dup2(oldfd, newfd) :\n// 1. Si newfd est ouvert, le ferme\n// 2. Copie oldfd vers newfd\n// 3. oldfd et newfd pointent vers le meme \"fichier\"\n\nint fd[2];\npipe(fd);\n\n// Avant dup2 :\n// fd 0 = stdin (terminal)\n// fd 1 = stdout (terminal)\n// fd[0] = 3 (lecture pipe)\n// fd[1] = 4 (ecriture pipe)\n\ndup2(fd[1], 1);\n// Apres dup2 :\n// fd 0 = stdin (terminal)\n// fd 1 = ecriture pipe (!)\n// fd[0] = 3 (lecture pipe)\n// fd[1] = 4 (ecriture pipe)",
+            "explanation": "dup2 fait pointer le fd de destination vers la meme ressource que le fd source"
+          }
+        ],
+        "keyPoints": [
+          "dup2(old, new) copie old vers new (new pointe vers la meme ressource)",
+          "Si new est deja ouvert, il est ferme automatiquement",
+          "Retourne new en cas de succes, -1 en cas d'erreur",
+          "L'ancien fd (old) reste ouvert et doit etre ferme manuellement"
+        ],
+        "commonMistakes": [
+          "Oublier de fermer l'ancien fd apres dup2",
+          "Inverser les arguments de dup2 (c'est dup2(source, destination))",
+          "Ne pas verifier le retour de dup2 (-1 = erreur)"
+        ]
+      },
+      {
+        "title": "Redirections stdin et stdout",
+        "content": "Les constantes STDIN_FILENO (0) et STDOUT_FILENO (1) representent les descripteurs standard. Rediriger ces descripteurs avec dup2 permet de changer d'ou un programme lit et ou il ecrit.",
+        "codeExamples": [
+          {
+            "title": "Rediriger stdin et stdout",
+            "code": "// Rediriger stdout vers un fichier :\nint fd = open(\"output.txt\", O_WRONLY | O_CREAT, 0644);\ndup2(fd, STDOUT_FILENO); // stdout -> fichier\nclose(fd);\nprintf(\"Ceci va dans output.txt\\n\");\n\n// Rediriger stdin depuis un fichier :\nint fd2 = open(\"input.txt\", O_RDONLY);\ndup2(fd2, STDIN_FILENO); // stdin <- fichier\nclose(fd2);\nchar buf[100];\nread(0, buf, 100); // Lit depuis input.txt\n\n// Rediriger stdout vers un pipe :\nint pfd[2];\npipe(pfd);\ndup2(pfd[1], STDOUT_FILENO); // stdout -> pipe\nclose(pfd[0]);\nclose(pfd[1]);",
+            "explanation": "dup2 permet de rediriger les entrees/sorties standard vers des fichiers ou pipes"
+          }
+        ],
+        "keyPoints": [
+          "STDIN_FILENO = 0, STDOUT_FILENO = 1, STDERR_FILENO = 2",
+          "Apres dup2(fd, 1), tout printf/write(1,...) va dans fd",
+          "Apres dup2(fd, 0), tout scanf/read(0,...) lit depuis fd",
+          "execve conserve les redirections (le nouveau programme herite des fd)"
+        ],
+        "commonMistakes": [
+          "Rediriger stdout sans sauvegarder l'ancien fd (on ne peut plus afficher a l'ecran)",
+          "Oublier que execve herite des redirections (c'est voulu !)",
+          "Confondre redirection d'entree et de sortie"
+        ]
+      },
+      {
+        "title": "Le pattern complet fork + pipe + dup2 + exec",
+        "content": "C'est le pattern central de pipex et minishell. Il combine toutes les primitives systeme pour connecter des commandes entre elles.",
+        "codeExamples": [
+          {
+            "title": "Sequence d'operations pour un pipe",
+            "code": "// Pour realiser : cmd1 | cmd2\n//\n// 1. pipe(fd)\n// 2. fork fils1 :\n//    - dup2(fd[1], 1)  // stdout -> pipe\n//    - close fd[0], fd[1]\n//    - execve(cmd1)\n// 3. fork fils2 :\n//    - dup2(fd[0], 0)  // stdin <- pipe\n//    - close fd[0], fd[1]\n//    - execve(cmd2)\n// 4. parent :\n//    - close fd[0], fd[1]\n//    - wait, wait\n//\n// Flux des donnees :\n// cmd1 -> stdout -> fd[1] -> [PIPE] -> fd[0] -> stdin -> cmd2",
+            "explanation": "Ce schema est la base de tout programme qui connecte des commandes"
+          }
+        ],
+        "keyPoints": [
+          "Creer le pipe AVANT les forks",
+          "Chaque fils fait dup2, close les deux bouts du pipe, puis execve",
+          "Le parent ferme les deux bouts du pipe et attend les deux fils",
+          "Les donnees circulent : cmd1.stdout -> pipe -> cmd2.stdin"
+        ],
+        "commonMistakes": [
+          "Oublier de fermer le pipe dans le parent (les fils ne recoivent jamais EOF)",
+          "Ne fermer qu'un bout du pipe au lieu des deux dans chaque processus",
+          "Faire wait avant de fermer le pipe (peut causer un deadlock)"
+        ]
+      },
+      {
+        "title": "Gestion des erreurs dans les pipes",
+        "content": "Chaque appel systeme peut echouer. Il est important de gerer les erreurs de pipe, fork, dup2 et execve proprement pour eviter les fuites de descripteurs et les zombies.",
+        "codeExamples": [
+          {
+            "title": "Gestion d'erreurs robuste",
+            "code": "int fd[2];\nif (pipe(fd) == -1)\n{\n\tperror(\"pipe\");\n\treturn (1);\n}\npid_t pid = fork();\nif (pid == -1)\n{\n\tperror(\"fork\");\n\tclose(fd[0]);\n\tclose(fd[1]);\n\treturn (1);\n}\nif (pid == 0)\n{\n\tif (dup2(fd[1], 1) == -1)\n\t{\n\t\tperror(\"dup2\");\n\t\texit(1);\n\t}\n\tclose(fd[0]);\n\tclose(fd[1]);\n\texecve(path, args, envp);\n\tperror(\"execve\"); // Seulement atteint si erreur\n\texit(127);\n}",
+            "explanation": "Chaque appel systeme est verifie et les ressources sont nettoyees en cas d'erreur"
+          }
+        ],
+        "keyPoints": [
+          "Toujours verifier le retour de pipe(), fork(), dup2(), execve()",
+          "En cas d'erreur, fermer les descripteurs deja ouverts",
+          "Utiliser perror() pour afficher un message d'erreur explicite",
+          "Dans le fils, toujours exit() apres un execve echoue"
+        ],
+        "commonMistakes": [
+          "Ignorer les retours d'erreur des appels systeme",
+          "Ne pas fermer les fd en cas d'erreur (fuite de descripteurs)",
+          "Continuer l'execution du fils apres un execve echoue"
+        ]
+      }
+    ],
+    "prepExercises": [
+      {
+        "id": 1,
+        "title": "dup2 basique",
+        "instruction": "Redirige stdout vers un pipe avec dup2, ecris 'test' dans stdout, puis lis depuis le pipe.",
+        "starterCode": "#include <unistd.h>\n\nint\tmain(void)\n{\n\tint fd[2];\n\tchar buf[100];\n\t// Pipe, dup2, write, read\n\t// TON CODE ICI\n\treturn (0);\n}",
+        "solution": "#include <unistd.h>\n\nint\tmain(void)\n{\n\tint fd[2];\n\tchar buf[100];\n\tint n;\n\tint saved_stdout;\n\n\tpipe(fd);\n\tsaved_stdout = dup(1);\n\tdup2(fd[1], 1);\n\tclose(fd[1]);\n\twrite(1, \"test\", 4);\n\tdup2(saved_stdout, 1);\n\tclose(saved_stdout);\n\tn = read(fd[0], buf, 99);\n\tclose(fd[0]);\n\twrite(1, buf, n);\n\twrite(1, \"\\n\", 1);\n\treturn (0);\n}",
+        "hint": "dup2(fd[1], 1) redirige stdout vers le pipe. Sauvegarde stdout avant avec dup(1).",
+        "difficulty": 2
+      },
+      {
+        "id": 2,
+        "title": "Execve avec redirection",
+        "instruction": "Fork un fils qui redirige stdout vers le pipe puis execute /bin/echo hello.",
+        "starterCode": "#include <unistd.h>\n#include <sys/wait.h>\n#include <stdlib.h>\n\nint\tmain(void)\n{\n\tint fd[2];\n\tchar buf[100];\n\t// Pipe, fork, fils redirige stdout et execve echo\n\t// TON CODE ICI\n\treturn (0);\n}",
+        "solution": "#include <unistd.h>\n#include <sys/wait.h>\n#include <stdlib.h>\n\nint\tmain(void)\n{\n\tint fd[2];\n\tchar buf[100];\n\tint n;\n\n\tpipe(fd);\n\tif (fork() == 0)\n\t{\n\t\tdup2(fd[1], 1);\n\t\tclose(fd[0]);\n\t\tclose(fd[1]);\n\t\tchar *args[] = {\"echo\", \"hello\", NULL};\n\t\tchar *envp[] = {NULL};\n\t\texecve(\"/bin/echo\", args, envp);\n\t\texit(1);\n\t}\n\tclose(fd[1]);\n\tn = read(fd[0], buf, 99);\n\tclose(fd[0]);\n\twrite(1, buf, n);\n\twait(NULL);\n\treturn (0);\n}",
+        "hint": "Dans le fils : dup2(fd[1], 1), close fd[0] et fd[1], execve /bin/echo.",
+        "difficulty": 2
+      },
+      {
+        "id": 3,
+        "title": "Rediriger stdin depuis un pipe",
+        "instruction": "Le parent ecrit des donnees dans le pipe. Le fils redirige stdin depuis le pipe et execute /usr/bin/wc.",
+        "starterCode": "#include <unistd.h>\n#include <sys/wait.h>\n#include <stdlib.h>\n\nint\tmain(void)\n{\n\tint fd[2];\n\t// Parent ecrit dans pipe, fils lit via stdin\n\t// TON CODE ICI\n\treturn (0);\n}",
+        "solution": "#include <unistd.h>\n#include <sys/wait.h>\n#include <stdlib.h>\n\nint\tmain(void)\n{\n\tint fd[2];\n\n\tpipe(fd);\n\tif (fork() == 0)\n\t{\n\t\tdup2(fd[0], 0);\n\t\tclose(fd[0]);\n\t\tclose(fd[1]);\n\t\tchar *args[] = {\"wc\", \"-c\", NULL};\n\t\tchar *envp[] = {NULL};\n\t\texecve(\"/usr/bin/wc\", args, envp);\n\t\texit(1);\n\t}\n\tclose(fd[0]);\n\twrite(fd[1], \"Hello World\", 11);\n\tclose(fd[1]);\n\twait(NULL);\n\treturn (0);\n}",
+        "hint": "Le fils fait dup2(fd[0], 0) pour rediriger stdin depuis le pipe.",
+        "difficulty": 3
+      },
+      {
+        "id": 4,
+        "title": "Deux commandes connectees",
+        "instruction": "Connecte /bin/echo 'hello world' avec /usr/bin/wc -w via un pipe (resultat attendu : 2).",
+        "starterCode": "#include <unistd.h>\n#include <sys/wait.h>\n#include <stdlib.h>\n\nint\tmain(void)\n{\n\tint fd[2];\n\t// echo \"hello world\" | wc -w\n\t// TON CODE ICI\n\treturn (0);\n}",
+        "solution": "#include <unistd.h>\n#include <sys/wait.h>\n#include <stdlib.h>\n\nint\tmain(void)\n{\n\tint fd[2];\n\tchar *envp[] = {NULL};\n\n\tpipe(fd);\n\tif (fork() == 0)\n\t{\n\t\tdup2(fd[1], 1);\n\t\tclose(fd[0]);\n\t\tclose(fd[1]);\n\t\tchar *args[] = {\"echo\", \"hello world\", NULL};\n\t\texecve(\"/bin/echo\", args, envp);\n\t\texit(1);\n\t}\n\tif (fork() == 0)\n\t{\n\t\tdup2(fd[0], 0);\n\t\tclose(fd[0]);\n\t\tclose(fd[1]);\n\t\tchar *args[] = {\"wc\", \"-w\", NULL};\n\t\texecve(\"/usr/bin/wc\", args, envp);\n\t\texit(1);\n\t}\n\tclose(fd[0]);\n\tclose(fd[1]);\n\twait(NULL);\n\twait(NULL);\n\treturn (0);\n}",
+        "hint": "Fils 1 : dup2(fd[1], 1) + execve echo. Fils 2 : dup2(fd[0], 0) + execve wc. Parent : close + wait x2.",
+        "difficulty": 3
+      },
+      {
+        "id": 5,
+        "title": "Fonction generique pour piper deux commandes",
+        "instruction": "Ecris une fonction pipe_cmds qui prend deux chemins et deux tableaux d'arguments et les connecte via un pipe.",
+        "starterCode": "#include <unistd.h>\n#include <sys/wait.h>\n#include <stdlib.h>\n\nvoid\tpipe_cmds(char *p1, char **a1, char *p2, char **a2)\n{\n\t// Connecte cmd1 | cmd2\n\t// TON CODE ICI\n}\n\nint\tmain(void)\n{\n\tchar *a1[] = {\"ls\", NULL};\n\tchar *a2[] = {\"wc\", \"-l\", NULL};\n\tpipe_cmds(\"/bin/ls\", a1, \"/usr/bin/wc\", a2);\n\treturn (0);\n}",
+        "solution": "#include <unistd.h>\n#include <sys/wait.h>\n#include <stdlib.h>\n\nvoid\tpipe_cmds(char *p1, char **a1, char *p2, char **a2)\n{\n\tint\t\tfd[2];\n\tchar\t*envp[] = {NULL};\n\n\tpipe(fd);\n\tif (fork() == 0)\n\t{\n\t\tdup2(fd[1], 1);\n\t\tclose(fd[0]);\n\t\tclose(fd[1]);\n\t\texecve(p1, a1, envp);\n\t\texit(1);\n\t}\n\tif (fork() == 0)\n\t{\n\t\tdup2(fd[0], 0);\n\t\tclose(fd[0]);\n\t\tclose(fd[1]);\n\t\texecve(p2, a2, envp);\n\t\texit(1);\n\t}\n\tclose(fd[0]);\n\tclose(fd[1]);\n\twait(NULL);\n\twait(NULL);\n}\n\nint\tmain(void)\n{\n\tchar *a1[] = {\"ls\", NULL};\n\tchar *a2[] = {\"wc\", \"-l\", NULL};\n\tpipe_cmds(\"/bin/ls\", a1, \"/usr/bin/wc\", a2);\n\treturn (0);\n}",
+        "hint": "C'est le meme pattern que l'exercice precedent mais encapsule dans une fonction.",
+        "difficulty": 3
+      }
+    ]
+  },
+  "starterCode": "#include <unistd.h>\n#include <sys/wait.h>\n#include <stdlib.h>\n\nint\tmain(void)\n{\n\tint\t\tfd[2];\n\tchar\t*envp[] = {NULL};\n\n\t// 1. Cree un pipe\n\t// 2. Fork fils 1 : dup2(fd[1], 1), close fd[0] et fd[1], execve \"ls -l\"\n\t// 3. Fork fils 2 : dup2(fd[0], 0), close fd[0] et fd[1], execve \"wc -l\"\n\t// 4. Parent : close fd[0] et fd[1], wait x2\n\treturn (0);\n}",
+  "solution": "#include <unistd.h>\n#include <sys/wait.h>\n#include <stdlib.h>\n\nint\tmain(void)\n{\n\tint\t\tfd[2];\n\tchar\t*envp[] = {NULL};\n\n\tif (pipe(fd) == -1)\n\t\treturn (1);\n\tif (fork() == 0)\n\t{\n\t\tdup2(fd[1], STDOUT_FILENO);\n\t\tclose(fd[0]);\n\t\tclose(fd[1]);\n\t\tchar *args[] = {\"ls\", \"-l\", NULL};\n\t\texecve(\"/bin/ls\", args, envp);\n\t\texit(1);\n\t}\n\tif (fork() == 0)\n\t{\n\t\tdup2(fd[0], STDIN_FILENO);\n\t\tclose(fd[0]);\n\t\tclose(fd[1]);\n\t\tchar *args[] = {\"wc\", \"-l\", NULL};\n\t\texecve(\"/usr/bin/wc\", args, envp);\n\t\texit(1);\n\t}\n\tclose(fd[0]);\n\tclose(fd[1]);\n\twait(NULL);\n\twait(NULL);\n\treturn (0);\n}",
+  "hints": [
+    "Cree le pipe avant les forks. Le fils 1 redirige stdout vers fd[1] avec dup2, le fils 2 redirige stdin depuis fd[0].",
+    "Dans chaque fils, apres dup2, ferme les DEUX bouts du pipe (fd[0] et fd[1]) avant execve.",
+    "Le parent doit fermer les deux bouts du pipe et faire wait() deux fois (une pour chaque fils)."
+  ],
+  "testCases": [
+    {
+      "id": 1,
+      "description": "ls -l | wc -l affiche le nombre de lignes",
+      "stdin": "",
+      "expectedStdout": "un nombre suivi d'un retour a la ligne",
+      "expectedExitCode": 0,
+      "visible": true
+    },
+    {
+      "id": 2,
+      "description": "Les deux commandes sont connectees via le pipe",
+      "stdin": "",
+      "expectedStdout": "la sortie de wc correspond au nombre de lignes de ls",
+      "expectedExitCode": 0,
+      "visible": false
+    },
+    {
+      "id": 3,
+      "description": "Pas de fuite de descripteurs ni de zombies",
+      "stdin": "",
+      "expectedStdout": "le programme termine proprement",
+      "expectedExitCode": 0,
+      "visible": false
+    }
+  ],
+  "constraints": {
+    "allowedFunctions": ["write", "read", "pipe", "fork", "close", "dup2", "execve", "wait", "waitpid", "exit"],
+    "forbiddenFunctions": ["printf", "system", "popen"],
+    "maxExecutionTime": 5000,
+    "maxMemory": 128
+  },
+  "relatedExercises": ["c-day57-ex00-ft-pipe-basic", "c-day57-ex02-ft-mini-pipex"],
+  "resources": [
+    {
+      "title": "Man dup2(2) - Linux manual page",
+      "url": "https://man7.org/linux/man-pages/man2/dup2.2.html",
+      "type": "documentation"
+    },
+    {
+      "title": "Pipes et redirections en C",
+      "url": "https://www.rozmichelle.com/pipes-forks-dups/",
+      "type": "article"
+    }
+  ]
+}

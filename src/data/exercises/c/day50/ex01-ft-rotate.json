@@ -1,0 +1,257 @@
+{
+  "id": "c-day50-ex01-ft-rotate",
+  "category": "c",
+  "day": 50,
+  "order": 1,
+  "title": "Operations ra, rb, rr (rotation)",
+  "description": "Implemente les operations de rotation de push_swap : ra (le premier element de a passe en dernier), rb (le premier de b passe en dernier), et rr (ra et rb en meme temps). La rotation decale tous les elements vers le haut et le premier element (sommet) se retrouve a la base. Prototypes : void ft_ra(t_stack *a); void ft_rb(t_stack *b); void ft_rr(t_stack *a, t_stack *b);",
+  "difficulty": 4,
+  "points": 40,
+  "estimatedTime": 40,
+  "learningObjectives": [
+    "Implementer une rotation circulaire sur une pile",
+    "Comprendre le decalage d'elements dans un tableau",
+    "Gerer le cas ou la rotation est inutile (0 ou 1 element)",
+    "Factoriser la rotation en une fonction generique",
+    "Preparer les operations de rotation pour push_swap"
+  ],
+  "learningContent": {
+    "lesson": {
+      "introduction": "La rotation est l'une des operations les plus interessantes de push_swap. Elle prend l'element du sommet (premier) et le place a la base (dernier) de la pile. Tous les autres elements remontent d'une position. C'est une rotation circulaire vers le haut. Dans notre representation par tableau ou le sommet est a data[top], la rotation revient a prendre data[top], decaler tous les elements vers le haut, et placer data[top] en position data[0].",
+      "steps": [
+        {
+          "id": 1,
+          "title": "Le concept de rotation",
+          "content": "La rotation (ra, rb) deplace le premier element (sommet) vers la derniere position (base). Tous les autres elements remontent d'une position.\n\n**Visualisation :**\n- Avant : sommet -> [A, B, C, D] <- base\n- Apres ra : sommet -> [B, C, D, A] <- base\n\nA etait au sommet, il se retrouve a la base. B, C, D remontent d'une position.\n\n**Dans notre tableau :** Le sommet est a data[top] et la base est a data[0]. La rotation prend data[top], decale tout vers la droite, et place l'ancien sommet en data[0].",
+          "codeExample": "// Representation dans notre tableau :\n// Avant ra : data = [D, C, B, A]  top=3 (A au sommet)\n//   data[0]=D (base), data[3]=A (sommet)\n// Apres ra : data = [A, D, C, B]  top=3 (B au sommet)\n//   data[0]=A (base), data[3]=B (sommet)\n\n// Etapes :\n// 1. Sauvegarder data[top] (= A)\n// 2. Decaler tout vers la droite :\n//    data[3] = data[2] (B)\n//    data[2] = data[1] (C)\n//    data[1] = data[0] (D)\n// 3. Placer A en data[0]\n// Resultat : [A, D, C, B]",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Pile = [1, 2, 3, 4, 5] (5 au sommet, 1 a la base). Que donne ra ?",
+            "starterCode": "// data = [1, 2, 3, 4, 5] top=4\n// Sommet = 5, base = 1\n// Apres ra :\n// 5 (sommet) passe a la base\n// Les autres remontent\n// data = [?, ?, ?, ?, ?]",
+            "solution": "// Apres ra :\n// 5 passe a la base (data[0])\n// data = [5, 1, 2, 3, 4] top=4\n// Nouveau sommet = 4, base = 5"
+          }
+        },
+        {
+          "id": 2,
+          "title": "Implementation du decalage",
+          "content": "La rotation se decompose en 3 etapes :\n\n1. **Sauvegarder le sommet** : `tmp = data[top]`\n2. **Decaler vers la droite** : chaque element prend la place du suivant\n3. **Placer le sommet a la base** : `data[0] = tmp`\n\nLe decalage doit se faire de **droite a gauche** (de top vers 1) pour ne pas ecraser les valeurs. On copie data[i-1] dans data[i] en descendant.",
+          "codeExample": "void\tft_stack_rotate(t_stack *stack)\n{\n\tint\ttmp;\n\tint\ti;\n\n\tif (!stack || stack->top < 1)\n\t\treturn ;\n\ttmp = stack->data[stack->top];\n\ti = stack->top;\n\twhile (i > 0)\n\t{\n\t\tstack->data[i] = stack->data[i - 1];\n\t\ti--;\n\t}\n\tstack->data[0] = tmp;\n}\n\n// Exemple : data = [10, 20, 30] top=2\n// tmp = 30 (sommet)\n// i=2 : data[2] = data[1] = 20 -> [10, 20, 20]\n// i=1 : data[1] = data[0] = 10 -> [10, 10, 20]\n// data[0] = tmp = 30            -> [30, 10, 20]\n// Resultat : [30, 10, 20] (20 au sommet)",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Dans quel sens doit-on parcourir le tableau pour le decalage ? Pourquoi ?",
+            "starterCode": "// data = [A, B, C] top=2\n// Si on commence par i=1 (gauche a droite) :\n// data[1] = data[0] -> [A, A, C]\n// data[2] = data[1] -> [A, A, A] ERREUR !\n// On a perdu B et C !\n\n// La bonne direction est : ???",
+            "solution": "// Il faut commencer par la droite (de top vers 1) :\n// i=2 : data[2] = data[1] -> [A, B, B]\n// i=1 : data[1] = data[0] -> [A, A, B]\n// data[0] = tmp            -> [tmp, A, B]\n// Rien n'est perdu !"
+          }
+        },
+        {
+          "id": 3,
+          "title": "ra, rb et rr",
+          "content": "Avec la fonction generique `ft_stack_rotate`, on peut facilement implementer ra, rb et rr :\n\n- **ra** : rotate la pile a\n- **rb** : rotate la pile b\n- **rr** : ra et rb en meme temps (une seule operation)\n\nComme pour le swap, rr compte comme une seule operation dans push_swap, ce qui est une optimisation quand on doit rotater les deux piles.",
+          "codeExample": "void\tft_ra(t_stack *a)\n{\n\tft_stack_rotate(a);\n}\n\nvoid\tft_rb(t_stack *b)\n{\n\tft_stack_rotate(b);\n}\n\nvoid\tft_rr(t_stack *a, t_stack *b)\n{\n\tft_stack_rotate(a);\n\tft_stack_rotate(b);\n}\n\n// Avant rr :\n//   a = [1, 2, 3] (3 au sommet)\n//   b = [10, 20]  (20 au sommet)\n// Apres rr :\n//   a = [3, 1, 2] (2 au sommet)\n//   b = [20, 10]  (10 au sommet)",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Si on fait ra deux fois sur la pile [1, 2, 3, 4] (4 au sommet), quel est le resultat ?",
+            "starterCode": "// data = [1, 2, 3, 4] top=3\n// 1er ra : 4 passe en base -> [4, 1, 2, 3]\n// 2eme ra : 3 passe en base -> [?, ?, ?, ?]",
+            "solution": "// 1er ra : [4, 1, 2, 3] (3 au sommet)\n// 2eme ra : [3, 4, 1, 2] (2 au sommet)\n// Deux rotations sur 4 elements = moitie du cycle"
+          }
+        },
+        {
+          "id": 4,
+          "title": "Complexite et cycles de rotation",
+          "content": "La rotation a une complexite de O(n) car il faut decaler tous les elements. Pour une pile de n elements, il faut n rotations pour revenir a l'etat initial (un cycle complet).\n\n**Propriete :** n rotations sur une pile de n elements = identite (pas de changement).\n\nC'est utile pour push_swap : si on cherche un element a la base de la pile, on peut le faire remonter au sommet avec n-k rotations (ou k est la distance depuis le sommet).\n\nAlternativement, reverse rotate (rra) permet de remonter un element depuis la base en une seule operation.",
+          "codeExample": "// Cycle complet sur une pile de 4 elements :\n// [1, 2, 3, 4] (4 au sommet)\n// ra -> [4, 1, 2, 3]\n// ra -> [3, 4, 1, 2]\n// ra -> [2, 3, 4, 1]\n// ra -> [1, 2, 3, 4]  <- retour a l'etat initial !\n// 4 rotations = 1 cycle complet\n\n// Pour amener l'element en position k au sommet :\n// Nombre de ra necessaires = top - k\n// Ou de rra necessaires = k + 1\n// On choisit le minimum des deux",
+          "language": "c"
+        }
+      ]
+    },
+    "theory": [
+      {
+        "title": "Rotation circulaire dans un tableau",
+        "content": "La rotation circulaire est une operation qui deplace le premier ou le dernier element a l'autre extremite. Tous les autres elements se decalent d'une position.",
+        "codeExamples": [
+          {
+            "title": "Rotation a gauche et a droite",
+            "code": "// Rotation a gauche (le premier part a la fin) :\n// [A, B, C, D] -> [B, C, D, A]\n// C'est ce que fait ra dans notre representation\n\n// Rotation a droite (le dernier part au debut) :\n// [A, B, C, D] -> [D, A, B, C]\n// C'est ce que fait rra (reverse rotate)\n\n// Dans notre pile (top a droite) :\n// ra  : sommet -> base (rotation vers le bas)\n// rra : base -> sommet (rotation vers le haut)",
+            "explanation": "Ra et rra sont des rotations dans des directions opposees"
+          }
+        ],
+        "keyPoints": [
+          "La rotation deplace un element d'une extremite a l'autre",
+          "Tous les autres elements se decalent d'une position",
+          "n rotations sur n elements = retour a l'etat initial",
+          "La complexite est O(n) car il faut decaler tous les elements"
+        ],
+        "commonMistakes": [
+          "Decaler dans le mauvais sens (ecraser des valeurs)",
+          "Oublier de sauvegarder l'element qui se deplace",
+          "Confondre rotate (sommet -> base) et reverse rotate (base -> sommet)"
+        ]
+      },
+      {
+        "title": "Le decalage dans un tableau",
+        "content": "Le decalage (shift) est l'operation qui deplace tous les elements d'une position dans un tableau. Il faut le faire dans le bon ordre pour ne pas ecraser les valeurs.",
+        "codeExamples": [
+          {
+            "title": "Decalage vers la droite",
+            "code": "// Decalage vers la droite (elements montent) :\n// data = [A, B, C, _]\n// On veut : [_, A, B, C]\n\n// CORRECT : de droite a gauche\ni = 3;\nwhile (i > 0)\n{\n\tdata[i] = data[i - 1]; // i=3: C, i=2: B, i=1: A\n\ti--;\n}\n// data = [A, A, B, C] -> data[0] libre pour insertion\n\n// INCORRECT : de gauche a droite\ni = 1;\nwhile (i <= 3)\n{\n\tdata[i] = data[i - 1]; // i=1: A, i=2: A, i=3: A\n\ti++;\n}\n// data = [A, A, A, A] -> tout est A !",
+            "explanation": "Toujours decaler dans la direction opposee au sens du deplacement"
+          }
+        ],
+        "keyPoints": [
+          "Decaler vers la droite : parcourir de droite a gauche",
+          "Decaler vers la gauche : parcourir de gauche a droite",
+          "Toujours sauvegarder l'element qui sera ecrase en premier",
+          "La complexite du decalage est O(n)"
+        ],
+        "commonMistakes": [
+          "Parcourir dans le mauvais sens (ecraser des valeurs)",
+          "Oublier de sauvegarder la valeur de l'extremite",
+          "Off-by-one error dans les bornes de la boucle"
+        ]
+      },
+      {
+        "title": "Utilisation strategique de ra dans push_swap",
+        "content": "Dans push_swap, ra est utilise strategiquement pour amener un element specifique au sommet de la pile, ou pour positionner les elements avant un push.",
+        "codeExamples": [
+          {
+            "title": "Amener un element au sommet",
+            "code": "// Pile a = [1, 5, 3, 8, 2] (2 au sommet)\n// On veut amener 5 au sommet\n// 5 est en position 1 (data[1])\n// Distance depuis le sommet : top - 1 = 4 - 1 = 3\n// Il faut 3 ra pour amener 5 au sommet\n\n// ra -> [2, 1, 5, 3, 8]\n// ra -> [8, 2, 1, 5, 3]\n// ra -> [3, 8, 2, 1, 5]  <- 5 au sommet !\n\n// Alternative : 2 rra (plus court !)\n// rra -> [5, 1, 3, 8, 2] -> non, ca donne autre chose\n// Il faut calculer min(ra, rra) pour chaque element",
+            "explanation": "On choisit la direction de rotation la plus courte"
+          }
+        ],
+        "keyPoints": [
+          "Ra permet d'amener n'importe quel element au sommet",
+          "Le nombre de ra necessaires depend de la position de l'element",
+          "On peut aussi utiliser rra si l'element est plus proche de la base",
+          "Choisir min(ra, rra) optimise le nombre d'operations"
+        ],
+        "commonMistakes": [
+          "Toujours utiliser ra alors que rra serait plus court",
+          "Ne pas calculer la distance avant de choisir la direction",
+          "Oublier que n ra sur n elements ne change rien"
+        ]
+      },
+      {
+        "title": "Complexite des operations push_swap",
+        "content": "Chaque operation push_swap a une complexite en termes de manipulation de tableau. Les swaps et pushes sont en O(1), mais les rotations sont en O(n) car elles decalent tous les elements.",
+        "codeExamples": [
+          {
+            "title": "Resume des complexites",
+            "code": "// Complexite par operation :\n// sa, sb, ss : O(1) - swap de 2 elements\n// pa, pb     : O(1) - transfert de 1 element\n// ra, rb     : O(n) - decalage de tous les elements\n// rra, rrb   : O(n) - decalage de tous les elements\n// rr, rrr    : O(n) - double rotation\n\n// Note : dans push_swap, on compte le NOMBRE\n// d'operations (pas leur complexite interne)\n// ra compte pour 1 operation, meme si elle fait\n// O(n) manipulations en interne\n\n// L'objectif est de minimiser le nombre d'operations,\n// pas le nombre de manipulations de tableau",
+            "explanation": "En push_swap, chaque commande vaut 1, quelle que soit sa complexite interne"
+          }
+        ],
+        "keyPoints": [
+          "Les swaps et pushes sont O(1) en manipulation de tableau",
+          "Les rotations sont O(n) car elles decalent tous les elements",
+          "En push_swap, chaque operation compte pour 1",
+          "L'objectif est de minimiser le nombre total d'operations"
+        ],
+        "commonMistakes": [
+          "Confondre la complexite interne et le cout push_swap (toujours 1)",
+          "Utiliser des representations inefficaces qui rendent ra en O(n²)",
+          "Ne pas optimiser le choix entre ra et rra"
+        ]
+      }
+    ],
+    "prepExercises": [
+      {
+        "id": 1,
+        "title": "Sauvegarder le sommet",
+        "instruction": "Sauvegarde data[top] dans une variable temporaire.",
+        "starterCode": "// stack->data = [10, 20, 30] top=2\nint tmp;\n// Sauvegarde le sommet\n// TON CODE ICI",
+        "solution": "int tmp;\ntmp = stack->data[stack->top];\n// tmp = 30 (le sommet est sauvegarde)",
+        "hint": "tmp = stack->data[stack->top];",
+        "difficulty": 1
+      },
+      {
+        "id": 2,
+        "title": "Decaler vers la droite",
+        "instruction": "Ecris la boucle qui decale tous les elements d'une position vers la droite (de top vers 1).",
+        "starterCode": "// data = [10, 20, 30] top=2\n// On veut : [_, 10, 20] (decalage vers la droite)\nint i = stack->top;\nwhile (/* condition */)\n{\n\t// Decalage\n\t// TON CODE ICI\n}",
+        "solution": "int i = stack->top;\nwhile (i > 0)\n{\n\tstack->data[i] = stack->data[i - 1];\n\ti--;\n}\n// data = [10, 10, 20] -> data[0] est libre",
+        "hint": "De i = top vers 1 : data[i] = data[i - 1].",
+        "difficulty": 2
+      },
+      {
+        "id": 3,
+        "title": "ft_stack_rotate complet",
+        "instruction": "Ecris ft_stack_rotate qui effectue une rotation : le sommet passe a la base.",
+        "starterCode": "void\tft_stack_rotate(t_stack *stack)\n{\n\t// 1. Verifie au moins 2 elements\n\t// 2. Sauvegarde le sommet\n\t// 3. Decale vers la droite\n\t// 4. Place le sommet a la base\n\t// TON CODE ICI\n}",
+        "solution": "void\tft_stack_rotate(t_stack *stack)\n{\n\tint\ttmp;\n\tint\ti;\n\n\tif (!stack || stack->top < 1)\n\t\treturn ;\n\ttmp = stack->data[stack->top];\n\ti = stack->top;\n\twhile (i > 0)\n\t{\n\t\tstack->data[i] = stack->data[i - 1];\n\t\ti--;\n\t}\n\tstack->data[0] = tmp;\n}",
+        "hint": "Sauvegarde data[top], decale de top a 1, place l'ancien sommet en data[0].",
+        "difficulty": 2
+      },
+      {
+        "id": 4,
+        "title": "ra, rb et rr",
+        "instruction": "Ecris ra, rb et rr en utilisant ft_stack_rotate.",
+        "starterCode": "void\tft_ra(t_stack *a)\n{\n\t// TON CODE ICI\n}\nvoid\tft_rb(t_stack *b)\n{\n\t// TON CODE ICI\n}\nvoid\tft_rr(t_stack *a, t_stack *b)\n{\n\t// TON CODE ICI\n}",
+        "solution": "void\tft_ra(t_stack *a)\n{\n\tft_stack_rotate(a);\n}\nvoid\tft_rb(t_stack *b)\n{\n\tft_stack_rotate(b);\n}\nvoid\tft_rr(t_stack *a, t_stack *b)\n{\n\tft_stack_rotate(a);\n\tft_stack_rotate(b);\n}",
+        "hint": "Chacune appelle ft_stack_rotate sur la pile correspondante.",
+        "difficulty": 1
+      },
+      {
+        "id": 5,
+        "title": "Verifier le cycle complet",
+        "instruction": "Verifie que 3 ra sur une pile de 3 elements revient a l'etat initial.",
+        "starterCode": "t_stack *a = ft_stack_init(5);\nft_stack_push(a, 1);\nft_stack_push(a, 2);\nft_stack_push(a, 3);\n// 3 ra\n// Verifie que l'etat est identique\n// TON CODE ICI",
+        "solution": "t_stack *a = ft_stack_init(5);\nft_stack_push(a, 1);\nft_stack_push(a, 2);\nft_stack_push(a, 3);\nft_ra(a); // [3, 1, 2] sommet=2\nft_ra(a); // [2, 3, 1] sommet=1\nft_ra(a); // [1, 2, 3] sommet=3 (retour initial !)\nft_putnbr(a->data[a->top]); // 3\nwrite(1, \"\\n\", 1);\nft_stack_free(a);",
+        "hint": "3 rotations sur 3 elements = retour a l'etat initial.",
+        "difficulty": 2
+      }
+    ]
+  },
+  "starterCode": "#include <stdlib.h>\n#include <unistd.h>\n\ntypedef struct s_stack\n{\n\tint\t*data;\n\tint\ttop;\n\tint\tcapacity;\n}\t\t\tt_stack;\n\nvoid\tft_putnbr(int n)\n{\n\tchar\tc;\n\n\tif (n == -2147483648)\n\t{\n\t\twrite(1, \"-2147483648\", 11);\n\t\treturn ;\n\t}\n\tif (n < 0)\n\t{\n\t\twrite(1, \"-\", 1);\n\t\tn = -n;\n\t}\n\tif (n >= 10)\n\t\tft_putnbr(n / 10);\n\tc = (n % 10) + '0';\n\twrite(1, &c, 1);\n}\n\nt_stack\t*ft_stack_init(int capacity)\n{\n\tt_stack\t*stack;\n\n\tstack = malloc(sizeof(t_stack));\n\tif (!stack)\n\t\treturn (NULL);\n\tstack->data = malloc(sizeof(int) * capacity);\n\tif (!stack->data)\n\t{\n\t\tfree(stack);\n\t\treturn (NULL);\n\t}\n\tstack->top = -1;\n\tstack->capacity = capacity;\n\treturn (stack);\n}\n\nvoid\tft_stack_free(t_stack *stack)\n{\n\tif (!stack)\n\t\treturn ;\n\tif (stack->data)\n\t\tfree(stack->data);\n\tfree(stack);\n}\n\nint\tft_stack_push(t_stack *stack, int value)\n{\n\tif (!stack || stack->top >= stack->capacity - 1)\n\t\treturn (-1);\n\tstack->top++;\n\tstack->data[stack->top] = value;\n\treturn (0);\n}\n\nvoid\tft_ra(t_stack *a)\n{\n\t// Le premier element (sommet) passe en dernier (base)\n\t// Decale tous les elements vers le haut\n\t// TON CODE ICI\n}\n\nvoid\tft_rb(t_stack *b)\n{\n\t// Meme chose pour b\n\t// TON CODE ICI\n}\n\nvoid\tft_rr(t_stack *a, t_stack *b)\n{\n\t// ra et rb en meme temps\n\t// TON CODE ICI\n}\n\nint\tmain(void)\n{\n\tt_stack\t*a;\n\tint\t\ti;\n\n\ta = ft_stack_init(5);\n\tft_stack_push(a, 1);\n\tft_stack_push(a, 2);\n\tft_stack_push(a, 3);\n\tft_stack_push(a, 4);\n\tft_ra(a);\n\ti = a->top;\n\twhile (i >= 0)\n\t{\n\t\tft_putnbr(a->data[i]);\n\t\twrite(1, \"\\n\", 1);\n\t\ti--;\n\t}\n\tft_stack_free(a);\n\treturn (0);\n}",
+  "solution": "#include <stdlib.h>\n#include <unistd.h>\n\ntypedef struct s_stack\n{\n\tint\t*data;\n\tint\ttop;\n\tint\tcapacity;\n}\t\t\tt_stack;\n\nvoid\tft_putnbr(int n)\n{\n\tchar\tc;\n\n\tif (n == -2147483648)\n\t{\n\t\twrite(1, \"-2147483648\", 11);\n\t\treturn ;\n\t}\n\tif (n < 0)\n\t{\n\t\twrite(1, \"-\", 1);\n\t\tn = -n;\n\t}\n\tif (n >= 10)\n\t\tft_putnbr(n / 10);\n\tc = (n % 10) + '0';\n\twrite(1, &c, 1);\n}\n\nt_stack\t*ft_stack_init(int capacity)\n{\n\tt_stack\t*stack;\n\n\tstack = malloc(sizeof(t_stack));\n\tif (!stack)\n\t\treturn (NULL);\n\tstack->data = malloc(sizeof(int) * capacity);\n\tif (!stack->data)\n\t{\n\t\tfree(stack);\n\t\treturn (NULL);\n\t}\n\tstack->top = -1;\n\tstack->capacity = capacity;\n\treturn (stack);\n}\n\nvoid\tft_stack_free(t_stack *stack)\n{\n\tif (!stack)\n\t\treturn ;\n\tif (stack->data)\n\t\tfree(stack->data);\n\tfree(stack);\n}\n\nint\tft_stack_push(t_stack *stack, int value)\n{\n\tif (!stack || stack->top >= stack->capacity - 1)\n\t\treturn (-1);\n\tstack->top++;\n\tstack->data[stack->top] = value;\n\treturn (0);\n}\n\nvoid\tft_stack_rotate(t_stack *stack)\n{\n\tint\ttmp;\n\tint\ti;\n\n\tif (!stack || stack->top < 1)\n\t\treturn ;\n\ttmp = stack->data[stack->top];\n\ti = stack->top;\n\twhile (i > 0)\n\t{\n\t\tstack->data[i] = stack->data[i - 1];\n\t\ti--;\n\t}\n\tstack->data[0] = tmp;\n}\n\nvoid\tft_ra(t_stack *a)\n{\n\tft_stack_rotate(a);\n}\n\nvoid\tft_rb(t_stack *b)\n{\n\tft_stack_rotate(b);\n}\n\nvoid\tft_rr(t_stack *a, t_stack *b)\n{\n\tft_stack_rotate(a);\n\tft_stack_rotate(b);\n}\n\nint\tmain(void)\n{\n\tt_stack\t*a;\n\tint\t\ti;\n\n\ta = ft_stack_init(5);\n\tft_stack_push(a, 1);\n\tft_stack_push(a, 2);\n\tft_stack_push(a, 3);\n\tft_stack_push(a, 4);\n\tft_ra(a);\n\ti = a->top;\n\twhile (i >= 0)\n\t{\n\t\tft_putnbr(a->data[i]);\n\t\twrite(1, \"\\n\", 1);\n\t\ti--;\n\t}\n\tft_stack_free(a);\n\treturn (0);\n}",
+  "hints": [
+    "Sauvegarde data[top] dans tmp, decale tous les elements de top vers 1 (data[i] = data[i-1]), puis place tmp en data[0].",
+    "La boucle de decalage va de i = top jusqu'a i > 0. On copie data[i-1] dans data[i] a chaque iteration.",
+    "Verifie que la pile a au moins 2 elements (top >= 1) avant de faire la rotation."
+  ],
+  "testCases": [
+    {
+      "id": 1,
+      "description": "Rotation d'une pile de 4 elements",
+      "stdin": "",
+      "expectedStdout": "3\n2\n1\n4\n",
+      "expectedExitCode": 0,
+      "visible": true
+    },
+    {
+      "id": 2,
+      "description": "Rotation sur pile d'un element (pas de changement)",
+      "stdin": "",
+      "expectedStdout": "3\n2\n1\n4\n",
+      "expectedExitCode": 0,
+      "visible": false
+    },
+    {
+      "id": 3,
+      "description": "Cycle complet de rotations",
+      "stdin": "",
+      "expectedStdout": "3\n2\n1\n4\n",
+      "expectedExitCode": 0,
+      "visible": false
+    }
+  ],
+  "constraints": {
+    "allowedFunctions": ["write", "malloc", "free"],
+    "forbiddenFunctions": ["printf", "calloc", "realloc"],
+    "maxExecutionTime": 5000,
+    "maxMemory": 128
+  },
+  "relatedExercises": ["c-day50-ex00-ft-push-ab", "c-day50-ex02-ft-reverse-rotate"],
+  "resources": [
+    {
+      "title": "Rotation circulaire dans un tableau",
+      "url": "https://www.geeksforgeeks.org/array-rotation/",
+      "type": "documentation"
+    },
+    {
+      "title": "push_swap - Comprendre les rotations",
+      "url": "https://medium.com/@jamierobertdawson/push-swap-the-least-amount-of-moves-with-two-stacks-d1e76a71789a",
+      "type": "article"
+    }
+  ]
+}

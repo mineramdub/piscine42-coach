@@ -1,0 +1,257 @@
+{
+  "id": "c-day49-ex00-ft-stack-init",
+  "category": "c",
+  "day": 49,
+  "order": 0,
+  "title": "Creer et initialiser une pile (stack)",
+  "description": "Ecris les fonctions pour creer et initialiser une pile (stack) basee sur un tableau. La structure t_stack contient un tableau d'entiers, un indice top (sommet) et la taille maximale. Implemente ft_stack_init qui alloue et initialise une pile, et ft_stack_free qui libere la memoire. Prototypes : t_stack *ft_stack_init(int capacity); void ft_stack_free(t_stack *stack);",
+  "difficulty": 3,
+  "points": 30,
+  "estimatedTime": 30,
+  "learningObjectives": [
+    "Comprendre la structure de donnees pile (LIFO)",
+    "Definir une structure en C pour representer une pile",
+    "Allouer dynamiquement la memoire pour une pile",
+    "Initialiser correctement les champs d'une structure",
+    "Preparer les bases pour le projet push_swap"
+  ],
+  "learningContent": {
+    "lesson": {
+      "introduction": "La pile (stack) est l'une des structures de donnees les plus fondamentales en informatique. Elle fonctionne selon le principe LIFO (Last In, First Out) : le dernier element empile est le premier a etre depile. Pense a une pile d'assiettes : tu poses les assiettes par-dessus et tu prends toujours celle du dessus. Les piles sont utilisees partout : la pile d'appels de fonctions, l'evaluation d'expressions, et le projet push_swap de 42 qui utilise deux piles pour trier des nombres.",
+      "steps": [
+        {
+          "id": 1,
+          "title": "Le concept de pile (LIFO)",
+          "content": "Une pile est une collection d'elements avec deux operations principales :\n\n1. **Push** : ajouter un element au sommet\n2. **Pop** : retirer l'element du sommet\n\nLe principe est **LIFO** (Last In, First Out) : le dernier element ajoute est le premier retire.\n\n**Exemples dans la vie reelle :**\n- Pile d'assiettes : on prend celle du dessus\n- Bouton 'Annuler' (Ctrl+Z) : annule la derniere action\n- Pile d'appels : la derniere fonction appelee est la premiere a retourner\n- Navigation web : le bouton 'retour' revient a la page precedente",
+          "codeExample": "// Operations sur une pile :\n// push(5) : pile = [5]\n// push(3) : pile = [5, 3]       <- 3 est au sommet\n// push(8) : pile = [5, 3, 8]    <- 8 est au sommet\n// pop()   : retourne 8, pile = [5, 3]   <- 8 retire\n// pop()   : retourne 3, pile = [5]      <- 3 retire\n// push(1) : pile = [5, 1]       <- 1 au sommet\n// pop()   : retourne 1, pile = [5]      <- 1 retire\n\n// L'element retire est toujours le DERNIER empile\n// C'est le principe LIFO",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Apres les operations push(10), push(20), push(30), pop(), push(40), que contient la pile et quel est le sommet ?",
+            "starterCode": "// push(10) : pile = [10]\n// push(20) : pile = [10, 20]\n// push(30) : pile = [10, 20, 30]\n// pop()    : pile = [10, 20], retire ???\n// push(40) : pile = ???\n// Sommet = ???",
+            "solution": "// push(10) : pile = [10]\n// push(20) : pile = [10, 20]\n// push(30) : pile = [10, 20, 30]\n// pop()    : pile = [10, 20], retire 30\n// push(40) : pile = [10, 20, 40]\n// Sommet = 40"
+          }
+        },
+        {
+          "id": 2,
+          "title": "La structure t_stack",
+          "content": "Pour representer une pile en C, on utilise une structure qui contient :\n\n1. **data** : un tableau d'entiers (alloue dynamiquement)\n2. **top** : l'indice du sommet de la pile (-1 si vide)\n3. **capacity** : la taille maximale du tableau\n\n**Convention :** `top` commence a -1 (pile vide). Apres un push, top passe a 0, puis 1, etc. L'element au sommet est `data[top]`.\n\n**Pourquoi un tableau ?** C'est la representation la plus simple. On peut aussi utiliser une liste chainee, mais le tableau est plus facile pour debuter et suffisant pour push_swap.",
+          "codeExample": "typedef struct s_stack\n{\n\tint\t*data;     // Tableau d'entiers\n\tint\ttop;       // Indice du sommet (-1 = vide)\n\tint\tcapacity;  // Taille max du tableau\n}\t\t\tt_stack;\n\n// Pile vide :\n// data = [_, _, _, _, _]  (5 cases non utilisees)\n// top = -1\n// capacity = 5\n\n// Apres push(42) :\n// data = [42, _, _, _, _]\n// top = 0\n// capacity = 5\n\n// Apres push(21) :\n// data = [42, 21, _, _, _]\n// top = 1",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Apres 3 push (valeurs 10, 20, 30) dans une pile de capacite 5, que valent top et data[top] ?",
+            "starterCode": "// Etat initial : top = -1, capacity = 5\n// push(10) : top = ???, data[???] = 10\n// push(20) : top = ???, data[???] = 20\n// push(30) : top = ???, data[???] = 30\n// data[top] = ???",
+            "solution": "// push(10) : top = 0, data[0] = 10\n// push(20) : top = 1, data[1] = 20\n// push(30) : top = 2, data[2] = 30\n// data[top] = data[2] = 30 (le sommet)"
+          }
+        },
+        {
+          "id": 3,
+          "title": "ft_stack_init : allocation et initialisation",
+          "content": "La fonction `ft_stack_init` doit :\n\n1. Allouer la structure `t_stack` avec malloc\n2. Allouer le tableau `data` avec malloc (capacity * sizeof(int))\n3. Initialiser `top` a -1 (pile vide)\n4. Initialiser `capacity` a la valeur demandee\n5. Retourner un pointeur vers la pile\n\n**Gestion d'erreur :** Si un malloc echoue, il faut liberer ce qui a deja ete alloue et retourner NULL.\n\n**Pourquoi malloc ?** Parce qu'on veut que la pile survive apres la fin de la fonction. Une variable locale serait detruite au return.",
+          "codeExample": "t_stack\t*ft_stack_init(int capacity)\n{\n\tt_stack\t*stack;\n\n\tstack = malloc(sizeof(t_stack));\n\tif (!stack)\n\t\treturn (NULL);\n\tstack->data = malloc(sizeof(int) * capacity);\n\tif (!stack->data)\n\t{\n\t\tfree(stack);\n\t\treturn (NULL);\n\t}\n\tstack->top = -1;\n\tstack->capacity = capacity;\n\treturn (stack);\n}",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Que se passe-t-il si on oublie de free(stack) quand le deuxieme malloc echoue ?",
+            "starterCode": "t_stack *stack = malloc(sizeof(t_stack));\nstack->data = malloc(sizeof(int) * capacity);\nif (!stack->data)\n{\n\t// Si on fait juste return (NULL) ici...\n\t// Que devient la memoire de stack ?\n}",
+            "solution": "// Si on fait return (NULL) sans free(stack) :\n// La memoire de stack n'est jamais liberee\n// C'est une FUITE MEMOIRE (memory leak)\n// Il faut toujours free(stack) avant return NULL"
+          }
+        },
+        {
+          "id": 4,
+          "title": "ft_stack_free : liberation propre",
+          "content": "La fonction `ft_stack_free` libere toute la memoire allouee par `ft_stack_init`. Il faut liberer dans l'**ordre inverse** de l'allocation :\n\n1. D'abord `stack->data` (le tableau)\n2. Ensuite `stack` (la structure)\n\nSi on libere `stack` en premier, on perd l'acces a `stack->data` et on a une fuite memoire. C'est une regle fondamentale : **toujours liberer les elements internes avant la structure contenante**.\n\nOn verifie aussi que stack n'est pas NULL avant de liberer, par securite.",
+          "codeExample": "void\tft_stack_free(t_stack *stack)\n{\n\tif (!stack)\n\t\treturn ;\n\tif (stack->data)\n\t\tfree(stack->data);\n\tfree(stack);\n}\n\n// Utilisation :\nt_stack *a = ft_stack_init(10);\n// ... utilisation de la pile ...\nft_stack_free(a);  // Libere tout proprement\n\n// ERREUR si on fait :\n// free(a);          // Fuite de a->data !\n// free(a->data);    // Trop tard, a est deja libere",
+          "language": "c"
+        }
+      ]
+    },
+    "theory": [
+      {
+        "title": "La pile en informatique",
+        "content": "La pile (stack) est une structure de donnees fondamentale utilisee dans de nombreux contextes : gestion des appels de fonctions, evaluation d'expressions, algorithmes de parcours, et le projet push_swap de 42.",
+        "codeExamples": [
+          {
+            "title": "La pile d'appels (call stack)",
+            "code": "// Quand tu appelles une fonction, le retour est empile :\nvoid c(void) { /* ... */ }\nvoid b(void) { c(); }\nvoid a(void) { b(); }\nint main(void) { a(); return 0; }\n\n// Pile d'appels :\n// | c()   | <- sommet (derniere appelee)\n// | b()   |\n// | a()   |\n// | main  | <- base\n\n// c() retourne -> pop c()\n// b() retourne -> pop b()\n// a() retourne -> pop a()\n// C'est LIFO : derniere appelee, premiere a retourner",
+            "explanation": "Chaque appel de fonction empile un 'frame' et chaque return le depile"
+          }
+        ],
+        "keyPoints": [
+          "LIFO : Last In, First Out (dernier entre, premier sorti)",
+          "Deux operations principales : push (empiler) et pop (depiler)",
+          "La pile d'appels du programme est la pile la plus importante en C",
+          "push_swap utilise deux piles pour trier des nombres"
+        ],
+        "commonMistakes": [
+          "Confondre pile (LIFO) et file d'attente (FIFO)",
+          "Oublier que pop retire ET retourne l'element",
+          "Essayer d'acceder a un element autre que le sommet"
+        ]
+      },
+      {
+        "title": "Representation par tableau",
+        "content": "On peut representer une pile avec un tableau et un indice top. Le tableau stocke les elements, et top indique le sommet. Cette representation est simple et efficace mais a une capacite fixe.",
+        "codeExamples": [
+          {
+            "title": "Pile basee sur un tableau",
+            "code": "// Representation :\n// data = [42, 21, 7, _, _]\n//         ^         ^     ^\n//       base     top=2   capacity=5\n\n// Le sommet est data[top] = 7\n// La pile contient 3 elements (top + 1)\n// Il reste 2 places (capacity - top - 1)\n\n// Pile vide : top = -1\n// Pile pleine : top = capacity - 1\n// Nombre d'elements : top + 1\n\n// Avantages : acces O(1) a tout element\n// Inconvenient : taille fixe",
+            "explanation": "L'indice top sert de pointeur de sommet dans le tableau"
+          }
+        ],
+        "keyPoints": [
+          "top = -1 signifie pile vide",
+          "top = capacity - 1 signifie pile pleine",
+          "Le nombre d'elements est top + 1",
+          "Push et pop sont en O(1) avec un tableau"
+        ],
+        "commonMistakes": [
+          "Initialiser top a 0 au lieu de -1 (decalage d'un element)",
+          "Oublier de verifier si la pile est pleine avant push",
+          "Oublier de verifier si la pile est vide avant pop"
+        ]
+      },
+      {
+        "title": "Allocation dynamique de structure",
+        "content": "Pour creer une pile dynamiquement, on alloue la structure et son tableau interne avec malloc. Cela permet de creer des piles de tailles differentes et de les passer entre fonctions.",
+        "codeExamples": [
+          {
+            "title": "Double allocation",
+            "code": "// Etape 1 : allouer la structure\nt_stack *stack = malloc(sizeof(t_stack));\n// sizeof(t_stack) = sizeof(int*) + sizeof(int) + sizeof(int)\n//                = 8 + 4 + 4 = 16 octets (sur 64 bits)\n\n// Etape 2 : allouer le tableau interne\nstack->data = malloc(sizeof(int) * capacity);\n// sizeof(int) * capacity = 4 * capacity octets\n\n// Total : 16 + 4*capacity octets\n// Pour capacity=100 : 16 + 400 = 416 octets\n\n// Verification d'erreur apres CHAQUE malloc !\nif (!stack) return NULL;\nif (!stack->data) { free(stack); return NULL; }",
+            "explanation": "Deux allocations separees : la structure et le tableau qu'elle contient"
+          }
+        ],
+        "keyPoints": [
+          "malloc(sizeof(t_stack)) alloue la structure elle-meme",
+          "malloc(sizeof(int) * capacity) alloue le tableau interne",
+          "Toujours verifier le retour de malloc (peut retourner NULL)",
+          "En cas d'echec partiel, liberer ce qui a ete alloue"
+        ],
+        "commonMistakes": [
+          "Oublier de verifier le retour de malloc",
+          "Ne pas liberer en cas d'echec du deuxieme malloc",
+          "Utiliser sizeof(int*) au lieu de sizeof(int) pour le tableau"
+        ]
+      },
+      {
+        "title": "Liberation de memoire et fuites",
+        "content": "Une fuite memoire (memory leak) se produit quand on alloue de la memoire sans jamais la liberer. Pour une pile, il faut liberer le tableau interne ET la structure.",
+        "codeExamples": [
+          {
+            "title": "Ordre de liberation",
+            "code": "// CORRECT : liberer l'interne d'abord\nvoid\tft_stack_free(t_stack *stack)\n{\n\tif (!stack)\n\t\treturn ;\n\tfree(stack->data);  // 1. Libere le tableau\n\tfree(stack);        // 2. Libere la structure\n}\n\n// INCORRECT : liberer la structure d'abord\nvoid\tbad_free(t_stack *stack)\n{\n\tfree(stack);        // stack est libere\n\tfree(stack->data);  // ERREUR : stack est invalide !\n}\n\n// INCOMPLET : oublier le tableau\nvoid\tincomplete_free(t_stack *stack)\n{\n\tfree(stack);        // Seule la structure est liberee\n\t// stack->data est perdu -> FUITE MEMOIRE\n}",
+            "explanation": "Toujours liberer de l'interieur vers l'exterieur"
+          }
+        ],
+        "keyPoints": [
+          "Liberer les membres avant la structure contenante",
+          "Toujours verifier NULL avant de free",
+          "Chaque malloc doit avoir un free correspondant",
+          "Utiliser Valgrind pour detecter les fuites memoire"
+        ],
+        "commonMistakes": [
+          "Liberer la structure avant ses membres internes",
+          "Oublier de liberer le tableau interne (fuite memoire)",
+          "Double free : liberer deux fois la meme memoire"
+        ]
+      }
+    ],
+    "prepExercises": [
+      {
+        "id": 1,
+        "title": "Definir la structure t_stack",
+        "instruction": "Ecris la definition de la structure t_stack avec data, top et capacity.",
+        "starterCode": "// Definis la structure t_stack\n// TON CODE ICI",
+        "solution": "typedef struct s_stack\n{\n\tint\t*data;\n\tint\ttop;\n\tint\tcapacity;\n}\t\t\tt_stack;",
+        "hint": "typedef struct s_stack { int *data; int top; int capacity; } t_stack;",
+        "difficulty": 1
+      },
+      {
+        "id": 2,
+        "title": "Allouer une structure",
+        "instruction": "Ecris le code pour allouer une t_stack avec malloc.",
+        "starterCode": "#include <stdlib.h>\n\ntypedef struct s_stack\n{\n\tint\t*data;\n\tint\ttop;\n\tint\tcapacity;\n}\t\t\tt_stack;\n\nt_stack\t*create(void)\n{\n\tt_stack\t*stack;\n\t// Alloue et retourne\n\t// TON CODE ICI\n}",
+        "solution": "t_stack\t*create(void)\n{\n\tt_stack\t*stack;\n\n\tstack = malloc(sizeof(t_stack));\n\tif (!stack)\n\t\treturn (NULL);\n\treturn (stack);\n}",
+        "hint": "malloc(sizeof(t_stack)) alloue la structure. Verifie que le retour n'est pas NULL.",
+        "difficulty": 1
+      },
+      {
+        "id": 3,
+        "title": "Allouer le tableau interne",
+        "instruction": "Alloue le tableau data de capacity entiers a l'interieur de la structure.",
+        "starterCode": "// stack est deja alloue\nstack->data = ???;\nif (!stack->data)\n{\n\t// Que faire ici ?\n}",
+        "solution": "stack->data = malloc(sizeof(int) * capacity);\nif (!stack->data)\n{\n\tfree(stack);\n\treturn (NULL);\n}",
+        "hint": "malloc(sizeof(int) * capacity). Si ca echoue, free(stack) puis return NULL.",
+        "difficulty": 2
+      },
+      {
+        "id": 4,
+        "title": "Initialiser les champs",
+        "instruction": "Initialise top a -1 et capacity a la valeur donnee.",
+        "starterCode": "// stack est alloue, data est alloue\nstack->top = ???;\nstack->capacity = ???;",
+        "solution": "stack->top = -1;\nstack->capacity = capacity;",
+        "hint": "top = -1 pour une pile vide, capacity = la valeur passee en parametre.",
+        "difficulty": 1
+      },
+      {
+        "id": 5,
+        "title": "ft_stack_init complet",
+        "instruction": "Ecris ft_stack_init qui alloue et initialise une pile complete.",
+        "starterCode": "#include <stdlib.h>\n\ntypedef struct s_stack\n{\n\tint\t*data;\n\tint\ttop;\n\tint\tcapacity;\n}\t\t\tt_stack;\n\nt_stack\t*ft_stack_init(int capacity)\n{\n\t// TON CODE ICI\n}",
+        "solution": "t_stack\t*ft_stack_init(int capacity)\n{\n\tt_stack\t*stack;\n\n\tstack = malloc(sizeof(t_stack));\n\tif (!stack)\n\t\treturn (NULL);\n\tstack->data = malloc(sizeof(int) * capacity);\n\tif (!stack->data)\n\t{\n\t\tfree(stack);\n\t\treturn (NULL);\n\t}\n\tstack->top = -1;\n\tstack->capacity = capacity;\n\treturn (stack);\n}",
+        "hint": "Deux mallocs, deux verifications, puis initialisation de top et capacity.",
+        "difficulty": 2
+      }
+    ]
+  },
+  "starterCode": "#include <stdlib.h>\n#include <unistd.h>\n\ntypedef struct s_stack\n{\n\tint\t*data;\n\tint\ttop;\n\tint\tcapacity;\n}\t\t\tt_stack;\n\nvoid\tft_putnbr(int n)\n{\n\tchar\tc;\n\n\tif (n == -2147483648)\n\t{\n\t\twrite(1, \"-2147483648\", 11);\n\t\treturn ;\n\t}\n\tif (n < 0)\n\t{\n\t\twrite(1, \"-\", 1);\n\t\tn = -n;\n\t}\n\tif (n >= 10)\n\t\tft_putnbr(n / 10);\n\tc = (n % 10) + '0';\n\twrite(1, &c, 1);\n}\n\nt_stack\t*ft_stack_init(int capacity)\n{\n\t// 1. Alloue la structure t_stack\n\t// 2. Alloue le tableau data de capacity ints\n\t// 3. Initialise top = -1 et capacity\n\t// 4. Gere les erreurs de malloc\n\t// TON CODE ICI\n}\n\nvoid\tft_stack_free(t_stack *stack)\n{\n\t// 1. Verifie que stack n'est pas NULL\n\t// 2. Libere data puis stack\n\t// TON CODE ICI\n}\n\nint\tmain(void)\n{\n\tt_stack\t*a;\n\n\ta = ft_stack_init(5);\n\tif (!a)\n\t\treturn (1);\n\tft_putnbr(a->top);\n\twrite(1, \"\\n\", 1);\n\tft_putnbr(a->capacity);\n\twrite(1, \"\\n\", 1);\n\tft_stack_free(a);\n\treturn (0);\n}",
+  "solution": "#include <stdlib.h>\n#include <unistd.h>\n\ntypedef struct s_stack\n{\n\tint\t*data;\n\tint\ttop;\n\tint\tcapacity;\n}\t\t\tt_stack;\n\nvoid\tft_putnbr(int n)\n{\n\tchar\tc;\n\n\tif (n == -2147483648)\n\t{\n\t\twrite(1, \"-2147483648\", 11);\n\t\treturn ;\n\t}\n\tif (n < 0)\n\t{\n\t\twrite(1, \"-\", 1);\n\t\tn = -n;\n\t}\n\tif (n >= 10)\n\t\tft_putnbr(n / 10);\n\tc = (n % 10) + '0';\n\twrite(1, &c, 1);\n}\n\nt_stack\t*ft_stack_init(int capacity)\n{\n\tt_stack\t*stack;\n\n\tstack = malloc(sizeof(t_stack));\n\tif (!stack)\n\t\treturn (NULL);\n\tstack->data = malloc(sizeof(int) * capacity);\n\tif (!stack->data)\n\t{\n\t\tfree(stack);\n\t\treturn (NULL);\n\t}\n\tstack->top = -1;\n\tstack->capacity = capacity;\n\treturn (stack);\n}\n\nvoid\tft_stack_free(t_stack *stack)\n{\n\tif (!stack)\n\t\treturn ;\n\tif (stack->data)\n\t\tfree(stack->data);\n\tfree(stack);\n}\n\nint\tmain(void)\n{\n\tt_stack\t*a;\n\n\ta = ft_stack_init(5);\n\tif (!a)\n\t\treturn (1);\n\tft_putnbr(a->top);\n\twrite(1, \"\\n\", 1);\n\tft_putnbr(a->capacity);\n\twrite(1, \"\\n\", 1);\n\tft_stack_free(a);\n\treturn (0);\n}",
+  "hints": [
+    "ft_stack_init fait deux mallocs : un pour la structure, un pour le tableau data. Verifie chaque retour.",
+    "Initialise top a -1 (pile vide) et capacity a la valeur passee en parametre.",
+    "ft_stack_free libere d'abord data puis stack. Verifie que stack n'est pas NULL avant de liberer."
+  ],
+  "testCases": [
+    {
+      "id": 1,
+      "description": "Initialisation d'une pile de capacite 5",
+      "stdin": "",
+      "expectedStdout": "-1\n5\n",
+      "expectedExitCode": 0,
+      "visible": true
+    },
+    {
+      "id": 2,
+      "description": "Verification que top est bien -1",
+      "stdin": "",
+      "expectedStdout": "-1\n5\n",
+      "expectedExitCode": 0,
+      "visible": false
+    },
+    {
+      "id": 3,
+      "description": "Liberation sans crash",
+      "stdin": "",
+      "expectedStdout": "-1\n5\n",
+      "expectedExitCode": 0,
+      "visible": false
+    }
+  ],
+  "constraints": {
+    "allowedFunctions": ["write", "malloc", "free"],
+    "forbiddenFunctions": ["printf", "calloc", "realloc"],
+    "maxExecutionTime": 5000,
+    "maxMemory": 128
+  },
+  "relatedExercises": ["c-day49-ex01-ft-stack-push-pop", "c-day49-ex02-ft-stack-operations"],
+  "resources": [
+    {
+      "title": "Structure de donnees : la pile",
+      "url": "https://www.geeksforgeeks.org/stack-data-structure/",
+      "type": "documentation"
+    },
+    {
+      "title": "Pile en C avec tableau",
+      "url": "https://www.geeksforgeeks.org/stack-data-structure-introduction-program/",
+      "type": "article"
+    }
+  ]
+}

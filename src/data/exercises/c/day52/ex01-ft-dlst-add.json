@@ -1,0 +1,257 @@
+{
+  "id": "c-day52-ex01-ft-dlst-add",
+  "category": "c",
+  "day": 52,
+  "order": 1,
+  "title": "Ajouter un element en tete et en queue",
+  "description": "Ecris deux fonctions : ft_dlst_add_front qui ajoute un noeud en tete de liste doublement chainee, et ft_dlst_add_back qui ajoute un noeud en queue. Les deux fonctions doivent correctement gerer les pointeurs prev et next pour maintenir la double liaison. Prototypes : void ft_dlst_add_front(t_dlist **head, t_dlist *new); void ft_dlst_add_back(t_dlist **head, t_dlist *new);",
+  "difficulty": 3,
+  "points": 30,
+  "estimatedTime": 30,
+  "learningObjectives": [
+    "Maitriser l'insertion en tete d'une liste doublement chainee",
+    "Maitriser l'insertion en queue d'une liste doublement chainee",
+    "Comprendre la gestion des pointeurs prev et next lors de l'insertion",
+    "Savoir utiliser un double pointeur pour modifier le pointeur de tete",
+    "Gerer les cas limites (liste vide, un seul element)"
+  ],
+  "learningContent": {
+    "lesson": {
+      "introduction": "Ajouter un element a une liste doublement chainee est plus complexe qu'avec une liste simplement chainee car il faut gerer deux pointeurs par noeud (prev et next). L'insertion en tete est en O(1) car on accede directement a la tete. L'insertion en queue necessite de parcourir la liste jusqu'au dernier noeud (O(n)), sauf si on maintient un pointeur vers la queue. Dans cet exercice, on travaille avec un seul pointeur vers la tete.",
+      "steps": [
+        {
+          "id": 1,
+          "title": "Insertion en tete (add_front)",
+          "content": "Pour ajouter un noeud en tete de liste :\n\n1. Le nouveau noeud devient la nouvelle tete\n2. Son next pointe vers l'ancienne tete\n3. L'ancienne tete (si elle existe) voit son prev pointer vers le nouveau noeud\n4. Le prev du nouveau noeud est NULL (c'est la nouvelle tete)\n5. Le pointeur **head est mis a jour\n\n**Attention au double pointeur :** On passe `t_dlist **head` pour pouvoir modifier le pointeur head lui-meme (pas juste la valeur pointee).",
+          "codeExample": "// Avant : head -> [B] <-> [C] -> NULL\n//         NULL <-\n\n// Inserer A en tete :\n// 1. new->next = *head (A->next = B)\n// 2. (*head)->prev = new (B->prev = A)\n// 3. new->prev = NULL\n// 4. *head = new\n\n// Apres : head -> [A] <-> [B] <-> [C] -> NULL\n//         NULL <-\n\nvoid\tft_dlst_add_front(t_dlist **head, t_dlist *new)\n{\n\tif (!new)\n\t\treturn ;\n\tnew->next = *head;\n\tnew->prev = NULL;\n\tif (*head)\n\t\t(*head)->prev = new;\n\t*head = new;\n}",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Si la liste est vide (head = NULL), que se passe-t-il avec ft_dlst_add_front ?",
+            "starterCode": "// *head = NULL, new = [A]\n// new->next = *head = ???\n// new->prev = ???\n// *head = ???\n// Resultat : ???",
+            "solution": "// *head = NULL, new = [A]\n// new->next = *head = NULL\n// new->prev = NULL\n// *head != NULL ? Non, on saute le if\n// *head = new = [A]\n// Resultat : head -> [A] -> NULL\n//            NULL <-\n// Le noeud est seul, prev et next sont NULL"
+          }
+        },
+        {
+          "id": 2,
+          "title": "Insertion en queue (add_back)",
+          "content": "Pour ajouter un noeud en queue, il faut d'abord trouver le dernier noeud en parcourant la liste, puis lier le nouveau noeud apres lui.\n\n**Etapes :**\n1. Si la liste est vide, le nouveau noeud devient la tete\n2. Sinon, parcourir jusqu'au dernier noeud (last->next == NULL)\n3. last->next = new\n4. new->prev = last\n5. new->next = NULL",
+          "codeExample": "// Avant : head -> [A] <-> [B] -> NULL\n\n// Inserer C en queue :\n// 1. Parcourir : A -> B (B->next == NULL, c'est le dernier)\n// 2. B->next = C\n// 3. C->prev = B\n// 4. C->next = NULL\n\n// Apres : head -> [A] <-> [B] <-> [C] -> NULL\n\nvoid\tft_dlst_add_back(t_dlist **head, t_dlist *new)\n{\n\tt_dlist\t*last;\n\n\tif (!new)\n\t\treturn ;\n\tif (!*head)\n\t{\n\t\tnew->prev = NULL;\n\t\t*head = new;\n\t\treturn ;\n\t}\n\tlast = *head;\n\twhile (last->next)\n\t\tlast = last->next;\n\tlast->next = new;\n\tnew->prev = last;\n\tnew->next = NULL;\n}",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Pourquoi add_back est O(n) alors que add_front est O(1) ?",
+            "starterCode": "// add_front : quelles operations ?\n// add_back : quelles operations ?\n// Pourquoi la difference de complexite ?",
+            "solution": "// add_front : 4 operations constantes\n// (modifier 3 pointeurs + mettre a jour head)\n// -> O(1)\n\n// add_back : parcourir toute la liste\n// pour trouver le dernier noeud\n// -> O(n) a cause du while (last->next)\n\n// Pour avoir add_back en O(1), il faudrait\n// maintenir un pointeur vers la queue (tail)"
+          }
+        },
+        {
+          "id": 3,
+          "title": "Le double pointeur t_dlist **head",
+          "content": "On passe un `t_dlist **head` (double pointeur) car on veut pouvoir modifier la valeur du pointeur head dans la fonction appelante.\n\nAvec un simple `t_dlist *head`, on ne modifierait qu'une copie locale du pointeur. Le changement ne serait pas visible apres le retour de la fonction.\n\n**Analogie :** C'est comme passer `int *x` pour modifier un int. Ici, on passe `t_dlist **head` pour modifier un `t_dlist *`.",
+          "codeExample": "// INCORRECT : simple pointeur\nvoid\tbad_add_front(t_dlist *head, t_dlist *new)\n{\n\tnew->next = head;\n\thead = new; // Modifie la copie locale !\n}\n// Apres l'appel, head n'a PAS change\n\n// CORRECT : double pointeur\nvoid\tft_dlst_add_front(t_dlist **head, t_dlist *new)\n{\n\tnew->next = *head;\n\t*head = new; // Modifie le pointeur original\n}\n// Apres l'appel, head pointe vers new\n\n// Appel :\nt_dlist *head = NULL;\nt_dlist *node = ft_dlst_new(data);\nft_dlst_add_front(&head, node); // &head = adresse du pointeur",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Si on appelle ft_dlst_add_front(&head, new) avec head = [B], quelle est la valeur de head apres ?",
+            "starterCode": "t_dlist *head = /* pointe vers [B] */;\nt_dlist *new = /* pointe vers [A] */;\nft_dlst_add_front(&head, new);\n// head pointe maintenant vers ???",
+            "solution": "// head pointe maintenant vers [A]\n// Car *head = new dans la fonction\n// fait que head = new dans l'appelant\n// La liste est : [A] <-> [B] -> NULL"
+          }
+        },
+        {
+          "id": 4,
+          "title": "Programme complet de test",
+          "content": "Voici un programme qui cree une liste doublement chainee en ajoutant des elements en tete et en queue, puis la parcourt dans les deux sens pour verifier que les liens sont corrects.\n\nL'affichage parcourt la liste en avant (head -> tail) puis en arriere (tail -> head) pour prouver que les liens prev et next sont corrects.",
+          "codeExample": "#include <unistd.h>\n#include <stdlib.h>\n\nvoid\tft_print_list_forward(t_dlist *head)\n{\n\twhile (head)\n\t{\n\t\tft_putnbr(*(int *)head->content);\n\t\tif (head->next)\n\t\t\twrite(1, \" <-> \", 5);\n\t\thead = head->next;\n\t}\n\twrite(1, \"\\n\", 1);\n}\n\nvoid\tft_print_list_backward(t_dlist *tail)\n{\n\twhile (tail)\n\t{\n\t\tft_putnbr(*(int *)tail->content);\n\t\tif (tail->prev)\n\t\t\twrite(1, \" <-> \", 5);\n\t\ttail = tail->prev;\n\t}\n\twrite(1, \"\\n\", 1);\n}\n\n// Utilisation :\n// forward:  1 <-> 2 <-> 3\n// backward: 3 <-> 2 <-> 1",
+          "language": "c"
+        }
+      ]
+    },
+    "theory": [
+      {
+        "title": "Insertion en tete : O(1)",
+        "content": "L'insertion en tete est l'operation la plus rapide sur une liste chainee car elle ne necessite pas de parcourir la liste. On modifie seulement quelques pointeurs en temps constant.",
+        "codeExamples": [
+          {
+            "title": "Les 4 etapes de l'insertion en tete",
+            "code": "// Etape 1 : new->next pointe vers l'ancienne tete\nnew->next = *head;\n// Etape 2 : new->prev est NULL (nouvelle tete)\nnew->prev = NULL;\n// Etape 3 : l'ancienne tete pointe en arriere vers new\nif (*head)\n\t(*head)->prev = new;\n// Etape 4 : head pointe vers new\n*head = new;",
+            "explanation": "4 operations en temps constant, independant de la taille de la liste"
+          }
+        ],
+        "keyPoints": [
+          "L'insertion en tete est toujours en O(1)",
+          "Il faut mettre a jour le prev de l'ancienne tete",
+          "Le prev du nouveau noeud est toujours NULL",
+          "Il faut verifier si la liste est vide avant d'acceder a (*head)->prev"
+        ],
+        "commonMistakes": [
+          "Oublier de mettre a jour (*head)->prev vers le nouveau noeud",
+          "Ne pas verifier si *head est NULL avant (*head)->prev",
+          "Mettre a jour *head avant new->next (on perd la reference a l'ancienne tete)"
+        ]
+      },
+      {
+        "title": "Insertion en queue : O(n)",
+        "content": "L'insertion en queue necessite de parcourir toute la liste pour trouver le dernier noeud. C'est pourquoi elle est en O(n). Pour ameliorer la performance, on peut maintenir un pointeur vers la queue.",
+        "codeExamples": [
+          {
+            "title": "Parcours jusqu'au dernier noeud",
+            "code": "// Trouver le dernier noeud\nt_dlist *last = *head;\nwhile (last->next)\n\tlast = last->next;\n\n// last pointe maintenant vers le dernier noeud\n// On peut ajouter apres lui :\nlast->next = new;\nnew->prev = last;\nnew->next = NULL;\n\n// Optimisation avec un pointeur tail :\n// tail->next = new;\n// new->prev = tail;\n// tail = new;\n// -> O(1) au lieu de O(n)",
+            "explanation": "Le parcours en O(n) peut etre evite en maintenant un pointeur vers la queue"
+          }
+        ],
+        "keyPoints": [
+          "Il faut parcourir jusqu'au noeud dont next est NULL",
+          "Le cas liste vide doit etre gere separement",
+          "Le new->next est toujours NULL (dernier noeud)",
+          "Un pointeur tail rendrait cette operation O(1)"
+        ],
+        "commonMistakes": [
+          "Oublier de gerer le cas liste vide (segfault sur last->next)",
+          "Ne pas mettre new->prev = last (la double liaison est cassee)",
+          "Oublier new->next = NULL (la liste ne se termine pas correctement)"
+        ]
+      },
+      {
+        "title": "Double pointeur : pourquoi et comment",
+        "content": "En C, les arguments sont passes par valeur. Pour modifier un pointeur dans la fonction appelante, on doit passer un pointeur vers ce pointeur, d'ou le double pointeur t_dlist **head.",
+        "codeExamples": [
+          {
+            "title": "Passage par valeur vs par reference",
+            "code": "// En C, tout est passe par valeur\nvoid\tchange_int(int x)    { x = 42; }     // NE marche PAS\nvoid\tchange_int(int *x)   { *x = 42; }    // Marche\n\nvoid\tchange_ptr(int *p)   { p = new; }     // NE marche PAS\nvoid\tchange_ptr(int **p)  { *p = new; }    // Marche\n\n// Meme logique pour les listes :\nvoid\tadd(t_dlist *head)   { head = new; }  // NE marche PAS\nvoid\tadd(t_dlist **head)  { *head = new; } // Marche",
+            "explanation": "Pour modifier un pointeur, on passe son adresse (double pointeur)"
+          }
+        ],
+        "keyPoints": [
+          "Un simple pointeur ne permet pas de modifier le pointeur appelant",
+          "Le double pointeur donne acces au pointeur original via dereferencement",
+          "L'appel se fait avec &head pour passer l'adresse du pointeur",
+          "*head dans la fonction correspond a head dans l'appelant"
+        ],
+        "commonMistakes": [
+          "Utiliser un simple pointeur au lieu d'un double pointeur",
+          "Confondre *head (le noeud pointe) et **head (l'adresse du pointeur)",
+          "Oublier le & lors de l'appel : ft_dlst_add_front(&head, new)"
+        ]
+      },
+      {
+        "title": "Cas limites et robustesse",
+        "content": "Les fonctions d'insertion doivent gerer plusieurs cas limites pour etre robustes : liste vide, noeud NULL, et insertion dans une liste a un seul element.",
+        "codeExamples": [
+          {
+            "title": "Gestion des cas limites",
+            "code": "void\tft_dlst_add_front(t_dlist **head, t_dlist *new)\n{\n\t// Cas 1 : new est NULL -> rien a faire\n\tif (!new)\n\t\treturn ;\n\t// Cas 2 : liste vide (*head == NULL)\n\t// new devient la tete, prev et next sont NULL\n\tnew->next = *head;\n\tnew->prev = NULL;\n\tif (*head) // Cas 3 : liste non vide\n\t\t(*head)->prev = new;\n\t*head = new;\n}\n\n// Tests :\n// Liste vide : head=NULL -> head=[A]\n// Un element : head=[B] -> head=[A]<->[B]\n// Plusieurs : head=[B]<->[C] -> head=[A]<->[B]<->[C]",
+            "explanation": "Le if (*head) protege contre le cas liste vide"
+          }
+        ],
+        "keyPoints": [
+          "Toujours verifier si new est NULL avant de l'inserer",
+          "Verifier si la liste est vide avant d'acceder aux champs de *head",
+          "Un seul element : prev et next du meme noeud peuvent changer",
+          "Les fonctions doivent etre idempotentes et sans effet de bord"
+        ],
+        "commonMistakes": [
+          "Ne pas verifier new == NULL (crash si on passe NULL)",
+          "Acceder a (*head)->prev quand *head est NULL (segfault)",
+          "Oublier que l'unique element d'une liste a prev=NULL et next=NULL"
+        ]
+      }
+    ],
+    "prepExercises": [
+      {
+        "id": 1,
+        "title": "Ajouter en tete d'une liste vide",
+        "instruction": "Cree une liste vide et ajoute un noeud en tete. Verifie que head pointe vers le noeud.",
+        "starterCode": "int\tmain(void)\n{\n\tt_dlist\t*head = NULL;\n\tint\t\tval = 42;\n\tt_dlist\t*node = ft_dlst_new(&val);\n\n\t// Ajoute node en tete\n\t// TON CODE ICI\n\t// Verifie que head == node\n}",
+        "solution": "int\tmain(void)\n{\n\tt_dlist\t*head = NULL;\n\tint\t\tval = 42;\n\tt_dlist\t*node = ft_dlst_new(&val);\n\n\tft_dlst_add_front(&head, node);\n\tif (head == node)\n\t\twrite(1, \"OK\\n\", 3);\n\tfree(node);\n\treturn (0);\n}",
+        "hint": "Appelle ft_dlst_add_front(&head, node). N'oublie pas le & devant head.",
+        "difficulty": 1
+      },
+      {
+        "id": 2,
+        "title": "Ajouter 3 elements en tete",
+        "instruction": "Ajoute 3 noeuds en tete et parcours la liste pour verifier l'ordre (dernier ajoute = premier).",
+        "starterCode": "int\tmain(void)\n{\n\tt_dlist\t*head = NULL;\n\tint\t\tv1 = 1, v2 = 2, v3 = 3;\n\n\tft_dlst_add_front(&head, ft_dlst_new(&v1));\n\tft_dlst_add_front(&head, ft_dlst_new(&v2));\n\tft_dlst_add_front(&head, ft_dlst_new(&v3));\n\t// Affiche la liste : devrait etre 3 2 1\n\t// TON CODE ICI\n}",
+        "solution": "int\tmain(void)\n{\n\tt_dlist\t*head = NULL;\n\tt_dlist\t*cur;\n\tint\t\tv1 = 1, v2 = 2, v3 = 3;\n\n\tft_dlst_add_front(&head, ft_dlst_new(&v1));\n\tft_dlst_add_front(&head, ft_dlst_new(&v2));\n\tft_dlst_add_front(&head, ft_dlst_new(&v3));\n\tcur = head;\n\twhile (cur)\n\t{\n\t\tft_putnbr(*(int *)cur->content);\n\t\twrite(1, \"\\n\", 1);\n\t\tcur = cur->next;\n\t}\n\treturn (0);\n}",
+        "hint": "Le dernier ajoute en tete est le premier de la liste : 3, 2, 1.",
+        "difficulty": 2
+      },
+      {
+        "id": 3,
+        "title": "Ajouter en queue d'une liste vide",
+        "instruction": "Cree une liste vide et ajoute un noeud en queue. Verifie que head pointe vers le noeud.",
+        "starterCode": "int\tmain(void)\n{\n\tt_dlist\t*head = NULL;\n\tint\t\tval = 42;\n\n\tft_dlst_add_back(&head, ft_dlst_new(&val));\n\t// Verifie que head pointe vers le noeud\n\t// TON CODE ICI\n}",
+        "solution": "int\tmain(void)\n{\n\tt_dlist\t*head = NULL;\n\tint\t\tval = 42;\n\n\tft_dlst_add_back(&head, ft_dlst_new(&val));\n\tif (head)\n\t\tft_putnbr(*(int *)head->content);\n\twrite(1, \"\\n\", 1);\n\treturn (0);\n}",
+        "hint": "Sur une liste vide, add_back fait la meme chose que add_front : le noeud devient la tete.",
+        "difficulty": 1
+      },
+      {
+        "id": 4,
+        "title": "Ajouter 3 elements en queue",
+        "instruction": "Ajoute 3 noeuds en queue et parcours la liste pour verifier l'ordre (premier ajoute = premier).",
+        "starterCode": "int\tmain(void)\n{\n\tt_dlist\t*head = NULL;\n\tint\t\tv1 = 1, v2 = 2, v3 = 3;\n\n\tft_dlst_add_back(&head, ft_dlst_new(&v1));\n\tft_dlst_add_back(&head, ft_dlst_new(&v2));\n\tft_dlst_add_back(&head, ft_dlst_new(&v3));\n\t// Affiche : 1 2 3\n\t// TON CODE ICI\n}",
+        "solution": "int\tmain(void)\n{\n\tt_dlist\t*head = NULL;\n\tt_dlist\t*cur;\n\tint\t\tv1 = 1, v2 = 2, v3 = 3;\n\n\tft_dlst_add_back(&head, ft_dlst_new(&v1));\n\tft_dlst_add_back(&head, ft_dlst_new(&v2));\n\tft_dlst_add_back(&head, ft_dlst_new(&v3));\n\tcur = head;\n\twhile (cur)\n\t{\n\t\tft_putnbr(*(int *)cur->content);\n\t\twrite(1, \"\\n\", 1);\n\t\tcur = cur->next;\n\t}\n\treturn (0);\n}",
+        "hint": "Avec add_back, l'ordre d'insertion est preserve : 1, 2, 3.",
+        "difficulty": 2
+      },
+      {
+        "id": 5,
+        "title": "Parcourir en arriere",
+        "instruction": "Apres avoir construit une liste, parcours-la en arriere en utilisant les pointeurs prev.",
+        "starterCode": "// Construis une liste [1] <-> [2] <-> [3]\n// Puis trouve le dernier noeud\n// Parcours en arriere avec prev\n// Affiche : 3 2 1",
+        "solution": "int\tmain(void)\n{\n\tt_dlist\t*head = NULL;\n\tt_dlist\t*cur;\n\tint\t\tv1 = 1, v2 = 2, v3 = 3;\n\n\tft_dlst_add_back(&head, ft_dlst_new(&v1));\n\tft_dlst_add_back(&head, ft_dlst_new(&v2));\n\tft_dlst_add_back(&head, ft_dlst_new(&v3));\n\tcur = head;\n\twhile (cur->next)\n\t\tcur = cur->next;\n\twhile (cur)\n\t{\n\t\tft_putnbr(*(int *)cur->content);\n\t\twrite(1, \"\\n\", 1);\n\t\tcur = cur->prev;\n\t}\n\treturn (0);\n}",
+        "hint": "D'abord avance jusqu'au dernier noeud (cur->next == NULL), puis recule avec cur->prev.",
+        "difficulty": 2
+      }
+    ]
+  },
+  "starterCode": "#include <unistd.h>\n#include <stdlib.h>\n\ntypedef struct s_dlist\n{\n\tvoid\t\t\t*content;\n\tstruct s_dlist\t*prev;\n\tstruct s_dlist\t*next;\n}\t\t\t\t\tt_dlist;\n\nvoid\tft_putnbr(int n)\n{\n\tchar\tc;\n\n\tif (n == -2147483648)\n\t{ write(1, \"-2147483648\", 11); return ; }\n\tif (n < 0) { write(1, \"-\", 1); n = -n; }\n\tif (n >= 10) ft_putnbr(n / 10);\n\tc = (n % 10) + '0';\n\twrite(1, &c, 1);\n}\n\nt_dlist\t*ft_dlst_new(void *content)\n{\n\tt_dlist\t*node = (t_dlist *)malloc(sizeof(t_dlist));\n\tif (!node) return (NULL);\n\tnode->content = content;\n\tnode->prev = NULL;\n\tnode->next = NULL;\n\treturn (node);\n}\n\nvoid\tft_dlst_add_front(t_dlist **head, t_dlist *new)\n{\n\t// 1. new->next = ancienne tete\n\t// 2. new->prev = NULL\n\t// 3. Ancien head->prev = new (si liste non vide)\n\t// 4. *head = new\n}\n\nvoid\tft_dlst_add_back(t_dlist **head, t_dlist *new)\n{\n\t// 1. Si liste vide : new devient head\n\t// 2. Sinon parcourir jusqu'au dernier noeud\n\t// 3. last->next = new\n\t// 4. new->prev = last\n}\n\nint\tmain(void)\n{\n\tt_dlist\t*head = NULL;\n\tt_dlist\t*cur;\n\tint\t\tv[] = {1, 2, 3, 4};\n\n\tft_dlst_add_back(&head, ft_dlst_new(&v[0]));\n\tft_dlst_add_back(&head, ft_dlst_new(&v[1]));\n\tft_dlst_add_front(&head, ft_dlst_new(&v[2]));\n\tft_dlst_add_back(&head, ft_dlst_new(&v[3]));\n\tcur = head;\n\twhile (cur)\n\t{\n\t\tft_putnbr(*(int *)cur->content);\n\t\twrite(1, \"\\n\", 1);\n\t\tcur = cur->next;\n\t}\n\treturn (0);\n}",
+  "solution": "#include <unistd.h>\n#include <stdlib.h>\n\ntypedef struct s_dlist\n{\n\tvoid\t\t\t*content;\n\tstruct s_dlist\t*prev;\n\tstruct s_dlist\t*next;\n}\t\t\t\t\tt_dlist;\n\nvoid\tft_putnbr(int n)\n{\n\tchar\tc;\n\n\tif (n == -2147483648)\n\t{ write(1, \"-2147483648\", 11); return ; }\n\tif (n < 0) { write(1, \"-\", 1); n = -n; }\n\tif (n >= 10) ft_putnbr(n / 10);\n\tc = (n % 10) + '0';\n\twrite(1, &c, 1);\n}\n\nt_dlist\t*ft_dlst_new(void *content)\n{\n\tt_dlist\t*node = (t_dlist *)malloc(sizeof(t_dlist));\n\tif (!node) return (NULL);\n\tnode->content = content;\n\tnode->prev = NULL;\n\tnode->next = NULL;\n\treturn (node);\n}\n\nvoid\tft_dlst_add_front(t_dlist **head, t_dlist *new)\n{\n\tif (!new)\n\t\treturn ;\n\tnew->next = *head;\n\tnew->prev = NULL;\n\tif (*head)\n\t\t(*head)->prev = new;\n\t*head = new;\n}\n\nvoid\tft_dlst_add_back(t_dlist **head, t_dlist *new)\n{\n\tt_dlist\t*last;\n\n\tif (!new)\n\t\treturn ;\n\tif (!*head)\n\t{\n\t\tnew->prev = NULL;\n\t\tnew->next = NULL;\n\t\t*head = new;\n\t\treturn ;\n\t}\n\tlast = *head;\n\twhile (last->next)\n\t\tlast = last->next;\n\tlast->next = new;\n\tnew->prev = last;\n\tnew->next = NULL;\n}\n\nint\tmain(void)\n{\n\tt_dlist\t*head = NULL;\n\tt_dlist\t*cur;\n\tint\t\tv[] = {1, 2, 3, 4};\n\n\tft_dlst_add_back(&head, ft_dlst_new(&v[0]));\n\tft_dlst_add_back(&head, ft_dlst_new(&v[1]));\n\tft_dlst_add_front(&head, ft_dlst_new(&v[2]));\n\tft_dlst_add_back(&head, ft_dlst_new(&v[3]));\n\tcur = head;\n\twhile (cur)\n\t{\n\t\tft_putnbr(*(int *)cur->content);\n\t\twrite(1, \"\\n\", 1);\n\t\tcur = cur->next;\n\t}\n\treturn (0);\n}",
+  "hints": [
+    "Pour add_front : new->next = *head, puis (*head)->prev = new si *head existe, puis *head = new.",
+    "Pour add_back : parcours jusqu'au dernier noeud (last->next == NULL), puis lie new apres last.",
+    "N'oublie pas le cas liste vide : si *head est NULL, le nouveau noeud devient directement la tete."
+  ],
+  "testCases": [
+    {
+      "id": 1,
+      "description": "Add back 1, 2, add front 3, add back 4 -> 3 1 2 4",
+      "stdin": "",
+      "expectedStdout": "3\n1\n2\n4\n",
+      "expectedExitCode": 0,
+      "visible": true
+    },
+    {
+      "id": 2,
+      "description": "3 add_front successifs : 3 2 1",
+      "stdin": "",
+      "expectedStdout": "3\n2\n1\n",
+      "expectedExitCode": 0,
+      "visible": false
+    },
+    {
+      "id": 3,
+      "description": "Parcours en arriere pour verifier les liens prev",
+      "stdin": "",
+      "expectedStdout": "4\n2\n1\n3\n",
+      "expectedExitCode": 0,
+      "visible": false
+    }
+  ],
+  "constraints": {
+    "allowedFunctions": ["write", "malloc", "free"],
+    "forbiddenFunctions": ["printf", "calloc", "realloc"],
+    "maxExecutionTime": 5000,
+    "maxMemory": 128
+  },
+  "relatedExercises": ["c-day52-ex00-ft-dlst-new", "c-day52-ex02-ft-dlst-remove"],
+  "resources": [
+    {
+      "title": "Insertion dans une liste doublement chainee",
+      "url": "https://www.geeksforgeeks.org/doubly-linked-list/",
+      "type": "article"
+    },
+    {
+      "title": "Double pointeurs en C",
+      "url": "https://fr.wikipedia.org/wiki/Pointeur_(programmation)",
+      "type": "documentation"
+    }
+  ]
+}

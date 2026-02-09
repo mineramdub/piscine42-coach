@@ -1,0 +1,257 @@
+{
+  "id": "c-day60-ex02-ft-phase4-review",
+  "category": "c",
+  "day": 60,
+  "order": 2,
+  "title": "Revision : combiner tri, processus et pipes",
+  "description": "Ecris un programme qui prend des entiers en arguments, les trie dans un processus fils, et envoie le resultat trie au parent via un pipe. Le fils convertit les arguments en entiers, les trie par ordre croissant, et ecrit chaque nombre (suivi de '\\n') dans le pipe. Le parent lit depuis le pipe et affiche le resultat. Cela combine les 3 grands themes de la Phase 4 : manipulation de donnees, processus et communication inter-processus.",
+  "difficulty": 5,
+  "points": 50,
+  "estimatedTime": 45,
+  "learningObjectives": [
+    "Combiner tous les concepts de la Phase 4 dans un programme complet",
+    "Maitriser la communication parent/fils via pipes",
+    "Savoir effectuer un traitement de donnees dans un processus fils",
+    "Gerer la serialisation/deserialisation de donnees via un pipe",
+    "Demontrer une comprehension globale de la programmation systeme"
+  ],
+  "learningContent": {
+    "lesson": {
+      "introduction": "Cet exercice final de la Phase 4 combine tri, processus et pipes. Le programme delegue le travail de tri a un processus fils qui communique le resultat au parent via un pipe. C'est un pattern courant en programmation systeme : un processus principal (parent) delegue un calcul a un sous-processus (fils) et recupere le resultat. C'est la synthese de tout ce que vous avez appris cette semaine.",
+      "steps": [
+        {
+          "id": 1,
+          "title": "L'architecture du programme",
+          "content": "Le programme fonctionne ainsi :\n1. Le **parent** cree un pipe et fork un fils\n2. Le **fils** recoit les arguments (via argv, herite du fork)\n3. Le fils les convertit, les trie, et ecrit le resultat dans le pipe\n4. Le **parent** lit depuis le pipe et affiche le resultat\n\nPourquoi cette architecture ? Elle illustre la delegation de travail a un sous-processus et la communication du resultat, pattern tres courant en programmation systeme.",
+          "codeExample": "// Architecture :\n//\n// Parent :\n//   1. pipe(pfd)\n//   2. fork()\n//   3. close(pfd[1])\n//   4. read(pfd[0]) -> affiche\n//   5. wait()\n//\n// Fils :\n//   1. close(pfd[0])\n//   2. Parse argv -> tableau d'entiers\n//   3. Trie le tableau\n//   4. Ecrit les entiers dans pfd[1]\n//   5. close(pfd[1])\n//   6. exit(0)\n//\n// Flux : argv -> [Fils: tri] -> pipe -> [Parent: affichage]",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Pourquoi utiliser un processus fils pour le tri au lieu de trier dans le parent ?",
+            "starterCode": "// Avantage du fils pour le tri :\n// 1. ???\n// 2. ???\n// En pratique, c'est un exercice pedagogique pour ???",
+            "solution": "// 1. Isolation : si le tri plante (segfault), le parent continue\n// 2. Parallelisme possible : le parent pourrait faire autre chose\n// En pratique, c'est un exercice pedagogique pour combiner\n// fork, pipe et traitement de donnees dans un meme programme"
+          }
+        },
+        {
+          "id": 2,
+          "title": "Le fils : parser, trier, ecrire",
+          "content": "Le fils recoit argv via le fork (copie de la memoire). Il doit :\n1. Parser les arguments avec ft_atoi\n2. Stocker dans un tableau (malloc)\n3. Trier avec un algorithme simple\n4. Ecrire chaque nombre dans le pipe au format texte\n\nPour ecrire un nombre dans le pipe, on utilise ft_putnbr_fd qui ecrit dans un fd specifique.",
+          "codeExample": "void\tft_putnbr_fd(int n, int fd)\n{\n\tchar c;\n\n\tif (n == -2147483648)\n\t{\n\t\twrite(fd, \"-2147483648\", 11);\n\t\treturn ;\n\t}\n\tif (n < 0)\n\t{\n\t\twrite(fd, \"-\", 1);\n\t\tn = -n;\n\t}\n\tif (n >= 10)\n\t\tft_putnbr_fd(n / 10, fd);\n\tc = (n % 10) + '0';\n\twrite(fd, &c, 1);\n}\n\n// Dans le fils :\nint i = 0;\nwhile (i < size)\n{\n\tft_putnbr_fd(tab[i], pfd[1]); // Ecrit dans le pipe\n\twrite(pfd[1], \"\\n\", 1);\n\ti++;\n}",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Pourquoi ecrire les nombres en texte dans le pipe au lieu d'ecrire les int directement ?",
+            "starterCode": "// Ecrire en texte : write(fd, \"42\\n\", 3)\n// Ecrire en binaire : write(fd, &n, sizeof(int))\n// Avantage du texte : ???",
+            "solution": "// Ecrire en texte est plus simple a lire/debugger\n// Le parent peut afficher directement sans conversion\n// Le binaire depend de l'endianness et de sizeof(int)\n// Le texte est portable et lisible par l'humain"
+          }
+        },
+        {
+          "id": 3,
+          "title": "Le parent : lire et afficher",
+          "content": "Le parent lit depuis le pipe et affiche directement sur stdout. Comme les donnees sont deja au format texte, il suffit de lire et retranscrire.\n\nLe parent utilise une boucle read() jusqu'a EOF (read retourne 0 quand le fils ferme le pipe).",
+          "codeExample": "// Dans le parent :\nclose(pfd[1]); // Fermer l'ecriture (le fils ecrit)\n\nchar buf[4096];\nint n;\nwhile ((n = read(pfd[0], buf, 4096)) > 0)\n\twrite(1, buf, n); // Affiche sur stdout\n\nclose(pfd[0]);\nwait(NULL);",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Quand est-ce que read(pfd[0], ...) retourne 0 dans le parent ?",
+            "starterCode": "// read retourne 0 quand : ???\n// Pour que ca arrive : le fils doit ???",
+            "solution": "// read retourne 0 quand toutes les copies de pfd[1] sont fermees\n// Pour que ca arrive : le fils doit close(pfd[1]) apres avoir ecrit\n// ET le parent doit avoir close(pfd[1]) aussi"
+          }
+        },
+        {
+          "id": 4,
+          "title": "Le programme complet assemble",
+          "content": "Le programme complet combine tout :\n1. Verification des arguments\n2. Creation du pipe\n3. Fork\n4. Fils : parse + tri + ecriture dans le pipe\n5. Parent : lecture du pipe + affichage\n6. Nettoyage (close, wait, free)\n\nC'est la synthese de toute la Phase 4 : manipulation de donnees, processus, pipes et communication inter-processus.",
+          "codeExample": "int main(int argc, char **argv)\n{\n\tint pfd[2];\n\n\tif (argc < 2)\n\t\treturn (0);\n\tpipe(pfd);\n\tif (fork() == 0)\n\t{\n\t\tclose(pfd[0]);\n\t\t// Parse argv, trie, ecrit dans pfd[1]\n\t\tdo_sort_and_write(argc, argv, pfd[1]);\n\t\tclose(pfd[1]);\n\t\texit(0);\n\t}\n\tclose(pfd[1]);\n\t// Lit depuis pfd[0] et affiche\n\tchar buf[4096];\n\tint n;\n\twhile ((n = read(pfd[0], buf, 4096)) > 0)\n\t\twrite(1, buf, n);\n\tclose(pfd[0]);\n\twait(NULL);\n\treturn (0);\n}",
+          "language": "c"
+        }
+      ]
+    },
+    "theory": [
+      {
+        "title": "Pattern delegateur/travailleur",
+        "content": "Le pattern ou un processus parent delegue du travail a un fils est tres courant en programmation systeme. Le parent coordonne et affiche, le fils calcule.",
+        "codeExamples": [
+          {
+            "title": "Le pattern delegateur",
+            "code": "// Pattern general :\n// 1. Parent cree un pipe\n// 2. Parent fork un fils travailleur\n// 3. Fils fait le calcul et ecrit le resultat\n// 4. Parent lit le resultat et le traite\n\n// Exemples reels de ce pattern :\n// - Le shell delegue chaque commande a un fils\n// - Un serveur web fork un fils par connexion\n// - make fork un fils pour chaque compilation\n// - xargs fork un processus pour chaque argument\n\n// Avantages :\n// - Isolation : un crash du fils n'affecte pas le parent\n// - Parallelisme : le parent peut faire autre chose\n// - Simplicite : chaque processus a un role clair",
+            "explanation": "Le pattern fork + pipe est le fondement de l'architecture Unix"
+          }
+        ],
+        "keyPoints": [
+          "Le parent coordonne, le fils travaille",
+          "Le pipe est le canal de communication du resultat",
+          "En cas d'erreur du fils, le parent peut reagir (code de sortie)",
+          "Ce pattern est utilise partout en programmation systeme Unix"
+        ],
+        "commonMistakes": [
+          "Oublier de fermer le pipe dans le parent (deadlock)",
+          "Ne pas attendre le fils (zombie)",
+          "Envoyer les donnees dans le mauvais sens"
+        ]
+      },
+      {
+        "title": "Serialisation de donnees dans un pipe",
+        "content": "Quand on envoie des donnees complexes (tableau d'entiers) a travers un pipe, il faut les serialiser (convertir en texte ou en format binaire defini).",
+        "codeExamples": [
+          {
+            "title": "Serialisation texte vs binaire",
+            "code": "// TEXTE (recommande pour cet exercice) :\n// Ecrit chaque nombre suivi de \\n\nft_putnbr_fd(42, pfd[1]);\nwrite(pfd[1], \"\\n\", 1);\nft_putnbr_fd(-5, pfd[1]);\nwrite(pfd[1], \"\\n\", 1);\n// -> \"42\\n-5\\n\" dans le pipe\n\n// BINAIRE (plus efficace mais moins lisible) :\nint n = 42;\nwrite(pfd[1], &n, sizeof(int)); // 4 octets\nn = -5;\nwrite(pfd[1], &n, sizeof(int)); // 4 octets\n\n// Le texte est plus facile a debugger et a afficher\n// Le binaire est plus compact et rapide",
+            "explanation": "Le format texte est plus simple et portable pour communiquer entre processus"
+          }
+        ],
+        "keyPoints": [
+          "Le texte est simple : nombre + separateur (newline)",
+          "Le binaire est compact mais depend de la plateforme",
+          "Le format doit etre convenu entre l'ecrivain et le lecteur",
+          "Pour cet exercice, le texte est parfait car on affiche directement"
+        ],
+        "commonMistakes": [
+          "Oublier le separateur entre les nombres (lecture impossible)",
+          "Melanger texte et binaire dans le meme pipe",
+          "Ne pas gerer le cas ou read ne lit qu'une partie d'un nombre"
+        ]
+      },
+      {
+        "title": "Gestion memoire dans le fils",
+        "content": "Le fils herite de la memoire du parent. S'il alloue de la memoire avec malloc, il doit la liberer avant exit. Sinon, la memoire est liberee automatiquement a la fin du processus.",
+        "codeExamples": [
+          {
+            "title": "Memoire dans le fils",
+            "code": "if (fork() == 0)\n{\n\t// Le fils herite de toutes les variables du parent\n\t// Mais sa memoire est independante (copie)\n\n\tint *tab = malloc(sizeof(int) * size);\n\t// ... remplir et trier ...\n\n\t// Option 1 : free avant exit (propre)\n\tfree(tab);\n\texit(0);\n\n\t// Option 2 : exit sans free\n\t// Le systeme libere toute la memoire du processus\n\t// Pas de fuite car le processus disparait\n\t// Mais c'est moins propre et valgrind le signale\n}",
+            "explanation": "Le systeme libere la memoire a la fin du processus, mais free est plus propre"
+          }
+        ],
+        "keyPoints": [
+          "Le fils herite d'une copie de la memoire du parent",
+          "malloc dans le fils n'affecte pas le parent",
+          "exit() libere toute la memoire du processus (pas de fuite reelle)",
+          "Mais free avant exit est la bonne pratique (valgrind-clean)"
+        ],
+        "commonMistakes": [
+          "Croire que free dans le fils affecte le parent (non, memoire independante)",
+          "Oublier que le fils a une copie des pointeurs du parent",
+          "Faire free dans le parent sur la memoire allouee par le fils (crash)"
+        ]
+      },
+      {
+        "title": "Bilan de la Phase 4",
+        "content": "La Phase 4 couvre les fondamentaux de la programmation systeme Unix. Ces concepts sont la base des projets pipex et minishell a 42.",
+        "codeExamples": [
+          {
+            "title": "Resume des concepts Phase 4",
+            "code": "// PROCESSUS (Jour 56) :\n// fork()     - Creer un processus fils\n// execve()   - Remplacer le processus par un programme\n// wait()     - Attendre un fils\n// getpid()   - Obtenir son PID\n\n// PIPES (Jour 57) :\n// pipe()     - Creer un canal de communication\n// dup2()     - Rediriger un descripteur\n// close()    - Fermer un descripteur\n\n// SIGNAUX (Jour 58) :\n// signal()   - Installer un handler (simple)\n// sigaction()- Installer un handler (robuste)\n// kill()     - Envoyer un signal\n\n// FICHIERS AVANCES (Jour 59) :\n// stat()     - Lire les metadonnees d'un fichier\n// opendir()  - Ouvrir un repertoire\n// readdir()  - Lire les entrees\n// mkdir()    - Creer un repertoire",
+            "explanation": "Tous ces appels systeme sont essentiels pour pipex et minishell"
+          }
+        ],
+        "keyPoints": [
+          "fork + execve + wait = lancer un programme",
+          "pipe + dup2 = connecter des processus",
+          "signal/sigaction = gerer les interruptions",
+          "stat + opendir/readdir = explorer le systeme de fichiers"
+        ],
+        "commonMistakes": [
+          "Oublier de fermer les descripteurs (fuites et deadlocks)",
+          "Ne pas attendre les processus fils (zombies)",
+          "Utiliser printf dans un handler de signal ou ignorer les erreurs d'appels systeme"
+        ]
+      }
+    ],
+    "prepExercises": [
+      {
+        "id": 1,
+        "title": "ft_putnbr_fd",
+        "instruction": "Ecris ft_putnbr_fd qui ecrit un entier dans un descripteur de fichier specifique.",
+        "starterCode": "#include <unistd.h>\n\nvoid\tft_putnbr_fd(int n, int fd)\n{\n\t// Ecrit n dans fd\n\t// TON CODE ICI\n}",
+        "solution": "#include <unistd.h>\n\nvoid\tft_putnbr_fd(int n, int fd)\n{\n\tchar c;\n\n\tif (n == -2147483648)\n\t{\n\t\twrite(fd, \"-2147483648\", 11);\n\t\treturn ;\n\t}\n\tif (n < 0)\n\t{\n\t\twrite(fd, \"-\", 1);\n\t\tn = -n;\n\t}\n\tif (n >= 10)\n\t\tft_putnbr_fd(n / 10, fd);\n\tc = (n % 10) + '0';\n\twrite(fd, &c, 1);\n}",
+        "hint": "Comme ft_putnbr mais avec write(fd, ...) au lieu de write(1, ...).",
+        "difficulty": 1
+      },
+      {
+        "id": 2,
+        "title": "Envoyer un nombre via pipe",
+        "instruction": "Le fils ecrit un nombre dans le pipe, le parent le lit et l'affiche.",
+        "starterCode": "#include <unistd.h>\n#include <sys/wait.h>\n#include <stdlib.h>\n\nvoid ft_putnbr_fd(int n, int fd) { char c; if(n==-2147483648){write(fd,\"-2147483648\",11);return;} if(n<0){write(fd,\"-\",1);n=-n;} if(n>=10) ft_putnbr_fd(n/10,fd); c=(n%10)+'0'; write(fd,&c,1); }\n\nint\tmain(void)\n{\n\tint pfd[2];\n\t// Fils ecrit 42 dans le pipe, parent lit et affiche\n\t// TON CODE ICI\n\treturn (0);\n}",
+        "solution": "#include <unistd.h>\n#include <sys/wait.h>\n#include <stdlib.h>\n\nvoid ft_putnbr_fd(int n, int fd) { char c; if(n==-2147483648){write(fd,\"-2147483648\",11);return;} if(n<0){write(fd,\"-\",1);n=-n;} if(n>=10) ft_putnbr_fd(n/10,fd); c=(n%10)+'0'; write(fd,&c,1); }\n\nint\tmain(void)\n{\n\tint pfd[2];\n\tchar buf[100];\n\tint n;\n\n\tpipe(pfd);\n\tif (fork() == 0)\n\t{\n\t\tclose(pfd[0]);\n\t\tft_putnbr_fd(42, pfd[1]);\n\t\twrite(pfd[1], \"\\n\", 1);\n\t\tclose(pfd[1]);\n\t\texit(0);\n\t}\n\tclose(pfd[1]);\n\tn = read(pfd[0], buf, 99);\n\tclose(pfd[0]);\n\twrite(1, buf, n);\n\twait(NULL);\n\treturn (0);\n}",
+        "hint": "Le fils ecrit avec ft_putnbr_fd(42, pfd[1]). Le parent lit avec read(pfd[0], ...).",
+        "difficulty": 2
+      },
+      {
+        "id": 3,
+        "title": "Trier et ecrire dans un pipe",
+        "instruction": "Le fils trie un tableau fixe {42, -5, 100, 3} et ecrit le resultat dans le pipe.",
+        "starterCode": "#include <unistd.h>\n#include <sys/wait.h>\n#include <stdlib.h>\n\nvoid ft_putnbr_fd(int n, int fd) { char c; if(n==-2147483648){write(fd,\"-2147483648\",11);return;} if(n<0){write(fd,\"-\",1);n=-n;} if(n>=10) ft_putnbr_fd(n/10,fd); c=(n%10)+'0'; write(fd,&c,1); }\nvoid ft_sort(int *t, int n) { int i=0; while(i<n-1){int m=i,j=i+1; while(j<n){if(t[j]<t[m])m=j;j++;} int tmp=t[i];t[i]=t[m];t[m]=tmp;i++;} }\n\nint\tmain(void)\n{\n\tint pfd[2];\n\t// Fils trie et ecrit, parent lit et affiche\n\t// TON CODE ICI\n\treturn (0);\n}",
+        "solution": "#include <unistd.h>\n#include <sys/wait.h>\n#include <stdlib.h>\n\nvoid ft_putnbr_fd(int n, int fd) { char c; if(n==-2147483648){write(fd,\"-2147483648\",11);return;} if(n<0){write(fd,\"-\",1);n=-n;} if(n>=10) ft_putnbr_fd(n/10,fd); c=(n%10)+'0'; write(fd,&c,1); }\nvoid ft_sort(int *t, int n) { int i=0; while(i<n-1){int m=i,j=i+1; while(j<n){if(t[j]<t[m])m=j;j++;} int tmp=t[i];t[i]=t[m];t[m]=tmp;i++;} }\n\nint\tmain(void)\n{\n\tint pfd[2];\n\tchar buf[4096];\n\tint n;\n\n\tpipe(pfd);\n\tif (fork() == 0)\n\t{\n\t\tclose(pfd[0]);\n\t\tint tab[] = {42, -5, 100, 3};\n\t\tft_sort(tab, 4);\n\t\tint i = 0;\n\t\twhile (i < 4)\n\t\t{\n\t\t\tft_putnbr_fd(tab[i], pfd[1]);\n\t\t\twrite(pfd[1], \"\\n\", 1);\n\t\t\ti++;\n\t\t}\n\t\tclose(pfd[1]);\n\t\texit(0);\n\t}\n\tclose(pfd[1]);\n\twhile ((n = read(pfd[0], buf, 4096)) > 0)\n\t\twrite(1, buf, n);\n\tclose(pfd[0]);\n\twait(NULL);\n\treturn (0);\n}",
+        "hint": "Le fils trie puis ecrit chaque nombre suivi de \\n dans pfd[1]. Le parent lit et affiche.",
+        "difficulty": 3
+      },
+      {
+        "id": 4,
+        "title": "Parser argv dans le fils",
+        "instruction": "Le fils parse argv (herite du parent), trie et ecrit dans le pipe.",
+        "starterCode": "#include <unistd.h>\n#include <sys/wait.h>\n#include <stdlib.h>\n\nint ft_atoi(char *s) { int r=0,g=1; while(*s==' ')s++; if(*s=='-'){g=-1;s++;}else if(*s=='+')s++; while(*s>='0'&&*s<='9')r=r*10+(*s++-'0'); return r*g; }\nvoid ft_putnbr_fd(int n, int fd) { char c; if(n==-2147483648){write(fd,\"-2147483648\",11);return;} if(n<0){write(fd,\"-\",1);n=-n;} if(n>=10) ft_putnbr_fd(n/10,fd); c=(n%10)+'0'; write(fd,&c,1); }\nvoid ft_sort(int *t, int n) { int i=0; while(i<n-1){int m=i,j=i+1; while(j<n){if(t[j]<t[m])m=j;j++;} int tmp=t[i];t[i]=t[m];t[m]=tmp;i++;} }\n\nint\tmain(int argc, char **argv)\n{\n\t// Pipe + fork, fils parse argv, trie, ecrit\n\t// TON CODE ICI\n\treturn (0);\n}",
+        "solution": "#include <unistd.h>\n#include <sys/wait.h>\n#include <stdlib.h>\n\nint ft_atoi(char *s) { int r=0,g=1; while(*s==' ')s++; if(*s=='-'){g=-1;s++;}else if(*s=='+')s++; while(*s>='0'&&*s<='9')r=r*10+(*s++-'0'); return r*g; }\nvoid ft_putnbr_fd(int n, int fd) { char c; if(n==-2147483648){write(fd,\"-2147483648\",11);return;} if(n<0){write(fd,\"-\",1);n=-n;} if(n>=10) ft_putnbr_fd(n/10,fd); c=(n%10)+'0'; write(fd,&c,1); }\nvoid ft_sort(int *t, int n) { int i=0; while(i<n-1){int m=i,j=i+1; while(j<n){if(t[j]<t[m])m=j;j++;} int tmp=t[i];t[i]=t[m];t[m]=tmp;i++;} }\n\nint\tmain(int argc, char **argv)\n{\n\tint pfd[2];\n\tchar buf[4096];\n\tint n;\n\tint size = argc - 1;\n\n\tif (size <= 0) return (0);\n\tpipe(pfd);\n\tif (fork() == 0)\n\t{\n\t\tclose(pfd[0]);\n\t\tint *tab = malloc(sizeof(int) * size);\n\t\tint i = 0;\n\t\twhile (i < size)\n\t\t{\n\t\t\ttab[i] = ft_atoi(argv[i + 1]);\n\t\t\ti++;\n\t\t}\n\t\tft_sort(tab, size);\n\t\ti = 0;\n\t\twhile (i < size)\n\t\t{\n\t\t\tft_putnbr_fd(tab[i], pfd[1]);\n\t\t\twrite(pfd[1], \"\\n\", 1);\n\t\t\ti++;\n\t\t}\n\t\tfree(tab);\n\t\tclose(pfd[1]);\n\t\texit(0);\n\t}\n\tclose(pfd[1]);\n\twhile ((n = read(pfd[0], buf, 4096)) > 0)\n\t\twrite(1, buf, n);\n\tclose(pfd[0]);\n\twait(NULL);\n\treturn (0);\n}",
+        "hint": "Le fils herite de argc/argv. Il parse, trie, ecrit dans pfd[1]. Le parent lit pfd[0].",
+        "difficulty": 3
+      },
+      {
+        "id": 5,
+        "title": "Programme complet avec gestion d'erreurs",
+        "instruction": "Ajoute la gestion complete des erreurs : pipe, fork, malloc.",
+        "starterCode": "#include <unistd.h>\n#include <sys/wait.h>\n#include <stdlib.h>\n\n// Fonctions fournies...\n\nint\tmain(int argc, char **argv)\n{\n\t// Programme complet avec gestion d'erreurs\n\t// TON CODE ICI\n\treturn (0);\n}",
+        "solution": "#include <unistd.h>\n#include <sys/wait.h>\n#include <stdlib.h>\n\nint ft_atoi(char *s) { int r=0,g=1; while(*s==' ')s++; if(*s=='-'){g=-1;s++;}else if(*s=='+')s++; while(*s>='0'&&*s<='9')r=r*10+(*s++-'0'); return r*g; }\nvoid ft_putnbr_fd(int n, int fd) { char c; if(n==-2147483648){write(fd,\"-2147483648\",11);return;} if(n<0){write(fd,\"-\",1);n=-n;} if(n>=10) ft_putnbr_fd(n/10,fd); c=(n%10)+'0'; write(fd,&c,1); }\nvoid ft_sort(int *t, int n) { int i=0; while(i<n-1){int m=i,j=i+1; while(j<n){if(t[j]<t[m])m=j;j++;} int tmp=t[i];t[i]=t[m];t[m]=tmp;i++;} }\n\nint\tmain(int argc, char **argv)\n{\n\tint pfd[2];\n\tchar buf[4096];\n\tint n, size = argc - 1;\n\n\tif (size <= 0) return (0);\n\tif (pipe(pfd) == -1) return (1);\n\tpid_t pid = fork();\n\tif (pid == -1) { close(pfd[0]); close(pfd[1]); return (1); }\n\tif (pid == 0)\n\t{\n\t\tclose(pfd[0]);\n\t\tint *tab = malloc(sizeof(int) * size);\n\t\tif (!tab) { close(pfd[1]); exit(1); }\n\t\tint i = 0;\n\t\twhile (i < size) { tab[i] = ft_atoi(argv[i + 1]); i++; }\n\t\tft_sort(tab, size);\n\t\ti = 0;\n\t\twhile (i < size) { ft_putnbr_fd(tab[i], pfd[1]); write(pfd[1], \"\\n\", 1); i++; }\n\t\tfree(tab);\n\t\tclose(pfd[1]);\n\t\texit(0);\n\t}\n\tclose(pfd[1]);\n\twhile ((n = read(pfd[0], buf, 4096)) > 0)\n\t\twrite(1, buf, n);\n\tclose(pfd[0]);\n\twait(NULL);\n\treturn (0);\n}",
+        "hint": "Verifie pipe(), fork(), malloc(). Ferme tout et free en cas d'erreur.",
+        "difficulty": 4
+      }
+    ]
+  },
+  "starterCode": "#include <unistd.h>\n#include <sys/wait.h>\n#include <stdlib.h>\n\nint\tft_atoi(char *str)\n{\n\t// Convertis str en entier\n}\n\nvoid\tft_putnbr_fd(int n, int fd)\n{\n\t// Ecris n dans fd\n}\n\nvoid\tft_sort(int *tab, int size)\n{\n\t// Tri par selection\n}\n\nint\tmain(int argc, char **argv)\n{\n\tint\tpfd[2];\n\n\t// 1. Verifier argc\n\t// 2. pipe(pfd)\n\t// 3. fork()\n\t// 4. Fils : close pfd[0], parse argv, trie, ecrit dans pfd[1]\n\t// 5. Parent : close pfd[1], lit pfd[0], affiche, wait\n\t(void)argc;\n\t(void)argv;\n\treturn (0);\n}",
+  "solution": "#include <unistd.h>\n#include <sys/wait.h>\n#include <stdlib.h>\n\nint\tft_atoi(char *str)\n{\n\tint\tresult;\n\tint\tsign;\n\n\tresult = 0;\n\tsign = 1;\n\twhile (*str == ' ' || (*str >= 9 && *str <= 13))\n\t\tstr++;\n\tif (*str == '-')\n\t\tsign = -1;\n\tif (*str == '-' || *str == '+')\n\t\tstr++;\n\twhile (*str >= '0' && *str <= '9')\n\t{\n\t\tresult = result * 10 + (*str - '0');\n\t\tstr++;\n\t}\n\treturn (result * sign);\n}\n\nvoid\tft_putnbr_fd(int n, int fd)\n{\n\tchar\tc;\n\n\tif (n == -2147483648)\n\t{\n\t\twrite(fd, \"-2147483648\", 11);\n\t\treturn ;\n\t}\n\tif (n < 0)\n\t{\n\t\twrite(fd, \"-\", 1);\n\t\tn = -n;\n\t}\n\tif (n >= 10)\n\t\tft_putnbr_fd(n / 10, fd);\n\tc = (n % 10) + '0';\n\twrite(fd, &c, 1);\n}\n\nvoid\tft_sort(int *tab, int size)\n{\n\tint\ti;\n\tint\tj;\n\tint\tmin;\n\tint\ttmp;\n\n\ti = 0;\n\twhile (i < size - 1)\n\t{\n\t\tmin = i;\n\t\tj = i + 1;\n\t\twhile (j < size)\n\t\t{\n\t\t\tif (tab[j] < tab[min])\n\t\t\t\tmin = j;\n\t\t\tj++;\n\t\t}\n\t\ttmp = tab[i];\n\t\ttab[i] = tab[min];\n\t\ttab[min] = tmp;\n\t\ti++;\n\t}\n}\n\nvoid\tdo_child(int argc, char **argv, int write_fd)\n{\n\tint\t*tab;\n\tint\tsize;\n\tint\ti;\n\n\tsize = argc - 1;\n\ttab = malloc(sizeof(int) * size);\n\tif (!tab)\n\t\texit(1);\n\ti = 0;\n\twhile (i < size)\n\t{\n\t\ttab[i] = ft_atoi(argv[i + 1]);\n\t\ti++;\n\t}\n\tft_sort(tab, size);\n\ti = 0;\n\twhile (i < size)\n\t{\n\t\tft_putnbr_fd(tab[i], write_fd);\n\t\twrite(write_fd, \"\\n\", 1);\n\t\ti++;\n\t}\n\tfree(tab);\n}\n\nint\tmain(int argc, char **argv)\n{\n\tint\t\tpfd[2];\n\tchar\tbuf[4096];\n\tint\t\tn;\n\n\tif (argc < 2)\n\t\treturn (0);\n\tif (pipe(pfd) == -1)\n\t\treturn (1);\n\tif (fork() == 0)\n\t{\n\t\tclose(pfd[0]);\n\t\tdo_child(argc, argv, pfd[1]);\n\t\tclose(pfd[1]);\n\t\texit(0);\n\t}\n\tclose(pfd[1]);\n\twhile ((n = read(pfd[0], buf, 4096)) > 0)\n\t\twrite(1, buf, n);\n\tclose(pfd[0]);\n\twait(NULL);\n\treturn (0);\n}",
+  "hints": [
+    "Le fils herite de argc et argv apres le fork. Il peut les utiliser directement pour parser les nombres.",
+    "Le fils ecrit les nombres tries dans pfd[1] avec ft_putnbr_fd, chacun suivi de '\\n'. Puis il ferme pfd[1].",
+    "Le parent ferme pfd[1], puis lit en boucle depuis pfd[0] et affiche sur stdout. N'oublie pas wait(NULL)."
+  ],
+  "testCases": [
+    {
+      "id": 1,
+      "description": "Tri de 4 entiers via processus fils",
+      "stdin": "",
+      "expectedStdout": "-5\n3\n42\n100\n",
+      "expectedExitCode": 0,
+      "visible": true
+    },
+    {
+      "id": 2,
+      "description": "Un seul argument",
+      "stdin": "",
+      "expectedStdout": "42\n",
+      "expectedExitCode": 0,
+      "visible": false
+    },
+    {
+      "id": 3,
+      "description": "Pas d'argument (rien affiche)",
+      "stdin": "",
+      "expectedStdout": "",
+      "expectedExitCode": 0,
+      "visible": false
+    }
+  ],
+  "constraints": {
+    "allowedFunctions": ["write", "read", "pipe", "fork", "close", "wait", "waitpid", "exit", "malloc", "free"],
+    "forbiddenFunctions": ["printf", "system", "qsort"],
+    "maxExecutionTime": 5000,
+    "maxMemory": 128
+  },
+  "relatedExercises": ["c-day60-ex00-ft-mini-sort", "c-day60-ex01-ft-pipex-exam"],
+  "resources": [
+    {
+      "title": "Man pipe(2) - Communication inter-processus",
+      "url": "https://man7.org/linux/man-pages/man2/pipe.2.html",
+      "type": "documentation"
+    },
+    {
+      "title": "Programmation systeme Unix en C - Resume",
+      "url": "https://www.geeksforgeeks.org/inter-process-communication-ipc/",
+      "type": "article"
+    }
+  ]
+}

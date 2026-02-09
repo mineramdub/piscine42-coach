@@ -1,0 +1,257 @@
+{
+  "id": "c-day48-ex01-ft-is-big-o-n2",
+  "category": "c",
+  "day": 48,
+  "order": 1,
+  "title": "Comprendre O(n²) en pratique",
+  "description": "Ecris un programme qui mesure le nombre d'operations du bubble sort pour differentes tailles de tableaux (10, 20, 50, 100) et affiche les resultats. Le but est de verifier experimentalement que le nombre d'operations suit une croissance quadratique. Prototype de la fonction de comptage : int ft_count_comparisons(int *tab, int size);",
+  "difficulty": 4,
+  "points": 40,
+  "estimatedTime": 40,
+  "learningObjectives": [
+    "Verifier experimentalement la complexite O(n²)",
+    "Comprendre la relation entre taille d'entree et nombre d'operations",
+    "Savoir generer des tableaux de test de differentes tailles",
+    "Interpreter des resultats experimentaux de complexite",
+    "Relier la theorie de Big O a la pratique"
+  ],
+  "learningContent": {
+    "lesson": {
+      "introduction": "La notation Big O est souvent enseignee de maniere theorique, mais le meilleur moyen de la comprendre est de l'observer experimentalement. Dans cet exercice, tu vas mesurer le nombre d'operations du bubble sort sur des tableaux de tailles croissantes et verifier que le nombre d'operations est bien proportionnel a n². Tu vas generer des tableaux inversement tries (pire cas) et observer comment les operations augmentent quand la taille double.",
+      "steps": [
+        {
+          "id": 1,
+          "title": "Generer un tableau inverse",
+          "content": "Pour observer le pire cas du bubble sort, on genere un tableau trie en ordre decroissant. Ainsi, chaque comparaison menera a un swap.\n\n**Tableau inverse de taille n :**\n- tab[0] = n, tab[1] = n-1, ..., tab[n-1] = 1\n\nOn peut generer ce tableau avec une simple boucle. C'est le scenario le plus couteux pour le bubble sort, ce qui nous permet de mesurer la borne superieure.",
+          "codeExample": "// Generer un tableau inverse de taille n\nvoid\tft_fill_reverse(int *tab, int size)\n{\n\tint\ti;\n\n\ti = 0;\n\twhile (i < size)\n\t{\n\t\ttab[i] = size - i;\n\t\ti++;\n\t}\n}\n\n// Exemple pour size = 5 :\n// tab = {5, 4, 3, 2, 1}\n\n// Pour size = 10 :\n// tab = {10, 9, 8, 7, 6, 5, 4, 3, 2, 1}",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Ecris la formule pour calculer tab[i] dans un tableau inverse de taille n.",
+            "starterCode": "// Pour un tableau inverse de taille n :\n// tab[0] = ???\n// tab[1] = ???\n// tab[i] = ???\n// tab[n-1] = ???",
+            "solution": "// tab[0] = n\n// tab[1] = n - 1\n// tab[i] = n - i\n// tab[n-1] = 1"
+          }
+        },
+        {
+          "id": 2,
+          "title": "Compter les comparaisons",
+          "content": "On modifie le bubble sort pour retourner le nombre de comparaisons effectuees. Pour le pire cas (tableau inverse), le nombre de comparaisons est toujours n*(n-1)/2, et le nombre de swaps est aussi n*(n-1)/2.\n\n**Pourquoi les comparaisons ?** Les comparaisons sont l'operation dominante dans un tri. Elles determinent la complexite theorique. Le nombre de swaps peut varier, mais les comparaisons sont fixes pour le bubble sort standard.",
+          "codeExample": "int\tft_count_comparisons(int *tab, int size)\n{\n\tint\tcomps;\n\tint\ti;\n\tint\tj;\n\tint\ttmp;\n\n\tcomps = 0;\n\ti = 0;\n\twhile (i < size - 1)\n\t{\n\t\tj = 0;\n\t\twhile (j < size - 1 - i)\n\t\t{\n\t\t\tcomps++;\n\t\t\tif (tab[j] > tab[j + 1])\n\t\t\t{\n\t\t\t\ttmp = tab[j];\n\t\t\t\ttab[j] = tab[j + 1];\n\t\t\t\ttab[j + 1] = tmp;\n\t\t\t}\n\t\t\tj++;\n\t\t}\n\t\ti++;\n\t}\n\treturn (comps);\n}",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Calcule n*(n-1)/2 pour n = 10, 20, 50 et 100.",
+            "starterCode": "// n = 10  : 10 * 9 / 2 = ???\n// n = 20  : 20 * 19 / 2 = ???\n// n = 50  : 50 * 49 / 2 = ???\n// n = 100 : 100 * 99 / 2 = ???",
+            "solution": "// n = 10  : 10 * 9 / 2  = 45\n// n = 20  : 20 * 19 / 2 = 190\n// n = 50  : 50 * 49 / 2 = 1225\n// n = 100 : 100 * 99 / 2 = 4950"
+          }
+        },
+        {
+          "id": 3,
+          "title": "Observer la croissance quadratique",
+          "content": "En observant les resultats, on peut verifier la croissance quadratique :\n\n- Quand n double (10 -> 20), les operations sont multipliees par ~4\n- Quand n est multiplie par 5 (10 -> 50), les operations sont multipliees par ~25\n- Quand n est multiplie par 10 (10 -> 100), les operations sont multipliees par ~100\n\nLe facteur est toujours le carre du ratio de croissance. C'est la signature de O(n²).\n\n**Ratio :** ops(2n) / ops(n) est toujours environ 4. Si on trouve autre chose (comme 2 ou 8), ce serait un signe de O(n) ou O(n³).",
+          "codeExample": "// Resultats attendus (comparaisons seulement) :\n// n=10  :    45   (ratio base)\n// n=20  :   190   (190/45  = 4.2  ~= 4)\n// n=50  :  1225   (1225/45 = 27.2 ~= 25)\n// n=100 :  4950   (4950/45 = 110  ~= 100)\n\n// Les ratios :\n// 20/10 = 2   -> 190/45 ~= 4   = 2^2\n// 50/10 = 5   -> 1225/45 ~= 27 ~= 5^2\n// 100/10 = 10 -> 4950/45 ~= 110 ~= 10^2\n\n// Conclusion : le nombre d'operations suit n^2",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Si un algorithme fait 100 operations pour n=10, combien fait-il pour n=30 s'il est O(n²) ?",
+            "starterCode": "// n=10 : 100 operations\n// n=30 : ??? operations\n// Ratio = 30/10 = 3\n// O(n^2) donc : 100 * ??? = ???",
+            "solution": "// n=10 : 100 operations\n// n=30 : 100 * 3^2 = 100 * 9 = 900 operations\n// Ratio = (30/10)^2 = 9"
+          }
+        },
+        {
+          "id": 4,
+          "title": "Afficher les resultats",
+          "content": "Pour rendre les resultats lisibles, on affiche la taille du tableau et le nombre d'operations correspondant. On peut aussi calculer et afficher le ratio par rapport a la taille precedente.\n\nL'affichage doit etre clair pour permettre de verifier visuellement la croissance quadratique. On utilise ft_putnbr et write pour respecter les contraintes de la Piscine.",
+          "codeExample": "// Format d'affichage attendu :\n// n=10 ops=45\n// n=20 ops=190\n// n=50 ops=1225\n// n=100 ops=4950\n\n// Code d'affichage :\nvoid\tprint_result(int n, int ops)\n{\n\twrite(1, \"n=\", 2);\n\tft_putnbr(n);\n\twrite(1, \" ops=\", 5);\n\tft_putnbr(ops);\n\twrite(1, \"\\n\", 1);\n}",
+          "language": "c"
+        }
+      ]
+    },
+    "theory": [
+      {
+        "title": "La notation Big O",
+        "content": "La notation Big O decrit la borne superieure de croissance d'une fonction. O(n²) signifie que le nombre d'operations croit au plus proportionnellement au carre de la taille de l'entree.",
+        "codeExamples": [
+          {
+            "title": "Definition intuitive de Big O",
+            "code": "// O(n^2) signifie :\n// Il existe des constantes c et n0 telles que\n// pour tout n >= n0 : f(n) <= c * n^2\n\n// En pratique :\n// f(n) = n*(n-1)/2 est O(n^2) car :\n// n*(n-1)/2 <= n^2/2 <= n^2 pour tout n >= 1\n// (c = 1, n0 = 1)\n\n// On ignore les constantes multiplicatives :\n// 3*n^2, n^2/2, n^2 + 100*n sont tous O(n^2)\n\n// On garde seulement le terme dominant :\n// n^2 + 1000*n + 5000 est O(n^2)\n// car pour n grand, n^2 domine tout",
+            "explanation": "Big O capture le taux de croissance, pas la valeur exacte"
+          }
+        ],
+        "keyPoints": [
+          "Big O donne la borne superieure de croissance",
+          "On ignore les constantes multiplicatives",
+          "On garde uniquement le terme dominant",
+          "O(n²) signifie que doubler n quadruple les operations"
+        ],
+        "commonMistakes": [
+          "Croire que O(n²) donne le nombre exact d'operations",
+          "Oublier que les constantes sont importantes en pratique",
+          "Confondre Big O (borne sup) avec Big Theta (borne exacte)"
+        ]
+      },
+      {
+        "title": "Verification experimentale",
+        "content": "Pour verifier experimentalement qu'un algorithme est O(n²), on mesure le nombre d'operations pour differentes tailles et on calcule le ratio. Si le ratio quand n double est environ 4, c'est O(n²).",
+        "codeExamples": [
+          {
+            "title": "Methode du ratio",
+            "code": "// Mesures :\n// n=10  -> 45 ops\n// n=20  -> 190 ops\n// n=40  -> 780 ops\n// n=80  -> 3160 ops\n\n// Ratios quand n double :\n// 190/45   = 4.22  ~= 4  -> O(n^2)\n// 780/190  = 4.10  ~= 4  -> O(n^2)\n// 3160/780 = 4.05  ~= 4  -> O(n^2)\n\n// Si les ratios etaient ~2 : O(n)\n// Si les ratios etaient ~8 : O(n^3)\n// Si les ratios etaient ~1 : O(1) ou O(log n)",
+            "explanation": "Le ratio constant quand n double revele la complexite"
+          }
+        ],
+        "keyPoints": [
+          "Doubler n et observer le ratio d'operations",
+          "Ratio ~4 -> O(n²), ratio ~2 -> O(n), ratio ~8 -> O(n³)",
+          "Plus n est grand, plus le ratio se rapproche de la valeur theorique",
+          "Les petites tailles ont des ratios moins precis a cause des termes constants"
+        ],
+        "commonMistakes": [
+          "Tester avec des tailles trop petites (les constantes faussent le ratio)",
+          "Ne pas utiliser le pire cas (les donnees aleatoires donnent un ratio bruite)",
+          "Confondre le temps reel d'execution avec le nombre d'operations"
+        ]
+      },
+      {
+        "title": "Pourquoi O(n²) est un probleme",
+        "content": "Un algorithme O(n²) devient rapidement impraticable quand la taille des donnees augmente. Pour des applications reelles avec des millions d'elements, il faut des algorithmes en O(n log n) ou mieux.",
+        "codeExamples": [
+          {
+            "title": "Temps d'execution estimes",
+            "code": "// Si 1 operation = 1 nanoseconde (10^-9 s) :\n\n// O(n^2) :\n// n=1000    : 10^6 ops  = 0.001 sec\n// n=10000   : 10^8 ops  = 0.1 sec\n// n=100000  : 10^10 ops = 10 sec\n// n=1000000 : 10^12 ops = 16 minutes !\n\n// O(n log n) :\n// n=1000    : 10000 ops   = 0.00001 sec\n// n=10000   : 130000 ops  = 0.00013 sec\n// n=100000  : 1700000 ops = 0.0017 sec\n// n=1000000 : 20000000 ops = 0.02 sec\n\n// Pour 1 million d'elements :\n// O(n^2)     : 16 minutes\n// O(n log n) : 0.02 secondes !",
+            "explanation": "La difference entre O(n²) et O(n log n) est enorme pour les grands n"
+          }
+        ],
+        "keyPoints": [
+          "O(n²) est acceptable pour n < 10000 environ",
+          "Pour n > 100000, il faut absolument O(n log n) ou mieux",
+          "La difference grandit avec n : pour n=10^6, le facteur est de ~50000",
+          "C'est pourquoi on utilise quicksort/mergesort en production"
+        ],
+        "commonMistakes": [
+          "Utiliser un tri O(n²) sur de grandes quantites de donnees",
+          "Croire que les ordinateurs modernes compensent un mauvais algorithme",
+          "Ne pas estimer la complexite avant d'implementer"
+        ]
+      },
+      {
+        "title": "Les differentes classes de complexite",
+        "content": "Il existe une hierarchie de complexites. Connaitre les plus courantes aide a evaluer rapidement l'efficacite d'un algorithme.",
+        "codeExamples": [
+          {
+            "title": "Hierarchie des complexites",
+            "code": "// Du plus rapide au plus lent (pour n grand) :\n// O(1)       < constant    (hash table lookup)\n// O(log n)   < logarithmique (recherche binaire)\n// O(n)       < lineaire    (parcours de tableau)\n// O(n log n) < quasi-lineaire (quicksort)\n// O(n^2)     < quadratique (bubble sort)\n// O(n^3)     < cubique     (multiplication de matrices)\n// O(2^n)     < exponentiel (sous-ensembles)\n// O(n!)      < factoriel   (permutations)\n\n// Pour n = 100 :\n// O(1)       : 1\n// O(log n)   : 7\n// O(n)       : 100\n// O(n log n) : 664\n// O(n^2)     : 10 000\n// O(2^n)     : 1.27 * 10^30 (impossible !)",
+            "explanation": "Chaque classe est un ordre de grandeur plus lente que la precedente"
+          }
+        ],
+        "keyPoints": [
+          "O(1) < O(log n) < O(n) < O(n log n) < O(n²) < O(n³) < O(2^n)",
+          "Les algorithmes polynomiaux (O(n^k)) sont 'raisonnables'",
+          "Les algorithmes exponentiels (O(2^n)) sont impraticables pour n > 30",
+          "Pour les tris, O(n log n) est la borne optimale par comparaison"
+        ],
+        "commonMistakes": [
+          "Confondre O(n log n) et O(n²) (le premier est beaucoup plus rapide)",
+          "Croire que O(n²) est toujours mauvais (c'est OK pour les petites tailles)",
+          "Ne pas connaitre la hierarchie des complexites"
+        ]
+      }
+    ],
+    "prepExercises": [
+      {
+        "id": 1,
+        "title": "Generer un tableau inverse",
+        "instruction": "Ecris ft_fill_reverse qui remplit un tableau avec les valeurs n, n-1, ..., 1.",
+        "starterCode": "void\tft_fill_reverse(int *tab, int size)\n{\n\t// Remplit tab avec size, size-1, ..., 1\n\t// TON CODE ICI\n}",
+        "solution": "void\tft_fill_reverse(int *tab, int size)\n{\n\tint\ti;\n\n\ti = 0;\n\twhile (i < size)\n\t{\n\t\ttab[i] = size - i;\n\t\ti++;\n\t}\n}",
+        "hint": "tab[i] = size - i : tab[0] = size, tab[1] = size - 1, etc.",
+        "difficulty": 1
+      },
+      {
+        "id": 2,
+        "title": "Compter les comparaisons seulement",
+        "instruction": "Ecris ft_count_comparisons qui trie avec bubble sort et retourne le nombre de comparaisons.",
+        "starterCode": "int\tft_count_comparisons(int *tab, int size)\n{\n\tint\tcomps;\n\n\tcomps = 0;\n\t// Bubble sort avec compteur de comparaisons\n\t// TON CODE ICI\n\treturn (comps);\n}",
+        "solution": "int\tft_count_comparisons(int *tab, int size)\n{\n\tint\tcomps;\n\tint\ti;\n\tint\tj;\n\tint\ttmp;\n\n\tcomps = 0;\n\ti = 0;\n\twhile (i < size - 1)\n\t{\n\t\tj = 0;\n\t\twhile (j < size - 1 - i)\n\t\t{\n\t\t\tcomps++;\n\t\t\tif (tab[j] > tab[j + 1])\n\t\t\t{\n\t\t\t\ttmp = tab[j];\n\t\t\t\ttab[j] = tab[j + 1];\n\t\t\t\ttab[j + 1] = tmp;\n\t\t\t}\n\t\t\tj++;\n\t\t}\n\t\ti++;\n\t}\n\treturn (comps);\n}",
+        "hint": "Incremente comps a chaque iteration de la boucle interne (avant le if).",
+        "difficulty": 2
+      },
+      {
+        "id": 3,
+        "title": "Calculer n*(n-1)/2",
+        "instruction": "Ecris une fonction qui calcule et retourne n*(n-1)/2.",
+        "starterCode": "int\tft_formula(int n)\n{\n\t// Retourne n * (n - 1) / 2\n\t// TON CODE ICI\n}",
+        "solution": "int\tft_formula(int n)\n{\n\treturn (n * (n - 1) / 2);\n}",
+        "hint": "Attention a l'ordre des operations : n * (n - 1) / 2.",
+        "difficulty": 1
+      },
+      {
+        "id": 4,
+        "title": "Afficher n= et ops=",
+        "instruction": "Ecris une fonction qui affiche 'n=X ops=Y' suivi d'un retour a la ligne.",
+        "starterCode": "void\tft_putnbr(int n);\n\nvoid\tprint_result(int n, int ops)\n{\n\t// Affiche \"n=X ops=Y\\n\"\n\t// TON CODE ICI\n}",
+        "solution": "void\tprint_result(int n, int ops)\n{\n\twrite(1, \"n=\", 2);\n\tft_putnbr(n);\n\twrite(1, \" ops=\", 5);\n\tft_putnbr(ops);\n\twrite(1, \"\\n\", 1);\n}",
+        "hint": "Utilise write pour les chaines fixes et ft_putnbr pour les nombres.",
+        "difficulty": 1
+      },
+      {
+        "id": 5,
+        "title": "Mesurer pour plusieurs tailles",
+        "instruction": "Ecris un main qui mesure les operations pour n = 10, 20, 50, 100.",
+        "starterCode": "#include <unistd.h>\n\nvoid\tft_putnbr(int n);\nint\tft_count_comparisons(int *tab, int size);\nvoid\tft_fill_reverse(int *tab, int size);\nvoid\tprint_result(int n, int ops);\n\nint\tmain(void)\n{\n\tint\ttab[100];\n\t// Teste pour n = 10, 20, 50, 100\n\t// TON CODE ICI\n\treturn (0);\n}",
+        "solution": "#include <unistd.h>\n\nvoid\tft_putnbr(int n);\nint\tft_count_comparisons(int *tab, int size);\nvoid\tft_fill_reverse(int *tab, int size);\nvoid\tprint_result(int n, int ops);\n\nint\tmain(void)\n{\n\tint\ttab[100];\n\tint\tops;\n\n\tft_fill_reverse(tab, 10);\n\tops = ft_count_comparisons(tab, 10);\n\tprint_result(10, ops);\n\tft_fill_reverse(tab, 20);\n\tops = ft_count_comparisons(tab, 20);\n\tprint_result(20, ops);\n\tft_fill_reverse(tab, 50);\n\tops = ft_count_comparisons(tab, 50);\n\tprint_result(50, ops);\n\tft_fill_reverse(tab, 100);\n\tops = ft_count_comparisons(tab, 100);\n\tprint_result(100, ops);\n\treturn (0);\n}",
+        "hint": "Pour chaque taille : fill_reverse, count_comparisons, print_result.",
+        "difficulty": 2
+      }
+    ]
+  },
+  "starterCode": "#include <unistd.h>\n\nvoid\tft_putnbr(int n)\n{\n\tchar\tc;\n\n\tif (n == -2147483648)\n\t{\n\t\twrite(1, \"-2147483648\", 11);\n\t\treturn ;\n\t}\n\tif (n < 0)\n\t{\n\t\twrite(1, \"-\", 1);\n\t\tn = -n;\n\t}\n\tif (n >= 10)\n\t\tft_putnbr(n / 10);\n\tc = (n % 10) + '0';\n\twrite(1, &c, 1);\n}\n\nvoid\tft_fill_reverse(int *tab, int size)\n{\n\t// Remplit tab avec size, size-1, ..., 1\n\t// TON CODE ICI\n}\n\nint\tft_count_comparisons(int *tab, int size)\n{\n\t// Bubble sort qui retourne le nombre de comparaisons\n\t// TON CODE ICI\n}\n\nint\tmain(void)\n{\n\tint\ttab[100];\n\tint\tops;\n\tint\tsizes[] = {10, 20, 50, 100};\n\tint\ti;\n\n\ti = 0;\n\twhile (i < 4)\n\t{\n\t\tft_fill_reverse(tab, sizes[i]);\n\t\tops = ft_count_comparisons(tab, sizes[i]);\n\t\twrite(1, \"n=\", 2);\n\t\tft_putnbr(sizes[i]);\n\t\twrite(1, \" ops=\", 5);\n\t\tft_putnbr(ops);\n\t\twrite(1, \"\\n\", 1);\n\t\ti++;\n\t}\n\treturn (0);\n}",
+  "solution": "#include <unistd.h>\n\nvoid\tft_putnbr(int n)\n{\n\tchar\tc;\n\n\tif (n == -2147483648)\n\t{\n\t\twrite(1, \"-2147483648\", 11);\n\t\treturn ;\n\t}\n\tif (n < 0)\n\t{\n\t\twrite(1, \"-\", 1);\n\t\tn = -n;\n\t}\n\tif (n >= 10)\n\t\tft_putnbr(n / 10);\n\tc = (n % 10) + '0';\n\twrite(1, &c, 1);\n}\n\nvoid\tft_fill_reverse(int *tab, int size)\n{\n\tint\ti;\n\n\ti = 0;\n\twhile (i < size)\n\t{\n\t\ttab[i] = size - i;\n\t\ti++;\n\t}\n}\n\nint\tft_count_comparisons(int *tab, int size)\n{\n\tint\tcomps;\n\tint\ti;\n\tint\tj;\n\tint\ttmp;\n\n\tcomps = 0;\n\ti = 0;\n\twhile (i < size - 1)\n\t{\n\t\tj = 0;\n\t\twhile (j < size - 1 - i)\n\t\t{\n\t\t\tcomps++;\n\t\t\tif (tab[j] > tab[j + 1])\n\t\t\t{\n\t\t\t\ttmp = tab[j];\n\t\t\t\ttab[j] = tab[j + 1];\n\t\t\t\ttab[j + 1] = tmp;\n\t\t\t}\n\t\t\tj++;\n\t\t}\n\t\ti++;\n\t}\n\treturn (comps);\n}\n\nint\tmain(void)\n{\n\tint\ttab[100];\n\tint\tops;\n\tint\tsizes[] = {10, 20, 50, 100};\n\tint\ti;\n\n\ti = 0;\n\twhile (i < 4)\n\t{\n\t\tft_fill_reverse(tab, sizes[i]);\n\t\tops = ft_count_comparisons(tab, sizes[i]);\n\t\twrite(1, \"n=\", 2);\n\t\tft_putnbr(sizes[i]);\n\t\twrite(1, \" ops=\", 5);\n\t\tft_putnbr(ops);\n\t\twrite(1, \"\\n\", 1);\n\t\ti++;\n\t}\n\treturn (0);\n}",
+  "hints": [
+    "ft_fill_reverse remplit le tableau avec size, size-1, ..., 1. Utilise tab[i] = size - i.",
+    "ft_count_comparisons est un bubble sort qui incremente un compteur a chaque comparaison (dans la boucle interne).",
+    "Les resultats attendus sont : n=10 ops=45, n=20 ops=190, n=50 ops=1225, n=100 ops=4950."
+  ],
+  "testCases": [
+    {
+      "id": 1,
+      "description": "Mesure pour 4 tailles de tableaux",
+      "stdin": "",
+      "expectedStdout": "n=10 ops=45\nn=20 ops=190\nn=50 ops=1225\nn=100 ops=4950\n",
+      "expectedExitCode": 0,
+      "visible": true
+    },
+    {
+      "id": 2,
+      "description": "Verification de la formule n*(n-1)/2",
+      "stdin": "",
+      "expectedStdout": "n=10 ops=45\nn=20 ops=190\nn=50 ops=1225\nn=100 ops=4950\n",
+      "expectedExitCode": 0,
+      "visible": false
+    },
+    {
+      "id": 3,
+      "description": "Coherence des ratios quadratiques",
+      "stdin": "",
+      "expectedStdout": "n=10 ops=45\nn=20 ops=190\nn=50 ops=1225\nn=100 ops=4950\n",
+      "expectedExitCode": 0,
+      "visible": false
+    }
+  ],
+  "constraints": {
+    "allowedFunctions": ["write"],
+    "forbiddenFunctions": ["printf", "qsort", "puts", "time", "clock"],
+    "maxExecutionTime": 5000,
+    "maxMemory": 128
+  },
+  "relatedExercises": ["c-day48-ex00-ft-count-ops", "c-day48-ex02-ft-binary-search"],
+  "resources": [
+    {
+      "title": "Big O Cheat Sheet",
+      "url": "https://www.bigocheatsheet.com/",
+      "type": "documentation"
+    },
+    {
+      "title": "Comprendre la complexite algorithmique",
+      "url": "https://www.geeksforgeeks.org/understanding-time-complexity-simple-examples/",
+      "type": "article"
+    }
+  ]
+}

@@ -1,0 +1,257 @@
+{
+  "id": "c-day56-ex01-ft-fork-exec",
+  "category": "c",
+  "day": 56,
+  "order": 1,
+  "title": "Combiner fork et execve pour lancer un programme",
+  "description": "Ecris un programme qui utilise fork() pour creer un processus fils, puis execve() dans le fils pour lancer la commande '/bin/ls' avec l'argument '-l'. Le parent doit attendre la fin du fils et afficher 'Programme termine avec succes' si le fils a retourne 0. Prototype de la fonction principale : void ft_exec_cmd(char *path, char **args);",
+  "difficulty": 4,
+  "points": 40,
+  "estimatedTime": 35,
+  "learningObjectives": [
+    "Comprendre le role d'execve() pour remplacer un processus par un autre programme",
+    "Savoir combiner fork() et execve() pour lancer une commande externe",
+    "Comprendre que execve remplace totalement le processus appelant",
+    "Gerer les erreurs d'execve (fichier introuvable, permissions)",
+    "Maitriser le pattern fork + exec + wait utilise dans les shells"
+  ],
+  "learningContent": {
+    "lesson": {
+      "introduction": "Le pattern fork + exec est le mecanisme fondamental des systemes Unix pour lancer des programmes. Le shell l'utilise a chaque commande que vous tapez : il fork() pour creer un fils, puis le fils appelle execve() pour se transformer en le programme demande. Le parent attend avec wait(). Comprendre ce mecanisme est indispensable pour les projets pipex et minishell a 42.",
+      "steps": [
+        {
+          "id": 1,
+          "title": "Qu'est-ce qu'execve() ?",
+          "content": "**execve()** remplace le programme actuel du processus par un nouveau programme. Apres execve(), le code qui suit n'est JAMAIS execute (sauf en cas d'erreur).\n\n**Prototype :** `int execve(const char *path, char *const argv[], char *const envp[]);`\n\n- `path` : chemin absolu du programme a executer\n- `argv` : tableau d'arguments (argv[0] = nom du programme)\n- `envp` : tableau des variables d'environnement\n\n**Attention :** Si execve reussit, il ne retourne JAMAIS. S'il retourne, c'est qu'il y a eu une erreur.",
+          "codeExample": "#include <unistd.h>\n\nint\tmain(void)\n{\n\tchar *args[] = {\"/bin/ls\", \"-l\", NULL};\n\tchar *env[] = {NULL};\n\n\texecve(\"/bin/ls\", args, env);\n\t// Si on arrive ici, execve a echoue !\n\twrite(2, \"Erreur execve\\n\", 14);\n\treturn (1);\n}",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Pourquoi execve() ne retourne-t-il jamais en cas de succes ?",
+            "starterCode": "// execve remplace le processus par un autre programme\n// Donc apres execve, le code actuel est ???\n// Le processus execute maintenant ???",
+            "solution": "// Apres execve, le code actuel est EFFACE de la memoire\n// Le processus execute maintenant le nouveau programme\n// C'est comme si tout le code etait remplace par /bin/ls"
+          }
+        },
+        {
+          "id": 2,
+          "title": "Le pattern fork + exec",
+          "content": "On ne peut pas appeler execve() directement dans le programme principal car cela remplacerait notre programme ! La solution : **fork d'abord**, puis execve dans le fils.\n\n1. Le parent appelle **fork()**\n2. Le **fils** appelle **execve()** (il est remplace par le nouveau programme)\n3. Le **parent** continue son execution et appelle **wait()**\n\nC'est exactement ce que fait bash quand vous tapez une commande !",
+          "codeExample": "#include <unistd.h>\n#include <sys/wait.h>\n\nint\tmain(void)\n{\n\tpid_t\tpid;\n\n\tpid = fork();\n\tif (pid == 0)\n\t{\n\t\t// FILS : se remplace par ls\n\t\tchar *args[] = {\"/bin/ls\", NULL};\n\t\tchar *env[] = {NULL};\n\t\texecve(\"/bin/ls\", args, env);\n\t\t// Jamais atteint si execve reussit\n\t\treturn (1);\n\t}\n\t// PARENT : attend le fils\n\twait(NULL);\n\treturn (0);\n}",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Pourquoi fait-on execve dans le fils et pas dans le parent ?",
+            "starterCode": "// Si on fait execve dans le parent :\n// Le parent est remplace par le nouveau programme\n// Consequence : ???",
+            "solution": "// Si on fait execve dans le parent :\n// Le parent est remplace et ne peut plus continuer\n// On perd le controle du programme principal\n// En faisant execve dans le fils, le parent reste intact"
+          }
+        },
+        {
+          "id": 3,
+          "title": "Construire argv et envp pour execve",
+          "content": "execve prend deux tableaux de chaines :\n\n**argv** : les arguments du programme\n- `argv[0]` doit etre le nom du programme\n- Le tableau DOIT se terminer par NULL\n\n**envp** : les variables d'environnement\n- Format : `\"CLE=valeur\"`\n- Se termine par NULL\n- On peut passer `environ` (variable globale) pour heriter de l'environnement",
+          "codeExample": "#include <unistd.h>\n\n// Pour lancer : /bin/ls -l -a /tmp\nint\tmain(void)\n{\n\tchar *argv[] = {\n\t\t\"ls\",    // argv[0] = nom du programme\n\t\t\"-l\",    // argv[1] = premier argument\n\t\t\"-a\",    // argv[2] = deuxieme argument\n\t\t\"/tmp\",  // argv[3] = troisieme argument\n\t\tNULL     // OBLIGATOIRE : terminateur\n\t};\n\tchar *envp[] = {\n\t\t\"PATH=/usr/bin:/bin\",\n\t\t\"HOME=/root\",\n\t\tNULL\n\t};\n\texecve(\"/bin/ls\", argv, envp);\n\treturn (1); // Erreur si on arrive ici\n}",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Construis le tableau argv pour lancer '/usr/bin/grep -r main .'",
+            "starterCode": "char *argv[] = {\n\t???,\n\t???,\n\t???,\n\t???,\n\tNULL\n};",
+            "solution": "char *argv[] = {\n\t\"grep\",\n\t\"-r\",\n\t\"main\",\n\t\".\",\n\tNULL\n};"
+          }
+        },
+        {
+          "id": 4,
+          "title": "Gestion des erreurs d'execve",
+          "content": "execve peut echouer pour plusieurs raisons :\n- **ENOENT** : le fichier n'existe pas\n- **EACCES** : pas de permission d'execution\n- **ENOEXEC** : format de fichier invalide\n\nQuand execve echoue, il retourne -1 et errno est positionne. Dans un fils cree par fork, il est important de quitter immediatement avec `exit()` pour ne pas continuer a executer le code du parent.\n\n**Convention de codes de sortie :**\n- 126 : commande trouvee mais pas executable\n- 127 : commande introuvable",
+          "codeExample": "#include <unistd.h>\n#include <stdio.h>\n#include <stdlib.h>\n#include <sys/wait.h>\n\nint\tmain(void)\n{\n\tpid_t pid = fork();\n\n\tif (pid == 0)\n\t{\n\t\tchar *args[] = {\"prog_inexistant\", NULL};\n\t\tchar *env[] = {NULL};\n\t\texecve(\"/chemin/inexistant\", args, env);\n\t\t// execve a echoue\n\t\tperror(\"execve\");\n\t\texit(127); // Convention : commande introuvable\n\t}\n\tint status;\n\twaitpid(pid, &status, 0);\n\tif (WIFEXITED(status))\n\t\tprintf(\"Fils sorti avec code : %d\\n\", WEXITSTATUS(status));\n\treturn (0);\n}",
+          "language": "c"
+        }
+      ]
+    },
+    "theory": [
+      {
+        "title": "La famille des fonctions exec",
+        "content": "execve est l'appel systeme de base, mais il existe plusieurs variantes dans la libc (execl, execlp, execv, execvp, execvpe). Elles different par la facon de passer les arguments et de trouver le programme.",
+        "codeExamples": [
+          {
+            "title": "Les variantes d'exec",
+            "code": "// execve : chemin absolu + tableau argv + tableau envp\nexecve(\"/bin/ls\", argv, envp);\n\n// execv : comme execve mais utilise l'environnement courant\nexecv(\"/bin/ls\", argv);\n\n// execvp : cherche dans PATH (pas besoin du chemin absolu)\nexecvp(\"ls\", argv);\n\n// execl : arguments en liste (pas en tableau)\nexecl(\"/bin/ls\", \"ls\", \"-l\", NULL);\n\n// execlp : combine liste + recherche PATH\nexeclp(\"ls\", \"ls\", \"-l\", NULL);",
+            "explanation": "v = vecteur (tableau), l = liste, p = PATH, e = envp"
+          }
+        ],
+        "keyPoints": [
+          "execve est le seul vrai appel systeme, les autres sont des wrappers",
+          "Le suffixe 'p' cherche dans PATH, sinon il faut le chemin absolu",
+          "Le suffixe 'l' prend les args en parametres, 'v' en tableau",
+          "A 42, on utilise souvent execve car c'est autorise dans les sujets"
+        ],
+        "commonMistakes": [
+          "Utiliser execvp au lieu d'execve quand le sujet exige execve",
+          "Oublier le NULL a la fin du tableau argv",
+          "Ne pas mettre le nom du programme en argv[0]"
+        ]
+      },
+      {
+        "title": "Le mecanisme fork + exec en detail",
+        "content": "Le pattern fork + exec est le fondement de la creation de processus sous Unix. Il separe deux operations : la creation du processus (fork) et le chargement du programme (exec).",
+        "codeExamples": [
+          {
+            "title": "Pattern complet fork + exec + wait",
+            "code": "pid_t pid = fork();\nif (pid == -1)\n\treturn (perror(\"fork\"), 1);\nif (pid == 0)\n{\n\t// FILS\n\texecve(path, argv, envp);\n\tperror(\"execve\"); // Seulement si erreur\n\texit(127);\n}\n// PARENT\nint status;\nwaitpid(pid, &status, 0);\nif (WIFEXITED(status))\n\tprintf(\"Code retour : %d\\n\", WEXITSTATUS(status));",
+            "explanation": "Ce pattern est utilise dans tous les shells et dans pipex"
+          }
+        ],
+        "keyPoints": [
+          "fork() cree le processus, execve() charge le programme",
+          "Cette separation permet de configurer le fils avant exec (redirections, pipes)",
+          "Le parent conserve son code et peut attendre le resultat",
+          "C'est le pattern utilise par bash pour chaque commande"
+        ],
+        "commonMistakes": [
+          "Oublier de terminer le fils avec exit() si execve echoue",
+          "Ne pas fermer les descripteurs inutiles dans le fils avant execve",
+          "Appeler execve dans le parent au lieu du fils"
+        ]
+      },
+      {
+        "title": "L'environnement et execve",
+        "content": "Le troisieme argument d'execve est l'environnement. C'est un tableau de chaines au format 'CLE=valeur'. Le programme execute pourra y acceder via la variable globale environ ou via getenv().",
+        "codeExamples": [
+          {
+            "title": "Passer l'environnement",
+            "code": "// Option 1 : environnement vide\nchar *env_empty[] = {NULL};\nexecve(\"/bin/ls\", argv, env_empty);\n\n// Option 2 : environnement personnalise\nchar *env_custom[] = {\n\t\"PATH=/usr/bin:/bin\",\n\t\"LANG=fr_FR.UTF-8\",\n\tNULL\n};\nexecve(\"/bin/ls\", argv, env_custom);\n\n// Option 3 : heriter de l'environnement du parent\nextern char **environ;\nexecve(\"/bin/ls\", argv, environ);",
+            "explanation": "On peut controler precisement l'environnement du programme lance"
+          }
+        ],
+        "keyPoints": [
+          "envp est un tableau de chaines terminant par NULL",
+          "Le format est 'CLE=valeur' pour chaque variable",
+          "environ (variable globale) contient l'environnement du processus courant",
+          "PATH est utilise par le shell pour trouver les commandes"
+        ],
+        "commonMistakes": [
+          "Passer NULL au lieu d'un tableau {NULL} pour envp",
+          "Oublier que certaines commandes ont besoin de PATH pour fonctionner",
+          "Ne pas terminer le tableau envp par NULL"
+        ]
+      },
+      {
+        "title": "Securite et bonnes pratiques avec execve",
+        "content": "L'utilisation d'execve demande de la rigueur. Il faut valider les chemins, gerer les erreurs proprement et ne jamais executer de commandes non controlees.",
+        "codeExamples": [
+          {
+            "title": "Verification avant execve",
+            "code": "#include <unistd.h>\n#include <stdio.h>\n#include <stdlib.h>\n\nvoid\texec_safe(char *path, char **argv, char **envp)\n{\n\tpid_t pid;\n\n\tif (access(path, X_OK) == -1)\n\t{\n\t\tperror(path);\n\t\treturn ;\n\t}\n\tpid = fork();\n\tif (pid == 0)\n\t{\n\t\texecve(path, argv, envp);\n\t\tperror(\"execve\");\n\t\texit(1);\n\t}\n\twaitpid(pid, NULL, 0);\n}",
+            "explanation": "Verifier les permissions avec access() avant d'appeler execve"
+          }
+        ],
+        "keyPoints": [
+          "Toujours verifier que le fichier existe et est executable (access)",
+          "Toujours gerer le cas ou execve echoue (perror + exit)",
+          "Fermer les descripteurs de fichiers inutiles avant execve",
+          "Ne jamais faire confiance a des chemins fournis par l'utilisateur sans validation"
+        ],
+        "commonMistakes": [
+          "Ne pas tester le retour d'execve (si on arrive apres execve, c'est une erreur)",
+          "Laisser des fd ouverts dans le fils qui ne seront pas utilises",
+          "Utiliser un chemin relatif sans le resoudre d'abord"
+        ]
+      }
+    ],
+    "prepExercises": [
+      {
+        "id": 1,
+        "title": "Execve simple",
+        "instruction": "Ecris un programme qui lance /bin/echo avec le message 'Hello' en utilisant execve directement (sans fork).",
+        "starterCode": "#include <unistd.h>\n\nint\tmain(void)\n{\n\t// Lance /bin/echo Hello\n\t// TON CODE ICI\n\treturn (1);\n}",
+        "solution": "#include <unistd.h>\n\nint\tmain(void)\n{\n\tchar *argv[] = {\"echo\", \"Hello\", NULL};\n\tchar *envp[] = {NULL};\n\n\texecve(\"/bin/echo\", argv, envp);\n\twrite(2, \"Erreur execve\\n\", 14);\n\treturn (1);\n}",
+        "hint": "Construis argv = {\"echo\", \"Hello\", NULL} et appelle execve(\"/bin/echo\", argv, envp).",
+        "difficulty": 1
+      },
+      {
+        "id": 2,
+        "title": "Fork + execve basique",
+        "instruction": "Ecris un programme qui fork et lance /bin/ls dans le fils. Le parent attend.",
+        "starterCode": "#include <unistd.h>\n#include <sys/wait.h>\n#include <stdlib.h>\n\nint\tmain(void)\n{\n\tpid_t pid = fork();\n\t// Dans le fils : execve /bin/ls\n\t// Dans le parent : wait\n\t// TON CODE ICI\n\treturn (0);\n}",
+        "solution": "#include <unistd.h>\n#include <sys/wait.h>\n#include <stdlib.h>\n\nint\tmain(void)\n{\n\tpid_t pid = fork();\n\tif (pid == -1)\n\t\treturn (1);\n\tif (pid == 0)\n\t{\n\t\tchar *argv[] = {\"ls\", NULL};\n\t\tchar *envp[] = {NULL};\n\t\texecve(\"/bin/ls\", argv, envp);\n\t\texit(1);\n\t}\n\twait(NULL);\n\treturn (0);\n}",
+        "hint": "Le fils fait execve, le parent fait wait(NULL).",
+        "difficulty": 2
+      },
+      {
+        "id": 3,
+        "title": "Gerer l'erreur d'execve",
+        "instruction": "Ecris un programme qui tente d'executer un chemin invalide et gere proprement l'erreur.",
+        "starterCode": "#include <unistd.h>\n#include <sys/wait.h>\n#include <stdlib.h>\n\nint\tmain(void)\n{\n\tpid_t pid = fork();\n\t// Le fils tente execve(\"/inexistant\", ...)\n\t// Si echec, affiche erreur et exit(127)\n\t// TON CODE ICI\n\treturn (0);\n}",
+        "solution": "#include <unistd.h>\n#include <sys/wait.h>\n#include <stdlib.h>\n#include <stdio.h>\n\nint\tmain(void)\n{\n\tpid_t pid = fork();\n\tif (pid == -1)\n\t\treturn (1);\n\tif (pid == 0)\n\t{\n\t\tchar *argv[] = {\"inexistant\", NULL};\n\t\tchar *envp[] = {NULL};\n\t\texecve(\"/inexistant\", argv, envp);\n\t\tperror(\"execve\");\n\t\texit(127);\n\t}\n\tint status;\n\twaitpid(pid, &status, 0);\n\tif (WIFEXITED(status))\n\t\tprintf(\"Code: %d\\n\", WEXITSTATUS(status));\n\treturn (0);\n}",
+        "hint": "Apres execve, s'il retourne, affiche l'erreur avec perror et exit(127).",
+        "difficulty": 2
+      },
+      {
+        "id": 4,
+        "title": "Execve avec arguments",
+        "instruction": "Lance /bin/ls -l -a /tmp dans un processus fils.",
+        "starterCode": "#include <unistd.h>\n#include <sys/wait.h>\n#include <stdlib.h>\n\nint\tmain(void)\n{\n\t// Construis argv pour \"ls -l -a /tmp\"\n\t// Fork + execve dans le fils\n\t// TON CODE ICI\n\treturn (0);\n}",
+        "solution": "#include <unistd.h>\n#include <sys/wait.h>\n#include <stdlib.h>\n\nint\tmain(void)\n{\n\tpid_t pid = fork();\n\tif (pid == -1)\n\t\treturn (1);\n\tif (pid == 0)\n\t{\n\t\tchar *argv[] = {\"ls\", \"-l\", \"-a\", \"/tmp\", NULL};\n\t\tchar *envp[] = {NULL};\n\t\texecve(\"/bin/ls\", argv, envp);\n\t\texit(1);\n\t}\n\twait(NULL);\n\treturn (0);\n}",
+        "hint": "argv doit etre {\"ls\", \"-l\", \"-a\", \"/tmp\", NULL}. N'oublie pas le NULL final.",
+        "difficulty": 2
+      },
+      {
+        "id": 5,
+        "title": "Fonction ft_exec_cmd",
+        "instruction": "Ecris une fonction ft_exec_cmd(char *path, char **args) qui encapsule le pattern fork + exec + wait.",
+        "starterCode": "#include <unistd.h>\n#include <sys/wait.h>\n#include <stdlib.h>\n\nvoid\tft_exec_cmd(char *path, char **args)\n{\n\t// Fork, execve dans le fils, wait dans le parent\n\t// TON CODE ICI\n}\n\nint\tmain(void)\n{\n\tchar *args[] = {\"ls\", \"-l\", NULL};\n\tft_exec_cmd(\"/bin/ls\", args);\n\treturn (0);\n}",
+        "solution": "#include <unistd.h>\n#include <sys/wait.h>\n#include <stdlib.h>\n\nvoid\tft_exec_cmd(char *path, char **args)\n{\n\tpid_t\tpid;\n\tchar\t*envp[] = {NULL};\n\n\tpid = fork();\n\tif (pid == -1)\n\t\treturn ;\n\tif (pid == 0)\n\t{\n\t\texecve(path, args, envp);\n\t\texit(127);\n\t}\n\twait(NULL);\n}\n\nint\tmain(void)\n{\n\tchar *args[] = {\"ls\", \"-l\", NULL};\n\tft_exec_cmd(\"/bin/ls\", args);\n\treturn (0);\n}",
+        "hint": "Encapsule fork + execve + wait dans une seule fonction.",
+        "difficulty": 3
+      }
+    ]
+  },
+  "starterCode": "#include <unistd.h>\n#include <sys/wait.h>\n#include <stdlib.h>\n\nvoid\tft_putstr(char *s)\n{\n\twhile (*s)\n\t\twrite(1, s++, 1);\n}\n\nvoid\tft_exec_cmd(char *path, char **args)\n{\n\t// 1. Fork pour creer un processus fils\n\t// 2. Dans le fils : execve(path, args, envp)\n\t// 3. Si execve echoue : afficher erreur et exit(127)\n\t// 4. Dans le parent : attendre le fils avec waitpid\n\t// 5. Verifier le code de retour du fils\n}\n\nint\tmain(void)\n{\n\tchar\t*args[] = {\"ls\", \"-l\", NULL};\n\n\tft_exec_cmd(\"/bin/ls\", args);\n\treturn (0);\n}",
+  "solution": "#include <unistd.h>\n#include <sys/wait.h>\n#include <stdlib.h>\n\nvoid\tft_putstr(char *s)\n{\n\twhile (*s)\n\t\twrite(1, s++, 1);\n}\n\nvoid\tft_exec_cmd(char *path, char **args)\n{\n\tpid_t\tpid;\n\tint\t\tstatus;\n\tchar\t*envp[] = {NULL};\n\n\tpid = fork();\n\tif (pid == -1)\n\t{\n\t\tft_putstr(\"Erreur fork\\n\");\n\t\treturn ;\n\t}\n\tif (pid == 0)\n\t{\n\t\texecve(path, args, envp);\n\t\tft_putstr(\"Erreur execve\\n\");\n\t\texit(127);\n\t}\n\twaitpid(pid, &status, 0);\n\tif (WIFEXITED(status) && WEXITSTATUS(status) == 0)\n\t\tft_putstr(\"Programme termine avec succes\\n\");\n\telse\n\t\tft_putstr(\"Programme termine avec erreur\\n\");\n}\n\nint\tmain(void)\n{\n\tchar\t*args[] = {\"ls\", \"-l\", NULL};\n\n\tft_exec_cmd(\"/bin/ls\", args);\n\treturn (0);\n}",
+  "hints": [
+    "Fork d'abord, puis dans le fils (pid == 0), appelle execve avec path, args et un envp = {NULL}.",
+    "Si execve retourne, c'est qu'il a echoue. Affiche une erreur et fais exit(127) dans le fils.",
+    "Le parent utilise waitpid(pid, &status, 0) puis WIFEXITED(status) et WEXITSTATUS(status) pour verifier le resultat."
+  ],
+  "testCases": [
+    {
+      "id": 1,
+      "description": "Execution de /bin/ls -l reussie",
+      "stdin": "",
+      "expectedStdout": "Programme termine avec succes\n",
+      "expectedExitCode": 0,
+      "visible": true
+    },
+    {
+      "id": 2,
+      "description": "Execution d'un programme inexistant",
+      "stdin": "",
+      "expectedStdout": "Erreur execve\nProgramme termine avec erreur\n",
+      "expectedExitCode": 0,
+      "visible": false
+    },
+    {
+      "id": 3,
+      "description": "Execution de /bin/echo avec arguments",
+      "stdin": "",
+      "expectedStdout": "test\nProgramme termine avec succes\n",
+      "expectedExitCode": 0,
+      "visible": false
+    }
+  ],
+  "constraints": {
+    "allowedFunctions": ["write", "fork", "execve", "wait", "waitpid", "exit", "access"],
+    "forbiddenFunctions": ["printf", "system", "execvp", "execlp"],
+    "maxExecutionTime": 5000,
+    "maxMemory": 128
+  },
+  "relatedExercises": ["c-day56-ex00-ft-fork-basic", "c-day56-ex02-ft-wait-status"],
+  "resources": [
+    {
+      "title": "Man execve(2) - Linux manual page",
+      "url": "https://man7.org/linux/man-pages/man2/execve.2.html",
+      "type": "documentation"
+    },
+    {
+      "title": "Fork et exec en C - Tutoriel pratique",
+      "url": "https://www.geeksforgeeks.org/exec-family-of-functions-in-c/",
+      "type": "article"
+    }
+  ]
+}

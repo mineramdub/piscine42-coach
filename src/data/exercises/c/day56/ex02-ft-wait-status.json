@@ -1,0 +1,257 @@
+{
+  "id": "c-day56-ex02-ft-wait-status",
+  "category": "c",
+  "day": 56,
+  "order": 2,
+  "title": "Utiliser wait/waitpid pour attendre un processus fils",
+  "description": "Ecris un programme qui cree 3 processus fils. Chaque fils retourne un code de sortie different (0, 1 et 42). Le parent attend chaque fils avec waitpid() et affiche pour chacun : 'Fils [pid] termine avec code [code]'. Utilise les macros WIFEXITED et WEXITSTATUS pour extraire le code de retour.",
+  "difficulty": 4,
+  "points": 40,
+  "estimatedTime": 35,
+  "learningObjectives": [
+    "Comprendre la difference entre wait() et waitpid()",
+    "Maitriser les macros WIFEXITED et WEXITSTATUS",
+    "Savoir gerer plusieurs processus fils simultanement",
+    "Comprendre les differentes options de waitpid (WNOHANG, etc.)",
+    "Gerer les cas ou un fils est termine par un signal (WIFSIGNALED)"
+  ],
+  "learningContent": {
+    "lesson": {
+      "introduction": "Quand un processus parent cree des fils avec fork(), il doit les attendre pour recuperer leur status de terminaison. wait() attend n'importe quel fils, tandis que waitpid() permet d'attendre un fils specifique. Le status retourne est un entier encode qui contient le code de sortie et la raison de la terminaison. Les macros WIFEXITED, WEXITSTATUS, WIFSIGNALED et WTERMSIG permettent de decoder ce status.",
+      "steps": [
+        {
+          "id": 1,
+          "title": "wait() vs waitpid()",
+          "content": "**wait(int *status)** : attend la fin de n'importe quel fils.\n- Retourne le PID du fils qui a termine\n- Stocke le status dans *status (ou NULL si on s'en fiche)\n\n**waitpid(pid_t pid, int *status, int options)** : plus flexible.\n- `pid > 0` : attend ce fils specifique\n- `pid == -1` : attend n'importe quel fils (comme wait)\n- `pid == 0` : attend un fils du meme groupe\n- `options` : WNOHANG (ne bloque pas), 0 (bloque)",
+          "codeExample": "#include <sys/wait.h>\n#include <unistd.h>\n\n// wait : attend n'importe quel fils\nint status;\npid_t terminated = wait(&status);\n\n// waitpid : attend un fils specifique\npid_t child_pid = fork();\n// ...\nwaitpid(child_pid, &status, 0);\n\n// waitpid avec WNOHANG : ne bloque pas\nwaitpid(child_pid, &status, WNOHANG);\n// retourne 0 si le fils n'a pas encore termine\n// retourne le PID si le fils a termine",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Quelle est la difference principale entre wait() et waitpid() ?",
+            "starterCode": "// wait() attend : ???\n// waitpid() peut attendre : ???\n// waitpid avec WNOHANG : ???",
+            "solution": "// wait() attend n'importe quel fils (le premier qui termine)\n// waitpid() peut attendre un fils SPECIFIQUE par son PID\n// waitpid avec WNOHANG ne bloque pas si le fils tourne encore"
+          }
+        },
+        {
+          "id": 2,
+          "title": "Decoder le status avec les macros W*",
+          "content": "Le status retourne par wait/waitpid est un entier **encode**. On ne peut PAS le lire directement comme un code de sortie. Il faut utiliser des macros :\n\n**WIFEXITED(status)** : vrai si le fils a termine normalement (exit/return)\n**WEXITSTATUS(status)** : le code de sortie (0-255). Valide seulement si WIFEXITED est vrai\n**WIFSIGNALED(status)** : vrai si le fils a ete tue par un signal\n**WTERMSIG(status)** : le numero du signal qui a tue le fils",
+          "codeExample": "#include <sys/wait.h>\n#include <stdio.h>\n\nvoid\tcheck_status(int status)\n{\n\tif (WIFEXITED(status))\n\t{\n\t\tprintf(\"Sorti normalement, code = %d\\n\",\n\t\t\tWEXITSTATUS(status));\n\t}\n\telse if (WIFSIGNALED(status))\n\t{\n\t\tprintf(\"Tue par signal %d\\n\",\n\t\t\tWTERMSIG(status));\n\t}\n}\n\n// Exemples :\n// Fils fait exit(0)   -> WIFEXITED=true, WEXITSTATUS=0\n// Fils fait exit(42)  -> WIFEXITED=true, WEXITSTATUS=42\n// Fils tue par SIGKILL -> WIFSIGNALED=true, WTERMSIG=9",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Si un fils fait exit(42), que retournent WIFEXITED et WEXITSTATUS ?",
+            "starterCode": "// Fils fait exit(42)\n// WIFEXITED(status) = ???\n// WEXITSTATUS(status) = ???\n// WIFSIGNALED(status) = ???",
+            "solution": "// WIFEXITED(status) = 1 (vrai, il a termine normalement)\n// WEXITSTATUS(status) = 42 (le code de exit())\n// WIFSIGNALED(status) = 0 (faux, pas tue par un signal)"
+          }
+        },
+        {
+          "id": 3,
+          "title": "Gerer plusieurs fils",
+          "content": "Quand on cree plusieurs fils, on doit attendre CHACUN d'entre eux. On peut :\n1. Stocker les PID dans un tableau et faire waitpid() pour chacun\n2. Appeler wait() en boucle jusqu'a ce qu'il retourne -1 (plus de fils)\n\n**Attention a l'ordre :** wait() retourne le PREMIER fils qui termine, pas forcement dans l'ordre de creation. waitpid() permet de controler l'ordre.",
+          "codeExample": "#include <unistd.h>\n#include <sys/wait.h>\n#include <stdio.h>\n\nint\tmain(void)\n{\n\tpid_t pids[3];\n\tint   status;\n\tint   i;\n\n\ti = 0;\n\twhile (i < 3)\n\t{\n\t\tpids[i] = fork();\n\t\tif (pids[i] == 0)\n\t\t\treturn (i); // Chaque fils retourne un code different\n\t\ti++;\n\t}\n\t// Attendre chaque fils dans l'ordre\n\ti = 0;\n\twhile (i < 3)\n\t{\n\t\twaitpid(pids[i], &status, 0);\n\t\tprintf(\"Fils %d : code %d\\n\", pids[i], WEXITSTATUS(status));\n\t\ti++;\n\t}\n\treturn (0);\n}",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Comment attendre tous les fils sans connaitre leurs PID ?",
+            "starterCode": "// Methode avec wait() en boucle :\n// Tant que wait retourne ???\n// On continue d'attendre",
+            "solution": "// On appelle wait() en boucle :\npid_t pid;\nwhile ((pid = wait(&status)) != -1)\n{\n\tprintf(\"Fils %d termine\\n\", pid);\n}\n// wait retourne -1 quand il n'y a plus de fils"
+          }
+        },
+        {
+          "id": 4,
+          "title": "WNOHANG et attente non bloquante",
+          "content": "Par defaut, wait() et waitpid() bloquent jusqu'a la fin du fils. L'option **WNOHANG** permet de verifier si un fils a termine SANS bloquer.\n\n**waitpid(pid, &status, WNOHANG)** :\n- Retourne le PID si le fils a termine\n- Retourne **0** si le fils tourne encore\n- Retourne -1 en cas d'erreur\n\nCette technique est utile pour un programme qui veut faire autre chose en attendant ses fils (polling).",
+          "codeExample": "#include <unistd.h>\n#include <sys/wait.h>\n#include <stdio.h>\n\nint\tmain(void)\n{\n\tpid_t pid = fork();\n\tint   status;\n\tpid_t result;\n\n\tif (pid == 0)\n\t{\n\t\tsleep(2);\n\t\treturn (42);\n\t}\n\t// Polling : verifier sans bloquer\n\twhile (1)\n\t{\n\t\tresult = waitpid(pid, &status, WNOHANG);\n\t\tif (result > 0)\n\t\t{\n\t\t\tprintf(\"Fils termine, code = %d\\n\",\n\t\t\t\tWEXITSTATUS(status));\n\t\t\tbreak ;\n\t\t}\n\t\tprintf(\"Fils pas encore fini...\\n\");\n\t\tsleep(1);\n\t}\n\treturn (0);\n}",
+          "language": "c"
+        }
+      ]
+    },
+    "theory": [
+      {
+        "title": "Le status encode de wait/waitpid",
+        "content": "Le parametre status de wait/waitpid n'est pas directement le code de sortie. C'est un entier encode sur 16 bits qui contient plusieurs informations. Les macros W* sont essentielles pour le decoder correctement.",
+        "codeExamples": [
+          {
+            "title": "Decodage du status",
+            "code": "int status;\nwait(&status);\n\n// Bits du status (simplifie) :\n// Si terminaison normale :\n//   bits 15-8 = code de sortie\n//   bits 7-0  = 0\n// Si tue par signal :\n//   bits 15-8 = 0\n//   bits 6-0  = numero du signal\n//   bit 7     = core dump\n\n// On ne manipule JAMAIS les bits directement !\n// On utilise les macros :\nif (WIFEXITED(status))\n\tprintf(\"Code: %d\\n\", WEXITSTATUS(status));\nif (WIFSIGNALED(status))\n\tprintf(\"Signal: %d\\n\", WTERMSIG(status));",
+            "explanation": "Le status est encode, il faut toujours utiliser les macros pour le lire"
+          }
+        ],
+        "keyPoints": [
+          "Le status n'est PAS directement le code de sortie",
+          "WIFEXITED verifie si le fils a fait exit() ou return",
+          "WEXITSTATUS extrait le code de sortie (0-255 seulement)",
+          "Toujours tester WIFEXITED avant d'utiliser WEXITSTATUS"
+        ],
+        "commonMistakes": [
+          "Utiliser status directement comme code de sortie sans les macros W*",
+          "Appeler WEXITSTATUS sans verifier WIFEXITED d'abord",
+          "Oublier que le code de sortie est tronque a 8 bits (0-255)"
+        ]
+      },
+      {
+        "title": "Terminaison par signal",
+        "content": "Un processus peut etre termine par un signal (SIGKILL, SIGSEGV, etc.). Dans ce cas, WIFEXITED est faux et WIFSIGNALED est vrai. WTERMSIG donne le numero du signal.",
+        "codeExamples": [
+          {
+            "title": "Detection de segfault",
+            "code": "#include <sys/wait.h>\n#include <stdio.h>\n#include <signal.h>\n\nvoid\tanalyse_status(int status)\n{\n\tif (WIFEXITED(status))\n\t\tprintf(\"Exit normal, code %d\\n\", WEXITSTATUS(status));\n\telse if (WIFSIGNALED(status))\n\t{\n\t\tint sig = WTERMSIG(status);\n\t\tprintf(\"Tue par signal %d\", sig);\n\t\tif (sig == SIGSEGV)\n\t\t\tprintf(\" (Segmentation fault)\");\n\t\telse if (sig == SIGKILL)\n\t\t\tprintf(\" (Killed)\");\n\t\tprintf(\"\\n\");\n\t}\n}",
+            "explanation": "On peut determiner si un fils a crash (segfault) ou a ete tue (kill)"
+          }
+        ],
+        "keyPoints": [
+          "WIFSIGNALED est vrai si le fils a ete tue par un signal",
+          "WTERMSIG donne le numero du signal (ex: 11 = SIGSEGV)",
+          "SIGSEGV = segfault, SIGKILL = kill -9, SIGTERM = terminaison",
+          "Un fils tue par signal n'a pas de code de sortie (WEXITSTATUS invalide)"
+        ],
+        "commonMistakes": [
+          "Tester WEXITSTATUS quand le fils a ete tue par un signal",
+          "Ignorer le cas WIFSIGNALED (le programme peut crasher)",
+          "Confondre le numero du signal avec le code de sortie"
+        ]
+      },
+      {
+        "title": "waitpid et ses options",
+        "content": "waitpid offre plus de controle que wait. Le premier parametre permet de choisir quel fils attendre. Le troisieme parametre accepte des flags combinables.",
+        "codeExamples": [
+          {
+            "title": "Options de waitpid",
+            "code": "// Attendre un fils specifique (bloquant)\nwaitpid(pid_fils, &status, 0);\n\n// Attendre n'importe quel fils (comme wait)\nwaitpid(-1, &status, 0);\n\n// Attendre sans bloquer\nwaitpid(pid_fils, &status, WNOHANG);\n\n// Attendre un fils stoppe (SIGSTOP)\nwaitpid(pid_fils, &status, WUNTRACED);\n\n// Combiner les options\nwaitpid(-1, &status, WNOHANG | WUNTRACED);",
+            "explanation": "waitpid est la version avancee de wait avec plus d'options"
+          }
+        ],
+        "keyPoints": [
+          "pid > 0 attend ce fils specifique",
+          "pid = -1 attend n'importe quel fils (equivalent a wait)",
+          "WNOHANG rend l'attente non bloquante (retourne 0 si pas fini)",
+          "WUNTRACED detecte aussi les fils stoppes (pas seulement termines)"
+        ],
+        "commonMistakes": [
+          "Utiliser wait() au lieu de waitpid() quand on a plusieurs fils",
+          "Oublier de gerer le retour 0 de waitpid avec WNOHANG",
+          "Ne pas boucler quand on attend plusieurs fils"
+        ]
+      },
+      {
+        "title": "Bonnes pratiques pour wait/waitpid",
+        "content": "La gestion correcte de l'attente des processus fils est cruciale pour eviter les zombies et les fuites de ressources. Il faut toujours attendre tous ses fils et gerer correctement le status.",
+        "codeExamples": [
+          {
+            "title": "Pattern robuste pour plusieurs fils",
+            "code": "#define NB_FILS 5\n\nint\tmain(void)\n{\n\tpid_t\tpids[NB_FILS];\n\tint\t\tstatus;\n\tint\t\ti;\n\n\t// Creer tous les fils\n\ti = 0;\n\twhile (i < NB_FILS)\n\t{\n\t\tpids[i] = fork();\n\t\tif (pids[i] == 0)\n\t\t\treturn (do_child_work(i));\n\t\ti++;\n\t}\n\t// Attendre TOUS les fils\n\ti = 0;\n\twhile (i < NB_FILS)\n\t{\n\t\twaitpid(pids[i], &status, 0);\n\t\tif (WIFEXITED(status))\n\t\t\tprintf(\"Fils %d: code %d\\n\", i, WEXITSTATUS(status));\n\t\ti++;\n\t}\n\treturn (0);\n}",
+            "explanation": "Stocker les PID dans un tableau et attendre chacun avec waitpid"
+          }
+        ],
+        "keyPoints": [
+          "Toujours attendre TOUS les fils crees",
+          "Stocker les PID dans un tableau si on cree plusieurs fils",
+          "Verifier WIFEXITED avant WEXITSTATUS",
+          "Gerer aussi le cas WIFSIGNALED pour les fils qui crashent"
+        ],
+        "commonMistakes": [
+          "Oublier d'attendre un fils (il devient zombie)",
+          "Attendre un seul fils quand on en a cree plusieurs",
+          "Utiliser le mauvais PID avec waitpid"
+        ]
+      }
+    ],
+    "prepExercises": [
+      {
+        "id": 1,
+        "title": "wait basique",
+        "instruction": "Ecris un programme qui fork un fils, le fils fait exit(42), et le parent affiche le code de sortie.",
+        "starterCode": "#include <unistd.h>\n#include <sys/wait.h>\n#include <stdio.h>\n#include <stdlib.h>\n\nint\tmain(void)\n{\n\t// Fork, fils exit(42), parent affiche le code\n\t// TON CODE ICI\n\treturn (0);\n}",
+        "solution": "#include <unistd.h>\n#include <sys/wait.h>\n#include <stdio.h>\n#include <stdlib.h>\n\nint\tmain(void)\n{\n\tpid_t pid = fork();\n\tint status;\n\n\tif (pid == 0)\n\t\texit(42);\n\twait(&status);\n\tif (WIFEXITED(status))\n\t\tprintf(\"Code: %d\\n\", WEXITSTATUS(status));\n\treturn (0);\n}",
+        "hint": "Le fils fait exit(42). Le parent fait wait(&status) puis WEXITSTATUS(status).",
+        "difficulty": 1
+      },
+      {
+        "id": 2,
+        "title": "waitpid specifique",
+        "instruction": "Cree 2 fils. Utilise waitpid pour attendre le DEUXIEME fils d'abord.",
+        "starterCode": "#include <unistd.h>\n#include <sys/wait.h>\n#include <stdio.h>\n#include <stdlib.h>\n\nint\tmain(void)\n{\n\tpid_t pid1, pid2;\n\tint status;\n\t// Cree 2 fils, attend pid2 en premier\n\t// TON CODE ICI\n\treturn (0);\n}",
+        "solution": "#include <unistd.h>\n#include <sys/wait.h>\n#include <stdio.h>\n#include <stdlib.h>\n\nint\tmain(void)\n{\n\tpid_t pid1 = fork();\n\tif (pid1 == 0)\n\t\texit(1);\n\tpid_t pid2 = fork();\n\tif (pid2 == 0)\n\t\texit(2);\n\tint status;\n\twaitpid(pid2, &status, 0);\n\tprintf(\"Fils 2: code %d\\n\", WEXITSTATUS(status));\n\twaitpid(pid1, &status, 0);\n\tprintf(\"Fils 1: code %d\\n\", WEXITSTATUS(status));\n\treturn (0);\n}",
+        "hint": "waitpid(pid2, &status, 0) attend specifiquement le deuxieme fils.",
+        "difficulty": 2
+      },
+      {
+        "id": 3,
+        "title": "Detecter un signal",
+        "instruction": "Cree un fils qui fait une segfault. Le parent detecte que le fils a ete tue par SIGSEGV.",
+        "starterCode": "#include <unistd.h>\n#include <sys/wait.h>\n#include <stdio.h>\n#include <signal.h>\n\nint\tmain(void)\n{\n\t// Fils fait *(int *)0 = 0 (segfault)\n\t// Parent detecte WIFSIGNALED et WTERMSIG == SIGSEGV\n\t// TON CODE ICI\n\treturn (0);\n}",
+        "solution": "#include <unistd.h>\n#include <sys/wait.h>\n#include <stdio.h>\n#include <signal.h>\n\nint\tmain(void)\n{\n\tpid_t pid = fork();\n\tint status;\n\n\tif (pid == 0)\n\t{\n\t\t*(int *)0 = 0;\n\t\treturn (0);\n\t}\n\twaitpid(pid, &status, 0);\n\tif (WIFSIGNALED(status))\n\t\tprintf(\"Signal: %d (SIGSEGV=%d)\\n\", WTERMSIG(status), SIGSEGV);\n\treturn (0);\n}",
+        "hint": "Un deferencement de NULL cause un SIGSEGV. Verifie WIFSIGNALED puis WTERMSIG.",
+        "difficulty": 2
+      },
+      {
+        "id": 4,
+        "title": "Attendre tous les fils en boucle",
+        "instruction": "Cree 3 fils avec des codes differents. Utilise une boucle wait() pour tous les attendre.",
+        "starterCode": "#include <unistd.h>\n#include <sys/wait.h>\n#include <stdio.h>\n#include <stdlib.h>\n\nint\tmain(void)\n{\n\tint i = 0;\n\twhile (i < 3)\n\t{\n\t\tif (fork() == 0)\n\t\t\texit(i * 10);\n\t\ti++;\n\t}\n\t// Attendre tous les fils\n\t// TON CODE ICI\n\treturn (0);\n}",
+        "solution": "#include <unistd.h>\n#include <sys/wait.h>\n#include <stdio.h>\n#include <stdlib.h>\n\nint\tmain(void)\n{\n\tint i = 0;\n\twhile (i < 3)\n\t{\n\t\tif (fork() == 0)\n\t\t\texit(i * 10);\n\t\ti++;\n\t}\n\tint status;\n\tpid_t pid;\n\twhile ((pid = wait(&status)) != -1)\n\t{\n\t\tif (WIFEXITED(status))\n\t\t\tprintf(\"Fils %d: code %d\\n\", pid, WEXITSTATUS(status));\n\t}\n\treturn (0);\n}",
+        "hint": "Boucle while ((pid = wait(&status)) != -1) pour attendre tous les fils.",
+        "difficulty": 3
+      },
+      {
+        "id": 5,
+        "title": "Attente avec affichage via write",
+        "instruction": "Refais l'exercice precedent en utilisant write et ft_putnbr au lieu de printf.",
+        "starterCode": "#include <unistd.h>\n#include <sys/wait.h>\n#include <stdlib.h>\n\nvoid\tft_putnbr(int n)\n{\n\tchar c;\n\tif (n < 0) { write(1, \"-\", 1); n = -n; }\n\tif (n >= 10) ft_putnbr(n / 10);\n\tc = (n % 10) + '0';\n\twrite(1, &c, 1);\n}\n\nint\tmain(void)\n{\n\t// Cree 3 fils, attend chacun, affiche avec write/ft_putnbr\n\t// TON CODE ICI\n\treturn (0);\n}",
+        "solution": "#include <unistd.h>\n#include <sys/wait.h>\n#include <stdlib.h>\n\nvoid\tft_putnbr(int n)\n{\n\tchar c;\n\tif (n < 0) { write(1, \"-\", 1); n = -n; }\n\tif (n >= 10) ft_putnbr(n / 10);\n\tc = (n % 10) + '0';\n\twrite(1, &c, 1);\n}\n\nint\tmain(void)\n{\n\tpid_t pids[3];\n\tint i = 0;\n\twhile (i < 3)\n\t{\n\t\tpids[i] = fork();\n\t\tif (pids[i] == 0)\n\t\t\texit(i);\n\t\ti++;\n\t}\n\tint status;\n\ti = 0;\n\twhile (i < 3)\n\t{\n\t\twaitpid(pids[i], &status, 0);\n\t\twrite(1, \"Fils \", 5);\n\t\tft_putnbr(pids[i]);\n\t\twrite(1, \" termine avec code \", 19);\n\t\tft_putnbr(WEXITSTATUS(status));\n\t\twrite(1, \"\\n\", 1);\n\t\ti++;\n\t}\n\treturn (0);\n}",
+        "hint": "Stocke les PID dans un tableau et utilise waitpid dans une boucle.",
+        "difficulty": 3
+      }
+    ]
+  },
+  "starterCode": "#include <unistd.h>\n#include <sys/wait.h>\n#include <stdlib.h>\n\nvoid\tft_putnbr(int n)\n{\n\tchar\tc;\n\n\tif (n == -2147483648)\n\t{\n\t\twrite(1, \"-2147483648\", 11);\n\t\treturn ;\n\t}\n\tif (n < 0)\n\t{\n\t\twrite(1, \"-\", 1);\n\t\tn = -n;\n\t}\n\tif (n >= 10)\n\t\tft_putnbr(n / 10);\n\tc = (n % 10) + '0';\n\twrite(1, &c, 1);\n}\n\nint\tmain(void)\n{\n\t// 1. Cree 3 processus fils\n\t// 2. Fils 1 fait exit(0), fils 2 fait exit(1), fils 3 fait exit(42)\n\t// 3. Le parent attend chaque fils avec waitpid\n\t// 4. Affiche \"Fils [pid] termine avec code [code]\\n\" pour chacun\n\t// 5. Utilise WIFEXITED et WEXITSTATUS\n\treturn (0);\n}",
+  "solution": "#include <unistd.h>\n#include <sys/wait.h>\n#include <stdlib.h>\n\nvoid\tft_putnbr(int n)\n{\n\tchar\tc;\n\n\tif (n == -2147483648)\n\t{\n\t\twrite(1, \"-2147483648\", 11);\n\t\treturn ;\n\t}\n\tif (n < 0)\n\t{\n\t\twrite(1, \"-\", 1);\n\t\tn = -n;\n\t}\n\tif (n >= 10)\n\t\tft_putnbr(n / 10);\n\tc = (n % 10) + '0';\n\twrite(1, &c, 1);\n}\n\nint\tmain(void)\n{\n\tpid_t\tpids[3];\n\tint\t\tcodes[3];\n\tint\t\tstatus;\n\tint\t\ti;\n\n\tcodes[0] = 0;\n\tcodes[1] = 1;\n\tcodes[2] = 42;\n\ti = 0;\n\twhile (i < 3)\n\t{\n\t\tpids[i] = fork();\n\t\tif (pids[i] == -1)\n\t\t\treturn (1);\n\t\tif (pids[i] == 0)\n\t\t\texit(codes[i]);\n\t\ti++;\n\t}\n\ti = 0;\n\twhile (i < 3)\n\t{\n\t\twaitpid(pids[i], &status, 0);\n\t\tif (WIFEXITED(status))\n\t\t{\n\t\t\twrite(1, \"Fils \", 5);\n\t\t\tft_putnbr(pids[i]);\n\t\t\twrite(1, \" termine avec code \", 19);\n\t\t\tft_putnbr(WEXITSTATUS(status));\n\t\t\twrite(1, \"\\n\", 1);\n\t\t}\n\t\ti++;\n\t}\n\treturn (0);\n}",
+  "hints": [
+    "Cree les 3 fils dans une boucle. Stocke chaque PID dans un tableau pids[3]. Chaque fils fait exit() avec un code different.",
+    "Apres avoir cree tous les fils, boucle avec waitpid(pids[i], &status, 0) pour attendre chacun dans l'ordre.",
+    "Verifie WIFEXITED(status) avant d'appeler WEXITSTATUS(status) pour extraire le code de sortie."
+  ],
+  "testCases": [
+    {
+      "id": 1,
+      "description": "3 fils avec codes 0, 1 et 42",
+      "stdin": "",
+      "expectedStdout": "Fils * termine avec code 0\nFils * termine avec code 1\nFils * termine avec code 42\n",
+      "expectedExitCode": 0,
+      "visible": true
+    },
+    {
+      "id": 2,
+      "description": "Tous les fils sont attendus (pas de zombies)",
+      "stdin": "",
+      "expectedStdout": "3 lignes de sortie avec les bons codes",
+      "expectedExitCode": 0,
+      "visible": false
+    },
+    {
+      "id": 3,
+      "description": "L'ordre d'affichage correspond a l'ordre de creation",
+      "stdin": "",
+      "expectedStdout": "codes dans l'ordre 0, 1, 42",
+      "expectedExitCode": 0,
+      "visible": false
+    }
+  ],
+  "constraints": {
+    "allowedFunctions": ["write", "fork", "wait", "waitpid", "exit", "getpid"],
+    "forbiddenFunctions": ["printf", "system"],
+    "maxExecutionTime": 5000,
+    "maxMemory": 128
+  },
+  "relatedExercises": ["c-day56-ex00-ft-fork-basic", "c-day56-ex01-ft-fork-exec"],
+  "resources": [
+    {
+      "title": "Man wait(2) - Linux manual page",
+      "url": "https://man7.org/linux/man-pages/man2/wait.2.html",
+      "type": "documentation"
+    },
+    {
+      "title": "Comprendre wait et waitpid en C",
+      "url": "https://www.geeksforgeeks.org/wait-system-call-in-c/",
+      "type": "article"
+    }
+  ]
+}

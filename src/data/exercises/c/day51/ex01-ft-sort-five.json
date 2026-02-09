@@ -1,0 +1,257 @@
+{
+  "id": "c-day51-ex01-ft-sort-five",
+  "category": "c",
+  "day": 51,
+  "order": 1,
+  "title": "Trier une pile de 5 elements",
+  "description": "Ecris une fonction ft_sort_five qui trie une pile de 5 elements en utilisant les operations sa, ra, rra, pb et pa. La strategie : envoyer les 2 plus petits elements dans la pile b avec pb, trier les 3 restants dans a avec ft_sort_three, puis remettre les elements de b dans a avec pa. Prototype : void ft_sort_five(int *stack_a, int *stack_b, int *size_a, int *size_b);",
+  "difficulty": 4,
+  "points": 40,
+  "estimatedTime": 40,
+  "learningObjectives": [
+    "Maitriser la manipulation de deux piles simultanement",
+    "Comprendre les operations pb (push b) et pa (push a)",
+    "Savoir identifier et extraire les elements minimum d'une pile",
+    "Combiner plusieurs sous-algorithmes pour resoudre un probleme",
+    "Optimiser le nombre d'operations pour un tri de 5 elements"
+  ],
+  "learningContent": {
+    "lesson": {
+      "introduction": "Apres avoir maitrise le tri de 3 elements, on passe a 5 elements. Le projet push_swap utilise deux piles : a (la pile principale) et b (une pile auxiliaire). L'idee pour trier 5 elements est simple mais efficace : on envoie les 2 plus petits dans la pile b, on trie les 3 restants dans a (avec notre ft_sort_three), puis on remet les elements de b dans a. Cette approche garantit un tri en maximum 12 operations, bien dans la limite exigee par push_swap.",
+      "steps": [
+        {
+          "id": 1,
+          "title": "Les operations pb et pa",
+          "content": "Deux nouvelles operations entrent en jeu :\n\n**pb (push b)** : Prend le premier element de la pile a et le met au sommet de la pile b. La taille de a diminue de 1, celle de b augmente de 1.\n\n**pa (push a)** : Prend le premier element de la pile b et le met au sommet de la pile a. L'inverse de pb.\n\nCes operations permettent de deplacer des elements entre les deux piles.",
+          "codeExample": "// Etat initial :\n// a = [5, 3, 1, 4, 2]  (size_a = 5)\n// b = []                (size_b = 0)\n\n// pb : premier de a -> sommet de b\n// a = [3, 1, 4, 2]     (size_a = 4)\n// b = [5]               (size_b = 1)\n\n// pb : encore un\n// a = [1, 4, 2]         (size_a = 3)\n// b = [3, 5]            (size_b = 2)\n\n// pa : premier de b -> sommet de a\n// a = [3, 1, 4, 2]     (size_a = 4)\n// b = [5]               (size_b = 1)\n\nvoid\tft_pb(int *a, int *b, int *size_a, int *size_b)\n{\n\tint\ti;\n\n\tif (*size_a == 0)\n\t\treturn ;\n\ti = *size_b;\n\twhile (i > 0)\n\t{\n\t\tb[i] = b[i - 1];\n\t\ti--;\n\t}\n\tb[0] = a[0];\n\ti = 0;\n\twhile (i < *size_a - 1)\n\t{\n\t\ta[i] = a[i + 1];\n\t\ti++;\n\t}\n\t(*size_a)--;\n\t(*size_b)++;\n\twrite(1, \"pb\\n\", 3);\n}",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Apres pb sur a=[5,3,1,4,2] et b=[], quel est l'etat des piles ?",
+            "starterCode": "// a = [5, 3, 1, 4, 2], b = []\n// Apres pb :\n// a = ???\n// b = ???",
+            "solution": "// Apres pb :\n// a = [3, 1, 4, 2]  (le 5 a ete retire du sommet)\n// b = [5]            (le 5 est place au sommet de b)"
+          }
+        },
+        {
+          "id": 2,
+          "title": "Trouver et amener le minimum au sommet",
+          "content": "Pour envoyer les 2 plus petits elements dans b, on doit d'abord les amener au sommet de a. Pour ca, on cherche la position du minimum dans la pile, puis on utilise ra ou rra pour l'amener au sommet.\n\n**Optimisation :** Si le minimum est dans la premiere moitie de la pile, on utilise ra. S'il est dans la seconde moitie, rra est plus rapide.\n\nCette logique de 'rotation optimale' est fondamentale dans push_swap.",
+          "codeExample": "int\tft_find_min_pos(int *stack, int size)\n{\n\tint\tmin_pos;\n\tint\ti;\n\n\tmin_pos = 0;\n\ti = 1;\n\twhile (i < size)\n\t{\n\t\tif (stack[i] < stack[min_pos])\n\t\t\tmin_pos = i;\n\t\ti++;\n\t}\n\treturn (min_pos);\n}\n\nvoid\tft_bring_to_top(int *stack, int size, int pos)\n{\n\tif (pos <= size / 2)\n\t{\n\t\twhile (pos > 0)\n\t\t{\n\t\t\tft_ra(stack, size);\n\t\t\tpos--;\n\t\t}\n\t}\n\telse\n\t{\n\t\twhile (pos < size)\n\t\t{\n\t\t\tft_rra(stack, size);\n\t\t\tpos++;\n\t\t}\n\t}\n}",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Dans la pile [5, 3, 1, 4, 2], ou est le minimum (1) ? Faut-il ra ou rra ?",
+            "starterCode": "// pile = [5, 3, 1, 4, 2], size = 5\n// Position du min (1) : ???\n// size / 2 = ???\n// pos <= size/2 ? -> utiliser ra ou rra ?",
+            "solution": "// Position du min (1) : 2\n// size / 2 = 2\n// pos (2) <= size/2 (2) -> utiliser ra\n// 2 rotations ra : [5,3,1,4,2] -> [3,1,4,2,5] -> [1,4,2,5,3]"
+          }
+        },
+        {
+          "id": 3,
+          "title": "Algorithme complet pour 5 elements",
+          "content": "L'algorithme se decompose en 4 etapes :\n\n1. **Trouver le minimum** dans a et l'amener au sommet\n2. **pb** : envoyer le minimum dans b\n3. **Repeter** les etapes 1-2 pour le second minimum\n4. **ft_sort_three** sur les 3 elements restants dans a\n5. **pa, pa** : remettre les 2 elements de b dans a\n\nLes 2 minimums dans b sont forcement dans le bon ordre (le plus petit au-dessus) si on les envoie dans l'ordre.",
+          "codeExample": "// Exemple pas a pas avec [5, 3, 1, 4, 2] :\n\n// Etape 1 : min=1 en pos 2, ra ra\n// a=[1,4,2,5,3] b=[]\n// pb\n// a=[4,2,5,3] b=[1]\n\n// Etape 2 : min=2 en pos 1, ra\n// a=[2,5,3,4] b=[1]\n// pb\n// a=[5,3,4] b=[2,1]\n\n// Etape 3 : ft_sort_three sur [5,3,4]\n// ra -> [3,4,5]\n// a=[3,4,5] b=[2,1]\n\n// Etape 4 : pa pa\n// a=[2,3,4,5] b=[1]\n// a=[1,2,3,4,5] b=[]\n// Trie !",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Combien d'operations au total dans l'exemple ci-dessus ? Listez-les.",
+            "starterCode": "// Operations effectuees :\n// 1. ???\n// 2. ???\n// ...\n// Total : ???",
+            "solution": "// Operations effectuees :\n// 1. ra\n// 2. ra\n// 3. pb\n// 4. ra\n// 5. pb\n// 6. ra (de ft_sort_three)\n// 7. pa\n// 8. pa\n// Total : 8 operations"
+          }
+        },
+        {
+          "id": 4,
+          "title": "Implementation complete de ft_sort_five",
+          "content": "Voici l'implementation complete qui combine toutes les pieces. La fonction utilise ft_find_min_pos pour localiser le minimum, ft_bring_to_top pour l'amener au sommet, pb pour l'envoyer dans b, ft_sort_three pour trier les 3 restants, et pa pour tout remettre.\n\n**Attention aux pointeurs de taille :** Comme pb et pa modifient la taille des piles, on passe des pointeurs vers size_a et size_b.\n\n**Complexite :** Au maximum 12 operations (2 rotations + pb + 2 rotations + pb + 2 ops sort_three + pa + pa = 10, parfois un peu plus selon la configuration).",
+          "codeExample": "void\tft_sort_five(int *a, int *b, int *size_a, int *size_b)\n{\n\tint\tpos;\n\n\t// Envoyer le 1er minimum dans b\n\tpos = ft_find_min_pos(a, *size_a);\n\tft_bring_to_top(a, *size_a, pos);\n\tft_pb(a, b, size_a, size_b);\n\t// Envoyer le 2eme minimum dans b\n\tpos = ft_find_min_pos(a, *size_a);\n\tft_bring_to_top(a, *size_a, pos);\n\tft_pb(a, b, size_a, size_b);\n\t// Trier les 3 restants\n\tft_sort_three(a, *size_a);\n\t// Remettre les 2 elements dans a\n\tft_pa(a, b, size_a, size_b);\n\tft_pa(a, b, size_a, size_b);\n}",
+          "language": "c"
+        }
+      ]
+    },
+    "theory": [
+      {
+        "title": "Utilisation de deux piles",
+        "content": "Le concept de push_swap repose sur l'utilisation de deux piles. La pile a contient les elements a trier, la pile b sert d'espace auxiliaire. L'objectif est de trier a en ordre croissant en utilisant le moins d'operations possible.",
+        "codeExamples": [
+          {
+            "title": "Gestion de deux piles avec des tableaux",
+            "code": "#define MAX_SIZE 100\n\nint\ta[MAX_SIZE];\nint\tb[MAX_SIZE];\nint\tsize_a = 5;\nint\tsize_b = 0;\n\n// a contient les elements : a[0] est le sommet\n// b est vide au debut\n// A la fin, a doit etre trie et b vide",
+            "explanation": "Les deux piles sont representees par des tableaux avec des compteurs de taille"
+          }
+        ],
+        "keyPoints": [
+          "La pile a est la pile principale, b est l'auxiliaire",
+          "Au debut b est vide, a la fin aussi",
+          "pb deplace du sommet de a vers le sommet de b",
+          "pa deplace du sommet de b vers le sommet de a"
+        ],
+        "commonMistakes": [
+          "Oublier de mettre a jour les tailles apres pb/pa",
+          "Ne pas decaler les elements du tableau apres un push",
+          "Tenter un pb quand a est vide ou un pa quand b est vide"
+        ]
+      },
+      {
+        "title": "Trouver le minimum efficacement",
+        "content": "Pour envoyer les plus petits elements dans b, il faut d'abord les localiser. Un parcours lineaire du tableau suffit pour trouver la position du minimum.",
+        "codeExamples": [
+          {
+            "title": "Recherche du minimum avec sa position",
+            "code": "int\tft_find_min_pos(int *stack, int size)\n{\n\tint\tmin_pos;\n\tint\ti;\n\n\tmin_pos = 0;\n\ti = 1;\n\twhile (i < size)\n\t{\n\t\tif (stack[i] < stack[min_pos])\n\t\t\tmin_pos = i;\n\t\ti++;\n\t}\n\treturn (min_pos);\n}\n// Pour [5, 3, 1, 4, 2] : retourne 2 (position de 1)",
+            "explanation": "Parcours simple en O(n) pour trouver l'index du plus petit element"
+          }
+        ],
+        "keyPoints": [
+          "La recherche du minimum est en O(n) avec un parcours simple",
+          "On retourne la position (index), pas la valeur",
+          "La position sert ensuite a calculer le nombre de rotations",
+          "Il faut re-chercher le minimum apres chaque extraction"
+        ],
+        "commonMistakes": [
+          "Retourner la valeur du min au lieu de sa position",
+          "Commencer la boucle a 0 au lieu de 1 (min_pos est deja 0)",
+          "Ne pas recalculer le min apres avoir envoye le premier dans b"
+        ]
+      },
+      {
+        "title": "Rotation optimale vers le sommet",
+        "content": "Une fois le minimum localise, il faut l'amener au sommet de la pile. Si le minimum est dans la premiere moitie, on fait des ra (rotation). S'il est dans la seconde moitie, rra (rotation inverse) est plus rapide car il y a moins de rotations a faire.",
+        "codeExamples": [
+          {
+            "title": "Choisir entre ra et rra",
+            "code": "// pile = [5, 3, 1, 4, 2], size = 5\n// min en position 2\n\n// Avec ra (2 rotations) :\n// ra -> [3, 1, 4, 2, 5]\n// ra -> [1, 4, 2, 5, 3] (min au sommet)\n\n// Avec rra (3 rotations) :\n// rra -> [2, 5, 3, 1, 4]\n// rra -> [4, 2, 5, 3, 1]\n// rra -> [1, 4, 2, 5, 3] (min au sommet)\n\n// ra est plus rapide ici (2 < 3)\n// Regle : si pos <= size/2, ra ; sinon rra",
+            "explanation": "On choisit la direction de rotation qui minimise le nombre d'operations"
+          }
+        ],
+        "keyPoints": [
+          "Si pos <= size/2 : utiliser ra (pos rotations)",
+          "Si pos > size/2 : utiliser rra (size - pos rotations)",
+          "Cette optimisation reduit significativement le nombre d'operations",
+          "C'est un concept cle utilise dans tous les algorithmes push_swap"
+        ],
+        "commonMistakes": [
+          "Toujours utiliser ra meme quand rra serait plus rapide",
+          "Se tromper dans le calcul du nombre de rra necessaires (size - pos)",
+          "Oublier de mettre a jour la variable pos dans la boucle"
+        ]
+      },
+      {
+        "title": "Decomposition du probleme",
+        "content": "L'algorithme de tri de 5 elements illustre un principe fondamental en algorithmique : decomposer un probleme complexe en sous-problemes plus simples. Ici, on reduit le probleme de 5 elements a un probleme de 3 elements (deja resolu).",
+        "codeExamples": [
+          {
+            "title": "Les etapes de la decomposition",
+            "code": "// Probleme : trier 5 elements\n// Decomposition :\n\n// 1. Reduire a 3 elements (envoyer 2 min dans b)\n//    -> Sous-probleme : trouver le min\n//    -> Sous-probleme : amener au sommet\n//    -> Operation : pb\n\n// 2. Trier 3 elements (deja resolu !)\n//    -> ft_sort_three()\n\n// 3. Remettre les elements de b\n//    -> pa, pa\n\n// Chaque sous-probleme est simple a resoudre",
+            "explanation": "La decomposition en sous-problemes rend l'algorithme plus clair et plus fiable"
+          }
+        ],
+        "keyPoints": [
+          "Decomposer un probleme complexe en sous-problemes simples",
+          "Reutiliser des fonctions existantes (ft_sort_three)",
+          "Chaque sous-probleme peut etre teste independamment",
+          "Cette approche est extensible a des tailles plus grandes"
+        ],
+        "commonMistakes": [
+          "Essayer de coder tout dans une seule fonction monolithique",
+          "Ne pas reutiliser ft_sort_three et recoder le tri de 3",
+          "Oublier l'etape finale de remettre les elements de b dans a"
+        ]
+      }
+    ],
+    "prepExercises": [
+      {
+        "id": 1,
+        "title": "Implementer ft_pb",
+        "instruction": "Ecris la fonction ft_pb qui prend le premier element de a et le met au sommet de b.",
+        "starterCode": "#include <unistd.h>\n\nvoid\tft_pb(int *a, int *b, int *size_a, int *size_b)\n{\n\t// Deplace a[0] au sommet de b\n\t// Met a jour les tailles\n\t// Affiche \"pb\\n\"\n\t// TON CODE ICI\n}",
+        "solution": "#include <unistd.h>\n\nvoid\tft_pb(int *a, int *b, int *size_a, int *size_b)\n{\n\tint\ti;\n\n\tif (*size_a == 0)\n\t\treturn ;\n\ti = *size_b;\n\twhile (i > 0)\n\t{\n\t\tb[i] = b[i - 1];\n\t\ti--;\n\t}\n\tb[0] = a[0];\n\ti = 0;\n\twhile (i < *size_a - 1)\n\t{\n\t\ta[i] = a[i + 1];\n\t\ti++;\n\t}\n\t(*size_a)--;\n\t(*size_b)++;\n\twrite(1, \"pb\\n\", 3);\n}",
+        "hint": "Decale b vers la droite pour faire de la place, copie a[0] dans b[0], decale a vers la gauche.",
+        "difficulty": 2
+      },
+      {
+        "id": 2,
+        "title": "Implementer ft_pa",
+        "instruction": "Ecris la fonction ft_pa qui prend le premier element de b et le met au sommet de a.",
+        "starterCode": "#include <unistd.h>\n\nvoid\tft_pa(int *a, int *b, int *size_a, int *size_b)\n{\n\t// Deplace b[0] au sommet de a\n\t// Met a jour les tailles\n\t// Affiche \"pa\\n\"\n\t// TON CODE ICI\n}",
+        "solution": "#include <unistd.h>\n\nvoid\tft_pa(int *a, int *b, int *size_a, int *size_b)\n{\n\tint\ti;\n\n\tif (*size_b == 0)\n\t\treturn ;\n\ti = *size_a;\n\twhile (i > 0)\n\t{\n\t\ta[i] = a[i - 1];\n\t\ti--;\n\t}\n\ta[0] = b[0];\n\ti = 0;\n\twhile (i < *size_b - 1)\n\t{\n\t\tb[i] = b[i + 1];\n\t\ti++;\n\t}\n\t(*size_a)++;\n\t(*size_b)--;\n\twrite(1, \"pa\\n\", 3);\n}",
+        "hint": "C'est l'inverse de pb : decale a vers la droite, copie b[0] dans a[0], decale b vers la gauche.",
+        "difficulty": 2
+      },
+      {
+        "id": 3,
+        "title": "Trouver la position du minimum",
+        "instruction": "Ecris ft_find_min_pos qui retourne l'index du plus petit element dans un tableau.",
+        "starterCode": "int\tft_find_min_pos(int *stack, int size)\n{\n\t// Retourne l'index du plus petit element\n\t// TON CODE ICI\n}",
+        "solution": "int\tft_find_min_pos(int *stack, int size)\n{\n\tint\tmin_pos;\n\tint\ti;\n\n\tmin_pos = 0;\n\ti = 1;\n\twhile (i < size)\n\t{\n\t\tif (stack[i] < stack[min_pos])\n\t\t\tmin_pos = i;\n\t\ti++;\n\t}\n\treturn (min_pos);\n}",
+        "hint": "Initialise min_pos a 0, parcours le tableau et mets a jour min_pos si tu trouves plus petit.",
+        "difficulty": 1
+      },
+      {
+        "id": 4,
+        "title": "Amener un element au sommet",
+        "instruction": "Ecris ft_bring_to_top qui utilise ra ou rra pour amener l'element en position pos au sommet.",
+        "starterCode": "void\tft_bring_to_top(int *stack, int size, int pos)\n{\n\t// Si pos <= size/2 : utiliser ra\n\t// Sinon : utiliser rra\n\t// TON CODE ICI\n}",
+        "solution": "void\tft_bring_to_top(int *stack, int size, int pos)\n{\n\tif (pos <= size / 2)\n\t{\n\t\twhile (pos > 0)\n\t\t{\n\t\t\tft_ra(stack, size);\n\t\t\tpos--;\n\t\t}\n\t}\n\telse\n\t{\n\t\twhile (pos < size)\n\t\t{\n\t\t\tft_rra(stack, size);\n\t\t\tpos++;\n\t\t}\n\t}\n}",
+        "hint": "Si pos est dans la premiere moitie, ra 'pos' fois. Sinon, rra 'size - pos' fois.",
+        "difficulty": 2
+      },
+      {
+        "id": 5,
+        "title": "Tester avec un exemple complet",
+        "instruction": "Trace l'execution de l'algorithme sur la pile [4, 2, 5, 1, 3]. Ecris chaque etape.",
+        "starterCode": "// Pile a = [4, 2, 5, 1, 3], b = []\n// Etape 1 : min = ??? en position ???\n// Rotation(s) : ???\n// pb -> a = ???, b = ???\n// Etape 2 : min = ??? en position ???\n// ...",
+        "solution": "// a=[4,2,5,1,3] b=[]\n// min=1 pos=3, pos > size/2(2) -> rra rra\n// rra -> a=[3,4,2,5,1] b=[]\n// rra -> a=[1,3,4,2,5] b=[]\n// pb -> a=[3,4,2,5] b=[1]\n// min=2 pos=2, pos <= size/2(2) -> ra ra\n// ra -> a=[4,2,5,3]\n// ra -> a=[2,5,3,4]\n// pb -> a=[5,3,4] b=[2,1]\n// sort_three: ra -> a=[3,4,5]\n// pa -> a=[2,3,4,5] b=[1]\n// pa -> a=[1,2,3,4,5] b=[]",
+        "hint": "Le min de [4,2,5,1,3] est 1 en position 3. Comme 3 > 5/2=2, on utilise rra.",
+        "difficulty": 3
+      }
+    ]
+  },
+  "starterCode": "#include <unistd.h>\n\nvoid\tft_sa(int *stack)\n{\n\tint\ttmp;\n\n\ttmp = stack[0];\n\tstack[0] = stack[1];\n\tstack[1] = tmp;\n\twrite(1, \"sa\\n\", 3);\n}\n\nvoid\tft_ra(int *stack, int size)\n{\n\tint\ttmp;\n\tint\ti;\n\n\ttmp = stack[0];\n\ti = 0;\n\twhile (i < size - 1)\n\t{\n\t\tstack[i] = stack[i + 1];\n\t\ti++;\n\t}\n\tstack[size - 1] = tmp;\n\twrite(1, \"ra\\n\", 3);\n}\n\nvoid\tft_rra(int *stack, int size)\n{\n\tint\ttmp;\n\tint\ti;\n\n\ttmp = stack[size - 1];\n\ti = size - 1;\n\twhile (i > 0)\n\t{\n\t\tstack[i] = stack[i - 1];\n\t\ti--;\n\t}\n\tstack[0] = tmp;\n\twrite(1, \"rra\\n\", 4);\n}\n\nvoid\tft_pb(int *a, int *b, int *size_a, int *size_b)\n{\n\t// Implementer : deplacer a[0] vers b[0]\n}\n\nvoid\tft_pa(int *a, int *b, int *size_a, int *size_b)\n{\n\t// Implementer : deplacer b[0] vers a[0]\n}\n\nint\tft_find_min_pos(int *stack, int size)\n{\n\t// Trouver la position du minimum\n}\n\nvoid\tft_sort_three(int *stack, int size)\n{\n\t// Reutiliser l'exercice precedent\n}\n\nvoid\tft_sort_five(int *a, int *b, int *size_a, int *size_b)\n{\n\t// 1. Trouver min, l'amener au sommet, pb\n\t// 2. Repeter pour le 2eme min\n\t// 3. ft_sort_three sur les 3 restants\n\t// 4. pa, pa\n}\n\nint\tmain(void)\n{\n\tint\ta[5] = {5, 3, 1, 4, 2};\n\tint\tb[5];\n\tint\tsize_a = 5;\n\tint\tsize_b = 0;\n\n\tft_sort_five(a, b, &size_a, &size_b);\n\treturn (0);\n}",
+  "solution": "#include <unistd.h>\n\nvoid\tft_sa(int *stack)\n{\n\tint\ttmp;\n\n\ttmp = stack[0];\n\tstack[0] = stack[1];\n\tstack[1] = tmp;\n\twrite(1, \"sa\\n\", 3);\n}\n\nvoid\tft_ra(int *stack, int size)\n{\n\tint\ttmp;\n\tint\ti;\n\n\ttmp = stack[0];\n\ti = 0;\n\twhile (i < size - 1)\n\t{\n\t\tstack[i] = stack[i + 1];\n\t\ti++;\n\t}\n\tstack[size - 1] = tmp;\n\twrite(1, \"ra\\n\", 3);\n}\n\nvoid\tft_rra(int *stack, int size)\n{\n\tint\ttmp;\n\tint\ti;\n\n\ttmp = stack[size - 1];\n\ti = size - 1;\n\twhile (i > 0)\n\t{\n\t\tstack[i] = stack[i - 1];\n\t\ti--;\n\t}\n\tstack[0] = tmp;\n\twrite(1, \"rra\\n\", 4);\n}\n\nvoid\tft_pb(int *a, int *b, int *size_a, int *size_b)\n{\n\tint\ti;\n\n\tif (*size_a == 0)\n\t\treturn ;\n\ti = *size_b;\n\twhile (i > 0)\n\t{\n\t\tb[i] = b[i - 1];\n\t\ti--;\n\t}\n\tb[0] = a[0];\n\ti = 0;\n\twhile (i < *size_a - 1)\n\t{\n\t\ta[i] = a[i + 1];\n\t\ti++;\n\t}\n\t(*size_a)--;\n\t(*size_b)++;\n\twrite(1, \"pb\\n\", 3);\n}\n\nvoid\tft_pa(int *a, int *b, int *size_a, int *size_b)\n{\n\tint\ti;\n\n\tif (*size_b == 0)\n\t\treturn ;\n\ti = *size_a;\n\twhile (i > 0)\n\t{\n\t\ta[i] = a[i - 1];\n\t\ti--;\n\t}\n\ta[0] = b[0];\n\ti = 0;\n\twhile (i < *size_b - 1)\n\t{\n\t\tb[i] = b[i + 1];\n\t\ti++;\n\t}\n\t(*size_a)++;\n\t(*size_b)--;\n\twrite(1, \"pa\\n\", 3);\n}\n\nint\tft_find_min_pos(int *stack, int size)\n{\n\tint\tmin_pos;\n\tint\ti;\n\n\tmin_pos = 0;\n\ti = 1;\n\twhile (i < size)\n\t{\n\t\tif (stack[i] < stack[min_pos])\n\t\t\tmin_pos = i;\n\t\ti++;\n\t}\n\treturn (min_pos);\n}\n\nvoid\tft_bring_to_top(int *stack, int size, int pos)\n{\n\tif (pos <= size / 2)\n\t{\n\t\twhile (pos > 0)\n\t\t{\n\t\t\tft_ra(stack, size);\n\t\t\tpos--;\n\t\t}\n\t}\n\telse\n\t{\n\t\twhile (pos < size)\n\t\t{\n\t\t\tft_rra(stack, size);\n\t\t\tpos++;\n\t\t}\n\t}\n}\n\nvoid\tft_sort_three(int *stack, int size)\n{\n\tif (size != 3)\n\t\treturn ;\n\tif (stack[0] > stack[1] && stack[0] > stack[2])\n\t\tft_ra(stack, size);\n\telse if (stack[1] > stack[0] && stack[1] > stack[2])\n\t\tft_rra(stack, size);\n\tif (stack[0] > stack[1])\n\t\tft_sa(stack);\n}\n\nvoid\tft_sort_five(int *a, int *b, int *size_a, int *size_b)\n{\n\tint\tpos;\n\n\tpos = ft_find_min_pos(a, *size_a);\n\tft_bring_to_top(a, *size_a, pos);\n\tft_pb(a, b, size_a, size_b);\n\tpos = ft_find_min_pos(a, *size_a);\n\tft_bring_to_top(a, *size_a, pos);\n\tft_pb(a, b, size_a, size_b);\n\tft_sort_three(a, *size_a);\n\tft_pa(a, b, size_a, size_b);\n\tft_pa(a, b, size_a, size_b);\n}\n\nint\tmain(void)\n{\n\tint\ta[5] = {5, 3, 1, 4, 2};\n\tint\tb[5];\n\tint\tsize_a = 5;\n\tint\tsize_b = 0;\n\n\tft_sort_five(a, b, &size_a, &size_b);\n\treturn (0);\n}",
+  "hints": [
+    "Commence par coder pb et pa : ce sont des push qui decalent les tableaux et mettent a jour les tailles.",
+    "Pour trouver le min, parcours le tableau et garde l'index du plus petit. Puis utilise ra ou rra selon sa position.",
+    "L'ordre est important : d'abord les 2 pb (plus petits), puis sort_three, puis 2 pa."
+  ],
+  "testCases": [
+    {
+      "id": 1,
+      "description": "Pile [5, 3, 1, 4, 2] : cas general",
+      "stdin": "",
+      "expectedStdout": "ra\nra\npb\nra\npb\nra\npa\npa\n",
+      "expectedExitCode": 0,
+      "visible": true
+    },
+    {
+      "id": 2,
+      "description": "Pile [1, 2, 3, 4, 5] : deja triee",
+      "stdin": "",
+      "expectedStdout": "pb\npb\npa\npa\n",
+      "expectedExitCode": 0,
+      "visible": false
+    },
+    {
+      "id": 3,
+      "description": "Pile [5, 4, 3, 2, 1] : ordre inverse",
+      "stdin": "",
+      "expectedStdout": "rra\npb\nrra\npb\nra\nsa\npa\npa\n",
+      "expectedExitCode": 0,
+      "visible": false
+    }
+  ],
+  "constraints": {
+    "allowedFunctions": ["write"],
+    "forbiddenFunctions": ["printf", "puts", "sort", "qsort"],
+    "maxExecutionTime": 5000,
+    "maxMemory": 128
+  },
+  "relatedExercises": ["c-day51-ex00-ft-sort-three", "c-day51-ex02-ft-find-index"],
+  "resources": [
+    {
+      "title": "Push_swap tutorial complet",
+      "url": "https://medium.com/nerd-for-tech/push-swap-tutorial-fa746e6b2571",
+      "type": "article"
+    },
+    {
+      "title": "Visualiseur push_swap",
+      "url": "https://github.com/o-reo/push_swap_visualizer",
+      "type": "documentation"
+    }
+  ]
+}

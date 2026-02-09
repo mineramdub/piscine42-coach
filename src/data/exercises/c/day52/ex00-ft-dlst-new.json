@@ -1,0 +1,257 @@
+{
+  "id": "c-day52-ex00-ft-dlst-new",
+  "category": "c",
+  "day": 52,
+  "order": 0,
+  "title": "Creer un noeud de liste doublement chainee",
+  "description": "Ecris une fonction ft_dlst_new qui cree un nouveau noeud de liste doublement chainee. La structure t_dlist contient un pointeur void *content, un pointeur prev et un pointeur next. Le noeud cree doit avoir prev et next initialises a NULL. Prototype : t_dlist *ft_dlst_new(void *content);",
+  "difficulty": 3,
+  "points": 30,
+  "estimatedTime": 25,
+  "learningObjectives": [
+    "Comprendre la structure d'une liste doublement chainee",
+    "Maitriser l'allocation dynamique avec malloc pour les noeuds",
+    "Savoir initialiser correctement les pointeurs prev et next a NULL",
+    "Comprendre la difference entre liste simplement et doublement chainee",
+    "Utiliser void * pour stocker des donnees generiques"
+  ],
+  "learningContent": {
+    "lesson": {
+      "introduction": "Les listes doublement chainees sont une evolution des listes simplement chainees. Chaque noeud possede deux pointeurs : un vers l'element suivant (next) et un vers l'element precedent (prev). Cette double liaison permet de parcourir la liste dans les deux sens et facilite les insertions et suppressions. En C, on les implemente avec des structures et de l'allocation dynamique. Elles sont tres utilisees dans les projets 42 comme minishell (historique de commandes) et push_swap (representation des piles).",
+      "steps": [
+        {
+          "id": 1,
+          "title": "Structure d'un noeud doublement chaine",
+          "content": "Un noeud de liste doublement chainee contient 3 champs :\n\n1. **content** : la donnee stockee (void * pour etre generique)\n2. **prev** : pointeur vers le noeud precedent\n3. **next** : pointeur vers le noeud suivant\n\nQuand un noeud est seul (isole), prev et next sont NULL. Le premier noeud a prev = NULL, le dernier a next = NULL.",
+          "codeExample": "typedef struct s_dlist\n{\n\tvoid\t\t\t*content;\n\tstruct s_dlist\t*prev;\n\tstruct s_dlist\t*next;\n}\t\t\t\t\tt_dlist;\n\n// Visualisation d'une liste doublement chainee :\n// NULL <- [A] <-> [B] <-> [C] -> NULL\n//          ^                ^\n//         head             tail\n\n// Noeud isole :\n// NULL <- [X] -> NULL\n// prev = NULL, next = NULL",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Combien d'octets occupe un noeud t_dlist sur un systeme 64 bits ?",
+            "starterCode": "// Sur un systeme 64 bits :\n// void * = ??? octets\n// struct s_dlist * = ??? octets\n// Total pour 3 champs = ???",
+            "solution": "// Sur un systeme 64 bits :\n// void * = 8 octets\n// struct s_dlist * = 8 octets (prev)\n// struct s_dlist * = 8 octets (next)\n// Total = 24 octets (sans padding)\n// sizeof(t_dlist) = 24"
+          }
+        },
+        {
+          "id": 2,
+          "title": "Allocation et initialisation d'un noeud",
+          "content": "Pour creer un noeud, on utilise malloc pour allouer la memoire, puis on initialise les 3 champs. Il est crucial de verifier que malloc n'echoue pas (retourne NULL si plus de memoire).\n\n**Etapes :**\n1. malloc(sizeof(t_dlist))\n2. Verifier que le resultat n'est pas NULL\n3. Assigner content\n4. Mettre prev et next a NULL\n5. Retourner le noeud",
+          "codeExample": "#include <stdlib.h>\n\nt_dlist\t*ft_dlst_new(void *content)\n{\n\tt_dlist\t*node;\n\n\tnode = (t_dlist *)malloc(sizeof(t_dlist));\n\tif (!node)\n\t\treturn (NULL);\n\tnode->content = content;\n\tnode->prev = NULL;\n\tnode->next = NULL;\n\treturn (node);\n}\n\n// Utilisation :\nint\tmain(void)\n{\n\tint\t\tval = 42;\n\tt_dlist\t*node = ft_dlst_new(&val);\n\t// node->content pointe vers val\n\t// node->prev = NULL\n\t// node->next = NULL\n\tfree(node);\n\treturn (0);\n}",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Que se passe-t-il si on oublie d'initialiser prev et next a NULL ?",
+            "starterCode": "t_dlist *node = malloc(sizeof(t_dlist));\nnode->content = data;\n// On n'initialise pas prev et next\n// Que valent prev et next ?",
+            "solution": "// prev et next contiennent des valeurs\n// aleatoires (garbage values).\n// Si on essaie de parcourir la liste,\n// on suit des pointeurs invalides\n// -> Segmentation fault ou corruption memoire.\n// TOUJOURS initialiser a NULL !"
+          }
+        },
+        {
+          "id": 3,
+          "title": "void * : le type generique du C",
+          "content": "Le champ content est de type `void *`, ce qui signifie qu'il peut pointer vers n'importe quel type de donnee : int, char, struct, etc.\n\n**Regles de void * :**\n- On ne peut pas dereferencer un void * directement\n- Il faut le caster vers le bon type avant utilisation\n- Pas besoin de cast pour assigner un pointeur a void *\n\nCela permet de creer des listes generiques qui stockent n'importe quoi.",
+          "codeExample": "// Stocker un int\nint\tn = 42;\nt_dlist\t*node1 = ft_dlst_new(&n);\nint\t*ptr = (int *)node1->content;\nprintf(\"%d\\n\", *ptr); // 42\n\n// Stocker une string\nchar\t*str = \"Bonjour\";\nt_dlist\t*node2 = ft_dlst_new(str);\nchar\t*s = (char *)node2->content;\nprintf(\"%s\\n\", s); // Bonjour\n\n// Stocker une struct\ntypedef struct { int x; int y; } t_point;\nt_point\tp = {3, 7};\nt_dlist\t*node3 = ft_dlst_new(&p);\nt_point\t*pp = (t_point *)node3->content;\nprintf(\"%d, %d\\n\", pp->x, pp->y); // 3, 7",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Comment recuperer un int depuis node->content ?",
+            "starterCode": "int val = 42;\nt_dlist *node = ft_dlst_new(&val);\n// Comment lire la valeur 42 depuis node->content ?\n// int result = ???;",
+            "solution": "int val = 42;\nt_dlist *node = ft_dlst_new(&val);\n// Cast void* vers int*, puis dereference :\nint result = *(int *)node->content;\n// result == 42"
+          }
+        },
+        {
+          "id": 4,
+          "title": "Comparaison avec les listes simplement chainees",
+          "content": "La liste doublement chainee est une extension de la liste simplement chainee (t_list de la libft). La difference principale est le pointeur prev qui permet de revenir en arriere.\n\n**Avantages de la double liaison :**\n- Parcours dans les deux sens (bidirectionnel)\n- Suppression d'un noeud en O(1) si on a le pointeur vers le noeud\n- Insertion avant un noeud en O(1)\n\n**Inconvenients :**\n- Plus de memoire (un pointeur supplementaire par noeud)\n- Plus de pointeurs a maintenir lors des insertions/suppressions\n- Plus de risques de bugs (oublier de mettre a jour prev ou next)",
+          "codeExample": "// Liste simplement chainee :\ntypedef struct s_list\n{\n\tvoid\t\t\t*content;\n\tstruct s_list\t*next;\n}\t\t\t\t\tt_list;\n// [A] -> [B] -> [C] -> NULL\n// On ne peut aller que vers l'avant\n\n// Liste doublement chainee :\ntypedef struct s_dlist\n{\n\tvoid\t\t\t*content;\n\tstruct s_dlist\t*prev;\n\tstruct s_dlist\t*next;\n}\t\t\t\t\tt_dlist;\n// NULL <- [A] <-> [B] <-> [C] -> NULL\n// On peut aller dans les deux sens\n\n// Supprimer le noeud B :\n// Simple : il faut le noeud A pour changer A->next\n// Double : B->prev->next = B->next; B->next->prev = B->prev;",
+          "language": "c"
+        }
+      ]
+    },
+    "theory": [
+      {
+        "title": "Listes chainees : rappels",
+        "content": "Une liste chainee est une structure de donnees dynamique ou chaque element (noeud) contient une donnee et un ou plusieurs pointeurs vers d'autres noeuds. Contrairement aux tableaux, les elements ne sont pas contigus en memoire.",
+        "codeExamples": [
+          {
+            "title": "Tableau vs liste chainee",
+            "code": "// Tableau : acces direct par index O(1)\nint arr[5] = {1, 2, 3, 4, 5};\nint x = arr[3]; // Acces direct\n\n// Liste chainee : acces sequentiel O(n)\n// Pour atteindre le 4eme element,\n// on doit traverser les 3 premiers\nt_dlist *current = head;\nint i = 0;\nwhile (i < 3)\n{\n\tcurrent = current->next;\n\ti++;\n}\n// current pointe maintenant vers le 4eme noeud",
+            "explanation": "Les tableaux offrent un acces direct, les listes un acces sequentiel mais une insertion flexible"
+          }
+        ],
+        "keyPoints": [
+          "Les noeuds sont alloues dynamiquement avec malloc",
+          "Chaque noeud est independant en memoire (pas contigu)",
+          "L'insertion et la suppression sont en O(1) si on a le pointeur",
+          "Le parcours est en O(n) car il faut suivre les liens"
+        ],
+        "commonMistakes": [
+          "Oublier de verifier le retour de malloc (NULL si echec)",
+          "Ne pas liberer la memoire des noeuds supprimes (fuite memoire)",
+          "Perdre la reference au premier noeud (toute la liste est perdue)"
+        ]
+      },
+      {
+        "title": "La double liaison prev/next",
+        "content": "Le pointeur prev pointe vers le noeud precedent dans la liste. Combine avec next, il permet une navigation bidirectionnelle et simplifie certaines operations comme la suppression.",
+        "codeExamples": [
+          {
+            "title": "Navigation bidirectionnelle",
+            "code": "// Liste : [A] <-> [B] <-> [C]\n// Si on est sur B :\n// B->prev = A\n// B->next = C\n// On peut aller en avant (C) ou en arriere (A)\n\n// Parcours en arriere (depuis la fin) :\nt_dlist *current = tail;\nwhile (current)\n{\n\t// traiter current\n\tcurrent = current->prev;\n}\n\n// Parcours en avant (depuis le debut) :\ncurrent = head;\nwhile (current)\n{\n\t// traiter current\n\tcurrent = current->next;\n}",
+            "explanation": "prev permet de remonter la liste, next de la descendre"
+          }
+        ],
+        "keyPoints": [
+          "prev pointe vers le noeud precedent, NULL pour le premier",
+          "next pointe vers le noeud suivant, NULL pour le dernier",
+          "La navigation est possible dans les deux directions",
+          "head->prev == NULL et tail->next == NULL"
+        ],
+        "commonMistakes": [
+          "Oublier de mettre prev a NULL pour le premier noeud",
+          "Oublier de mettre next a NULL pour le dernier noeud",
+          "Confondre la direction : prev va vers le debut, next vers la fin"
+        ]
+      },
+      {
+        "title": "Allocation dynamique et gestion memoire",
+        "content": "Chaque noeud est alloue dynamiquement avec malloc. Il est essentiel de liberer cette memoire quand le noeud n'est plus necessaire pour eviter les fuites memoire.",
+        "codeExamples": [
+          {
+            "title": "Cycle de vie d'un noeud",
+            "code": "// 1. Creation (allocation)\nt_dlist *node = ft_dlst_new(data);\nif (!node)\n\treturn ; // malloc a echoue\n\n// 2. Utilisation\n// ... insertion dans la liste, etc.\n\n// 3. Liberation\n// Attention : si content a ete alloue avec malloc,\n// il faut le liberer AVANT le noeud\nfree(node->content); // si content est alloue\nfree(node);          // liberer le noeud\n\n// ERREUR : liberer le noeud avant son contenu\nfree(node);          // node est libere\nfree(node->content); // ERREUR : node n'existe plus !",
+            "explanation": "Toujours liberer le contenu avant le noeud si le contenu a ete alloue"
+          }
+        ],
+        "keyPoints": [
+          "malloc retourne NULL si l'allocation echoue",
+          "Toujours verifier le retour de malloc",
+          "Liberer le contenu avant le noeud si necessaire",
+          "Chaque malloc doit avoir un free correspondant"
+        ],
+        "commonMistakes": [
+          "Ne pas verifier si malloc retourne NULL",
+          "Liberer le noeud avant son contenu alloue dynamiquement",
+          "Utiliser un noeud apres l'avoir libere (use-after-free)"
+        ]
+      },
+      {
+        "title": "void * : pointeur generique",
+        "content": "void * est le type pointeur generique du C. Il peut stocker l'adresse de n'importe quel type de donnee. C'est ce qui rend les listes chainees generiques, capables de stocker des int, des strings, des structures, etc.",
+        "codeExamples": [
+          {
+            "title": "Cast et utilisation de void *",
+            "code": "// void * peut stocker n'importe quelle adresse\nvoid *ptr;\n\nint n = 42;\nptr = &n;                    // OK, pas de cast necessaire\nint val = *(int *)ptr;       // Cast pour lire la valeur\n\nchar *str = \"hello\";\nptr = str;                   // OK\nchar *s = (char *)ptr;       // Cast pour utiliser\n\n// On ne peut PAS faire :\n// *ptr = 10;  // Erreur : void* ne peut pas etre dereference\n// ptr + 1;   // Erreur : taille de void inconnue",
+            "explanation": "void * stocke n'importe quelle adresse mais necessite un cast pour etre utilise"
+          }
+        ],
+        "keyPoints": [
+          "void * peut pointer vers n'importe quel type",
+          "Pas de cast necessaire pour assigner a void *",
+          "Un cast est obligatoire pour dereferencer un void *",
+          "On ne peut pas faire d'arithmetique sur void *"
+        ],
+        "commonMistakes": [
+          "Dereferencer un void * sans cast (erreur de compilation)",
+          "Caster vers le mauvais type (lire un int comme un char *)",
+          "Oublier que void * ne stocke que l'adresse, pas la donnee elle-meme"
+        ]
+      }
+    ],
+    "prepExercises": [
+      {
+        "id": 1,
+        "title": "Definir la structure t_dlist",
+        "instruction": "Ecris la definition de la structure t_dlist avec content, prev et next.",
+        "starterCode": "// Definis la structure t_dlist\n// avec les 3 champs necessaires\n// TON CODE ICI",
+        "solution": "typedef struct s_dlist\n{\n\tvoid\t\t\t*content;\n\tstruct s_dlist\t*prev;\n\tstruct s_dlist\t*next;\n}\t\t\t\t\tt_dlist;",
+        "hint": "typedef struct s_dlist { ... } t_dlist; avec 3 champs : void *, et 2 pointeurs vers s_dlist.",
+        "difficulty": 1
+      },
+      {
+        "id": 2,
+        "title": "Allouer un noeud avec malloc",
+        "instruction": "Alloue un noeud t_dlist avec malloc et verifie que l'allocation a reussi.",
+        "starterCode": "#include <stdlib.h>\n\nt_dlist\t*create_node(void)\n{\n\t// Alloue un noeud et verifie le retour de malloc\n\t// TON CODE ICI\n}",
+        "solution": "#include <stdlib.h>\n\nt_dlist\t*create_node(void)\n{\n\tt_dlist\t*node;\n\n\tnode = (t_dlist *)malloc(sizeof(t_dlist));\n\tif (!node)\n\t\treturn (NULL);\n\treturn (node);\n}",
+        "hint": "malloc(sizeof(t_dlist)) alloue la taille d'un noeud. Verifie si le resultat est NULL.",
+        "difficulty": 1
+      },
+      {
+        "id": 3,
+        "title": "Initialiser les champs du noeud",
+        "instruction": "Apres allocation, initialise content avec une donnee et prev/next a NULL.",
+        "starterCode": "t_dlist\t*ft_dlst_new(void *content)\n{\n\tt_dlist\t*node;\n\n\tnode = (t_dlist *)malloc(sizeof(t_dlist));\n\tif (!node)\n\t\treturn (NULL);\n\t// Initialise les 3 champs\n\t// TON CODE ICI\n\treturn (node);\n}",
+        "solution": "t_dlist\t*ft_dlst_new(void *content)\n{\n\tt_dlist\t*node;\n\n\tnode = (t_dlist *)malloc(sizeof(t_dlist));\n\tif (!node)\n\t\treturn (NULL);\n\tnode->content = content;\n\tnode->prev = NULL;\n\tnode->next = NULL;\n\treturn (node);\n}",
+        "hint": "node->content = content; node->prev = NULL; node->next = NULL;",
+        "difficulty": 1
+      },
+      {
+        "id": 4,
+        "title": "Stocker un entier dans un noeud",
+        "instruction": "Cree un noeud contenant un entier et affiche sa valeur en castant content.",
+        "starterCode": "#include <unistd.h>\n#include <stdlib.h>\n\nvoid\tft_putnbr(int n);\nt_dlist\t*ft_dlst_new(void *content);\n\nint\tmain(void)\n{\n\tint\t\tval = 42;\n\tt_dlist\t*node;\n\tint\t\t*ptr;\n\n\tnode = ft_dlst_new(&val);\n\t// Recupere et affiche la valeur\n\t// TON CODE ICI\n\tfree(node);\n\treturn (0);\n}",
+        "solution": "#include <unistd.h>\n#include <stdlib.h>\n\nvoid\tft_putnbr(int n);\nt_dlist\t*ft_dlst_new(void *content);\n\nint\tmain(void)\n{\n\tint\t\tval = 42;\n\tt_dlist\t*node;\n\tint\t\t*ptr;\n\n\tnode = ft_dlst_new(&val);\n\tptr = (int *)node->content;\n\tft_putnbr(*ptr);\n\twrite(1, \"\\n\", 1);\n\tfree(node);\n\treturn (0);\n}",
+        "hint": "Cast node->content en (int *) puis dereference avec *.",
+        "difficulty": 2
+      },
+      {
+        "id": 5,
+        "title": "Creer deux noeuds et les lier",
+        "instruction": "Cree deux noeuds et lie-les ensemble (le premier pointe vers le second et inversement).",
+        "starterCode": "t_dlist\t*ft_dlst_new(void *content);\n\nint\tmain(void)\n{\n\tint\t\ta = 1;\n\tint\t\tb = 2;\n\tt_dlist\t*node1 = ft_dlst_new(&a);\n\tt_dlist\t*node2 = ft_dlst_new(&b);\n\n\t// Lie node1 et node2\n\t// node1 -> node2 et node2 -> node1\n\t// TON CODE ICI\n\n\tfree(node1);\n\tfree(node2);\n\treturn (0);\n}",
+        "solution": "t_dlist\t*ft_dlst_new(void *content);\n\nint\tmain(void)\n{\n\tint\t\ta = 1;\n\tint\t\tb = 2;\n\tt_dlist\t*node1 = ft_dlst_new(&a);\n\tt_dlist\t*node2 = ft_dlst_new(&b);\n\n\tnode1->next = node2;\n\tnode2->prev = node1;\n\t// NULL <- [1] <-> [2] -> NULL\n\n\tfree(node1);\n\tfree(node2);\n\treturn (0);\n}",
+        "hint": "node1->next = node2; et node2->prev = node1;",
+        "difficulty": 2
+      }
+    ]
+  },
+  "starterCode": "#include <unistd.h>\n#include <stdlib.h>\n\ntypedef struct s_dlist\n{\n\tvoid\t\t\t*content;\n\tstruct s_dlist\t*prev;\n\tstruct s_dlist\t*next;\n}\t\t\t\t\tt_dlist;\n\nvoid\tft_putnbr(int n)\n{\n\tchar\tc;\n\n\tif (n == -2147483648)\n\t{\n\t\twrite(1, \"-2147483648\", 11);\n\t\treturn ;\n\t}\n\tif (n < 0)\n\t{\n\t\twrite(1, \"-\", 1);\n\t\tn = -n;\n\t}\n\tif (n >= 10)\n\t\tft_putnbr(n / 10);\n\tc = (n % 10) + '0';\n\twrite(1, &c, 1);\n}\n\nt_dlist\t*ft_dlst_new(void *content)\n{\n\t// 1. Allouer un noeud avec malloc\n\t// 2. Verifier si malloc a reussi\n\t// 3. Initialiser content, prev et next\n\t// 4. Retourner le noeud\n}\n\nint\tmain(void)\n{\n\tint\t\tval = 42;\n\tt_dlist\t*node;\n\n\tnode = ft_dlst_new(&val);\n\tif (node)\n\t{\n\t\tft_putnbr(*(int *)node->content);\n\t\twrite(1, \"\\n\", 1);\n\t\tif (node->prev == NULL)\n\t\t\twrite(1, \"prev=NULL\\n\", 10);\n\t\tif (node->next == NULL)\n\t\t\twrite(1, \"next=NULL\\n\", 10);\n\t\tfree(node);\n\t}\n\treturn (0);\n}",
+  "solution": "#include <unistd.h>\n#include <stdlib.h>\n\ntypedef struct s_dlist\n{\n\tvoid\t\t\t*content;\n\tstruct s_dlist\t*prev;\n\tstruct s_dlist\t*next;\n}\t\t\t\t\tt_dlist;\n\nvoid\tft_putnbr(int n)\n{\n\tchar\tc;\n\n\tif (n == -2147483648)\n\t{\n\t\twrite(1, \"-2147483648\", 11);\n\t\treturn ;\n\t}\n\tif (n < 0)\n\t{\n\t\twrite(1, \"-\", 1);\n\t\tn = -n;\n\t}\n\tif (n >= 10)\n\t\tft_putnbr(n / 10);\n\tc = (n % 10) + '0';\n\twrite(1, &c, 1);\n}\n\nt_dlist\t*ft_dlst_new(void *content)\n{\n\tt_dlist\t*node;\n\n\tnode = (t_dlist *)malloc(sizeof(t_dlist));\n\tif (!node)\n\t\treturn (NULL);\n\tnode->content = content;\n\tnode->prev = NULL;\n\tnode->next = NULL;\n\treturn (node);\n}\n\nint\tmain(void)\n{\n\tint\t\tval = 42;\n\tt_dlist\t*node;\n\n\tnode = ft_dlst_new(&val);\n\tif (node)\n\t{\n\t\tft_putnbr(*(int *)node->content);\n\t\twrite(1, \"\\n\", 1);\n\t\tif (node->prev == NULL)\n\t\t\twrite(1, \"prev=NULL\\n\", 10);\n\t\tif (node->next == NULL)\n\t\t\twrite(1, \"next=NULL\\n\", 10);\n\t\tfree(node);\n\t}\n\treturn (0);\n}",
+  "hints": [
+    "Utilise malloc(sizeof(t_dlist)) pour allouer un noeud. Verifie que le resultat n'est pas NULL.",
+    "Assigne content au champ content du noeud. N'oublie pas de mettre prev et next a NULL.",
+    "Retourne le noeud cree. Si malloc echoue, retourne NULL directement."
+  ],
+  "testCases": [
+    {
+      "id": 1,
+      "description": "Creer un noeud avec un entier, verifier content et pointeurs NULL",
+      "stdin": "",
+      "expectedStdout": "42\nprev=NULL\nnext=NULL\n",
+      "expectedExitCode": 0,
+      "visible": true
+    },
+    {
+      "id": 2,
+      "description": "Creer un noeud avec une chaine de caracteres",
+      "stdin": "",
+      "expectedStdout": "hello\nprev=NULL\nnext=NULL\n",
+      "expectedExitCode": 0,
+      "visible": false
+    },
+    {
+      "id": 3,
+      "description": "Creer un noeud avec content NULL",
+      "stdin": "",
+      "expectedStdout": "content=NULL\nprev=NULL\nnext=NULL\n",
+      "expectedExitCode": 0,
+      "visible": false
+    }
+  ],
+  "constraints": {
+    "allowedFunctions": ["write", "malloc", "free"],
+    "forbiddenFunctions": ["printf", "calloc", "realloc"],
+    "maxExecutionTime": 5000,
+    "maxMemory": 128
+  },
+  "relatedExercises": ["c-day52-ex01-ft-dlst-add", "c-day52-ex02-ft-dlst-remove"],
+  "resources": [
+    {
+      "title": "Listes doublement chainees en C",
+      "url": "https://www.learn-c.org/en/Linked_lists",
+      "type": "article"
+    },
+    {
+      "title": "Documentation malloc",
+      "url": "https://man7.org/linux/man-pages/man3/malloc.3.html",
+      "type": "documentation"
+    }
+  ]
+}

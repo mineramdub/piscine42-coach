@@ -1,0 +1,257 @@
+{
+  "id": "c-day58-ex00-ft-signal-handler",
+  "category": "c",
+  "day": 58,
+  "order": 0,
+  "title": "Gerer SIGINT et SIGTERM avec signal()",
+  "description": "Ecris un programme qui installe un handler personnalise pour SIGINT (Ctrl+C) et SIGTERM. Quand SIGINT est recu, le programme affiche 'Signal SIGINT recu!' au lieu de quitter. Quand SIGTERM est recu, il affiche 'Signal SIGTERM recu, arret...' puis quitte proprement. Le programme tourne en boucle infinie avec pause() en attendant les signaux.",
+  "difficulty": 3,
+  "points": 30,
+  "estimatedTime": 30,
+  "learningObjectives": [
+    "Comprendre ce que sont les signaux Unix et leur role",
+    "Maitriser la fonction signal() pour installer un handler personnalise",
+    "Savoir gerer SIGINT et SIGTERM avec un comportement personnalise",
+    "Comprendre la difference entre les signaux interceptables et non interceptables",
+    "Utiliser pause() pour attendre un signal"
+  ],
+  "learningContent": {
+    "lesson": {
+      "introduction": "Les signaux sont un mecanisme de communication asynchrone entre processus sous Unix. Quand vous appuyez sur Ctrl+C dans le terminal, le systeme envoie le signal SIGINT au processus en premier plan. Par defaut, ce signal termine le processus. Mais on peut installer un 'handler' personnalise pour intercepter les signaux et reagir differemment. Les signaux sont essentiels pour les projets minishell et minitalk a 42.",
+      "steps": [
+        {
+          "id": 1,
+          "title": "Qu'est-ce qu'un signal ?",
+          "content": "Un **signal** est une notification asynchrone envoyee a un processus. Le systeme d'exploitation utilise les signaux pour informer un processus d'un evenement.\n\n**Signaux courants :**\n- **SIGINT (2)** : interruption (Ctrl+C)\n- **SIGTERM (15)** : demande de terminaison (kill par defaut)\n- **SIGKILL (9)** : terminaison forcee (NON interceptable)\n- **SIGSEGV (11)** : violation de memoire (segfault)\n- **SIGPIPE (13)** : ecriture dans un pipe sans lecteur\n\n**Comportements par defaut :** terminer, ignorer, ou stopper le processus.",
+          "codeExample": "// Signaux les plus courants :\n// Signal    Numero  Par defaut    Cause\n// SIGINT      2     Terminer      Ctrl+C\n// SIGQUIT     3     Core dump     Ctrl+\\\n// SIGKILL     9     Terminer      kill -9 (non interceptable)\n// SIGSEGV    11     Core dump     Acces memoire invalide\n// SIGPIPE    13     Terminer      Pipe sans lecteur\n// SIGTERM    15     Terminer      kill (defaut)\n// SIGSTOP    19     Stopper       (non interceptable)\n// SIGCONT    18     Continuer     Reprendre apres stop\n// SIGUSR1    10     Terminer      Signal utilisateur 1\n// SIGUSR2    12     Terminer      Signal utilisateur 2",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Quel signal est envoye quand on fait Ctrl+C ? Peut-on l'intercepter ?",
+            "starterCode": "// Ctrl+C envoie le signal : ???\n// Ce signal peut etre intercepte : ???\n// Quel signal ne peut JAMAIS etre intercepte : ???",
+            "solution": "// Ctrl+C envoie le signal SIGINT (numero 2)\n// Oui, SIGINT peut etre intercepte avec signal() ou sigaction()\n// SIGKILL (9) et SIGSTOP (19) ne peuvent JAMAIS etre interceptes"
+          }
+        },
+        {
+          "id": 2,
+          "title": "Installer un handler avec signal()",
+          "content": "La fonction **signal()** permet d'installer un handler personnalise pour un signal. Le handler est une fonction qui sera appelee automatiquement quand le signal arrive.\n\n**Prototype :** `void (*signal(int signum, void (*handler)(int)))(int);`\n\nPlus simplement : `signal(SIGINT, ma_fonction);`\n\n**Valeurs speciales :**\n- `SIG_DFL` : restaurer le comportement par defaut\n- `SIG_IGN` : ignorer le signal",
+          "codeExample": "#include <signal.h>\n#include <unistd.h>\n\nvoid\thandler(int sig)\n{\n\twrite(1, \"Signal recu!\\n\", 13);\n\t(void)sig;\n}\n\nint\tmain(void)\n{\n\t// Installer le handler pour SIGINT\n\tsignal(SIGINT, handler);\n\t// Maintenant, Ctrl+C appelle handler au lieu de quitter\n\n\t// Ignorer SIGTERM :\n\tsignal(SIGTERM, SIG_IGN);\n\n\t// Restaurer le comportement par defaut :\n\tsignal(SIGINT, SIG_DFL);\n\n\twhile (1)\n\t\tpause(); // Attend un signal\n\treturn (0);\n}",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Que fait signal(SIGINT, SIG_IGN) ? Et signal(SIGINT, SIG_DFL) ?",
+            "starterCode": "signal(SIGINT, SIG_IGN); // ???\nsignal(SIGINT, SIG_DFL); // ???",
+            "solution": "// SIG_IGN : ignore SIGINT (Ctrl+C ne fait plus rien)\n// SIG_DFL : restaure le comportement par defaut (Ctrl+C termine le programme)"
+          }
+        },
+        {
+          "id": 3,
+          "title": "Ecrire un handler correct",
+          "content": "Un handler de signal doit etre **async-signal-safe**. Cela signifie qu'on ne peut utiliser que certaines fonctions a l'interieur (celles qui sont reentrantes).\n\n**Fonctions autorisees dans un handler :**\n- write()\n- _exit() (pas exit() !)\n- signal()\n\n**Fonctions INTERDITES dans un handler :**\n- printf() (pas async-signal-safe)\n- malloc() / free()\n- exit() (utiliser _exit() a la place)\n\nOn peut aussi utiliser une variable globale de type `volatile sig_atomic_t` pour communiquer entre le handler et le programme principal.",
+          "codeExample": "#include <signal.h>\n#include <unistd.h>\n\nvolatile sig_atomic_t g_signal = 0;\n\nvoid\thandler(int sig)\n{\n\t// CORRECT : write est async-signal-safe\n\twrite(1, \"Signal!\\n\", 8);\n\tg_signal = sig;\n}\n\n// INCORRECT :\nvoid\tbad_handler(int sig)\n{\n\tprintf(\"Signal %d\\n\", sig); // INTERDIT !\n\tchar *p = malloc(10);       // INTERDIT !\n\texit(0);                     // INTERDIT ! Utiliser _exit(0)\n}",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Pourquoi printf() est-il interdit dans un handler de signal ?",
+            "starterCode": "// printf utilise un buffer interne\n// Si le signal arrive pendant que printf ???\n// Resultat : ???",
+            "solution": "// printf utilise un buffer interne et des verrous\n// Si le signal arrive pendant que printf ecrit,\n// le handler appelle printf qui essaie de prendre le meme verrou\n// Resultat : deadlock ou corruption de donnees"
+          }
+        },
+        {
+          "id": 4,
+          "title": "pause() et boucle d'attente",
+          "content": "**pause()** suspend le processus jusqu'a reception d'un signal. C'est plus efficace qu'une boucle active (while(1)) car le processus ne consomme pas de CPU en attendant.\n\nApres que le handler a ete execute, pause() retourne -1 avec errno = EINTR, et le programme continue.\n\nPour un programme qui attend des signaux en continu, on utilise une boucle avec pause() ou une variable globale pour controler la sortie.",
+          "codeExample": "#include <signal.h>\n#include <unistd.h>\n\nvolatile sig_atomic_t g_running = 1;\n\nvoid\thandle_sigterm(int sig)\n{\n\t(void)sig;\n\twrite(1, \"Arret demande...\\n\", 17);\n\tg_running = 0;\n}\n\nvoid\thandle_sigint(int sig)\n{\n\t(void)sig;\n\twrite(1, \"SIGINT recu!\\n\", 13);\n}\n\nint\tmain(void)\n{\n\tsignal(SIGINT, handle_sigint);\n\tsignal(SIGTERM, handle_sigterm);\n\twrite(1, \"En attente de signaux...\\n\", 25);\n\twhile (g_running)\n\t\tpause();\n\twrite(1, \"Programme termine.\\n\", 19);\n\treturn (0);\n}",
+          "language": "c"
+        }
+      ]
+    },
+    "theory": [
+      {
+        "title": "Les signaux Unix en detail",
+        "content": "Les signaux sont des interruptions logicielles. Le noyau peut envoyer un signal a un processus pour diverses raisons : action de l'utilisateur, erreur, ou demande d'un autre processus.",
+        "codeExamples": [
+          {
+            "title": "Les categories de signaux",
+            "code": "// Signaux d'action utilisateur :\n// SIGINT  (2)  - Ctrl+C\n// SIGQUIT (3)  - Ctrl+\\\n// SIGTSTP (20) - Ctrl+Z\n\n// Signaux d'erreur :\n// SIGSEGV (11) - Acces memoire invalide\n// SIGFPE  (8)  - Division par zero\n// SIGBUS  (7)  - Erreur de bus\n\n// Signaux de controle :\n// SIGKILL (9)  - Tuer (non interceptable)\n// SIGTERM (15) - Terminer proprement\n// SIGSTOP (19) - Stopper (non interceptable)\n// SIGCONT (18) - Continuer\n\n// Signaux utilisateur :\n// SIGUSR1 (10) - Defini par l'utilisateur\n// SIGUSR2 (12) - Defini par l'utilisateur",
+            "explanation": "Chaque signal a un numero et un comportement par defaut"
+          }
+        ],
+        "keyPoints": [
+          "Un signal est une interruption asynchrone envoyee a un processus",
+          "Chaque signal a un numero, un nom et un comportement par defaut",
+          "SIGKILL (9) et SIGSTOP (19) ne peuvent PAS etre interceptes",
+          "SIGUSR1 et SIGUSR2 sont reserves pour l'utilisation personnalisee"
+        ],
+        "commonMistakes": [
+          "Essayer d'intercepter SIGKILL ou SIGSTOP (impossible)",
+          "Confondre SIGTERM (interceptable) et SIGKILL (non interceptable)",
+          "Oublier que les numeros de signaux varient selon les systemes"
+        ]
+      },
+      {
+        "title": "La fonction signal()",
+        "content": "signal() est la methode historique pour gerer les signaux. Elle est simple mais a des limites. Pour du code robuste, on prefere sigaction() (voir exercice suivant).",
+        "codeExamples": [
+          {
+            "title": "Utilisation de signal()",
+            "code": "#include <signal.h>\n\n// Prototype simplifie :\ntypedef void (*sighandler_t)(int);\nsighandler_t signal(int signum, sighandler_t handler);\n\n// Installer un handler :\nvoid my_handler(int sig) { /* ... */ }\nsignal(SIGINT, my_handler);\n\n// Ignorer un signal :\nsignal(SIGPIPE, SIG_IGN);\n\n// Restaurer le defaut :\nsignal(SIGINT, SIG_DFL);\n\n// signal() retourne l'ancien handler :\nsighandler_t old = signal(SIGINT, my_handler);\n// old contient l'ancien handler (SIG_DFL la premiere fois)",
+            "explanation": "signal() associe un handler a un signal. Retourne l'ancien handler."
+          }
+        ],
+        "keyPoints": [
+          "signal(signum, handler) installe handler pour le signal signum",
+          "SIG_IGN ignore le signal, SIG_DFL restaure le defaut",
+          "signal() retourne l'ancien handler (ou SIG_ERR en cas d'erreur)",
+          "Le handler recoit le numero du signal en parametre"
+        ],
+        "commonMistakes": [
+          "Oublier de caster ou declarer correctement le handler",
+          "Ne pas verifier le retour de signal() (SIG_ERR = erreur)",
+          "Utiliser signal() dans du code multi-thread (pas sur)"
+        ]
+      },
+      {
+        "title": "Fonctions async-signal-safe",
+        "content": "Dans un handler de signal, seules les fonctions 'async-signal-safe' peuvent etre utilisees. Utiliser une fonction non safe peut causer des deadlocks ou de la corruption.",
+        "codeExamples": [
+          {
+            "title": "Fonctions safe vs unsafe",
+            "code": "// SAFE dans un handler :\n// write(), _exit(), signal()\n// read(), close(), fork(), execve()\n// getpid(), kill(), pause()\n\n// UNSAFE dans un handler (INTERDIT) :\n// printf(), fprintf()\n// malloc(), free(), realloc()\n// exit() (utiliser _exit())\n// strlen() sur certains systemes\n\n// Solution : utiliser une variable globale\nvolatile sig_atomic_t g_flag = 0;\n\nvoid handler(int sig)\n{\n\t(void)sig;\n\tg_flag = 1; // Juste lever un drapeau\n}\n\n// Dans le main :\nwhile (!g_flag)\n\tpause();\n// Traiter le signal ici (hors du handler)",
+            "explanation": "Le pattern recommande : le handler leve un drapeau, le main reagit"
+          }
+        ],
+        "keyPoints": [
+          "Seules les fonctions async-signal-safe sont autorisees dans un handler",
+          "write() est safe, printf() ne l'est PAS",
+          "Le pattern recommande est de lever un drapeau dans le handler",
+          "volatile sig_atomic_t garantit un acces atomique a la variable"
+        ],
+        "commonMistakes": [
+          "Appeler printf() dans un handler (risk de deadlock)",
+          "Appeler malloc/free dans un handler (corruption du tas)",
+          "Utiliser exit() au lieu de _exit() dans un handler"
+        ]
+      },
+      {
+        "title": "Envoyer des signaux",
+        "content": "On peut envoyer des signaux a un processus avec la commande kill du shell ou la fonction kill() en C. Le nom est trompeur : kill() envoie n'importe quel signal, pas seulement SIGKILL.",
+        "codeExamples": [
+          {
+            "title": "kill() et raise()",
+            "code": "#include <signal.h>\n#include <unistd.h>\n\n// Envoyer un signal a un processus :\nkill(pid, SIGTERM); // Envoie SIGTERM a pid\nkill(pid, SIGINT);  // Envoie SIGINT a pid\nkill(pid, SIGUSR1); // Envoie SIGUSR1 a pid\n\n// Envoyer un signal a soi-meme :\nraise(SIGINT); // Equivalent a kill(getpid(), SIGINT)\n\n// Depuis le terminal :\n// kill -SIGTERM 12345\n// kill -9 12345       (SIGKILL)\n// kill -SIGUSR1 12345\n\n// kill avec pid = 0 envoie a tout le groupe :\nkill(0, SIGTERM); // Tous les processus du groupe",
+            "explanation": "kill() envoie un signal a un processus par son PID"
+          }
+        ],
+        "keyPoints": [
+          "kill(pid, signal) envoie un signal a un processus",
+          "raise(signal) envoie un signal a soi-meme",
+          "kill() retourne 0 en succes, -1 en erreur",
+          "On ne peut envoyer des signaux qu'aux processus qu'on possede (meme UID)"
+        ],
+        "commonMistakes": [
+          "Confondre kill() (envoyer un signal) avec tuer un processus",
+          "Oublier de verifier que le PID cible est valide",
+          "Envoyer SIGKILL en premier recours (utiliser SIGTERM d'abord)"
+        ]
+      }
+    ],
+    "prepExercises": [
+      {
+        "id": 1,
+        "title": "Handler basique pour SIGINT",
+        "instruction": "Installe un handler qui affiche 'Ctrl+C intercepte!' quand on recoit SIGINT.",
+        "starterCode": "#include <signal.h>\n#include <unistd.h>\n\nvoid\thandler(int sig)\n{\n\t// Affiche le message\n\t// TON CODE ICI\n\t(void)sig;\n}\n\nint\tmain(void)\n{\n\t// Installe le handler pour SIGINT\n\t// TON CODE ICI\n\tpause();\n\treturn (0);\n}",
+        "solution": "#include <signal.h>\n#include <unistd.h>\n\nvoid\thandler(int sig)\n{\n\twrite(1, \"Ctrl+C intercepte!\\n\", 19);\n\t(void)sig;\n}\n\nint\tmain(void)\n{\n\tsignal(SIGINT, handler);\n\tpause();\n\treturn (0);\n}",
+        "hint": "signal(SIGINT, handler) puis pause() pour attendre le signal.",
+        "difficulty": 1
+      },
+      {
+        "id": 2,
+        "title": "Ignorer SIGINT",
+        "instruction": "Ecris un programme qui ignore SIGINT. Le programme attend 5 secondes puis affiche 'Fini'.",
+        "starterCode": "#include <signal.h>\n#include <unistd.h>\n\nint\tmain(void)\n{\n\t// Ignore SIGINT et attend 5 secondes\n\t// TON CODE ICI\n\treturn (0);\n}",
+        "solution": "#include <signal.h>\n#include <unistd.h>\n\nint\tmain(void)\n{\n\tsignal(SIGINT, SIG_IGN);\n\twrite(1, \"Ctrl+C est ignore pendant 5s\\n\", 29);\n\tsleep(5);\n\twrite(1, \"Fini\\n\", 5);\n\treturn (0);\n}",
+        "hint": "signal(SIGINT, SIG_IGN) ignore SIGINT. Utilise sleep(5) pour attendre.",
+        "difficulty": 1
+      },
+      {
+        "id": 3,
+        "title": "Variable globale avec signal",
+        "instruction": "Utilise une variable volatile sig_atomic_t pour quitter proprement sur SIGINT.",
+        "starterCode": "#include <signal.h>\n#include <unistd.h>\n\nvolatile sig_atomic_t g_running = 1;\n\nvoid\thandler(int sig)\n{\n\t// Met g_running a 0\n\t// TON CODE ICI\n\t(void)sig;\n}\n\nint\tmain(void)\n{\n\t// Boucle tant que g_running == 1\n\t// TON CODE ICI\n\treturn (0);\n}",
+        "solution": "#include <signal.h>\n#include <unistd.h>\n\nvolatile sig_atomic_t g_running = 1;\n\nvoid\thandler(int sig)\n{\n\tg_running = 0;\n\t(void)sig;\n}\n\nint\tmain(void)\n{\n\tsignal(SIGINT, handler);\n\twrite(1, \"En attente...\\n\", 14);\n\twhile (g_running)\n\t\tpause();\n\twrite(1, \"Arret propre\\n\", 13);\n\treturn (0);\n}",
+        "hint": "Le handler met g_running = 0. La boucle while(g_running) + pause() attend.",
+        "difficulty": 2
+      },
+      {
+        "id": 4,
+        "title": "Gerer deux signaux",
+        "instruction": "Installe un handler different pour SIGINT et SIGTERM.",
+        "starterCode": "#include <signal.h>\n#include <unistd.h>\n\nvoid\thandle_int(int sig)\n{\n\t(void)sig;\n\t// Affiche \"SIGINT recu\"\n}\n\nvoid\thandle_term(int sig)\n{\n\t(void)sig;\n\t// Affiche \"SIGTERM recu\"\n}\n\nint\tmain(void)\n{\n\t// Installe les deux handlers\n\t// TON CODE ICI\n\twhile (1) pause();\n\treturn (0);\n}",
+        "solution": "#include <signal.h>\n#include <unistd.h>\n\nvoid\thandle_int(int sig)\n{\n\t(void)sig;\n\twrite(1, \"SIGINT recu\\n\", 12);\n}\n\nvoid\thandle_term(int sig)\n{\n\t(void)sig;\n\twrite(1, \"SIGTERM recu\\n\", 13);\n\t_exit(0);\n}\n\nint\tmain(void)\n{\n\tsignal(SIGINT, handle_int);\n\tsignal(SIGTERM, handle_term);\n\twhile (1)\n\t\tpause();\n\treturn (0);\n}",
+        "hint": "signal(SIGINT, handle_int) et signal(SIGTERM, handle_term).",
+        "difficulty": 2
+      },
+      {
+        "id": 5,
+        "title": "Compter les signaux recus",
+        "instruction": "Compte le nombre de SIGINT recus. Au 3eme SIGINT, quitte le programme.",
+        "starterCode": "#include <signal.h>\n#include <unistd.h>\n\nvolatile sig_atomic_t g_count = 0;\n\nvoid\thandler(int sig)\n{\n\t(void)sig;\n\t// Incremente g_count et affiche le compteur\n\t// Si g_count == 3, quitte\n}\n\nint\tmain(void)\n{\n\t// TON CODE ICI\n\treturn (0);\n}",
+        "solution": "#include <signal.h>\n#include <unistd.h>\n\nvolatile sig_atomic_t g_count = 0;\n\nvoid\thandler(int sig)\n{\n\t(void)sig;\n\tg_count++;\n\tif (g_count == 1)\n\t\twrite(1, \"Signal 1/3\\n\", 11);\n\telse if (g_count == 2)\n\t\twrite(1, \"Signal 2/3\\n\", 11);\n\telse\n\t{\n\t\twrite(1, \"Signal 3/3, arret\\n\", 18);\n\t\t_exit(0);\n\t}\n}\n\nint\tmain(void)\n{\n\tsignal(SIGINT, handler);\n\twrite(1, \"3 Ctrl+C pour quitter\\n\", 22);\n\twhile (1)\n\t\tpause();\n\treturn (0);\n}",
+        "hint": "Incremente g_count dans le handler. Quand g_count atteint 3, _exit(0).",
+        "difficulty": 3
+      }
+    ]
+  },
+  "starterCode": "#include <signal.h>\n#include <unistd.h>\n\nvolatile sig_atomic_t g_running = 1;\n\nvoid\thandle_sigint(int sig)\n{\n\t(void)sig;\n\t// Affiche \"Signal SIGINT recu!\\n\" avec write\n}\n\nvoid\thandle_sigterm(int sig)\n{\n\t(void)sig;\n\t// Affiche \"Signal SIGTERM recu, arret...\\n\" avec write\n\t// Met g_running a 0 pour sortir de la boucle\n}\n\nint\tmain(void)\n{\n\t// 1. Installe handle_sigint pour SIGINT\n\t// 2. Installe handle_sigterm pour SIGTERM\n\t// 3. Affiche \"En attente de signaux...\" \n\t// 4. Boucle avec pause() tant que g_running == 1\n\t// 5. Affiche \"Programme termine.\"\n\treturn (0);\n}",
+  "solution": "#include <signal.h>\n#include <unistd.h>\n\nvolatile sig_atomic_t g_running = 1;\n\nvoid\thandle_sigint(int sig)\n{\n\t(void)sig;\n\twrite(1, \"Signal SIGINT recu!\\n\", 20);\n}\n\nvoid\thandle_sigterm(int sig)\n{\n\t(void)sig;\n\twrite(1, \"Signal SIGTERM recu, arret...\\n\", 30);\n\tg_running = 0;\n}\n\nint\tmain(void)\n{\n\tsignal(SIGINT, handle_sigint);\n\tsignal(SIGTERM, handle_sigterm);\n\twrite(1, \"En attente de signaux...\\n\", 25);\n\twhile (g_running)\n\t\tpause();\n\twrite(1, \"Programme termine.\\n\", 19);\n\treturn (0);\n}",
+  "hints": [
+    "Utilise signal(SIGINT, handle_sigint) et signal(SIGTERM, handle_sigterm) pour installer les handlers.",
+    "Dans les handlers, utilise write() (pas printf !) car c'est async-signal-safe. Le parametre sig est le numero du signal.",
+    "Utilise une variable volatile sig_atomic_t g_running et pause() dans une boucle while(g_running)."
+  ],
+  "testCases": [
+    {
+      "id": 1,
+      "description": "SIGINT est intercepte et le message est affiche",
+      "stdin": "",
+      "expectedStdout": "En attente de signaux...\nSignal SIGINT recu!\n",
+      "expectedExitCode": 0,
+      "visible": true
+    },
+    {
+      "id": 2,
+      "description": "SIGTERM termine proprement le programme",
+      "stdin": "",
+      "expectedStdout": "Signal SIGTERM recu, arret...\nProgramme termine.\n",
+      "expectedExitCode": 0,
+      "visible": false
+    },
+    {
+      "id": 3,
+      "description": "Plusieurs SIGINT consecutifs sont geres",
+      "stdin": "",
+      "expectedStdout": "Signal SIGINT recu!\nSignal SIGINT recu!\n",
+      "expectedExitCode": 0,
+      "visible": false
+    }
+  ],
+  "constraints": {
+    "allowedFunctions": ["write", "signal", "pause", "sleep", "_exit"],
+    "forbiddenFunctions": ["printf", "system"],
+    "maxExecutionTime": 5000,
+    "maxMemory": 128
+  },
+  "relatedExercises": ["c-day58-ex01-ft-signal-send", "c-day58-ex02-ft-sigaction-intro"],
+  "resources": [
+    {
+      "title": "Man signal(2) - Linux manual page",
+      "url": "https://man7.org/linux/man-pages/man2/signal.2.html",
+      "type": "documentation"
+    },
+    {
+      "title": "Les signaux Unix en C - Guide pratique",
+      "url": "https://www.geeksforgeeks.org/signals-c-language/",
+      "type": "article"
+    }
+  ]
+}

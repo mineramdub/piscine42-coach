@@ -1,0 +1,257 @@
+{
+  "id": "c-day59-ex01-ft-mini-ls",
+  "category": "c",
+  "day": 59,
+  "order": 1,
+  "title": "Implementer un mini ls",
+  "description": "Ecris un programme qui prend un chemin de repertoire en argument et affiche pour chaque entree : le nom, la taille en octets et les permissions au format rwxrwxrwx. Utilise opendir(), readdir() et stat() pour lister les fichiers. Les fichiers caches (commencant par '.') ne sont pas affiches. Format par ligne : '[permissions] [taille] [nom]'.",
+  "difficulty": 4,
+  "points": 40,
+  "estimatedTime": 40,
+  "learningObjectives": [
+    "Maitriser opendir(), readdir() et closedir() pour parcourir un repertoire",
+    "Combiner readdir() et stat() pour obtenir les infos des fichiers",
+    "Savoir construire des chemins complets avec la concatenation",
+    "Comprendre la structure struct dirent et ses champs",
+    "Gerer les erreurs d'ouverture et de lecture de repertoire"
+  ],
+  "learningContent": {
+    "lesson": {
+      "introduction": "La commande ls est l'une des plus utilisees sous Unix. Pour implementer un mini ls, on doit combiner plusieurs appels systeme : opendir() pour ouvrir un repertoire, readdir() pour lire ses entrees, et stat() pour obtenir les details de chaque fichier. Ce pattern est fondamental pour tout programme qui parcourt le systeme de fichiers.",
+      "steps": [
+        {
+          "id": 1,
+          "title": "opendir() et readdir()",
+          "content": "**opendir(path)** ouvre un repertoire et retourne un pointeur DIR *. **readdir(dir)** lit l'entree suivante et retourne un pointeur vers struct dirent.\n\nLa boucle typique :\n1. `DIR *dir = opendir(path);`\n2. `while ((entry = readdir(dir)) != NULL)`\n3. Traiter entry->d_name\n4. `closedir(dir);`\n\n**struct dirent** contient principalement `d_name` (le nom de l'entree).",
+          "codeExample": "#include <dirent.h>\n#include <stdio.h>\n\nint\tmain(void)\n{\n\tDIR\t\t\t\t*dir;\n\tstruct dirent\t*entry;\n\n\tdir = opendir(\".\");\n\tif (dir == NULL)\n\t{\n\t\tperror(\"opendir\");\n\t\treturn (1);\n\t}\n\twhile ((entry = readdir(dir)) != NULL)\n\t\tprintf(\"%s\\n\", entry->d_name);\n\tclosedir(dir);\n\treturn (0);\n}",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Que contient entry->d_name apres readdir() ?",
+            "starterCode": "struct dirent *entry = readdir(dir);\n// entry->d_name contient : ???\n// Exemples de valeurs : ???",
+            "solution": "// entry->d_name contient le NOM du fichier/repertoire\n// Exemples : \".\", \"..\", \"main.c\", \"Makefile\", \".git\"\n// C'est juste le nom, PAS le chemin complet"
+          }
+        },
+        {
+          "id": 2,
+          "title": "Construire le chemin complet pour stat()",
+          "content": "readdir() ne donne que le nom du fichier, pas le chemin complet. Pour appeler stat(), il faut construire le chemin : `repertoire + \"/\" + nom_fichier`.\n\nExemple : si on parcourt `/home/user` et qu'on trouve `test.c`, le chemin complet est `/home/user/test.c`.",
+          "codeExample": "#include <string.h>\n#include <sys/stat.h>\n\nvoid\tbuild_path(char *buf, char *dir, char *name)\n{\n\tint\ti;\n\tint\tj;\n\n\ti = 0;\n\twhile (dir[i])\n\t{\n\t\tbuf[i] = dir[i];\n\t\ti++;\n\t}\n\tbuf[i++] = '/';\n\tj = 0;\n\twhile (name[j])\n\t{\n\t\tbuf[i + j] = name[j];\n\t\tj++;\n\t}\n\tbuf[i + j] = '\\0';\n}\n\n// Usage :\nchar path[1024];\nbuild_path(path, \"/home/user\", \"test.c\");\n// path = \"/home/user/test.c\"\nstruct stat sb;\nstat(path, &sb); // Maintenant on peut stat",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Pourquoi ne peut-on pas faire stat(entry->d_name, &sb) directement ?",
+            "starterCode": "// entry->d_name = \"test.c\"\n// stat(\"test.c\", &sb) fonctionne si ???\n// Ca echoue si ???",
+            "solution": "// stat(\"test.c\", &sb) fonctionne si le repertoire courant contient test.c\n// Ca echoue si on parcourt un AUTRE repertoire (pas le repertoire courant)\n// Il faut le chemin complet : \"/autre/repertoire/test.c\""
+          }
+        },
+        {
+          "id": 3,
+          "title": "Filtrer les fichiers caches",
+          "content": "Sous Unix, les fichiers dont le nom commence par '.' sont consideres comme caches. Par defaut, ls ne les affiche pas (il faut -a pour les voir).\n\nDans readdir(), les entrees '.' (repertoire courant) et '..' (repertoire parent) sont toujours presentes. Il faut les filtrer.",
+          "codeExample": "while ((entry = readdir(dir)) != NULL)\n{\n\t// Ignorer les fichiers caches (commencant par '.')\n\tif (entry->d_name[0] == '.')\n\t\tcontinue ;\n\t// Traiter le fichier\n\tbuild_path(path, dir_path, entry->d_name);\n\tstat(path, &sb);\n\tprint_entry(entry->d_name, &sb);\n}",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Comment filtrer '.' et '..' mais garder les autres fichiers caches ?",
+            "starterCode": "// Pour ignorer seulement '.' et '..' :\nif (???) continue;\n// Pour ignorer TOUS les fichiers caches :\nif (???) continue;",
+            "solution": "// Ignorer seulement . et .. :\nif (strcmp(name, \".\") == 0 || strcmp(name, \"..\") == 0) continue;\n// Ignorer TOUS les fichiers caches :\nif (name[0] == '.') continue;"
+          }
+        },
+        {
+          "id": 4,
+          "title": "Assembler le mini ls",
+          "content": "Le mini ls combine tout : ouvrir le repertoire, lire chaque entree, construire le chemin complet, appeler stat, et afficher les informations.\n\nLe format de sortie par ligne est : `[permissions] [taille] [nom]`\n\nExemple :\n```\nrw-r--r--    1234 main.c\nrwxr-xr-x    4096 src\nrw-r--r--     567 Makefile\n```",
+          "codeExample": "#include <dirent.h>\n#include <sys/stat.h>\n#include <unistd.h>\n\nvoid\tmini_ls(char *dir_path)\n{\n\tDIR\t\t\t\t*dir;\n\tstruct dirent\t*entry;\n\tstruct stat\t\tsb;\n\tchar\t\t\tpath[1024];\n\n\tdir = opendir(dir_path);\n\tif (!dir)\n\t\treturn ;\n\twhile ((entry = readdir(dir)) != NULL)\n\t{\n\t\tif (entry->d_name[0] == '.')\n\t\t\tcontinue ;\n\t\tbuild_path(path, dir_path, entry->d_name);\n\t\tif (stat(path, &sb) == -1)\n\t\t\tcontinue ;\n\t\tprint_perms(sb.st_mode);\n\t\twrite(1, \" \", 1);\n\t\tft_putnbr(sb.st_size);\n\t\twrite(1, \" \", 1);\n\t\tft_putstr(entry->d_name);\n\t\twrite(1, \"\\n\", 1);\n\t}\n\tclosedir(dir);\n}",
+          "language": "c"
+        }
+      ]
+    },
+    "theory": [
+      {
+        "title": "opendir, readdir, closedir",
+        "content": "Ces trois fonctions forment le trio pour parcourir un repertoire. Elles font partie de la bibliotheque POSIX et sont definies dans <dirent.h>.",
+        "codeExamples": [
+          {
+            "title": "Le trio de fonctions repertoire",
+            "code": "#include <dirent.h>\n\n// opendir : ouvre un repertoire\nDIR *dir = opendir(\"/home/user\");\n// Retourne NULL si erreur (inexistant, pas de permission)\n\n// readdir : lit l'entree suivante\nstruct dirent *entry;\nwhile ((entry = readdir(dir)) != NULL)\n{\n\t// entry->d_name = nom du fichier\n\t// entry->d_type = type (DT_REG, DT_DIR, etc.)\n}\n// Retourne NULL a la fin du repertoire\n\n// closedir : ferme le repertoire\nclosedir(dir);",
+            "explanation": "Le pattern ouverture-lecture-fermeture pour les repertoires"
+          }
+        ],
+        "keyPoints": [
+          "opendir retourne DIR * ou NULL en cas d'erreur",
+          "readdir retourne struct dirent * ou NULL a la fin",
+          "closedir libere les ressources (comme fclose pour les fichiers)",
+          "d_name contient le nom, d_type le type (pas toujours disponible)"
+        ],
+        "commonMistakes": [
+          "Oublier closedir() (fuite de descripteur de repertoire)",
+          "Ne pas verifier le retour de opendir() (NULL = erreur)",
+          "Supposer que d_type est toujours disponible (certains systemes de fichiers ne le supportent pas)"
+        ]
+      },
+      {
+        "title": "struct dirent",
+        "content": "struct dirent est la structure retournee par readdir(). Elle contient les informations de base sur une entree de repertoire.",
+        "codeExamples": [
+          {
+            "title": "Champs de struct dirent",
+            "code": "struct dirent {\n\tino_t          d_ino;    // Numero d'inode\n\toff_t          d_off;    // Offset dans le repertoire\n\tunsigned short d_reclen; // Longueur de l'enregistrement\n\tunsigned char  d_type;   // Type de fichier (pas garanti)\n\tchar           d_name[]; // Nom du fichier\n};\n\n// d_type (quand disponible) :\n// DT_REG  = fichier regulier\n// DT_DIR  = repertoire\n// DT_LNK  = lien symbolique\n// DT_FIFO = pipe nomme\n// DT_SOCK = socket\n// DT_CHR  = peripherique caractere\n// DT_BLK  = peripherique bloc\n// DT_UNKNOWN = inconnu (utiliser stat a la place)",
+            "explanation": "d_name est le champ le plus utilise, d_type est pratique mais pas portable"
+          }
+        ],
+        "keyPoints": [
+          "d_name contient le nom du fichier (pas le chemin complet)",
+          "d_type donne le type mais n'est pas garanti sur tous les FS",
+          "Si d_type == DT_UNKNOWN, utiliser stat() pour le type",
+          "Le pointeur retourne par readdir est un buffer statique (pas de free)"
+        ],
+        "commonMistakes": [
+          "Stocker le pointeur de readdir sans copier (buffer ecrase au prochain appel)",
+          "Se fier a d_type qui peut valoir DT_UNKNOWN",
+          "Faire free() sur le retour de readdir (c'est un buffer statique)"
+        ]
+      },
+      {
+        "title": "Construction de chemins",
+        "content": "Pour appeler stat() sur un fichier trouve dans un repertoire, il faut construire son chemin complet en concatenant le chemin du repertoire, '/', et le nom du fichier.",
+        "codeExamples": [
+          {
+            "title": "Construire un chemin de fichier",
+            "code": "// Methode manuelle (sans strcat/sprintf) :\nvoid\tbuild_path(char *result, char *dir, char *name)\n{\n\tint i = 0;\n\tint j = 0;\n\n\twhile (dir[i])\n\t\tresult[j++] = dir[i++];\n\tif (j > 0 && result[j - 1] != '/')\n\t\tresult[j++] = '/';\n\ti = 0;\n\twhile (name[i])\n\t\tresult[j++] = name[i++];\n\tresult[j] = '\\0';\n}\n\n// Exemples :\n// build_path(buf, \"/home\", \"user\") -> \"/home/user\"\n// build_path(buf, \"/home/\", \"user\") -> \"/home/user\"\n// build_path(buf, \".\", \"file.c\") -> \"./file.c\"",
+            "explanation": "Il faut gerer le cas ou le repertoire se termine deja par '/'"
+          }
+        ],
+        "keyPoints": [
+          "Le chemin complet = repertoire + '/' + nom du fichier",
+          "Gerer le cas ou le repertoire se termine deja par '/'",
+          "Utiliser un buffer suffisamment grand (PATH_MAX ou 1024)",
+          "Ne pas oublier le '\\0' terminal"
+        ],
+        "commonMistakes": [
+          "Ajouter un double '/' si le repertoire se termine par '/'",
+          "Buffer trop petit pour le chemin complet (depassement)",
+          "Oublier le '/' entre le repertoire et le nom du fichier"
+        ]
+      },
+      {
+        "title": "Combiner readdir et stat",
+        "content": "readdir donne le nom, stat donne les details. Ensemble, ils permettent d'implementer ls -l et d'autres commandes de listing.",
+        "codeExamples": [
+          {
+            "title": "Pattern complet readdir + stat",
+            "code": "void\tlist_dir(char *dir_path)\n{\n\tDIR             *dir;\n\tstruct dirent   *entry;\n\tstruct stat     sb;\n\tchar            full[1024];\n\n\tdir = opendir(dir_path);\n\tif (!dir)\n\t\treturn ;\n\twhile ((entry = readdir(dir)))\n\t{\n\t\tif (entry->d_name[0] == '.')\n\t\t\tcontinue ;\n\t\tbuild_path(full, dir_path, entry->d_name);\n\t\tif (stat(full, &sb) == 0)\n\t\t{\n\t\t\t// sb contient taille, permissions, dates...\n\t\t\tprint_entry(entry->d_name, &sb);\n\t\t}\n\t}\n\tclosedir(dir);\n}",
+            "explanation": "readdir pour le nom + stat pour les details = listing complet"
+          }
+        ],
+        "keyPoints": [
+          "readdir donne le nom, stat donne taille/permissions/dates",
+          "Construire le chemin complet avant d'appeler stat",
+          "Toujours verifier le retour de stat (certains fichiers peuvent disparaitre)",
+          "closedir a la fin pour liberer les ressources"
+        ],
+        "commonMistakes": [
+          "Appeler stat avec juste d_name au lieu du chemin complet",
+          "Ne pas gerer les erreurs de stat (fichier supprime entre readdir et stat)",
+          "Oublier closedir (fuite de ressources)"
+        ]
+      }
+    ],
+    "prepExercises": [
+      {
+        "id": 1,
+        "title": "Lister les noms",
+        "instruction": "Ecris un programme qui liste les noms de fichiers dans le repertoire courant.",
+        "starterCode": "#include <dirent.h>\n#include <unistd.h>\n\nint\tmain(void)\n{\n\t// opendir + readdir + closedir\n\t// TON CODE ICI\n\treturn (0);\n}",
+        "solution": "#include <dirent.h>\n#include <unistd.h>\n\nvoid\tft_putstr(char *s) { while (*s) write(1, s++, 1); }\n\nint\tmain(void)\n{\n\tDIR *dir = opendir(\".\");\n\tstruct dirent *e;\n\tif (!dir)\n\t\treturn (1);\n\twhile ((e = readdir(dir)))\n\t{\n\t\tif (e->d_name[0] != '.')\n\t\t{\n\t\t\tft_putstr(e->d_name);\n\t\t\twrite(1, \"\\n\", 1);\n\t\t}\n\t}\n\tclosedir(dir);\n\treturn (0);\n}",
+        "hint": "opendir(\".\"), boucle readdir, filtre les '.', affiche d_name.",
+        "difficulty": 1
+      },
+      {
+        "id": 2,
+        "title": "Lister avec argument",
+        "instruction": "Le programme prend un chemin en argument et liste les fichiers de ce repertoire.",
+        "starterCode": "#include <dirent.h>\n#include <unistd.h>\n\nvoid\tft_putstr(char *s) { while (*s) write(1, s++, 1); }\n\nint\tmain(int argc, char **argv)\n{\n\t// Ouvre argv[1] comme repertoire\n\t// TON CODE ICI\n\t(void)argc;\n\treturn (0);\n}",
+        "solution": "#include <dirent.h>\n#include <unistd.h>\n\nvoid\tft_putstr(char *s) { while (*s) write(1, s++, 1); }\n\nint\tmain(int argc, char **argv)\n{\n\tDIR *dir;\n\tstruct dirent *e;\n\n\tif (argc != 2)\n\t\treturn (1);\n\tdir = opendir(argv[1]);\n\tif (!dir)\n\t\treturn (1);\n\twhile ((e = readdir(dir)))\n\t{\n\t\tif (e->d_name[0] != '.')\n\t\t{\n\t\t\tft_putstr(e->d_name);\n\t\t\twrite(1, \"\\n\", 1);\n\t\t}\n\t}\n\tclosedir(dir);\n\treturn (0);\n}",
+        "hint": "opendir(argv[1]) au lieu de opendir(\".\").",
+        "difficulty": 1
+      },
+      {
+        "id": 3,
+        "title": "Construire des chemins",
+        "instruction": "Ecris la fonction build_path qui concatene un repertoire et un nom de fichier.",
+        "starterCode": "#include <unistd.h>\n\nvoid\tbuild_path(char *buf, char *dir, char *name)\n{\n\t// Concatene dir + \"/\" + name dans buf\n\t// TON CODE ICI\n}\n\nint\tmain(void)\n{\n\tchar path[1024];\n\tbuild_path(path, \"/home\", \"test.c\");\n\twrite(1, path, 16);\n\twrite(1, \"\\n\", 1);\n\treturn (0);\n}",
+        "solution": "#include <unistd.h>\n\nvoid\tbuild_path(char *buf, char *dir, char *name)\n{\n\tint i = 0;\n\tint j = 0;\n\n\twhile (dir[i])\n\t{\n\t\tbuf[j++] = dir[i++];\n\t}\n\tif (j > 0 && buf[j - 1] != '/')\n\t\tbuf[j++] = '/';\n\ti = 0;\n\twhile (name[i])\n\t\tbuf[j++] = name[i++];\n\tbuf[j] = '\\0';\n}\n\nint\tmain(void)\n{\n\tchar path[1024];\n\tbuild_path(path, \"/home\", \"test.c\");\n\twrite(1, path, 16);\n\twrite(1, \"\\n\", 1);\n\treturn (0);\n}",
+        "hint": "Copie dir dans buf, ajoute '/', copie name, termine par '\\0'.",
+        "difficulty": 2
+      },
+      {
+        "id": 4,
+        "title": "Lister avec taille",
+        "instruction": "Liste les fichiers avec leur taille en combinant readdir et stat.",
+        "starterCode": "#include <dirent.h>\n#include <sys/stat.h>\n#include <unistd.h>\n\nvoid ft_putstr(char *s) { while (*s) write(1, s++, 1); }\nvoid ft_putnbr(long n) { char c; if (n >= 10) ft_putnbr(n / 10); c = (n % 10) + '0'; write(1, &c, 1); }\nvoid build_path(char *b, char *d, char *n) { int i=0,j=0; while(d[i]) b[j++]=d[i++]; if(j>0&&b[j-1]!='/') b[j++]='/'; i=0; while(n[i]) b[j++]=n[i++]; b[j]=0; }\n\nint\tmain(int argc, char **argv)\n{\n\t// Liste fichiers avec taille\n\t// TON CODE ICI\n\t(void)argc;\n\treturn (0);\n}",
+        "solution": "#include <dirent.h>\n#include <sys/stat.h>\n#include <unistd.h>\n\nvoid ft_putstr(char *s) { while (*s) write(1, s++, 1); }\nvoid ft_putnbr(long n) { char c; if (n >= 10) ft_putnbr(n / 10); c = (n % 10) + '0'; write(1, &c, 1); }\nvoid build_path(char *b, char *d, char *n) { int i=0,j=0; while(d[i]) b[j++]=d[i++]; if(j>0&&b[j-1]!='/') b[j++]='/'; i=0; while(n[i]) b[j++]=n[i++]; b[j]=0; }\n\nint\tmain(int argc, char **argv)\n{\n\tDIR *dir;\n\tstruct dirent *e;\n\tstruct stat sb;\n\tchar path[1024];\n\n\tif (argc != 2) return (1);\n\tdir = opendir(argv[1]);\n\tif (!dir) return (1);\n\twhile ((e = readdir(dir)))\n\t{\n\t\tif (e->d_name[0] == '.') continue;\n\t\tbuild_path(path, argv[1], e->d_name);\n\t\tif (stat(path, &sb) == 0)\n\t\t{\n\t\t\tft_putnbr(sb.st_size);\n\t\t\twrite(1, \" \", 1);\n\t\t\tft_putstr(e->d_name);\n\t\t\twrite(1, \"\\n\", 1);\n\t\t}\n\t}\n\tclosedir(dir);\n\treturn (0);\n}",
+        "hint": "build_path pour le chemin complet, stat pour la taille, afficher.",
+        "difficulty": 3
+      },
+      {
+        "id": 5,
+        "title": "Mini ls complet",
+        "instruction": "Ajoute les permissions au listing : [perms] [taille] [nom].",
+        "starterCode": "#include <dirent.h>\n#include <sys/stat.h>\n#include <unistd.h>\n\n// Helpers fournis...\n\nint\tmain(int argc, char **argv)\n{\n\t// Liste avec permissions, taille et nom\n\t// TON CODE ICI\n\t(void)argc;\n\treturn (0);\n}",
+        "solution": "#include <dirent.h>\n#include <sys/stat.h>\n#include <unistd.h>\n\nvoid ft_putstr(char *s) { while (*s) write(1, s++, 1); }\nvoid ft_putnbr(long n) { char c; if (n >= 10) ft_putnbr(n / 10); c = (n % 10) + '0'; write(1, &c, 1); }\nvoid build_path(char *b, char *d, char *n) { int i=0,j=0; while(d[i]) b[j++]=d[i++]; if(j>0&&b[j-1]!='/') b[j++]='/'; i=0; while(n[i]) b[j++]=n[i++]; b[j]=0; }\nvoid print_perms(mode_t m) { char p[10]; p[0]=(m&S_IRUSR)?'r':'-'; p[1]=(m&S_IWUSR)?'w':'-'; p[2]=(m&S_IXUSR)?'x':'-'; p[3]=(m&S_IRGRP)?'r':'-'; p[4]=(m&S_IWGRP)?'w':'-'; p[5]=(m&S_IXGRP)?'x':'-'; p[6]=(m&S_IROTH)?'r':'-'; p[7]=(m&S_IWOTH)?'w':'-'; p[8]=(m&S_IXOTH)?'x':'-'; write(1, p, 9); }\n\nint\tmain(int argc, char **argv)\n{\n\tDIR *dir;\n\tstruct dirent *e;\n\tstruct stat sb;\n\tchar path[1024];\n\n\tif (argc != 2) return (1);\n\tdir = opendir(argv[1]);\n\tif (!dir) return (1);\n\twhile ((e = readdir(dir)))\n\t{\n\t\tif (e->d_name[0] == '.') continue;\n\t\tbuild_path(path, argv[1], e->d_name);\n\t\tif (stat(path, &sb) == 0)\n\t\t{\n\t\t\tprint_perms(sb.st_mode);\n\t\t\twrite(1, \" \", 1);\n\t\t\tft_putnbr(sb.st_size);\n\t\t\twrite(1, \" \", 1);\n\t\t\tft_putstr(e->d_name);\n\t\t\twrite(1, \"\\n\", 1);\n\t\t}\n\t}\n\tclosedir(dir);\n\treturn (0);\n}",
+        "hint": "Combine print_perms, ft_putnbr(st_size) et ft_putstr(d_name).",
+        "difficulty": 3
+      }
+    ]
+  },
+  "starterCode": "#include <dirent.h>\n#include <sys/stat.h>\n#include <unistd.h>\n\nvoid\tft_putstr(char *s) { while (*s) write(1, s++, 1); }\nvoid\tft_putnbr(long n) { char c; if (n >= 10) ft_putnbr(n / 10); c = (n % 10) + '0'; write(1, &c, 1); }\n\nvoid\tbuild_path(char *buf, char *dir, char *name)\n{\n\t// Concatene dir + \"/\" + name dans buf\n}\n\nvoid\tprint_perms(mode_t mode)\n{\n\t// Affiche rwxrwxrwx\n}\n\nint\tmain(int argc, char **argv)\n{\n\t// 1. Ouvre argv[1] comme repertoire\n\t// 2. Boucle readdir, filtre les '.'\n\t// 3. Pour chaque fichier : build_path, stat, afficher\n\t// 4. Format : [perms] [taille] [nom]\n\t(void)argc;\n\t(void)argv;\n\treturn (0);\n}",
+  "solution": "#include <dirent.h>\n#include <sys/stat.h>\n#include <unistd.h>\n\nvoid\tft_putstr(char *s) { while (*s) write(1, s++, 1); }\nvoid\tft_putnbr(long n) { char c; if (n >= 10) ft_putnbr(n / 10); c = (n % 10) + '0'; write(1, &c, 1); }\n\nvoid\tbuild_path(char *buf, char *dir, char *name)\n{\n\tint\ti;\n\tint\tj;\n\n\ti = 0;\n\tj = 0;\n\twhile (dir[i])\n\t\tbuf[j++] = dir[i++];\n\tif (j > 0 && buf[j - 1] != '/')\n\t\tbuf[j++] = '/';\n\ti = 0;\n\twhile (name[i])\n\t\tbuf[j++] = name[i++];\n\tbuf[j] = '\\0';\n}\n\nvoid\tprint_perms(mode_t m)\n{\n\tchar\tp[9];\n\n\tp[0] = (m & S_IRUSR) ? 'r' : '-';\n\tp[1] = (m & S_IWUSR) ? 'w' : '-';\n\tp[2] = (m & S_IXUSR) ? 'x' : '-';\n\tp[3] = (m & S_IRGRP) ? 'r' : '-';\n\tp[4] = (m & S_IWGRP) ? 'w' : '-';\n\tp[5] = (m & S_IXGRP) ? 'x' : '-';\n\tp[6] = (m & S_IROTH) ? 'r' : '-';\n\tp[7] = (m & S_IWOTH) ? 'w' : '-';\n\tp[8] = (m & S_IXOTH) ? 'x' : '-';\n\twrite(1, p, 9);\n}\n\nint\tmain(int argc, char **argv)\n{\n\tDIR\t\t\t\t*dir;\n\tstruct dirent\t*entry;\n\tstruct stat\t\tsb;\n\tchar\t\t\tpath[1024];\n\n\tif (argc != 2)\n\t{\n\t\tft_putstr(\"Usage: ./mini_ls <repertoire>\\n\");\n\t\treturn (1);\n\t}\n\tdir = opendir(argv[1]);\n\tif (!dir)\n\t{\n\t\tft_putstr(\"Erreur ouverture repertoire\\n\");\n\t\treturn (1);\n\t}\n\twhile ((entry = readdir(dir)) != NULL)\n\t{\n\t\tif (entry->d_name[0] == '.')\n\t\t\tcontinue ;\n\t\tbuild_path(path, argv[1], entry->d_name);\n\t\tif (stat(path, &sb) == -1)\n\t\t\tcontinue ;\n\t\tprint_perms(sb.st_mode);\n\t\twrite(1, \" \", 1);\n\t\tft_putnbr(sb.st_size);\n\t\twrite(1, \" \", 1);\n\t\tft_putstr(entry->d_name);\n\t\twrite(1, \"\\n\", 1);\n\t}\n\tclosedir(dir);\n\treturn (0);\n}",
+  "hints": [
+    "Ouvre le repertoire avec opendir(argv[1]). Verifie le retour (NULL = erreur).",
+    "Construis le chemin complet avec build_path avant d'appeler stat. N'oublie pas le '/' entre le repertoire et le nom.",
+    "Pour chaque entree non cachee, affiche permissions (print_perms), taille (ft_putnbr), et nom (ft_putstr)."
+  ],
+  "testCases": [
+    {
+      "id": 1,
+      "description": "Liste les fichiers du repertoire courant",
+      "stdin": "",
+      "expectedStdout": "permissions taille nom pour chaque fichier",
+      "expectedExitCode": 0,
+      "visible": true
+    },
+    {
+      "id": 2,
+      "description": "Les fichiers caches sont exclus",
+      "stdin": "",
+      "expectedStdout": "pas de fichiers commencant par '.'",
+      "expectedExitCode": 0,
+      "visible": false
+    },
+    {
+      "id": 3,
+      "description": "Repertoire inexistant retourne erreur",
+      "stdin": "",
+      "expectedStdout": "Erreur ouverture repertoire\n",
+      "expectedExitCode": 1,
+      "visible": false
+    }
+  ],
+  "constraints": {
+    "allowedFunctions": ["write", "opendir", "readdir", "closedir", "stat", "lstat"],
+    "forbiddenFunctions": ["printf", "system", "scandir"],
+    "maxExecutionTime": 5000,
+    "maxMemory": 128
+  },
+  "relatedExercises": ["c-day59-ex00-ft-file-info", "c-day59-ex02-ft-copy-recursive"],
+  "resources": [
+    {
+      "title": "Man readdir(3) - Linux manual page",
+      "url": "https://man7.org/linux/man-pages/man3/readdir.3.html",
+      "type": "documentation"
+    },
+    {
+      "title": "Parcourir un repertoire en C",
+      "url": "https://www.geeksforgeeks.org/c-program-list-files-sub-directories-directory/",
+      "type": "article"
+    }
+  ]
+}

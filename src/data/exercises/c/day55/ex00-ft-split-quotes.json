@@ -1,0 +1,257 @@
+{
+  "id": "c-day55-ex00-ft-split-quotes",
+  "category": "c",
+  "day": 55,
+  "order": 0,
+  "title": "Split avec gestion des quotes",
+  "description": "Ecris une fonction ft_split_quotes qui decoupe une chaine en mots separes par des espaces, mais en respectant les quotes simples et doubles. Le texte entre quotes n'est pas coupe, meme s'il contient des espaces. Exemple : 'hello \"world 42\" test' donne [\"hello\", \"world 42\", \"test\"]. Prototype : char **ft_split_quotes(char *str);",
+  "difficulty": 4,
+  "points": 40,
+  "estimatedTime": 40,
+  "learningObjectives": [
+    "Maitriser le parsing de chaines avec des delimiteurs contextuels",
+    "Gerer les quotes simples et doubles comme groupement de texte",
+    "Implementer un automate a etats pour le parsing",
+    "Allouer et remplir un tableau de chaines dynamiquement",
+    "Preparer les bases du parsing pour minishell"
+  ],
+  "learningContent": {
+    "lesson": {
+      "introduction": "Dans un shell, les espaces separent les arguments, mais le texte entre guillemets est traite comme un seul argument. Par exemple, `echo \"hello world\"` a deux arguments : 'echo' et 'hello world'. Implementer ce comportement necessite un parsing qui distingue les espaces 'normaux' des espaces 'proteges' par des quotes. C'est une competence essentielle pour le projet minishell de 42. L'approche utilise un automate a etats : on est soit en mode normal, soit a l'interieur de quotes simples, soit a l'interieur de quotes doubles.",
+      "steps": [
+        {
+          "id": 1,
+          "title": "Le probleme du split avec quotes",
+          "content": "Le ft_split classique decoupe aux espaces. Mais avec des quotes, certains espaces ne doivent pas etre des separateurs :\n\n- `hello world` -> [\"hello\", \"world\"] (split normal)\n- `hello \"world 42\"` -> [\"hello\", \"world 42\"] (quotes protegent l'espace)\n- `'hello world' test` -> [\"hello world\", \"test\"] (quotes simples aussi)\n\nLes quotes elles-memes ne font pas partie du resultat (elles sont retirees).",
+          "codeExample": "// Exemples d'entree -> sortie :\n\n// \"hello world\"\n// -> [\"hello\", \"world\"]\n\n// \"hello \\\"world 42\\\" test\"\n// -> [\"hello\", \"world 42\", \"test\"]\n\n// \"'hello world' test\"\n// -> [\"hello world\", \"test\"]\n\n// \"one 'two three' \\\"four five\\\" six\"\n// -> [\"one\", \"two three\", \"four five\", \"six\"]\n\n// Les quotes ne sont PAS dans le resultat\n// Les espaces dans les quotes sont preserves",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Combien de mots dans : echo 'hello world' \"foo bar\" baz ?",
+            "starterCode": "// Chaine : echo 'hello world' \"foo bar\" baz\n// Mot 1 : ???\n// Mot 2 : ???\n// Mot 3 : ???\n// Mot 4 : ???\n// Total : ???",
+            "solution": "// Mot 1 : echo\n// Mot 2 : hello world (entre quotes simples)\n// Mot 3 : foo bar (entre quotes doubles)\n// Mot 4 : baz\n// Total : 4 mots"
+          }
+        },
+        {
+          "id": 2,
+          "title": "Automate a etats pour le parsing",
+          "content": "On utilise 3 etats :\n- **NORMAL** : les espaces sont des separateurs, ' ouvre une quote simple, \" ouvre une quote double\n- **IN_SINGLE** : tout est du texte jusqu'au prochain ' (meme les espaces et les \")\n- **IN_DOUBLE** : tout est du texte jusqu'au prochain \" (meme les espaces et les ')\n\nL'etat change quand on rencontre une quote correspondante.",
+          "codeExample": "// Etats :\n#define NORMAL 0\n#define IN_SINGLE 1\n#define IN_DOUBLE 2\n\n// Parsing de: hello \"world 42\" test\n// h -> NORMAL, texte\n// e -> NORMAL, texte\n// l -> NORMAL, texte\n// l -> NORMAL, texte\n// o -> NORMAL, texte\n// ' ' -> NORMAL, separateur -> fin mot 1 \"hello\"\n// \" -> NORMAL -> IN_DOUBLE (ouvre quote)\n// w -> IN_DOUBLE, texte\n// o -> IN_DOUBLE, texte\n// r -> IN_DOUBLE, texte\n// l -> IN_DOUBLE, texte\n// d -> IN_DOUBLE, texte\n// ' ' -> IN_DOUBLE, texte (espace preserve !)\n// 4 -> IN_DOUBLE, texte\n// 2 -> IN_DOUBLE, texte\n// \" -> IN_DOUBLE -> NORMAL (ferme quote) -> fin mot 2\n// ' ' -> NORMAL, separateur\n// t,e,s,t -> NORMAL, texte -> fin mot 3",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Quel est l'etat a chaque caractere de : it's ?",
+            "starterCode": "// Chaine : it's\n// i -> etat ???\n// t -> etat ???\n// ' -> etat ???\n// s -> etat ???\n// Probleme : la quote simple ouvre-t-elle un groupe ?",
+            "solution": "// i -> NORMAL\n// t -> NORMAL\n// ' -> NORMAL -> IN_SINGLE (ouvre quote simple)\n// s -> IN_SINGLE (dans la quote)\n// Fin de chaine : quote non fermee !\n// C'est un cas d'erreur : quote non equilibree\n// Pour simplifier, on traite comme du texte"
+          }
+        },
+        {
+          "id": 3,
+          "title": "Compter les mots puis allouer",
+          "content": "L'implementation se fait en 2 passes :\n\n**Passe 1 :** Compter le nombre de mots en parcourant la chaine avec l'automate a etats. Un mot commence quand on passe d'un separateur a du texte.\n\n**Passe 2 :** Allouer le tableau de char *, puis pour chaque mot, calculer sa longueur, l'allouer, et le copier (sans les quotes).\n\nCette approche en 2 passes evite les realloc et simplifie le code.",
+          "codeExample": "// Passe 1 : compter les mots\nint\tft_count_words(char *str)\n{\n\tint\tcount;\n\tint\tin_word;\n\tint\tstate;\n\n\tcount = 0;\n\tin_word = 0;\n\tstate = NORMAL;\n\twhile (*str)\n\t{\n\t\tif (state == NORMAL && *str == ' ')\n\t\t{\n\t\t\tin_word = 0;\n\t\t}\n\t\telse\n\t\t{\n\t\t\tif (!in_word)\n\t\t\t{\n\t\t\t\tcount++;\n\t\t\t\tin_word = 1;\n\t\t\t}\n\t\t\tif (state == NORMAL && (*str == '\\'' || *str == '\"'))\n\t\t\t\tstate = (*str == '\\'') ? IN_SINGLE : IN_DOUBLE;\n\t\t\telse if ((state == IN_SINGLE && *str == '\\'')\n\t\t\t\t|| (state == IN_DOUBLE && *str == '\"'))\n\t\t\t\tstate = NORMAL;\n\t\t}\n\t\tstr++;\n\t}\n\treturn (count);\n}",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Combien de mots compte ft_count_words pour : a 'b c' d ?",
+            "starterCode": "// str = \"a 'b c' d\"\n// a -> in_word=1, count=1\n// ' ' -> in_word=0\n// ' -> in_word=1, count=2, IN_SINGLE\n// b -> IN_SINGLE (dans le mot)\n// ' ' -> IN_SINGLE (dans le mot, pas un sep)\n// c -> IN_SINGLE\n// ' -> NORMAL (ferme quote)\n// ' ' -> in_word=0\n// d -> in_word=1, count=???\n// Total : ???",
+            "solution": "// count = 3\n// Mot 1 : a\n// Mot 2 : b c (les espaces dans les quotes ne separent pas)\n// Mot 3 : d"
+          }
+        },
+        {
+          "id": 4,
+          "title": "Extraction des mots sans les quotes",
+          "content": "Pour chaque mot, on calcule sa longueur (sans les quotes), on alloue la memoire, et on copie les caracteres en sautant les quotes.\n\nLe parcours est identique a celui du comptage, mais cette fois on extrait le contenu. Les quotes ne sont pas copiees dans le resultat.\n\n**Finalisation :** Le tableau de char * doit se terminer par NULL (comme argv).",
+          "codeExample": "char\t*ft_extract_word(char *str, int *pos)\n{\n\tchar\tword[1024];\n\tint\t\twi;\n\tint\t\tstate;\n\n\twi = 0;\n\tstate = NORMAL;\n\twhile (str[*pos] && !(state == NORMAL && str[*pos] == ' '))\n\t{\n\t\tif (state == NORMAL && (str[*pos] == '\\'' || str[*pos] == '\"'))\n\t\t\tstate = (str[*pos] == '\\'') ? IN_SINGLE : IN_DOUBLE;\n\t\telse if ((state == IN_SINGLE && str[*pos] == '\\'')\n\t\t\t|| (state == IN_DOUBLE && str[*pos] == '\"'))\n\t\t\tstate = NORMAL;\n\t\telse\n\t\t\tword[wi++] = str[*pos];\n\t\t(*pos)++;\n\t}\n\tword[wi] = '\\0';\n\t// Dupliquer word avec malloc et retourner\n}",
+          "language": "c"
+        }
+      ]
+    },
+    "theory": [
+      {
+        "title": "Automates a etats finis",
+        "content": "Un automate a etats finis est un modele de calcul avec un nombre fini d'etats. Les transitions entre etats sont declenchees par les caracteres d'entree. C'est un outil fondamental pour le parsing.",
+        "codeExamples": [
+          {
+            "title": "L'automate pour les quotes",
+            "code": "// Etats : NORMAL, IN_SINGLE, IN_DOUBLE\n// Transitions :\n// NORMAL + ' -> IN_SINGLE\n// NORMAL + \" -> IN_DOUBLE\n// IN_SINGLE + ' -> NORMAL\n// IN_DOUBLE + \" -> NORMAL\n// Tous les autres caracteres : rester dans l'etat actuel\n\n// Table de transitions :\n// Etat      | Caractere | Nouvel etat\n// NORMAL    | '         | IN_SINGLE\n// NORMAL    | \"         | IN_DOUBLE\n// NORMAL    | autre     | NORMAL\n// IN_SINGLE | '         | NORMAL\n// IN_SINGLE | autre     | IN_SINGLE\n// IN_DOUBLE | \"         | NORMAL\n// IN_DOUBLE | autre     | IN_DOUBLE",
+            "explanation": "L'automate a 3 etats et des transitions simples declenchees par les quotes"
+          }
+        ],
+        "keyPoints": [
+          "Un automate a un etat courant qui change selon l'entree",
+          "Les transitions sont deterministes (un seul nouvel etat par entree)",
+          "L'etat determine le comportement (espace = separateur ou texte)",
+          "C'est le modele theorique derriere les expressions regulieres"
+        ],
+        "commonMistakes": [
+          "Oublier de changer d'etat quand on rencontre une quote",
+          "Changer d'etat pour le mauvais type de quote (simple vs double)",
+          "Ne pas revenir en etat NORMAL quand la quote fermante est rencontree"
+        ]
+      },
+      {
+        "title": "Parsing en deux passes",
+        "content": "La technique des deux passes est courante en C : d'abord compter les elements, puis allouer et remplir. Cela evite les reallocations dynamiques et simplifie la gestion memoire.",
+        "codeExamples": [
+          {
+            "title": "Pattern en deux passes",
+            "code": "char\t**ft_split_quotes(char *str)\n{\n\tchar\t**result;\n\tint\t\tnb_words;\n\n\t// Passe 1 : compter les mots\n\tnb_words = ft_count_words(str);\n\n\t// Allouer le tableau de pointeurs (+1 pour NULL)\n\tresult = (char **)malloc(sizeof(char *) * (nb_words + 1));\n\tif (!result)\n\t\treturn (NULL);\n\n\t// Passe 2 : extraire chaque mot\n\t// ...\n\n\tresult[nb_words] = NULL;\n\treturn (result);\n}",
+            "explanation": "Compter d'abord permet d'allouer la taille exacte sans realloc"
+          }
+        ],
+        "keyPoints": [
+          "Passe 1 : compter les elements pour connaitre la taille",
+          "Passe 2 : allouer et remplir avec la taille exacte",
+          "Le tableau de char * se termine par NULL (convention argc/argv)",
+          "Cette technique evite realloc et ses complications"
+        ],
+        "commonMistakes": [
+          "Oublier le +1 pour le NULL terminal dans l'allocation",
+          "Avoir un comptage different entre passe 1 et passe 2 (bug subtil)",
+          "Ne pas liberer les allocations precedentes en cas d'echec"
+        ]
+      },
+      {
+        "title": "Gestion des quotes dans le shell",
+        "content": "Dans bash, les quotes simples et doubles ont des comportements differents. Les quotes simples preservent tout litteralement. Les quotes doubles permettent l'expansion de variables et de certaines sequences d'echappement.",
+        "codeExamples": [
+          {
+            "title": "Quotes dans bash",
+            "code": "// Quotes simples : tout est litteral\n// echo 'hello $USER'  -> hello $USER\n// echo 'hello \"world\"' -> hello \"world\"\n\n// Quotes doubles : expansion de variables\n// echo \"hello $USER\"  -> hello florent\n// echo \"hello 'world'\" -> hello 'world'\n\n// Pour cet exercice, on simplifie :\n// Les deux types de quotes protegent les espaces\n// Pas d'expansion de variables\n// Les quotes ne sont pas dans le resultat",
+            "explanation": "Dans un vrai shell, les quotes doubles permettent l'expansion mais pas les simples"
+          }
+        ],
+        "keyPoints": [
+          "Les quotes simples preservent tout litteralement",
+          "Les quotes doubles permettent l'expansion de variables",
+          "Les deux types protegent les espaces (pas de split)",
+          "Pour minishell, cette distinction sera importante"
+        ],
+        "commonMistakes": [
+          "Traiter les quotes simples et doubles de maniere identique (OK pour cet exercice)",
+          "Oublier qu'une quote dans l'autre type n'est pas speciale ('\"' est du texte en single)",
+          "Ne pas gerer les quotes non fermees (cas d'erreur)"
+        ]
+      },
+      {
+        "title": "Allocation dynamique pour les resultats",
+        "content": "Le resultat est un char ** : un tableau de pointeurs vers des chaines. Chaque chaine doit etre allouee individuellement avec malloc. L'appelant est responsable de liberer toute la memoire.",
+        "codeExamples": [
+          {
+            "title": "Allocation et liberation",
+            "code": "// Allocation :\nchar **result = malloc(sizeof(char *) * (n + 1));\nresult[0] = ft_strdup(\"hello\"); // malloc interne\nresult[1] = ft_strdup(\"world\"); // malloc interne\nresult[2] = NULL;\n\n// Liberation :\nint i = 0;\nwhile (result[i])\n{\n\tfree(result[i]); // Liberer chaque chaine\n\ti++;\n}\nfree(result); // Liberer le tableau de pointeurs\n\n// Ordre : d'abord les chaines, puis le tableau",
+            "explanation": "Chaque malloc doit avoir un free. Liberer les chaines avant le tableau."
+          }
+        ],
+        "keyPoints": [
+          "Le tableau de char * est alloue avec malloc(sizeof(char *) * (n+1))",
+          "Chaque chaine est allouee individuellement",
+          "Le tableau se termine par NULL",
+          "La liberation doit liberer chaque chaine puis le tableau"
+        ],
+        "commonMistakes": [
+          "Oublier de liberer les chaines individuelles (fuites memoire)",
+          "Liberer le tableau avant les chaines (use-after-free)",
+          "Ne pas mettre NULL a la fin du tableau"
+        ]
+      }
+    ],
+    "prepExercises": [
+      {
+        "id": 1,
+        "title": "Detecter si on est dans des quotes",
+        "instruction": "Ecris une fonction qui retourne l'etat (NORMAL, IN_SINGLE, IN_DOUBLE) a la position i.",
+        "starterCode": "int\tft_get_state(char *str, int i)\n{\n\tint\tstate;\n\tint\tj;\n\n\tstate = 0; // NORMAL\n\t// Parcourir de 0 a i-1 et mettre a jour l'etat\n\t// TON CODE ICI\n}",
+        "solution": "int\tft_get_state(char *str, int i)\n{\n\tint\tstate;\n\tint\tj;\n\n\tstate = 0;\n\tj = 0;\n\twhile (j < i)\n\t{\n\t\tif (state == 0 && str[j] == '\\'')\n\t\t\tstate = 1;\n\t\telse if (state == 0 && str[j] == '\"')\n\t\t\tstate = 2;\n\t\telse if (state == 1 && str[j] == '\\'')\n\t\t\tstate = 0;\n\t\telse if (state == 2 && str[j] == '\"')\n\t\t\tstate = 0;\n\t\tj++;\n\t}\n\treturn (state);\n}",
+        "hint": "Parcours la chaine de 0 a i-1 en changeant l'etat a chaque quote rencontree.",
+        "difficulty": 2
+      },
+      {
+        "id": 2,
+        "title": "Est-ce un separateur ?",
+        "instruction": "Ecris une fonction qui retourne 1 si le caractere a la position i est un separateur (espace en etat NORMAL).",
+        "starterCode": "int\tft_is_separator(char *str, int i)\n{\n\t// Un espace est separateur seulement en etat NORMAL\n\t// TON CODE ICI\n}",
+        "solution": "int\tft_is_separator(char *str, int i)\n{\n\tif (str[i] != ' ')\n\t\treturn (0);\n\treturn (ft_get_state(str, i) == 0);\n}",
+        "hint": "Un espace est separateur seulement si l'etat est NORMAL (pas dans des quotes).",
+        "difficulty": 2
+      },
+      {
+        "id": 3,
+        "title": "Compter les mots",
+        "instruction": "Ecris ft_count_words qui compte les mots en tenant compte des quotes.",
+        "starterCode": "int\tft_count_words(char *str)\n{\n\tint\tcount;\n\tint\tin_word;\n\tint\tstate;\n\n\t// Parcourir str en gerant l'etat\n\t// Compter les transitions sep -> non-sep\n\t// TON CODE ICI\n}",
+        "solution": "int\tft_count_words(char *str)\n{\n\tint\tcount;\n\tint\tin_word;\n\tint\tstate;\n\n\tcount = 0;\n\tin_word = 0;\n\tstate = 0;\n\twhile (*str)\n\t{\n\t\tif (state == 0 && *str == ' ')\n\t\t\tin_word = 0;\n\t\telse\n\t\t{\n\t\t\tif (!in_word)\n\t\t\t{\n\t\t\t\tcount++;\n\t\t\t\tin_word = 1;\n\t\t\t}\n\t\t\tif (state == 0 && (*str == '\\'' || *str == '\"'))\n\t\t\t\tstate = (*str == '\\'') ? 1 : 2;\n\t\t\telse if ((state == 1 && *str == '\\'') || (state == 2 && *str == '\"'))\n\t\t\t\tstate = 0;\n\t\t}\n\t\tstr++;\n\t}\n\treturn (count);\n}",
+        "hint": "En etat NORMAL, un espace remet in_word a 0. Un non-espace apres un espace incremente count.",
+        "difficulty": 3
+      },
+      {
+        "id": 4,
+        "title": "Dupliquer une sous-chaine",
+        "instruction": "Ecris ft_substr qui alloue et retourne une copie de str[start..start+len-1].",
+        "starterCode": "char\t*ft_substr(char *str, int start, int len)\n{\n\t// Alloue et copie len caracteres depuis str+start\n\t// TON CODE ICI\n}",
+        "solution": "char\t*ft_substr(char *str, int start, int len)\n{\n\tchar\t*sub;\n\tint\t\ti;\n\n\tsub = (char *)malloc(sizeof(char) * (len + 1));\n\tif (!sub)\n\t\treturn (NULL);\n\ti = 0;\n\twhile (i < len)\n\t{\n\t\tsub[i] = str[start + i];\n\t\ti++;\n\t}\n\tsub[i] = '\\0';\n\treturn (sub);\n}",
+        "hint": "malloc(len + 1), copie caractere par caractere, termine avec '\\0'.",
+        "difficulty": 2
+      },
+      {
+        "id": 5,
+        "title": "Extraire un mot sans les quotes",
+        "instruction": "Ecris une fonction qui extrait un mot en retirant les quotes.",
+        "starterCode": "char\t*ft_extract_word(char *str, int *pos)\n{\n\tchar\tbuf[1024];\n\tint\t\tbi;\n\tint\t\tstate;\n\n\tbi = 0;\n\tstate = 0;\n\t// Copier les caracteres dans buf en sautant les quotes\n\t// Avancer *pos\n\t// TON CODE ICI\n}",
+        "solution": "char\t*ft_extract_word(char *str, int *pos)\n{\n\tchar\tbuf[1024];\n\tint\t\tbi;\n\tint\t\tstate;\n\tchar\t*word;\n\n\tbi = 0;\n\tstate = 0;\n\twhile (str[*pos] && !(state == 0 && str[*pos] == ' '))\n\t{\n\t\tif (state == 0 && (str[*pos] == '\\'' || str[*pos] == '\"'))\n\t\t\tstate = (str[*pos] == '\\'') ? 1 : 2;\n\t\telse if ((state == 1 && str[*pos] == '\\'') || (state == 2 && str[*pos] == '\"'))\n\t\t\tstate = 0;\n\t\telse\n\t\t\tbuf[bi++] = str[*pos];\n\t\t(*pos)++;\n\t}\n\tbuf[bi] = '\\0';\n\tword = ft_substr(buf, 0, bi);\n\treturn (word);\n}",
+        "hint": "Parcours le mot. Si c'est une quote qui ouvre/ferme, change l'etat mais ne copie pas. Sinon, copie le caractere.",
+        "difficulty": 3
+      }
+    ]
+  },
+  "starterCode": "#include <unistd.h>\n#include <stdlib.h>\n\n#define NORMAL 0\n#define IN_SINGLE 1\n#define IN_DOUBLE 2\n\nvoid\tft_putstr(char *s) { while (*s) write(1, s++, 1); }\n\nchar\t**ft_split_quotes(char *str)\n{\n\t// 1. Compter les mots (en gerant les quotes)\n\t// 2. Allouer le tableau de char * (+1 pour NULL)\n\t// 3. Pour chaque mot : extraire sans les quotes\n\t// 4. Terminer par NULL\n\treturn (NULL);\n}\n\nint\tmain(void)\n{\n\tchar\t**words;\n\tint\t\ti;\n\n\twords = ft_split_quotes(\"hello \\\"world 42\\\" test\");\n\ti = 0;\n\twhile (words && words[i])\n\t{\n\t\tft_putstr(words[i]);\n\t\twrite(1, \"\\n\", 1);\n\t\ti++;\n\t}\n\treturn (0);\n}",
+  "solution": "#include <unistd.h>\n#include <stdlib.h>\n\n#define NORMAL 0\n#define IN_SINGLE 1\n#define IN_DOUBLE 2\n\nvoid\tft_putstr(char *s) { while (*s) write(1, s++, 1); }\n\nint\tft_count_words(char *str)\n{\n\tint\tc = 0, in = 0, st = 0;\n\twhile (*str)\n\t{\n\t\tif (st == 0 && *str == ' ')\n\t\t\tin = 0;\n\t\telse\n\t\t{\n\t\t\tif (!in) { c++; in = 1; }\n\t\t\tif (st == 0 && (*str == '\\'' || *str == '\"'))\n\t\t\t\tst = (*str == '\\'') ? 1 : 2;\n\t\t\telse if ((st == 1 && *str == '\\'') || (st == 2 && *str == '\"'))\n\t\t\t\tst = 0;\n\t\t}\n\t\tstr++;\n\t}\n\treturn (c);\n}\n\nchar\t*ft_extract(char *str, int *pos)\n{\n\tchar\tbuf[1024];\n\tint\t\tbi = 0;\n\tint\t\tst = 0;\n\tchar\t*word;\n\n\twhile (str[*pos] && !(st == 0 && str[*pos] == ' '))\n\t{\n\t\tif (st == 0 && (str[*pos] == '\\'' || str[*pos] == '\"'))\n\t\t\tst = (str[*pos] == '\\'') ? 1 : 2;\n\t\telse if ((st == 1 && str[*pos] == '\\'') || (st == 2 && str[*pos] == '\"'))\n\t\t\tst = 0;\n\t\telse\n\t\t\tbuf[bi++] = str[*pos];\n\t\t(*pos)++;\n\t}\n\tbuf[bi] = '\\0';\n\tword = (char *)malloc(bi + 1);\n\tif (!word) return (NULL);\n\tbi = 0;\n\twhile (buf[bi]) { word[bi] = buf[bi]; bi++; }\n\tword[bi] = '\\0';\n\treturn (word);\n}\n\nchar\t**ft_split_quotes(char *str)\n{\n\tchar\t**result;\n\tint\t\tnb;\n\tint\t\ti;\n\tint\t\tpos;\n\n\tnb = ft_count_words(str);\n\tresult = (char **)malloc(sizeof(char *) * (nb + 1));\n\tif (!result) return (NULL);\n\tpos = 0;\n\ti = 0;\n\twhile (i < nb)\n\t{\n\t\twhile (str[pos] == ' ')\n\t\t\tpos++;\n\t\tresult[i] = ft_extract(str, &pos);\n\t\ti++;\n\t}\n\tresult[nb] = NULL;\n\treturn (result);\n}\n\nint\tmain(void)\n{\n\tchar\t**words;\n\tint\t\ti;\n\n\twords = ft_split_quotes(\"hello \\\"world 42\\\" test\");\n\ti = 0;\n\twhile (words && words[i])\n\t{\n\t\tft_putstr(words[i]);\n\t\twrite(1, \"\\n\", 1);\n\t\ti++;\n\t}\n\treturn (0);\n}",
+  "hints": [
+    "Utilise un automate a 3 etats (NORMAL, IN_SINGLE, IN_DOUBLE). En etat NORMAL, l'espace est un separateur.",
+    "Fais 2 passes : d'abord compter les mots, puis les extraire. Le comptage et l'extraction utilisent le meme automate.",
+    "Lors de l'extraction, copie les caracteres sauf les quotes (qui changent l'etat mais ne sont pas du texte)."
+  ],
+  "testCases": [
+    {
+      "id": 1,
+      "description": "hello \"world 42\" test -> 3 mots",
+      "stdin": "",
+      "expectedStdout": "hello\nworld 42\ntest\n",
+      "expectedExitCode": 0,
+      "visible": true
+    },
+    {
+      "id": 2,
+      "description": "'un deux' trois \"quatre cinq\" -> 3 mots",
+      "stdin": "",
+      "expectedStdout": "un deux\ntrois\nquatre cinq\n",
+      "expectedExitCode": 0,
+      "visible": false
+    },
+    {
+      "id": 3,
+      "description": "simple sans quotes -> split normal",
+      "stdin": "",
+      "expectedStdout": "hello\nworld\n",
+      "expectedExitCode": 0,
+      "visible": false
+    }
+  ],
+  "constraints": {
+    "allowedFunctions": ["write", "malloc", "free"],
+    "forbiddenFunctions": ["printf", "strtok", "strsep"],
+    "maxExecutionTime": 5000,
+    "maxMemory": 128
+  },
+  "relatedExercises": ["c-day55-ex01-ft-parse-args", "c-day55-ex02-ft-eval-expr"],
+  "resources": [
+    {
+      "title": "Parsing et automates a etats",
+      "url": "https://fr.wikipedia.org/wiki/Automate_fini",
+      "type": "documentation"
+    },
+    {
+      "title": "Shell quoting rules",
+      "url": "https://www.gnu.org/software/bash/manual/html_node/Quoting.html",
+      "type": "article"
+    }
+  ]
+}

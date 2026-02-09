@@ -1,0 +1,257 @@
+{
+  "id": "c-day53-ex00-ft-queue-init",
+  "category": "c",
+  "day": 53,
+  "order": 0,
+  "title": "Implementer une file d'attente FIFO",
+  "description": "Implemente une file d'attente (queue) FIFO en utilisant une liste chainee. La file doit supporter 3 operations : ft_queue_enqueue pour ajouter un element a la fin, ft_queue_dequeue pour retirer l'element du debut, et ft_queue_peek pour voir l'element du debut sans le retirer. Prototypes : void ft_queue_enqueue(t_queue *q, void *content); void *ft_queue_dequeue(t_queue *q); void *ft_queue_peek(t_queue *q);",
+  "difficulty": 3,
+  "points": 30,
+  "estimatedTime": 30,
+  "learningObjectives": [
+    "Comprendre le concept de file d'attente FIFO (First In, First Out)",
+    "Implementer une queue avec une liste chainee",
+    "Maitriser les operations enqueue (ajout) et dequeue (retrait)",
+    "Gerer les pointeurs front et rear pour des operations en O(1)",
+    "Comprendre les applications des files d'attente en programmation"
+  ],
+  "learningContent": {
+    "lesson": {
+      "introduction": "Une file d'attente (queue) est une structure de donnees qui suit le principe FIFO : First In, First Out. Le premier element ajoute est le premier retire, comme une file d'attente a la boulangerie. C'est le complement naturel de la pile (LIFO). Les files sont utilisees partout en informatique : gestion des processus (scheduler), buffer d'impression, BFS (parcours en largeur de graphes), et gestion des evenements. On l'implemente ici avec une liste chainee pour avoir des operations en O(1).",
+      "steps": [
+        {
+          "id": 1,
+          "title": "Concept FIFO et structure de la queue",
+          "content": "Une file d'attente a deux extremites :\n- **Front** (avant) : ou l'on retire les elements (dequeue)\n- **Rear** (arriere) : ou l'on ajoute les elements (enqueue)\n\nPour des operations en O(1), on maintient deux pointeurs : un vers le front et un vers le rear. Sans le pointeur rear, ajouter a la fin serait O(n).",
+          "codeExample": "// Structure d'un noeud de la file\ntypedef struct s_qnode\n{\n\tvoid\t\t\t*content;\n\tstruct s_qnode\t*next;\n}\t\t\t\t\tt_qnode;\n\n// Structure de la file (avec front et rear)\ntypedef struct s_queue\n{\n\tt_qnode\t*front;\t// Debut (pour dequeue)\n\tt_qnode\t*rear;\t// Fin (pour enqueue)\n\tint\t\tsize;\t// Nombre d'elements\n}\t\t\t\tt_queue;\n\n// Visualisation :\n// Enqueue -> [D] [C] [B] [A] -> Dequeue\n//            rear          front\n// Premier arrive (A) = premier sorti",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Si on enqueue A, B, C dans cet ordre, lequel sort en premier avec dequeue ?",
+            "starterCode": "// enqueue(A) : file = [A]\n// enqueue(B) : file = [A, B]\n// enqueue(C) : file = [A, B, C]\n// dequeue()  : retourne ???",
+            "solution": "// dequeue() retourne A\n// Car FIFO : First In, First Out\n// A est entre en premier, il sort en premier\n// La file apres dequeue : [B, C]"
+          }
+        },
+        {
+          "id": 2,
+          "title": "Initialisation et enqueue",
+          "content": "L'initialisation met front et rear a NULL et size a 0. L'enqueue cree un nouveau noeud et l'ajoute apres rear.\n\n**Cas special :** Si la file est vide, le nouveau noeud est a la fois le front et le rear.\n\n**Complexite :** O(1) grace au pointeur rear (pas besoin de parcourir).",
+          "codeExample": "void\tft_queue_init(t_queue *q)\n{\n\tq->front = NULL;\n\tq->rear = NULL;\n\tq->size = 0;\n}\n\nvoid\tft_queue_enqueue(t_queue *q, void *content)\n{\n\tt_qnode\t*node;\n\n\tnode = (t_qnode *)malloc(sizeof(t_qnode));\n\tif (!node)\n\t\treturn ;\n\tnode->content = content;\n\tnode->next = NULL;\n\tif (q->rear == NULL)\n\t{\n\t\tq->front = node;\n\t\tq->rear = node;\n\t}\n\telse\n\t{\n\t\tq->rear->next = node;\n\t\tq->rear = node;\n\t}\n\tq->size++;\n}",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Apres enqueue(10) sur une file vide, que valent front et rear ?",
+            "starterCode": "// File vide : front=NULL, rear=NULL\n// enqueue(10) :\n// front = ???\n// rear = ???\n// front == rear ? ???",
+            "solution": "// front et rear pointent tous les deux\n// vers le meme noeud contenant 10\n// front == rear == le noeud [10]\n// C'est le seul element de la file"
+          }
+        },
+        {
+          "id": 3,
+          "title": "Dequeue et peek",
+          "content": "Le dequeue retire l'element du front et retourne son contenu. Il faut aussi gerer le cas ou la file devient vide apres le dequeue (rear doit aussi devenir NULL).\n\nLe peek retourne le contenu du front sans le retirer.\n\n**Attention :** On retourne le content (void *) mais on libere le noeud (t_qnode). L'appelant est responsable de la donnee retournee.",
+          "codeExample": "void\t*ft_queue_dequeue(t_queue *q)\n{\n\tt_qnode\t*tmp;\n\tvoid\t*content;\n\n\tif (!q->front)\n\t\treturn (NULL);\n\ttmp = q->front;\n\tcontent = tmp->content;\n\tq->front = q->front->next;\n\tif (q->front == NULL)\n\t\tq->rear = NULL;\n\tfree(tmp);\n\tq->size--;\n\treturn (content);\n}\n\nvoid\t*ft_queue_peek(t_queue *q)\n{\n\tif (!q->front)\n\t\treturn (NULL);\n\treturn (q->front->content);\n}",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "File = [A, B]. Apres dequeue(), que valent front, rear et size ?",
+            "starterCode": "// File : front->[A]->[B]<-rear, size=2\n// dequeue() retourne : ???\n// front = ???\n// rear = ???\n// size = ???",
+            "solution": "// dequeue() retourne A (le content du front)\n// front = [B] (avance au suivant)\n// rear = [B] (inchange, B est le dernier)\n// size = 1\n// Le noeud de A est libere"
+          }
+        },
+        {
+          "id": 4,
+          "title": "Programme complet et test",
+          "content": "Voici un programme complet qui cree une file, y ajoute des elements, les retire dans l'ordre FIFO, et affiche le resultat. On verifie que les elements sortent dans l'ordre d'insertion.\n\n**Applications concretes des files :**\n- Scheduler d'OS : les processus attendent leur tour\n- Serveur web : les requetes sont traitees dans l'ordre d'arrivee\n- BFS : les noeuds a visiter sont dans une file\n- Buffer d'E/S : les donnees sont lues/ecrites dans l'ordre",
+          "codeExample": "#include <unistd.h>\n#include <stdlib.h>\n\nint\tmain(void)\n{\n\tt_queue\tq;\n\tint\t\tv[] = {10, 20, 30, 40};\n\tint\t\t*val;\n\n\tft_queue_init(&q);\n\tft_queue_enqueue(&q, &v[0]);\n\tft_queue_enqueue(&q, &v[1]);\n\tft_queue_enqueue(&q, &v[2]);\n\tft_queue_enqueue(&q, &v[3]);\n\t// File : 10 -> 20 -> 30 -> 40\n\twhile (q.size > 0)\n\t{\n\t\tval = (int *)ft_queue_dequeue(&q);\n\t\tft_putnbr(*val);\n\t\twrite(1, \"\\n\", 1);\n\t}\n\t// Affiche : 10 20 30 40 (FIFO)\n\treturn (0);\n}",
+          "language": "c"
+        }
+      ]
+    },
+    "theory": [
+      {
+        "title": "FIFO vs LIFO",
+        "content": "FIFO (First In, First Out) et LIFO (Last In, First Out) sont les deux principes fondamentaux des structures de donnees lineaires. La file est FIFO, la pile est LIFO. Choisir la bonne structure depend du probleme a resoudre.",
+        "codeExamples": [
+          {
+            "title": "Comparaison pile vs file",
+            "code": "// Pile (LIFO) : le dernier entre sort en premier\n// push(1), push(2), push(3)\n// pop() -> 3, pop() -> 2, pop() -> 1\n// Comme une pile d'assiettes\n\n// File (FIFO) : le premier entre sort en premier\n// enqueue(1), enqueue(2), enqueue(3)\n// dequeue() -> 1, dequeue() -> 2, dequeue() -> 3\n// Comme une file d'attente au cinema\n\n// Utilisation :\n// Pile : undo/redo, appels de fonctions, DFS\n// File : BFS, scheduler, buffer",
+            "explanation": "Le choix entre pile et file depend de l'ordre de traitement souhaite"
+          }
+        ],
+        "keyPoints": [
+          "FIFO : premier entre, premier sorti (file d'attente)",
+          "LIFO : dernier entre, premier sorti (pile d'assiettes)",
+          "Les files sont utilisees quand l'ordre d'arrivee compte",
+          "Les piles sont utilisees quand le dernier element est le plus pertinent"
+        ],
+        "commonMistakes": [
+          "Confondre FIFO et LIFO (ajouter et retirer du meme cote = pile, pas file)",
+          "Utiliser une pile quand une file est necessaire (et vice versa)",
+          "Oublier que la file a deux extremites (front et rear)"
+        ]
+      },
+      {
+        "title": "Implementation avec liste chainee",
+        "content": "On peut implementer une file avec un tableau (circulaire) ou une liste chainee. La liste chainee est plus flexible car elle n'a pas de taille fixe. Avec deux pointeurs (front et rear), toutes les operations sont en O(1).",
+        "codeExamples": [
+          {
+            "title": "Structure de la file avec liste chainee",
+            "code": "// Chaque element est un noeud\ntypedef struct s_qnode {\n\tvoid *content;\n\tstruct s_qnode *next;\n} t_qnode;\n\n// La file gere les deux extremites\ntypedef struct s_queue {\n\tt_qnode *front; // Pour dequeue en O(1)\n\tt_qnode *rear;  // Pour enqueue en O(1)\n\tint size;\n} t_queue;\n\n// Sans rear : enqueue serait O(n)\n// Car il faudrait parcourir jusqu'au dernier noeud",
+            "explanation": "Le pointeur rear est la cle pour avoir enqueue en O(1)"
+          }
+        ],
+        "keyPoints": [
+          "La liste chainee offre une taille dynamique (pas de limite fixe)",
+          "Le pointeur front permet dequeue en O(1)",
+          "Le pointeur rear permet enqueue en O(1)",
+          "Chaque noeud est alloue/libere individuellement avec malloc/free"
+        ],
+        "commonMistakes": [
+          "Oublier le pointeur rear (enqueue en O(n) au lieu de O(1))",
+          "Ne pas mettre a jour rear quand la file devient vide apres dequeue",
+          "Ne pas mettre a jour front quand on enqueue dans une file vide"
+        ]
+      },
+      {
+        "title": "Operations en O(1)",
+        "content": "Grace aux pointeurs front et rear, les trois operations fondamentales (enqueue, dequeue, peek) sont en O(1) : temps constant, independant du nombre d'elements dans la file.",
+        "codeExamples": [
+          {
+            "title": "Complexite des operations",
+            "code": "// enqueue : O(1)\n// Ajoute apres rear, met a jour rear\n// Nombre constant d'operations\n\n// dequeue : O(1)\n// Retire front, avance front\n// Nombre constant d'operations\n\n// peek : O(1)\n// Retourne front->content\n// Une seule operation\n\n// Comparaison avec un tableau :\n// Tableau simple :\n// enqueue (ajout fin) : O(1)\n// dequeue (retrait debut) : O(n) (decalage !)\n// Tableau circulaire : O(1) pour les deux",
+            "explanation": "La liste chainee avec front et rear offre du O(1) pour toutes les operations"
+          }
+        ],
+        "keyPoints": [
+          "Toutes les operations sont en O(1) avec front et rear",
+          "Pas de decalage d'elements comme avec un tableau",
+          "La taille de la file n'affecte pas le temps des operations",
+          "L'overhead est l'allocation/liberation memoire a chaque operation"
+        ],
+        "commonMistakes": [
+          "Implementer dequeue avec parcours de la liste (inutile avec front)",
+          "Implementer enqueue avec parcours de la liste (inutile avec rear)",
+          "Oublier de mettre a jour size apres chaque operation"
+        ]
+      },
+      {
+        "title": "Cas limites et robustesse",
+        "content": "Les cas limites sont critiques dans l'implementation d'une file. Il faut gerer la file vide, la transition de vide a non-vide, et la transition de non-vide a vide. Chaque cas necessite une mise a jour differente des pointeurs.",
+        "codeExamples": [
+          {
+            "title": "Les transitions critiques",
+            "code": "// File vide -> enqueue :\n// front ET rear doivent pointer vers le nouveau noeud\nif (q->rear == NULL)\n{\n\tq->front = node;\n\tq->rear = node;\n}\n\n// File a 1 element -> dequeue :\n// Apres retrait, front = NULL ET rear = NULL\nq->front = q->front->next; // NULL\nif (q->front == NULL)\n\tq->rear = NULL; // CRUCIAL !\n\n// Si on oublie : rear pointe vers un noeud libere\n// -> use-after-free au prochain enqueue !",
+            "explanation": "Les transitions vide<->non-vide necessitent la mise a jour des deux pointeurs"
+          }
+        ],
+        "keyPoints": [
+          "File vide : front = NULL et rear = NULL",
+          "Enqueue sur file vide : front et rear pointent vers le meme noeud",
+          "Dequeue du dernier element : remettre rear a NULL aussi",
+          "Dequeue sur file vide : retourner NULL sans rien faire"
+        ],
+        "commonMistakes": [
+          "Oublier de remettre rear a NULL quand la file devient vide",
+          "Ne pas gerer le cas dequeue sur file vide (segfault)",
+          "Oublier que front et rear pointent vers le meme noeud quand size = 1"
+        ]
+      }
+    ],
+    "prepExercises": [
+      {
+        "id": 1,
+        "title": "Initialiser une file vide",
+        "instruction": "Ecris ft_queue_init qui initialise une structure t_queue a vide.",
+        "starterCode": "void\tft_queue_init(t_queue *q)\n{\n\t// Met front, rear a NULL et size a 0\n\t// TON CODE ICI\n}",
+        "solution": "void\tft_queue_init(t_queue *q)\n{\n\tq->front = NULL;\n\tq->rear = NULL;\n\tq->size = 0;\n}",
+        "hint": "Trois assignations : front = NULL, rear = NULL, size = 0.",
+        "difficulty": 1
+      },
+      {
+        "id": 2,
+        "title": "Creer un noeud de file",
+        "instruction": "Ecris une fonction qui cree un noeud t_qnode avec malloc.",
+        "starterCode": "t_qnode\t*create_qnode(void *content)\n{\n\t// Alloue un noeud, initialise content et next\n\t// TON CODE ICI\n}",
+        "solution": "t_qnode\t*create_qnode(void *content)\n{\n\tt_qnode\t*node;\n\n\tnode = (t_qnode *)malloc(sizeof(t_qnode));\n\tif (!node)\n\t\treturn (NULL);\n\tnode->content = content;\n\tnode->next = NULL;\n\treturn (node);\n}",
+        "hint": "Meme principe que ft_dlst_new : malloc, verifier NULL, initialiser les champs.",
+        "difficulty": 1
+      },
+      {
+        "id": 3,
+        "title": "Enqueue sur file vide",
+        "instruction": "Ecris la partie de enqueue qui gere le cas d'une file vide.",
+        "starterCode": "void\tft_enqueue_empty(t_queue *q, t_qnode *node)\n{\n\t// La file est vide : front et rear doivent pointer vers node\n\t// TON CODE ICI\n}",
+        "solution": "void\tft_enqueue_empty(t_queue *q, t_qnode *node)\n{\n\tq->front = node;\n\tq->rear = node;\n\tq->size = 1;\n}",
+        "hint": "Quand la file est vide, le nouveau noeud est a la fois le front et le rear.",
+        "difficulty": 1
+      },
+      {
+        "id": 4,
+        "title": "Dequeue avec gestion du cas vide",
+        "instruction": "Ecris ft_queue_dequeue avec la gestion du cas ou la file devient vide.",
+        "starterCode": "void\t*ft_queue_dequeue(t_queue *q)\n{\n\tt_qnode\t*tmp;\n\tvoid\t*content;\n\n\tif (!q->front)\n\t\treturn (NULL);\n\t// Retire le front, avance front, gere le cas vide\n\t// TON CODE ICI\n}",
+        "solution": "void\t*ft_queue_dequeue(t_queue *q)\n{\n\tt_qnode\t*tmp;\n\tvoid\t*content;\n\n\tif (!q->front)\n\t\treturn (NULL);\n\ttmp = q->front;\n\tcontent = tmp->content;\n\tq->front = q->front->next;\n\tif (q->front == NULL)\n\t\tq->rear = NULL;\n\tfree(tmp);\n\tq->size--;\n\treturn (content);\n}",
+        "hint": "Apres q->front = q->front->next, si front est NULL alors rear doit aussi etre NULL.",
+        "difficulty": 2
+      },
+      {
+        "id": 5,
+        "title": "Tester l'ordre FIFO",
+        "instruction": "Enqueue 3 elements puis dequeue-les tous. Verifie que l'ordre est FIFO.",
+        "starterCode": "int\tmain(void)\n{\n\tt_queue\tq;\n\tint\t\tv[] = {10, 20, 30};\n\n\tft_queue_init(&q);\n\t// Enqueue 10, 20, 30\n\t// Dequeue et affiche chacun\n\t// Doit afficher : 10 20 30\n\t// TON CODE ICI\n\treturn (0);\n}",
+        "solution": "int\tmain(void)\n{\n\tt_queue\tq;\n\tint\t\tv[] = {10, 20, 30};\n\tint\t\t*val;\n\n\tft_queue_init(&q);\n\tft_queue_enqueue(&q, &v[0]);\n\tft_queue_enqueue(&q, &v[1]);\n\tft_queue_enqueue(&q, &v[2]);\n\twhile (q.size > 0)\n\t{\n\t\tval = (int *)ft_queue_dequeue(&q);\n\t\tft_putnbr(*val);\n\t\twrite(1, \"\\n\", 1);\n\t}\n\treturn (0);\n}",
+        "hint": "Enqueue ajoute a la fin, dequeue retire du debut. L'ordre FIFO est naturel.",
+        "difficulty": 2
+      }
+    ]
+  },
+  "starterCode": "#include <unistd.h>\n#include <stdlib.h>\n\ntypedef struct s_qnode\n{\n\tvoid\t\t\t*content;\n\tstruct s_qnode\t*next;\n}\t\t\t\t\tt_qnode;\n\ntypedef struct s_queue\n{\n\tt_qnode\t*front;\n\tt_qnode\t*rear;\n\tint\t\tsize;\n}\t\t\t\tt_queue;\n\nvoid\tft_putnbr(int n)\n{\n\tchar c;\n\tif (n == -2147483648) { write(1, \"-2147483648\", 11); return ; }\n\tif (n < 0) { write(1, \"-\", 1); n = -n; }\n\tif (n >= 10) ft_putnbr(n / 10);\n\tc = (n % 10) + '0';\n\twrite(1, &c, 1);\n}\n\nvoid\tft_queue_init(t_queue *q)\n{\n\t// Initialise front=NULL, rear=NULL, size=0\n}\n\nvoid\tft_queue_enqueue(t_queue *q, void *content)\n{\n\t// 1. Creer un noeud\n\t// 2. Si file vide : front ET rear = noeud\n\t// 3. Sinon : rear->next = noeud, rear = noeud\n\t// 4. size++\n}\n\nvoid\t*ft_queue_dequeue(t_queue *q)\n{\n\t// 1. Si file vide : retourner NULL\n\t// 2. Sauvegarder front et son content\n\t// 3. Avancer front\n\t// 4. Si front NULL : rear = NULL aussi\n\t// 5. Liberer le noeud, size--, retourner content\n}\n\nvoid\t*ft_queue_peek(t_queue *q)\n{\n\t// Retourner front->content sans retirer\n}\n\nint\tmain(void)\n{\n\tt_queue\tq;\n\tint\t\tv[] = {10, 20, 30, 40};\n\tint\t\t*val;\n\n\tft_queue_init(&q);\n\tft_queue_enqueue(&q, &v[0]);\n\tft_queue_enqueue(&q, &v[1]);\n\tft_queue_enqueue(&q, &v[2]);\n\tft_queue_enqueue(&q, &v[3]);\n\twhile (q.size > 0)\n\t{\n\t\tval = (int *)ft_queue_dequeue(&q);\n\t\tft_putnbr(*val);\n\t\twrite(1, \"\\n\", 1);\n\t}\n\treturn (0);\n}",
+  "solution": "#include <unistd.h>\n#include <stdlib.h>\n\ntypedef struct s_qnode\n{\n\tvoid\t\t\t*content;\n\tstruct s_qnode\t*next;\n}\t\t\t\t\tt_qnode;\n\ntypedef struct s_queue\n{\n\tt_qnode\t*front;\n\tt_qnode\t*rear;\n\tint\t\tsize;\n}\t\t\t\tt_queue;\n\nvoid\tft_putnbr(int n)\n{\n\tchar c;\n\tif (n == -2147483648) { write(1, \"-2147483648\", 11); return ; }\n\tif (n < 0) { write(1, \"-\", 1); n = -n; }\n\tif (n >= 10) ft_putnbr(n / 10);\n\tc = (n % 10) + '0';\n\twrite(1, &c, 1);\n}\n\nvoid\tft_queue_init(t_queue *q)\n{\n\tq->front = NULL;\n\tq->rear = NULL;\n\tq->size = 0;\n}\n\nvoid\tft_queue_enqueue(t_queue *q, void *content)\n{\n\tt_qnode\t*node;\n\n\tnode = (t_qnode *)malloc(sizeof(t_qnode));\n\tif (!node)\n\t\treturn ;\n\tnode->content = content;\n\tnode->next = NULL;\n\tif (q->rear == NULL)\n\t{\n\t\tq->front = node;\n\t\tq->rear = node;\n\t}\n\telse\n\t{\n\t\tq->rear->next = node;\n\t\tq->rear = node;\n\t}\n\tq->size++;\n}\n\nvoid\t*ft_queue_dequeue(t_queue *q)\n{\n\tt_qnode\t*tmp;\n\tvoid\t*content;\n\n\tif (!q->front)\n\t\treturn (NULL);\n\ttmp = q->front;\n\tcontent = tmp->content;\n\tq->front = q->front->next;\n\tif (q->front == NULL)\n\t\tq->rear = NULL;\n\tfree(tmp);\n\tq->size--;\n\treturn (content);\n}\n\nvoid\t*ft_queue_peek(t_queue *q)\n{\n\tif (!q->front)\n\t\treturn (NULL);\n\treturn (q->front->content);\n}\n\nint\tmain(void)\n{\n\tt_queue\tq;\n\tint\t\tv[] = {10, 20, 30, 40};\n\tint\t\t*val;\n\n\tft_queue_init(&q);\n\tft_queue_enqueue(&q, &v[0]);\n\tft_queue_enqueue(&q, &v[1]);\n\tft_queue_enqueue(&q, &v[2]);\n\tft_queue_enqueue(&q, &v[3]);\n\twhile (q.size > 0)\n\t{\n\t\tval = (int *)ft_queue_dequeue(&q);\n\t\tft_putnbr(*val);\n\t\twrite(1, \"\\n\", 1);\n\t}\n\treturn (0);\n}",
+  "hints": [
+    "Enqueue : cree un noeud, si rear est NULL alors front ET rear pointent vers le noeud, sinon rear->next = noeud et rear avance.",
+    "Dequeue : sauvegarde front->content, avance front, si front devient NULL alors rear = NULL aussi, libere l'ancien noeud.",
+    "N'oublie pas de gerer les cas limites : file vide pour dequeue/peek, et transition vide<->non-vide."
+  ],
+  "testCases": [
+    {
+      "id": 1,
+      "description": "Enqueue 4 elements, dequeue tous : ordre FIFO",
+      "stdin": "",
+      "expectedStdout": "10\n20\n30\n40\n",
+      "expectedExitCode": 0,
+      "visible": true
+    },
+    {
+      "id": 2,
+      "description": "Alternance enqueue/dequeue",
+      "stdin": "",
+      "expectedStdout": "1\n2\n3\n",
+      "expectedExitCode": 0,
+      "visible": false
+    },
+    {
+      "id": 3,
+      "description": "Dequeue sur file vide retourne NULL",
+      "stdin": "",
+      "expectedStdout": "NULL\n",
+      "expectedExitCode": 0,
+      "visible": false
+    }
+  ],
+  "constraints": {
+    "allowedFunctions": ["write", "malloc", "free"],
+    "forbiddenFunctions": ["printf", "calloc", "realloc"],
+    "maxExecutionTime": 5000,
+    "maxMemory": 128
+  },
+  "relatedExercises": ["c-day53-ex01-ft-stack-calc", "c-day53-ex02-ft-bracket-check"],
+  "resources": [
+    {
+      "title": "File d'attente (informatique)",
+      "url": "https://fr.wikipedia.org/wiki/File_(structure_de_donn%C3%A9es)",
+      "type": "documentation"
+    },
+    {
+      "title": "Implementation d'une queue en C",
+      "url": "https://www.geeksforgeeks.org/queue-linked-list-implementation/",
+      "type": "article"
+    }
+  ]
+}

@@ -1,0 +1,257 @@
+{
+  "id": "c-day59-ex00-ft-file-info",
+  "category": "c",
+  "day": 59,
+  "order": 0,
+  "title": "Utiliser stat() pour obtenir les infos d'un fichier",
+  "description": "Ecris un programme qui prend un chemin de fichier en argument et affiche ses informations : nom, taille en octets, et permissions (rwxrwxrwx). Utilise stat() pour remplir une structure struct stat et les macros S_IRUSR, S_IWUSR, etc. pour extraire les permissions. Format de sortie : 'Fichier: [nom]\\nTaille: [taille] octets\\nPermissions: [rwxrwxrwx]'.",
+  "difficulty": 3,
+  "points": 30,
+  "estimatedTime": 30,
+  "learningObjectives": [
+    "Comprendre l'appel systeme stat() et la structure struct stat",
+    "Savoir extraire la taille, les permissions et le type d'un fichier",
+    "Maitriser les macros de permissions (S_IRUSR, S_IWUSR, etc.)",
+    "Comprendre la representation octale des permissions Unix",
+    "Gerer les erreurs de stat() (fichier inexistant, permissions)"
+  ],
+  "learningContent": {
+    "lesson": {
+      "introduction": "Chaque fichier sous Unix possede des metadonnees : taille, permissions, proprietaire, dates de modification, etc. L'appel systeme stat() permet de lire ces informations sans ouvrir le fichier. La commande ls -l utilise stat() en interne. Comprendre stat() est essentiel pour les projets qui manipulent le systeme de fichiers comme ft_ls ou minishell.",
+      "steps": [
+        {
+          "id": 1,
+          "title": "L'appel systeme stat()",
+          "content": "**stat(const char *path, struct stat *buf)** remplit la structure stat avec les informations du fichier pointe par path.\n\nRetourne 0 en cas de succes, -1 en cas d'erreur (fichier inexistant, etc.).\n\n**Variantes :**\n- `stat()` : suit les liens symboliques\n- `lstat()` : ne suit PAS les liens symboliques\n- `fstat()` : prend un descripteur de fichier au lieu d'un chemin",
+          "codeExample": "#include <sys/stat.h>\n#include <stdio.h>\n\nint\tmain(void)\n{\n\tstruct stat sb;\n\n\tif (stat(\"test.txt\", &sb) == -1)\n\t{\n\t\tperror(\"stat\");\n\t\treturn (1);\n\t}\n\tprintf(\"Taille : %ld octets\\n\", sb.st_size);\n\tprintf(\"Inode  : %ld\\n\", sb.st_ino);\n\tprintf(\"Mode   : %o\\n\", sb.st_mode & 0777);\n\tprintf(\"Liens  : %ld\\n\", sb.st_nlink);\n\treturn (0);\n}",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Quelle est la difference entre stat() et lstat() ?",
+            "starterCode": "// stat(\"lien_symbolique\", &sb) donne les infos de : ???\n// lstat(\"lien_symbolique\", &sb) donne les infos de : ???",
+            "solution": "// stat() suit les liens symboliques : il donne les infos du fichier CIBLE\n// lstat() ne suit pas les liens : il donne les infos du LIEN lui-meme\n// Pour un fichier normal, les deux sont identiques"
+          }
+        },
+        {
+          "id": 2,
+          "title": "La structure struct stat",
+          "content": "La structure **struct stat** contient toutes les metadonnees d'un fichier :\n\n- `st_mode` : type du fichier et permissions\n- `st_size` : taille en octets\n- `st_nlink` : nombre de liens durs\n- `st_uid` / `st_gid` : proprietaire et groupe\n- `st_atime` : dernier acces\n- `st_mtime` : derniere modification\n- `st_ctime` : dernier changement de status\n- `st_ino` : numero d'inode\n- `st_dev` : peripherique",
+          "codeExample": "#include <sys/stat.h>\n#include <time.h>\n#include <stdio.h>\n\nvoid\tprint_info(char *path)\n{\n\tstruct stat sb;\n\n\tif (stat(path, &sb) == -1)\n\t\treturn ;\n\tprintf(\"Fichier : %s\\n\", path);\n\tprintf(\"Taille  : %ld octets\\n\", sb.st_size);\n\tprintf(\"Inode   : %ld\\n\", sb.st_ino);\n\tprintf(\"Liens   : %ld\\n\", sb.st_nlink);\n\tprintf(\"UID/GID : %d/%d\\n\", sb.st_uid, sb.st_gid);\n\tprintf(\"Modifie : %s\", ctime(&sb.st_mtime));\n}",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Quel champ de struct stat contient la taille du fichier ?",
+            "starterCode": "struct stat sb;\nstat(\"fichier.txt\", &sb);\n// La taille est dans : sb.???",
+            "solution": "// La taille est dans : sb.st_size\n// C'est un off_t (generalement long)\n// Elle est en octets"
+          }
+        },
+        {
+          "id": 3,
+          "title": "Extraire les permissions",
+          "content": "Le champ **st_mode** contient a la fois le type du fichier et les permissions. On utilise des masques binaires pour extraire chaque permission.\n\n**Macros de type :**\n- `S_ISREG(mode)` : fichier regulier ?\n- `S_ISDIR(mode)` : repertoire ?\n- `S_ISLNK(mode)` : lien symbolique ?\n\n**Macros de permissions :**\n- `S_IRUSR`, `S_IWUSR`, `S_IXUSR` : lecture/ecriture/execution proprietaire\n- `S_IRGRP`, `S_IWGRP`, `S_IXGRP` : groupe\n- `S_IROTH`, `S_IWOTH`, `S_IXOTH` : autres",
+          "codeExample": "#include <sys/stat.h>\n\nvoid\tprint_permissions(mode_t mode)\n{\n\tchar perms[10];\n\n\tperms[0] = (mode & S_IRUSR) ? 'r' : '-';\n\tperms[1] = (mode & S_IWUSR) ? 'w' : '-';\n\tperms[2] = (mode & S_IXUSR) ? 'x' : '-';\n\tperms[3] = (mode & S_IRGRP) ? 'r' : '-';\n\tperms[4] = (mode & S_IWGRP) ? 'w' : '-';\n\tperms[5] = (mode & S_IXGRP) ? 'x' : '-';\n\tperms[6] = (mode & S_IROTH) ? 'r' : '-';\n\tperms[7] = (mode & S_IWOTH) ? 'w' : '-';\n\tperms[8] = (mode & S_IXOTH) ? 'x' : '-';\n\tperms[9] = '\\0';\n\twrite(1, perms, 9);\n}",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Un fichier a les permissions 0644 (rw-r--r--). Quels bits sont actifs ?",
+            "starterCode": "// 0644 en binaire : ???\n// S_IRUSR : ???\n// S_IWUSR : ???\n// S_IXUSR : ???\n// S_IRGRP : ???",
+            "solution": "// 0644 = 110 100 100 en binaire\n// S_IRUSR : OUI (r proprietaire)\n// S_IWUSR : OUI (w proprietaire)\n// S_IXUSR : NON (pas x proprietaire)\n// S_IRGRP : OUI (r groupe)"
+          }
+        },
+        {
+          "id": 4,
+          "title": "Determiner le type de fichier",
+          "content": "Le champ st_mode encode aussi le type de fichier. Les macros S_IS* permettent de le tester facilement.\n\n**Types de fichiers Unix :**\n- Fichier regulier (`-`)\n- Repertoire (`d`)\n- Lien symbolique (`l`)\n- Pipe nomme (`p`)\n- Socket (`s`)\n- Peripherique caractere (`c`)\n- Peripherique bloc (`b`)\n\nLa commande `ls -l` affiche le type comme premier caractere (ex: `drwxr-xr-x`).",
+          "codeExample": "#include <sys/stat.h>\n#include <unistd.h>\n\nchar\tfile_type(mode_t mode)\n{\n\tif (S_ISREG(mode))\n\t\treturn ('-');\n\tif (S_ISDIR(mode))\n\t\treturn ('d');\n\tif (S_ISLNK(mode))\n\t\treturn ('l');\n\tif (S_ISFIFO(mode))\n\t\treturn ('p');\n\tif (S_ISSOCK(mode))\n\t\treturn ('s');\n\tif (S_ISCHR(mode))\n\t\treturn ('c');\n\tif (S_ISBLK(mode))\n\t\treturn ('b');\n\treturn ('?');\n}\n\n// Usage :\nstruct stat sb;\nstat(\"dossier\", &sb);\nchar type = file_type(sb.st_mode);\n// type == 'd' pour un repertoire",
+          "language": "c"
+        }
+      ]
+    },
+    "theory": [
+      {
+        "title": "L'appel systeme stat() en detail",
+        "content": "stat() est un appel systeme qui lit les metadonnees d'un fichier depuis l'inode. Il ne lit pas le contenu du fichier, juste ses attributs.",
+        "codeExamples": [
+          {
+            "title": "Les trois variantes de stat",
+            "code": "#include <sys/stat.h>\n\nstruct stat sb;\n\n// stat : chemin, suit les liens symboliques\nstat(\"/etc/passwd\", &sb);\n\n// lstat : chemin, NE suit PAS les liens\nlstat(\"/etc/alternatives/vi\", &sb);\n\n// fstat : descripteur de fichier\nint fd = open(\"file\", O_RDONLY);\nfstat(fd, &sb);\nclose(fd);",
+            "explanation": "Les trois variantes de stat selon la source et le traitement des liens"
+          }
+        ],
+        "keyPoints": [
+          "stat() lit les metadonnees sans ouvrir le fichier",
+          "Retourne 0 en succes, -1 en erreur (ENOENT, EACCES, etc.)",
+          "lstat() est necessaire pour identifier les liens symboliques",
+          "fstat() utilise un descripteur deja ouvert"
+        ],
+        "commonMistakes": [
+          "Utiliser stat() au lieu de lstat() pour detecter les liens symboliques",
+          "Ne pas verifier le retour de stat() (le fichier peut ne pas exister)",
+          "Oublier d'inclure <sys/stat.h>"
+        ]
+      },
+      {
+        "title": "Les permissions Unix",
+        "content": "Les permissions Unix sont codees sur 12 bits dans st_mode. Les 9 bits de base representent rwx pour owner/group/others. Les 3 bits speciaux sont setuid, setgid et sticky.",
+        "codeExamples": [
+          {
+            "title": "Decodage des permissions",
+            "code": "// st_mode contient (en octal) :\n// 0100644 = fichier regulier, rw-r--r--\n//  ^^^        ^^^\n//  type     permissions\n\n// Extraire les permissions (masque 0777) :\nmode_t perms = sb.st_mode & 0777;\n// perms = 0644 = rw-r--r--\n\n// Bits de permissions :\n// S_IRUSR = 0400 = r pour owner\n// S_IWUSR = 0200 = w pour owner\n// S_IXUSR = 0100 = x pour owner\n// S_IRGRP = 0040 = r pour group\n// S_IWGRP = 0020 = w pour group\n// S_IXGRP = 0010 = x pour group\n// S_IROTH = 0004 = r pour others\n// S_IWOTH = 0002 = w pour others\n// S_IXOTH = 0001 = x pour others",
+            "explanation": "Les permissions sont des masques binaires qu'on teste avec &"
+          }
+        ],
+        "keyPoints": [
+          "Les permissions sont dans les 12 bits de poids faible de st_mode",
+          "On teste avec & : if (mode & S_IRUSR) = proprietaire peut lire",
+          "Le masque 0777 extrait les 9 bits rwx",
+          "chmod utilise la meme notation octale (644, 755, etc.)"
+        ],
+        "commonMistakes": [
+          "Oublier le masque 0777 en affichant st_mode en octal",
+          "Confondre les groupes : USR = owner, GRP = group, OTH = others",
+          "Ne pas gerer les bits speciaux (setuid, setgid, sticky)"
+        ]
+      },
+      {
+        "title": "Types de fichiers Unix",
+        "content": "Sous Unix, tout est fichier. Mais il existe plusieurs types de fichiers, chacun avec un comportement different. Le type est encode dans les bits superieurs de st_mode.",
+        "codeExamples": [
+          {
+            "title": "Tester le type de fichier",
+            "code": "#include <sys/stat.h>\n\nstruct stat sb;\nstat(path, &sb);\n\n// Macros de test :\nif (S_ISREG(sb.st_mode))  // Fichier regulier (-)\nif (S_ISDIR(sb.st_mode))  // Repertoire (d)\nif (S_ISLNK(sb.st_mode))  // Lien symbolique (l)\nif (S_ISFIFO(sb.st_mode)) // Pipe nomme (p)\nif (S_ISSOCK(sb.st_mode)) // Socket (s)\nif (S_ISCHR(sb.st_mode))  // Peripherique caractere (c)\nif (S_ISBLK(sb.st_mode))  // Peripherique bloc (b)\n\n// Alternative avec masque :\nswitch (sb.st_mode & S_IFMT)\n{\n\tcase S_IFREG: /* regulier */ break;\n\tcase S_IFDIR: /* repertoire */ break;\n\tcase S_IFLNK: /* lien */ break;\n}",
+            "explanation": "Les macros S_IS* testent le type encode dans les bits superieurs de st_mode"
+          }
+        ],
+        "keyPoints": [
+          "Il existe 7 types de fichiers sous Unix",
+          "S_ISREG, S_ISDIR, S_ISLNK sont les plus courants",
+          "lstat() est necessaire pour detecter les liens (stat suit les liens)",
+          "S_IFMT est le masque pour extraire le type (bits superieurs)"
+        ],
+        "commonMistakes": [
+          "Utiliser stat() pour detecter les liens symboliques (il faut lstat)",
+          "Oublier que les repertoires sont aussi des fichiers",
+          "Ne pas tester le type avant de faire des operations specifiques"
+        ]
+      },
+      {
+        "title": "Dates et horodatage des fichiers",
+        "content": "Chaque fichier a trois timestamps : dernier acces (atime), derniere modification (mtime), et dernier changement d'attributs (ctime). ls -l affiche mtime par defaut.",
+        "codeExamples": [
+          {
+            "title": "Lire les dates d'un fichier",
+            "code": "#include <sys/stat.h>\n#include <time.h>\n#include <stdio.h>\n\nvoid\tprint_dates(char *path)\n{\n\tstruct stat sb;\n\n\tif (stat(path, &sb) == -1)\n\t\treturn ;\n\t// st_atime : dernier acces (lecture)\n\tprintf(\"Acces  : %s\", ctime(&sb.st_atime));\n\t// st_mtime : derniere modification (contenu)\n\tprintf(\"Modif  : %s\", ctime(&sb.st_mtime));\n\t// st_ctime : dernier changement (attributs/permissions)\n\tprintf(\"Change : %s\", ctime(&sb.st_ctime));\n}\n\n// ctime() convertit time_t en chaine lisible\n// Ex: \"Mon Feb  9 14:30:00 2026\\n\"",
+            "explanation": "Les trois timestamps indiquent quand le fichier a ete lu, modifie, ou change"
+          }
+        ],
+        "keyPoints": [
+          "st_atime = dernier acces (lecture du contenu)",
+          "st_mtime = derniere modification (ecriture du contenu)",
+          "st_ctime = dernier changement de status (chmod, chown, etc.)",
+          "ctime() convertit time_t en chaine lisible (terminee par \\n)"
+        ],
+        "commonMistakes": [
+          "Confondre mtime (contenu) et ctime (attributs)",
+          "Oublier que ctime() ajoute un \\n a la fin de la chaine",
+          "Croire que ctime = creation time (non, c'est change time)"
+        ]
+      }
+    ],
+    "prepExercises": [
+      {
+        "id": 1,
+        "title": "stat() basique",
+        "instruction": "Ecris un programme qui affiche la taille d'un fichier donne en argument.",
+        "starterCode": "#include <sys/stat.h>\n#include <stdio.h>\n\nint\tmain(int argc, char **argv)\n{\n\t// Affiche la taille de argv[1]\n\t// TON CODE ICI\n\t(void)argc;\n\treturn (0);\n}",
+        "solution": "#include <sys/stat.h>\n#include <stdio.h>\n\nint\tmain(int argc, char **argv)\n{\n\tstruct stat sb;\n\n\tif (argc != 2)\n\t\treturn (1);\n\tif (stat(argv[1], &sb) == -1)\n\t{\n\t\tperror(\"stat\");\n\t\treturn (1);\n\t}\n\tprintf(\"%ld octets\\n\", sb.st_size);\n\treturn (0);\n}",
+        "hint": "stat(argv[1], &sb) remplit sb. La taille est dans sb.st_size.",
+        "difficulty": 1
+      },
+      {
+        "id": 2,
+        "title": "Tester si c'est un repertoire",
+        "instruction": "Ecris un programme qui dit si l'argument est un fichier regulier ou un repertoire.",
+        "starterCode": "#include <sys/stat.h>\n#include <unistd.h>\n\nint\tmain(int argc, char **argv)\n{\n\t// Teste si argv[1] est un fichier ou un repertoire\n\t// TON CODE ICI\n\t(void)argc;\n\treturn (0);\n}",
+        "solution": "#include <sys/stat.h>\n#include <unistd.h>\n\nint\tmain(int argc, char **argv)\n{\n\tstruct stat sb;\n\n\tif (argc != 2)\n\t\treturn (1);\n\tif (stat(argv[1], &sb) == -1)\n\t\treturn (1);\n\tif (S_ISDIR(sb.st_mode))\n\t\twrite(1, \"Repertoire\\n\", 11);\n\telse if (S_ISREG(sb.st_mode))\n\t\twrite(1, \"Fichier regulier\\n\", 17);\n\telse\n\t\twrite(1, \"Autre\\n\", 6);\n\treturn (0);\n}",
+        "hint": "S_ISDIR(sb.st_mode) pour repertoire, S_ISREG(sb.st_mode) pour fichier regulier.",
+        "difficulty": 1
+      },
+      {
+        "id": 3,
+        "title": "Afficher les permissions en rwx",
+        "instruction": "Ecris une fonction qui convertit st_mode en chaine 'rwxrwxrwx'.",
+        "starterCode": "#include <sys/stat.h>\n#include <unistd.h>\n\nvoid\tprint_perms(mode_t mode)\n{\n\tchar perms[10];\n\t// Remplis perms avec r/w/x ou -\n\t// TON CODE ICI\n\twrite(1, perms, 9);\n\twrite(1, \"\\n\", 1);\n}\n\nint\tmain(int argc, char **argv)\n{\n\tstruct stat sb;\n\tif (argc == 2 && stat(argv[1], &sb) == 0)\n\t\tprint_perms(sb.st_mode);\n\treturn (0);\n}",
+        "solution": "#include <sys/stat.h>\n#include <unistd.h>\n\nvoid\tprint_perms(mode_t mode)\n{\n\tchar perms[10];\n\n\tperms[0] = (mode & S_IRUSR) ? 'r' : '-';\n\tperms[1] = (mode & S_IWUSR) ? 'w' : '-';\n\tperms[2] = (mode & S_IXUSR) ? 'x' : '-';\n\tperms[3] = (mode & S_IRGRP) ? 'r' : '-';\n\tperms[4] = (mode & S_IWGRP) ? 'w' : '-';\n\tperms[5] = (mode & S_IXGRP) ? 'x' : '-';\n\tperms[6] = (mode & S_IROTH) ? 'r' : '-';\n\tperms[7] = (mode & S_IWOTH) ? 'w' : '-';\n\tperms[8] = (mode & S_IXOTH) ? 'x' : '-';\n\tperms[9] = '\\0';\n\twrite(1, perms, 9);\n\twrite(1, \"\\n\", 1);\n}\n\nint\tmain(int argc, char **argv)\n{\n\tstruct stat sb;\n\tif (argc == 2 && stat(argv[1], &sb) == 0)\n\t\tprint_perms(sb.st_mode);\n\treturn (0);\n}",
+        "hint": "Teste chaque bit avec & : (mode & S_IRUSR) ? 'r' : '-'.",
+        "difficulty": 2
+      },
+      {
+        "id": 4,
+        "title": "Afficher la taille avec write",
+        "instruction": "Affiche la taille d'un fichier avec write() et ft_putnbr() (sans printf).",
+        "starterCode": "#include <sys/stat.h>\n#include <unistd.h>\n\nvoid\tft_putnbr(long n)\n{\n\tchar c;\n\tif (n < 0) { write(1, \"-\", 1); n = -n; }\n\tif (n >= 10) ft_putnbr(n / 10);\n\tc = (n % 10) + '0';\n\twrite(1, &c, 1);\n}\n\nint\tmain(int argc, char **argv)\n{\n\t// Affiche \"Taille: [n] octets\" avec write\n\t// TON CODE ICI\n\t(void)argc;\n\treturn (0);\n}",
+        "solution": "#include <sys/stat.h>\n#include <unistd.h>\n\nvoid\tft_putnbr(long n)\n{\n\tchar c;\n\tif (n < 0) { write(1, \"-\", 1); n = -n; }\n\tif (n >= 10) ft_putnbr(n / 10);\n\tc = (n % 10) + '0';\n\twrite(1, &c, 1);\n}\n\nint\tmain(int argc, char **argv)\n{\n\tstruct stat sb;\n\n\tif (argc != 2)\n\t\treturn (1);\n\tif (stat(argv[1], &sb) == -1)\n\t\treturn (1);\n\twrite(1, \"Taille: \", 8);\n\tft_putnbr(sb.st_size);\n\twrite(1, \" octets\\n\", 8);\n\treturn (0);\n}",
+        "hint": "stat pour obtenir sb.st_size, ft_putnbr pour l'afficher.",
+        "difficulty": 2
+      },
+      {
+        "id": 5,
+        "title": "Programme complet ft_file_info",
+        "instruction": "Combine tout : affiche nom, taille et permissions d'un fichier avec write uniquement.",
+        "starterCode": "#include <sys/stat.h>\n#include <unistd.h>\n\nvoid\tft_putstr(char *s) { while (*s) write(1, s++, 1); }\nvoid\tft_putnbr(long n) {\n\tchar c;\n\tif (n >= 10) ft_putnbr(n / 10);\n\tc = (n % 10) + '0';\n\twrite(1, &c, 1);\n}\n\nint\tmain(int argc, char **argv)\n{\n\t// Affiche Fichier, Taille, Permissions\n\t// TON CODE ICI\n\t(void)argc;\n\treturn (0);\n}",
+        "solution": "#include <sys/stat.h>\n#include <unistd.h>\n\nvoid\tft_putstr(char *s) { while (*s) write(1, s++, 1); }\nvoid\tft_putnbr(long n) {\n\tchar c;\n\tif (n >= 10) ft_putnbr(n / 10);\n\tc = (n % 10) + '0';\n\twrite(1, &c, 1);\n}\n\nvoid\tprint_perms(mode_t m)\n{\n\tchar p[10];\n\tp[0] = (m & S_IRUSR) ? 'r' : '-';\n\tp[1] = (m & S_IWUSR) ? 'w' : '-';\n\tp[2] = (m & S_IXUSR) ? 'x' : '-';\n\tp[3] = (m & S_IRGRP) ? 'r' : '-';\n\tp[4] = (m & S_IWGRP) ? 'w' : '-';\n\tp[5] = (m & S_IXGRP) ? 'x' : '-';\n\tp[6] = (m & S_IROTH) ? 'r' : '-';\n\tp[7] = (m & S_IWOTH) ? 'w' : '-';\n\tp[8] = (m & S_IXOTH) ? 'x' : '-';\n\twrite(1, p, 9);\n}\n\nint\tmain(int argc, char **argv)\n{\n\tstruct stat sb;\n\tif (argc != 2)\n\t\treturn (1);\n\tif (stat(argv[1], &sb) == -1)\n\t\treturn (1);\n\tft_putstr(\"Fichier: \");\n\tft_putstr(argv[1]);\n\twrite(1, \"\\n\", 1);\n\tft_putstr(\"Taille: \");\n\tft_putnbr(sb.st_size);\n\tft_putstr(\" octets\\n\");\n\tft_putstr(\"Permissions: \");\n\tprint_perms(sb.st_mode);\n\twrite(1, \"\\n\", 1);\n\treturn (0);\n}",
+        "hint": "Combine stat, ft_putstr, ft_putnbr et print_perms pour afficher toutes les infos.",
+        "difficulty": 3
+      }
+    ]
+  },
+  "starterCode": "#include <sys/stat.h>\n#include <unistd.h>\n\nvoid\tft_putstr(char *s)\n{\n\twhile (*s)\n\t\twrite(1, s++, 1);\n}\n\nvoid\tft_putnbr(long n)\n{\n\tchar\tc;\n\n\tif (n >= 10)\n\t\tft_putnbr(n / 10);\n\tc = (n % 10) + '0';\n\twrite(1, &c, 1);\n}\n\nint\tmain(int argc, char **argv)\n{\n\tstruct stat\tsb;\n\n\t// 1. Verifier argc == 2\n\t// 2. Appeler stat(argv[1], &sb)\n\t// 3. Afficher \"Fichier: [nom]\\n\"\n\t// 4. Afficher \"Taille: [taille] octets\\n\"\n\t// 5. Afficher \"Permissions: [rwxrwxrwx]\\n\"\n\t(void)argc;\n\t(void)argv;\n\treturn (0);\n}",
+  "solution": "#include <sys/stat.h>\n#include <unistd.h>\n\nvoid\tft_putstr(char *s)\n{\n\twhile (*s)\n\t\twrite(1, s++, 1);\n}\n\nvoid\tft_putnbr(long n)\n{\n\tchar\tc;\n\n\tif (n >= 10)\n\t\tft_putnbr(n / 10);\n\tc = (n % 10) + '0';\n\twrite(1, &c, 1);\n}\n\nvoid\tprint_perms(mode_t mode)\n{\n\tchar\tperms[10];\n\n\tperms[0] = (mode & S_IRUSR) ? 'r' : '-';\n\tperms[1] = (mode & S_IWUSR) ? 'w' : '-';\n\tperms[2] = (mode & S_IXUSR) ? 'x' : '-';\n\tperms[3] = (mode & S_IRGRP) ? 'r' : '-';\n\tperms[4] = (mode & S_IWGRP) ? 'w' : '-';\n\tperms[5] = (mode & S_IXGRP) ? 'x' : '-';\n\tperms[6] = (mode & S_IROTH) ? 'r' : '-';\n\tperms[7] = (mode & S_IWOTH) ? 'w' : '-';\n\tperms[8] = (mode & S_IXOTH) ? 'x' : '-';\n\tperms[9] = '\\0';\n\twrite(1, perms, 9);\n}\n\nint\tmain(int argc, char **argv)\n{\n\tstruct stat\tsb;\n\n\tif (argc != 2)\n\t{\n\t\tft_putstr(\"Usage: ./ft_file_info <fichier>\\n\");\n\t\treturn (1);\n\t}\n\tif (stat(argv[1], &sb) == -1)\n\t{\n\t\tft_putstr(\"Erreur: fichier introuvable\\n\");\n\t\treturn (1);\n\t}\n\tft_putstr(\"Fichier: \");\n\tft_putstr(argv[1]);\n\twrite(1, \"\\n\", 1);\n\tft_putstr(\"Taille: \");\n\tft_putnbr(sb.st_size);\n\tft_putstr(\" octets\\n\");\n\tft_putstr(\"Permissions: \");\n\tprint_perms(sb.st_mode);\n\twrite(1, \"\\n\", 1);\n\treturn (0);\n}",
+  "hints": [
+    "Appelle stat(argv[1], &sb) pour remplir la structure. Verifie le retour (-1 = erreur).",
+    "sb.st_size contient la taille. Utilise ft_putnbr pour l'afficher.",
+    "Pour les permissions, teste chaque bit avec & : (mode & S_IRUSR) ? 'r' : '-' pour chacune des 9 permissions."
+  ],
+  "testCases": [
+    {
+      "id": 1,
+      "description": "Affiche les infos d'un fichier existant",
+      "stdin": "",
+      "expectedStdout": "Fichier: test.txt\nTaille: * octets\nPermissions: rw-r--r--\n",
+      "expectedExitCode": 0,
+      "visible": true
+    },
+    {
+      "id": 2,
+      "description": "Fichier inexistant retourne erreur",
+      "stdin": "",
+      "expectedStdout": "Erreur: fichier introuvable\n",
+      "expectedExitCode": 1,
+      "visible": false
+    },
+    {
+      "id": 3,
+      "description": "Pas d'argument affiche usage",
+      "stdin": "",
+      "expectedStdout": "Usage: ./ft_file_info <fichier>\n",
+      "expectedExitCode": 1,
+      "visible": false
+    }
+  ],
+  "constraints": {
+    "allowedFunctions": ["write", "stat", "lstat"],
+    "forbiddenFunctions": ["printf", "system"],
+    "maxExecutionTime": 5000,
+    "maxMemory": 128
+  },
+  "relatedExercises": ["c-day59-ex01-ft-mini-ls", "c-day59-ex02-ft-copy-recursive"],
+  "resources": [
+    {
+      "title": "Man stat(2) - Linux manual page",
+      "url": "https://man7.org/linux/man-pages/man2/stat.2.html",
+      "type": "documentation"
+    },
+    {
+      "title": "Comprendre les permissions Unix",
+      "url": "https://www.geeksforgeeks.org/stat-command-in-linux-with-examples/",
+      "type": "article"
+    }
+  ]
+}

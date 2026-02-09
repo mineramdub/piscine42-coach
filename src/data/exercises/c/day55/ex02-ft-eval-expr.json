@@ -1,0 +1,257 @@
+{
+  "id": "c-day55-ex02-ft-eval-expr",
+  "category": "c",
+  "day": 55,
+  "order": 2,
+  "title": "Evaluer une expression arithmetique avec parsing recursif",
+  "description": "Ecris une fonction ft_eval_expr qui evalue une expression arithmetique simple contenant des entiers positifs, les operateurs +, -, *, / et des parentheses. L'evaluation respecte la priorite des operateurs (* et / avant + et -). Utilise le parsing recursif descendant (recursive descent parser). Prototype : int ft_eval_expr(char *expr);",
+  "difficulty": 5,
+  "points": 50,
+  "estimatedTime": 45,
+  "learningObjectives": [
+    "Comprendre le parsing recursif descendant (recursive descent)",
+    "Implementer une grammaire avec priorite des operateurs",
+    "Gerer les parentheses comme sous-expressions recursives",
+    "Maitriser la tokenisation et l'evaluation combinee",
+    "Preparer les concepts fondamentaux des compilateurs"
+  ],
+  "learningContent": {
+    "lesson": {
+      "introduction": "Evaluer une expression comme '3 + 4 * 2' en respectant la priorite des operateurs (le * avant le +) est un probleme fondamental en informatique. L'approche du parsing recursif descendant (recursive descent parser) est elegante : on definit une grammaire avec des niveaux de priorite, et chaque niveau est une fonction qui appelle le niveau suivant. C'est la technique utilisee dans les compilateurs et les interpreteurs. L'expression '3 + 4 * 2' donne 11 (pas 14), car * est prioritaire sur +.",
+      "steps": [
+        {
+          "id": 1,
+          "title": "Priorite des operateurs",
+          "content": "Les operateurs ont des priorites :\n\n1. **Parentheses** : evaluees en premier (priorite maximale)\n2. **\\* et /** : multiplicatif (priorite haute)\n3. **+ et -** : additif (priorite basse)\n\nSans parentheses : `3 + 4 * 2 = 3 + 8 = 11`\nAvec parentheses : `(3 + 4) * 2 = 7 * 2 = 14`\n\nLa grammaire formelle :\n- expr = term (('+' | '-') term)*\n- term = factor (('*' | '/') factor)*\n- factor = NUMBER | '(' expr ')'",
+          "codeExample": "// Grammaire BNF :\n// expr   -> term (('+' | '-') term)*\n// term   -> factor (('*' | '/') factor)*\n// factor -> NUMBER | '(' expr ')'\n\n// Exemples :\n// \"3 + 4 * 2\"     -> expr -> term(3) + term(4*2)\n//                        -> 3 + 8 = 11\n\n// \"(3 + 4) * 2\"   -> expr -> term((3+4)*2)\n//                        -> term -> factor(3+4) * factor(2)\n//                        -> 7 * 2 = 14\n\n// \"2 * 3 + 4 * 5\" -> expr -> term(2*3) + term(4*5)\n//                        -> 6 + 20 = 26",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Quel est le resultat de : 2 + 3 * 4 - 1 ?",
+            "starterCode": "// 2 + 3 * 4 - 1\n// Priorite : * d'abord\n// 3 * 4 = ???\n// Puis + et - de gauche a droite\n// 2 + ??? - 1 = ???",
+            "solution": "// 3 * 4 = 12\n// 2 + 12 - 1 = 13\n// L'expression vaut 13"
+          }
+        },
+        {
+          "id": 2,
+          "title": "Le recursive descent parser",
+          "content": "Chaque niveau de priorite est une fonction :\n\n- **ft_expr** : gere + et -, appelle ft_term pour les operandes\n- **ft_term** : gere * et /, appelle ft_factor pour les operandes\n- **ft_factor** : gere les nombres et les parentheses\n\nLa recursion se fait dans ft_factor : quand on rencontre '(', on appelle ft_expr (le niveau le plus bas de priorite) pour evaluer la sous-expression jusqu'a ')'.",
+          "codeExample": "// Position globale dans la chaine\nint\tg_pos;\n\n// Avancer en sautant les espaces\nvoid\tft_skip_spaces(char *expr)\n{\n\twhile (expr[g_pos] == ' ')\n\t\tg_pos++;\n}\n\n// factor : nombre ou (expr)\nint\tft_factor(char *expr)\n{\n\tint\tresult;\n\n\tft_skip_spaces(expr);\n\tif (expr[g_pos] == '(')\n\t{\n\t\tg_pos++; // Sauter '('\n\t\tresult = ft_expr(expr); // Evaluer la sous-expression\n\t\tft_skip_spaces(expr);\n\t\tg_pos++; // Sauter ')'\n\t\treturn (result);\n\t}\n\t// Sinon, c'est un nombre\n\tresult = 0;\n\twhile (expr[g_pos] >= '0' && expr[g_pos] <= '9')\n\t\tresult = result * 10 + (expr[g_pos++] - '0');\n\treturn (result);\n}",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Quelle fonction est appelee en premier pour evaluer '(2 + 3) * 4' ?",
+            "starterCode": "// Expression : (2 + 3) * 4\n// On commence par ft_expr\n// ft_expr appelle ft_term\n// ft_term appelle ft_factor\n// ft_factor voit '(' -> appelle ???\n// Quelle est la chaine d'appels ?",
+            "solution": "// ft_expr -> ft_term -> ft_factor\n// ft_factor voit '(' -> appelle ft_expr (recursion !)\n// ft_expr evalue '2 + 3' = 5\n// Retour a ft_factor avec result = 5\n// ft_factor saute ')'\n// Retour a ft_term : 5 * ft_factor(4) = 20\n// Retour a ft_expr : 20"
+          }
+        },
+        {
+          "id": 3,
+          "title": "Implementation de expr et term",
+          "content": "ft_expr gere l'addition et la soustraction. ft_term gere la multiplication et la division. Les deux ont la meme structure : evaluer le premier operande, puis tant qu'il y a un operateur de leur niveau, evaluer le suivant et appliquer.\n\nL'associativite est a gauche : `3 - 2 - 1 = (3 - 2) - 1 = 0` (pas 3 - (2 - 1) = 2).",
+          "codeExample": "// term : multiplication et division\nint\tft_term(char *expr)\n{\n\tint\tresult;\n\n\tresult = ft_factor(expr);\n\tft_skip_spaces(expr);\n\twhile (expr[g_pos] == '*' || expr[g_pos] == '/')\n\t{\n\t\tchar op = expr[g_pos++];\n\t\tint right = ft_factor(expr);\n\t\tif (op == '*')\n\t\t\tresult *= right;\n\t\telse\n\t\t\tresult /= right;\n\t\tft_skip_spaces(expr);\n\t}\n\treturn (result);\n}\n\n// expr : addition et soustraction\nint\tft_expr(char *expr)\n{\n\tint\tresult;\n\n\tresult = ft_term(expr);\n\tft_skip_spaces(expr);\n\twhile (expr[g_pos] == '+' || expr[g_pos] == '-')\n\t{\n\t\tchar op = expr[g_pos++];\n\t\tint right = ft_term(expr);\n\t\tif (op == '+')\n\t\t\tresult += right;\n\t\telse\n\t\t\tresult -= right;\n\t\tft_skip_spaces(expr);\n\t}\n\treturn (result);\n}",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Trace l'execution de ft_expr pour '2 * 3 + 4'.",
+            "starterCode": "// ft_expr('2 * 3 + 4')\n// result = ft_term('2 * 3 + 4')\n//   ft_term : result = ft_factor = ???\n//   '*' -> right = ft_factor = ???\n//   result = ??? * ??? = ???\n//   Pas de * ou / -> retourne ???\n// ft_expr : '+' -> right = ft_term('4')\n// result = ??? + ??? = ???",
+            "solution": "// ft_expr appelle ft_term\n// ft_term : factor(2) = 2, '*', factor(3) = 3\n//   result = 2 * 3 = 6\n//   Pas de * ou / -> retourne 6\n// ft_expr : result = 6\n//   '+' -> ft_term('4') = 4\n//   result = 6 + 4 = 10\n// Resultat final : 10"
+          }
+        },
+        {
+          "id": 4,
+          "title": "Programme complet",
+          "content": "Le programme prend une expression en argument et affiche le resultat. La variable g_pos est globale pour simplifier le passage entre les fonctions. On pourrait aussi utiliser un pointeur int * passe en parametre.\n\n**Gestion des erreurs :** Pour cet exercice, on suppose que l'expression est toujours valide. Un vrai parser devrait gerer les erreurs de syntaxe (parentheses non fermees, operateurs manquants, etc.).",
+          "codeExample": "#include <unistd.h>\n\nint\tg_pos;\n\nvoid\tft_putnbr(int n)\n{\n\tchar c;\n\tif (n < 0) { write(1, \"-\", 1); n = -n; }\n\tif (n >= 10) ft_putnbr(n / 10);\n\tc = n % 10 + '0';\n\twrite(1, &c, 1);\n}\n\nint\tft_eval_expr(char *expr)\n{\n\tg_pos = 0;\n\treturn (ft_expr(expr));\n}\n\nint\tmain(int argc, char **argv)\n{\n\tint\tresult;\n\n\tif (argc != 2)\n\t\treturn (1);\n\tresult = ft_eval_expr(argv[1]);\n\tft_putnbr(result);\n\twrite(1, \"\\n\", 1);\n\treturn (0);\n}",
+          "language": "c"
+        }
+      ]
+    },
+    "theory": [
+      {
+        "title": "Grammaires et parsing",
+        "content": "Une grammaire definit la structure syntaxique d'un langage. Pour les expressions arithmetiques, la grammaire definit comment les nombres, operateurs et parentheses se combinent. Le parsing est l'analyse de cette structure.",
+        "codeExamples": [
+          {
+            "title": "Grammaire des expressions arithmetiques",
+            "code": "// Grammaire BNF (Backus-Naur Form) :\n// expr   -> term (('+' | '-') term)*\n// term   -> factor (('*' | '/') factor)*\n// factor -> NUMBER | '(' expr ')'\n// NUMBER -> [0-9]+\n\n// Chaque regle definit un niveau de priorite :\n// expr (basse priorite) -> contient + et -\n// term (haute priorite) -> contient * et /\n// factor (plus haute)   -> nombres et parentheses\n\n// La recursion expr -> term -> factor -> '(' expr ')'\n// permet des expressions imbriquees a l'infini",
+            "explanation": "La grammaire definit formellement la syntaxe des expressions et leur priorite"
+          }
+        ],
+        "keyPoints": [
+          "La grammaire definit la structure syntaxique valide",
+          "Chaque niveau de la grammaire correspond a un niveau de priorite",
+          "La recursion dans la grammaire permet l'imbrication",
+          "Le parser traduit la grammaire en code (une fonction par regle)"
+        ],
+        "commonMistakes": [
+          "Ne pas respecter la priorite des operateurs dans la grammaire",
+          "Mettre + et * au meme niveau (pas de priorite)",
+          "Oublier la recursion pour les parentheses (pas d'imbrication)"
+        ]
+      },
+      {
+        "title": "Recursive descent parsing",
+        "content": "Le parsing recursif descendant est une technique ou chaque regle de grammaire est une fonction. L'appel entre fonctions reflète la structure de la grammaire. C'est simple a implementer et a comprendre.",
+        "codeExamples": [
+          {
+            "title": "Correspondance grammaire -> code",
+            "code": "// Grammaire : expr -> term (('+' | '-') term)*\n// Code :\nint ft_expr(char *e)\n{\n\tint r = ft_term(e);          // term\n\twhile (e[g_pos] == '+' || e[g_pos] == '-')  // ('+' | '-')*\n\t{\n\t\tchar op = e[g_pos++];\n\t\tint right = ft_term(e);  // term\n\t\tif (op == '+') r += right;\n\t\telse r -= right;\n\t}\n\treturn (r);\n}\n\n// Chaque element de la grammaire a un equivalent direct :\n// regle -> fonction\n// alternative (|) -> if/else\n// repetition (*) -> while\n// terminal -> comparaison et avance g_pos",
+            "explanation": "La correspondance entre grammaire et code est directe et systematique"
+          }
+        ],
+        "keyPoints": [
+          "Une regle de grammaire = une fonction",
+          "Une alternative = un if/else ou switch",
+          "Une repetition = une boucle while",
+          "Un terminal (nombre, operateur) = comparaison et avance"
+        ],
+        "commonMistakes": [
+          "Ne pas avancer g_pos apres avoir consomme un caractere",
+          "Oublier de sauter les espaces entre les tokens",
+          "Appeler la mauvaise fonction pour le mauvais niveau de priorite"
+        ]
+      },
+      {
+        "title": "Associativite a gauche",
+        "content": "L'associativite determine comment les operateurs de meme priorite sont groupes. L'associativite a gauche signifie que 3 - 2 - 1 = (3 - 2) - 1 = 0. La boucle while dans ft_expr et ft_term assure l'associativite a gauche.",
+        "codeExamples": [
+          {
+            "title": "Associativite a gauche avec une boucle",
+            "code": "// 3 - 2 - 1\n// Associativite gauche : (3 - 2) - 1 = 0\n// Associativite droite : 3 - (2 - 1) = 2 (FAUX)\n\n// La boucle while assure l'associativite gauche :\nresult = ft_term(expr); // result = 3\n// Iteration 1 : '-' 2 -> result = 3 - 2 = 1\n// Iteration 2 : '-' 1 -> result = 1 - 1 = 0\n// Resultat : 0 (correct !)\n\n// Si on utilisait la recursion a la place :\n// result = 3 - ft_expr(\"2 - 1\") = 3 - 1 = 2\n// C'est l'associativite DROITE (incorrect !)",
+            "explanation": "La boucle while garantit l'associativite a gauche, la recursion donnerait l'associativite a droite"
+          }
+        ],
+        "keyPoints": [
+          "L'associativite gauche : (a - b) - c, pas a - (b - c)",
+          "La boucle while assure l'associativite gauche naturellement",
+          "La recursion directe donnerait l'associativite droite",
+          "Pour +, l'associativite n'importe pas (commutativite)"
+        ],
+        "commonMistakes": [
+          "Utiliser la recursion au lieu de la boucle (associativite droite)",
+          "Ne pas tester avec des expressions comme 10 - 3 - 2 (doit donner 5)",
+          "Confondre associativite et commutativite"
+        ]
+      },
+      {
+        "title": "Gestion de la position de lecture",
+        "content": "La variable g_pos (ou un pointeur int *pos) maintient la position actuelle dans la chaine. Chaque fonction avance g_pos en consommant les caracteres. C'est essentiel pour que les fonctions se coordonnent.",
+        "codeExamples": [
+          {
+            "title": "Le curseur de lecture",
+            "code": "int g_pos = 0;\n\n// Expression : \"3 + 4 * 2\"\n// g_pos = 0 -> ft_expr\n//   ft_term -> ft_factor lit '3', g_pos = 1\n//   ft_term : pas de * ou /, retourne 3, g_pos = 1\n//   ft_skip_spaces, g_pos = 2\n//   '+' lu, g_pos = 3\n//   ft_term -> ft_factor lit '4', g_pos = 5\n//   '*' lu, g_pos = 7\n//   ft_factor lit '2', g_pos = 9\n//   result = 4 * 2 = 8\n//   retourne 8\n//   result = 3 + 8 = 11\n\n// g_pos avance toujours vers l'avant\n// Chaque caractere est consomme exactement une fois",
+            "explanation": "g_pos avance lineairement, chaque caractere est lu et consomme une seule fois"
+          }
+        ],
+        "keyPoints": [
+          "g_pos avance toujours vers l'avant (jamais en arriere)",
+          "Chaque caractere est consomme exactement une fois",
+          "ft_skip_spaces avance g_pos au-dela des espaces",
+          "Les fonctions se coordonnent via la position partagee g_pos"
+        ],
+        "commonMistakes": [
+          "Ne pas avancer g_pos apres avoir lu un nombre ou un operateur",
+          "Avancer g_pos deux fois pour le meme caractere",
+          "Oublier de sauter les espaces avant de lire le prochain token"
+        ]
+      }
+    ],
+    "prepExercises": [
+      {
+        "id": 1,
+        "title": "Lire un nombre dans une chaine",
+        "instruction": "Ecris ft_read_number qui lit un entier a partir de g_pos et avance g_pos.",
+        "starterCode": "int\tg_pos = 0;\n\nint\tft_read_number(char *expr)\n{\n\tint\tresult;\n\n\t// Lire les chiffres et avancer g_pos\n\t// TON CODE ICI\n}",
+        "solution": "int\tg_pos = 0;\n\nint\tft_read_number(char *expr)\n{\n\tint\tresult;\n\n\tresult = 0;\n\twhile (expr[g_pos] >= '0' && expr[g_pos] <= '9')\n\t\tresult = result * 10 + (expr[g_pos++] - '0');\n\treturn (result);\n}",
+        "hint": "result = result * 10 + (expr[g_pos] - '0'); g_pos++;",
+        "difficulty": 1
+      },
+      {
+        "id": 2,
+        "title": "Evaluer sans priorite",
+        "instruction": "Ecris un evaluateur simple qui traite +, -, *, / de gauche a droite sans priorite.",
+        "starterCode": "int\tft_eval_simple(char *expr)\n{\n\tint result = ft_read_number(expr);\n\tft_skip_spaces(expr);\n\t// Boucle : lire operateur, lire nombre, appliquer\n\t// TON CODE ICI\n}",
+        "solution": "int\tft_eval_simple(char *expr)\n{\n\tint result = ft_read_number(expr);\n\tchar op;\n\n\tft_skip_spaces(expr);\n\twhile (expr[g_pos] == '+' || expr[g_pos] == '-'\n\t\t|| expr[g_pos] == '*' || expr[g_pos] == '/')\n\t{\n\t\top = expr[g_pos++];\n\t\tft_skip_spaces(expr);\n\t\tint right = ft_read_number(expr);\n\t\tif (op == '+') result += right;\n\t\telse if (op == '-') result -= right;\n\t\telse if (op == '*') result *= right;\n\t\telse result /= right;\n\t\tft_skip_spaces(expr);\n\t}\n\treturn (result);\n}",
+        "hint": "Boucle while sur les operateurs. Lis l'operateur, lis le nombre suivant, applique.",
+        "difficulty": 2
+      },
+      {
+        "id": 3,
+        "title": "Implementer ft_factor",
+        "instruction": "Ecris ft_factor qui gere les nombres et les parentheses.",
+        "starterCode": "int\tft_factor(char *expr)\n{\n\tint\tresult;\n\n\tft_skip_spaces(expr);\n\tif (expr[g_pos] == '(')\n\t{\n\t\t// Sauter '(', evaluer expr, sauter ')'\n\t\t// TON CODE ICI\n\t}\n\t// Sinon lire un nombre\n\t// TON CODE ICI\n}",
+        "solution": "int\tft_factor(char *expr)\n{\n\tint\tresult;\n\n\tft_skip_spaces(expr);\n\tif (expr[g_pos] == '(')\n\t{\n\t\tg_pos++;\n\t\tresult = ft_expr(expr);\n\t\tft_skip_spaces(expr);\n\t\tg_pos++;\n\t\treturn (result);\n\t}\n\treturn (ft_read_number(expr));\n}",
+        "hint": "Si '(' : avance, appelle ft_expr, avance apres ')'. Sinon : ft_read_number.",
+        "difficulty": 2
+      },
+      {
+        "id": 4,
+        "title": "Implementer ft_term",
+        "instruction": "Ecris ft_term qui gere * et / en appelant ft_factor.",
+        "starterCode": "int\tft_term(char *expr)\n{\n\tint\tresult;\n\n\tresult = ft_factor(expr);\n\t// Tant que * ou / : lire operateur, ft_factor, appliquer\n\t// TON CODE ICI\n}",
+        "solution": "int\tft_term(char *expr)\n{\n\tint\tresult;\n\tchar\top;\n\n\tresult = ft_factor(expr);\n\tft_skip_spaces(expr);\n\twhile (expr[g_pos] == '*' || expr[g_pos] == '/')\n\t{\n\t\top = expr[g_pos++];\n\t\tint right = ft_factor(expr);\n\t\tif (op == '*') result *= right;\n\t\telse result /= right;\n\t\tft_skip_spaces(expr);\n\t}\n\treturn (result);\n}",
+        "hint": "Meme structure que ft_expr mais avec * et / au lieu de + et -, et ft_factor au lieu de ft_term.",
+        "difficulty": 2
+      },
+      {
+        "id": 5,
+        "title": "Tester avec des parentheses imbriquees",
+        "instruction": "Evalue '((2 + 3) * (4 - 1))' et trace les appels recursifs.",
+        "starterCode": "// Expression : ((2 + 3) * (4 - 1))\n// ft_expr -> ft_term -> ft_factor : '(' -> ft_expr\n//   ft_expr -> ft_term -> ft_factor : '(' -> ft_expr\n//     ft_expr : ft_term(2) + ft_term(3) = ???\n//   ft_factor retourne ???\n//   ft_term : ??? * ft_factor('(4 - 1)')\n//     ft_factor : '(' -> ft_expr\n//       ft_expr : ft_term(4) - ft_term(1) = ???\n// Resultat final : ???",
+        "solution": "// ((2 + 3) * (4 - 1))\n// ft_factor : '(' -> ft_expr\n//   ft_term -> ft_factor : '(' -> ft_expr\n//     2 + 3 = 5\n//   ft_term : 5 * ft_factor\n//     ft_factor : '(' -> ft_expr\n//       4 - 1 = 3\n//   5 * 3 = 15\n// Resultat final : 15",
+        "hint": "Chaque '(' declenche un appel recursif a ft_expr. L'expression interne est evaluee completement avant de continuer.",
+        "difficulty": 3
+      }
+    ]
+  },
+  "starterCode": "#include <unistd.h>\n\nint\tg_pos;\n\nvoid\tft_putnbr(int n)\n{\n\tchar c;\n\tif (n < 0) { write(1, \"-\", 1); n = -n; }\n\tif (n >= 10) ft_putnbr(n / 10);\n\tc = n % 10 + '0';\n\twrite(1, &c, 1);\n}\n\nvoid\tft_skip_spaces(char *e) { while (e[g_pos] == ' ') g_pos++; }\n\nint\tft_expr(char *expr);\n\nint\tft_factor(char *expr)\n{\n\t// Si '(' : evaluer sous-expression\n\t// Sinon : lire un nombre\n\treturn (0);\n}\n\nint\tft_term(char *expr)\n{\n\t// ft_factor puis boucle * et /\n\treturn (0);\n}\n\nint\tft_expr(char *expr)\n{\n\t// ft_term puis boucle + et -\n\treturn (0);\n}\n\nint\tft_eval_expr(char *expr)\n{\n\tg_pos = 0;\n\treturn (ft_expr(expr));\n}\n\nint\tmain(int argc, char **argv)\n{\n\tif (argc != 2)\n\t\treturn (1);\n\tft_putnbr(ft_eval_expr(argv[1]));\n\twrite(1, \"\\n\", 1);\n\treturn (0);\n}",
+  "solution": "#include <unistd.h>\n\nint\tg_pos;\n\nvoid\tft_putnbr(int n)\n{\n\tchar c;\n\tif (n < 0) { write(1, \"-\", 1); n = -n; }\n\tif (n >= 10) ft_putnbr(n / 10);\n\tc = n % 10 + '0';\n\twrite(1, &c, 1);\n}\n\nvoid\tft_skip_spaces(char *e) { while (e[g_pos] == ' ') g_pos++; }\n\nint\tft_expr(char *expr);\n\nint\tft_factor(char *expr)\n{\n\tint\tresult;\n\n\tft_skip_spaces(expr);\n\tif (expr[g_pos] == '(')\n\t{\n\t\tg_pos++;\n\t\tresult = ft_expr(expr);\n\t\tft_skip_spaces(expr);\n\t\tif (expr[g_pos] == ')')\n\t\t\tg_pos++;\n\t\treturn (result);\n\t}\n\tresult = 0;\n\twhile (expr[g_pos] >= '0' && expr[g_pos] <= '9')\n\t\tresult = result * 10 + (expr[g_pos++] - '0');\n\treturn (result);\n}\n\nint\tft_term(char *expr)\n{\n\tint\t\tresult;\n\tchar\top;\n\tint\t\tright;\n\n\tresult = ft_factor(expr);\n\tft_skip_spaces(expr);\n\twhile (expr[g_pos] == '*' || expr[g_pos] == '/')\n\t{\n\t\top = expr[g_pos++];\n\t\tright = ft_factor(expr);\n\t\tif (op == '*')\n\t\t\tresult *= right;\n\t\telse\n\t\t\tresult /= right;\n\t\tft_skip_spaces(expr);\n\t}\n\treturn (result);\n}\n\nint\tft_expr(char *expr)\n{\n\tint\t\tresult;\n\tchar\top;\n\tint\t\tright;\n\n\tresult = ft_term(expr);\n\tft_skip_spaces(expr);\n\twhile (expr[g_pos] == '+' || expr[g_pos] == '-')\n\t{\n\t\top = expr[g_pos++];\n\t\tright = ft_term(expr);\n\t\tif (op == '+')\n\t\t\tresult += right;\n\t\telse\n\t\t\tresult -= right;\n\t\tft_skip_spaces(expr);\n\t}\n\treturn (result);\n}\n\nint\tft_eval_expr(char *expr)\n{\n\tg_pos = 0;\n\treturn (ft_expr(expr));\n}\n\nint\tmain(int argc, char **argv)\n{\n\tif (argc != 2)\n\t\treturn (1);\n\tft_putnbr(ft_eval_expr(argv[1]));\n\twrite(1, \"\\n\", 1);\n\treturn (0);\n}",
+  "hints": [
+    "Trois fonctions mutuellement recursives : ft_expr (+ et -), ft_term (* et /), ft_factor (nombres et parentheses).",
+    "ft_factor gere les parentheses : si '(', avance et appelle ft_expr recursivement, puis saute ')'.",
+    "N'oublie pas ft_skip_spaces entre chaque token. La variable g_pos avance toujours vers l'avant."
+  ],
+  "testCases": [
+    {
+      "id": 1,
+      "description": "'3 + 4 * 2' = 11 (priorite respectee)",
+      "stdin": "",
+      "expectedStdout": "11\n",
+      "expectedExitCode": 0,
+      "visible": true
+    },
+    {
+      "id": 2,
+      "description": "'(3 + 4) * 2' = 14 (parentheses)",
+      "stdin": "",
+      "expectedStdout": "14\n",
+      "expectedExitCode": 0,
+      "visible": false
+    },
+    {
+      "id": 3,
+      "description": "'((2 + 3) * (4 - 1))' = 15 (imbrication)",
+      "stdin": "",
+      "expectedStdout": "15\n",
+      "expectedExitCode": 0,
+      "visible": false
+    }
+  ],
+  "constraints": {
+    "allowedFunctions": ["write"],
+    "forbiddenFunctions": ["printf", "atoi", "eval"],
+    "maxExecutionTime": 5000,
+    "maxMemory": 128
+  },
+  "relatedExercises": ["c-day55-ex00-ft-split-quotes", "c-day55-ex01-ft-parse-args"],
+  "resources": [
+    {
+      "title": "Recursive descent parser",
+      "url": "https://en.wikipedia.org/wiki/Recursive_descent_parser",
+      "type": "documentation"
+    },
+    {
+      "title": "Expression evaluation en C",
+      "url": "https://www.geeksforgeeks.org/expression-evaluation/",
+      "type": "article"
+    }
+  ]
+}

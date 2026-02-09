@@ -1,0 +1,257 @@
+{
+  "id": "c-day53-ex01-ft-stack-calc",
+  "category": "c",
+  "day": 53,
+  "order": 1,
+  "title": "Calculatrice en notation polonaise inverse",
+  "description": "Ecris un programme ft_stack_calc qui evalue une expression en notation polonaise inverse (RPN) en utilisant une pile. L'expression est passee en argument sous forme de chaine. Les operateurs supportes sont +, -, * et /. Les nombres et operateurs sont separes par des espaces. Le resultat est affiche sur la sortie standard. Exemple : '3 4 + 2 *' = (3+4)*2 = 14.",
+  "difficulty": 4,
+  "points": 40,
+  "estimatedTime": 40,
+  "learningObjectives": [
+    "Comprendre la notation polonaise inverse (RPN)",
+    "Implementer une pile pour evaluer des expressions",
+    "Maitriser le parsing de chaine avec tokenisation",
+    "Gerer les operations arithmetiques avec une pile",
+    "Comprendre le lien entre RPN et les compilateurs"
+  ],
+  "learningContent": {
+    "lesson": {
+      "introduction": "La notation polonaise inverse (RPN, pour Reverse Polish Notation) est une maniere d'ecrire les expressions mathematiques ou l'operateur est place apres ses operandes. Par exemple, '3 + 4' s'ecrit '3 4 +' en RPN. Cette notation elimine le besoin de parentheses et est facile a evaluer avec une pile : quand on rencontre un nombre, on l'empile ; quand on rencontre un operateur, on depile deux nombres, on applique l'operation, et on empile le resultat. Les calculatrices HP et le langage Forth utilisent cette notation.",
+      "steps": [
+        {
+          "id": 1,
+          "title": "La notation polonaise inverse",
+          "content": "En RPN, l'operateur vient apres les operandes :\n- Infixe (classique) : `3 + 4` -> RPN : `3 4 +`\n- Infixe : `(3 + 4) * 2` -> RPN : `3 4 + 2 *`\n- Infixe : `3 + 4 * 2` -> RPN : `3 4 2 * +`\n\n**Avantages de la RPN :**\n- Pas de parentheses necessaires\n- Pas de regles de priorite des operateurs\n- Evaluation simple avec une pile\n- Utilisee dans les compilateurs (code intermediaire)",
+          "codeExample": "// Conversion infixe -> RPN :\n// 3 + 4           -> 3 4 +\n// (3 + 4) * 2     -> 3 4 + 2 *\n// 3 + 4 * 2       -> 3 4 2 * +\n// (1 + 2) * (3 - 4) -> 1 2 + 3 4 - *\n// 5               -> 5\n\n// L'ordre des operandes est preserve\n// L'ordre d'evaluation est explicite\n// Pas d'ambiguite !",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Convertis '(5 - 3) * (2 + 1)' en RPN.",
+            "starterCode": "// Infixe : (5 - 3) * (2 + 1)\n// Etape 1 : 5 - 3 -> ???\n// Etape 2 : 2 + 1 -> ???\n// Etape 3 : resultat1 * resultat2 -> ???",
+            "solution": "// 5 - 3 -> 5 3 -\n// 2 + 1 -> 2 1 +\n// (5-3) * (2+1) -> 5 3 - 2 1 + *\n// Les sous-expressions sont evaluees en premier"
+          }
+        },
+        {
+          "id": 2,
+          "title": "Algorithme d'evaluation avec une pile",
+          "content": "L'algorithme est simple :\n\n1. Lire les tokens (nombres et operateurs) de gauche a droite\n2. Si c'est un nombre : le pousser sur la pile\n3. Si c'est un operateur : depiler 2 nombres, appliquer l'operation, empiler le resultat\n4. A la fin, le resultat est le seul element sur la pile\n\n**Attention a l'ordre :** Pour a b -, on depile d'abord b puis a, et on calcule a - b (pas b - a).",
+          "codeExample": "// Evaluation de \"3 4 + 2 *\" :\n\n// Token '3' : push(3)      -> pile : [3]\n// Token '4' : push(4)      -> pile : [3, 4]\n// Token '+' : pop 4, pop 3 -> 3+4=7\n//             push(7)      -> pile : [7]\n// Token '2' : push(2)      -> pile : [7, 2]\n// Token '*' : pop 2, pop 7 -> 7*2=14\n//             push(14)     -> pile : [14]\n\n// Resultat = 14\n\n// Attention a l'ordre pour - et / :\n// \"5 3 -\" : pop 3, pop 5 -> 5-3=2 (pas 3-5)\n// Le premier depile est l'operande droit (b)\n// Le second depile est l'operande gauche (a)",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Trace l'evaluation de '2 3 4 * +' avec la pile.",
+            "starterCode": "// Token '2' : pile = ???\n// Token '3' : pile = ???\n// Token '4' : pile = ???\n// Token '*' : pop ???, pop ??? -> ???\n//             pile = ???\n// Token '+' : pop ???, pop ??? -> ???\n//             pile = ???\n// Resultat = ???",
+            "solution": "// Token '2' : pile = [2]\n// Token '3' : pile = [2, 3]\n// Token '4' : pile = [2, 3, 4]\n// Token '*' : pop 4, pop 3 -> 3*4=12\n//             pile = [2, 12]\n// Token '+' : pop 12, pop 2 -> 2+12=14\n//             pile = [14]\n// Resultat = 14 (equivalent a 2 + 3*4)"
+          }
+        },
+        {
+          "id": 3,
+          "title": "Implementation de la pile et du parsing",
+          "content": "On utilise un tableau comme pile (plus simple qu'une liste chainee pour des int). Le parsing decoupe la chaine en tokens separes par des espaces.\n\nPour chaque token, on verifie si c'est un nombre (ft_atoi) ou un operateur (+, -, *, /). Les nombres negatifs commencent par '-' suivi d'un chiffre.",
+          "codeExample": "// Pile simple avec un tableau\n#define MAX_STACK 100\n\nint\tstack[MAX_STACK];\nint\ttop = -1;\n\nvoid\tpush(int val)\n{\n\tstack[++top] = val;\n}\n\nint\tpop(void)\n{\n\treturn (stack[top--]);\n}\n\n// Verifier si un token est un operateur\nint\tis_operator(char *token)\n{\n\tif (token[1] == '\\0')\n\t\treturn (token[0] == '+' || token[0] == '-'\n\t\t\t|| token[0] == '*' || token[0] == '/');\n\treturn (0);\n}\n\n// Appliquer un operateur\nint\tapply_op(int a, int b, char op)\n{\n\tif (op == '+')\n\t\treturn (a + b);\n\tif (op == '-')\n\t\treturn (a - b);\n\tif (op == '*')\n\t\treturn (a * b);\n\tif (op == '/')\n\t\treturn (a / b);\n\treturn (0);\n}",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Le token '-' est-il un operateur ou un nombre negatif ? Comment les distinguer ?",
+            "starterCode": "// Token \"-\" : operateur ou nombre ?\n// Token \"-3\" : operateur ou nombre ?\n// Comment distinguer ?\n// Indice : regarder la longueur et les caracteres",
+            "solution": "// Token \"-\" (longueur 1) : c'est l'operateur moins\n// Token \"-3\" (longueur > 1) : c'est le nombre -3\n// Regle : un '-' est operateur si token[1] == '\\0'\n// Sinon c'est un nombre negatif\n// is_operator verifie token[1] == '\\0'"
+          }
+        },
+        {
+          "id": 4,
+          "title": "Programme complet",
+          "content": "Le programme lit l'expression RPN en argument (argv[1]), la decoupe en tokens, et evalue avec l'algorithme de pile. Il affiche le resultat final.\n\n**Gestion d'erreurs :**\n- Division par zero : afficher \"Error\"\n- Expression invalide : afficher \"Error\"\n- Pas d'argument : ne rien afficher\n\nLa tokenisation peut etre faite avec un simple parcours de la chaine, en detectant les espaces comme separateurs.",
+          "codeExample": "int\tmain(int argc, char **argv)\n{\n\tchar\t*str;\n\tint\t\ti;\n\tint\t\ta;\n\tint\t\tb;\n\n\tif (argc != 2)\n\t\treturn (1);\n\tstr = argv[1];\n\ti = 0;\n\twhile (str[i])\n\t{\n\t\twhile (str[i] == ' ')\n\t\t\ti++;\n\t\tif (str[i] && is_operator_char(str, i))\n\t\t{\n\t\t\tb = pop();\n\t\t\ta = pop();\n\t\t\tpush(apply_op(a, b, str[i]));\n\t\t\ti++;\n\t\t}\n\t\telse if (str[i])\n\t\t{\n\t\t\tpush(ft_atoi(str + i));\n\t\t\twhile (str[i] && str[i] != ' ')\n\t\t\t\ti++;\n\t\t}\n\t}\n\tft_putnbr(stack[0]);\n\twrite(1, \"\\n\", 1);\n\treturn (0);\n}",
+          "language": "c"
+        }
+      ]
+    },
+    "theory": [
+      {
+        "title": "La pile comme structure d'evaluation",
+        "content": "La pile est la structure ideale pour evaluer des expressions car elle gere naturellement l'imbrication des calculs. Chaque sous-calcul empile son resultat, qui est ensuite utilise par le calcul suivant.",
+        "codeExamples": [
+          {
+            "title": "La pile pendant l'evaluation",
+            "code": "// Expression : \"1 2 + 3 4 - *\"\n// = (1 + 2) * (3 - 4) = 3 * (-1) = -3\n\n// Etat de la pile a chaque etape :\n// '1' -> [1]\n// '2' -> [1, 2]\n// '+' -> [3]        (1+2)\n// '3' -> [3, 3]\n// '4' -> [3, 3, 4]\n// '-' -> [3, -1]    (3-4)\n// '*' -> [-3]       (3*(-1))\n\n// La pile gere naturellement la priorite\n// des operations grace a l'ordre RPN",
+            "explanation": "La pile stocke les resultats intermediaires qui sont utilises par les operations suivantes"
+          }
+        ],
+        "keyPoints": [
+          "La pile stocke les operandes et les resultats intermediaires",
+          "Chaque operateur consomme 2 elements et en produit 1",
+          "A la fin, il ne reste qu'un element : le resultat",
+          "La pile gere implicitement la priorite des operations"
+        ],
+        "commonMistakes": [
+          "Inverser l'ordre des operandes pour - et / (b - a au lieu de a - b)",
+          "Ne pas verifier qu'il y a au moins 2 elements avant un operateur",
+          "Oublier qu'a la fin il doit rester exactement 1 element"
+        ]
+      },
+      {
+        "title": "Tokenisation de chaines",
+        "content": "La tokenisation consiste a decouper une chaine en morceaux (tokens) separes par un delimiteur (ici, l'espace). C'est une operation fondamentale en parsing, utilisee dans les shells, les compilateurs, et les interpreteurs.",
+        "codeExamples": [
+          {
+            "title": "Parcours et tokenisation manuelle",
+            "code": "// Chaine : \"3 42 + 2 *\"\n// Tokens : [\"3\", \"42\", \"+\", \"2\", \"*\"]\n\n// Approche sans allocation :\nchar *str = \"3 42 + 2 *\";\nint i = 0;\nwhile (str[i])\n{\n\twhile (str[i] == ' ')  // Sauter les espaces\n\t\ti++;\n\tint start = i;\n\twhile (str[i] && str[i] != ' ')  // Avancer dans le token\n\t\ti++;\n\t// Le token va de str[start] a str[i-1]\n\t// Traiter le token...\n}",
+            "explanation": "La tokenisation manuelle parcourt la chaine en sautant les espaces"
+          }
+        ],
+        "keyPoints": [
+          "Les tokens sont separes par des espaces",
+          "Sauter les espaces avant chaque token",
+          "Avancer jusqu'au prochain espace ou fin de chaine",
+          "ft_atoi convertit un token en nombre"
+        ],
+        "commonMistakes": [
+          "Ne pas sauter les espaces multiples entre les tokens",
+          "Lire au-dela de la fin de chaine (buffer overflow)",
+          "Confondre le caractere '-' operateur et le signe negatif"
+        ]
+      },
+      {
+        "title": "Pile avec tableau vs liste chainee",
+        "content": "Pour une calculatrice RPN, un tableau est souvent prefere pour la pile car les operations push/pop sont plus simples et plus rapides (pas d'allocation/liberation). La taille maximale est previsible.",
+        "codeExamples": [
+          {
+            "title": "Pile avec un tableau",
+            "code": "// Pile avec tableau (simple et rapide)\n#define MAX_STACK 100\nint stack[MAX_STACK];\nint top = -1;\n\nvoid push(int val) { stack[++top] = val; }\nint pop(void) { return stack[top--]; }\nint peek(void) { return stack[top]; }\nint is_empty(void) { return top == -1; }\n\n// Avantages :\n// - Pas de malloc/free\n// - Cache-friendly (donnees contigues)\n// - Operations en O(1) garanti\n\n// Inconvenient :\n// - Taille fixe (mais suffisante pour RPN)",
+            "explanation": "Un tableau est plus efficace qu'une liste chainee pour une pile a taille bornee"
+          }
+        ],
+        "keyPoints": [
+          "Un tableau est plus simple et plus rapide pour une pile",
+          "top = -1 indique que la pile est vide",
+          "push incremente top puis ecrit, pop lit puis decremente",
+          "Pas besoin de malloc/free : pas de risque de fuite memoire"
+        ],
+        "commonMistakes": [
+          "Oublier de verifier le depassement de pile (top >= MAX_STACK)",
+          "Oublier de verifier la pile vide avant pop (top < 0)",
+          "Confondre pre-increment (++top) et post-increment (top++)"
+        ]
+      },
+      {
+        "title": "Applications de la RPN",
+        "content": "La notation polonaise inverse est utilisee dans de nombreux domaines : calculatrices HP, langage Forth, PostScript, code intermediaire des compilateurs (bytecode), et les algorithmes de shunting-yard pour convertir infixe en RPN.",
+        "codeExamples": [
+          {
+            "title": "RPN dans la vraie vie",
+            "code": "// Calculatrices HP : l'utilisateur saisit en RPN\n// 3 ENTER 4 + affiche 7\n\n// PostScript (PDF) utilise RPN :\n// 100 200 moveto   (deplace le curseur)\n// 0 50 rlineto     (trace une ligne)\n\n// Compilateurs : le code intermediaire est en RPN\n// x = a + b * c\n// Bytecode : LOAD a, LOAD b, LOAD c, MUL, ADD, STORE x\n\n// L'algorithme shunting-yard de Dijkstra\n// convertit infixe -> RPN en gerant la priorite",
+            "explanation": "La RPN est un concept fondamental en informatique, utilise dans les compilateurs et interpreteurs"
+          }
+        ],
+        "keyPoints": [
+          "Les calculatrices HP sont les plus connues pour utiliser la RPN",
+          "PostScript et PDF utilisent un modele base sur une pile",
+          "Les compilateurs convertissent le code en RPN (bytecode)",
+          "L'algorithme shunting-yard de Dijkstra fait la conversion infixe -> RPN"
+        ],
+        "commonMistakes": [
+          "Croire que la RPN est obsolete (elle est partout dans les compilateurs)",
+          "Confondre la notation polonaise (prefixe) et la polonaise inverse (postfixe)",
+          "Penser que la RPN est plus difficile (elle est plus simple a evaluer)"
+        ]
+      }
+    ],
+    "prepExercises": [
+      {
+        "id": 1,
+        "title": "Pile avec un tableau",
+        "instruction": "Implemente push et pop avec un tableau et un index top.",
+        "starterCode": "#define MAX_STACK 100\nint stack[MAX_STACK];\nint top = -1;\n\nvoid\tpush(int val)\n{\n\t// TON CODE ICI\n}\n\nint\tpop(void)\n{\n\t// TON CODE ICI\n}",
+        "solution": "#define MAX_STACK 100\nint stack[MAX_STACK];\nint top = -1;\n\nvoid\tpush(int val)\n{\n\tstack[++top] = val;\n}\n\nint\tpop(void)\n{\n\treturn (stack[top--]);\n}",
+        "hint": "push : incremente top puis ecrit. pop : lit puis decremente top.",
+        "difficulty": 1
+      },
+      {
+        "id": 2,
+        "title": "Identifier un operateur",
+        "instruction": "Ecris is_operator qui retourne 1 si le caractere est +, -, * ou /.",
+        "starterCode": "int\tis_operator(char c)\n{\n\t// TON CODE ICI\n}",
+        "solution": "int\tis_operator(char c)\n{\n\treturn (c == '+' || c == '-' || c == '*' || c == '/');\n}",
+        "hint": "Verifie si c est egal a '+', '-', '*' ou '/'.",
+        "difficulty": 1
+      },
+      {
+        "id": 3,
+        "title": "Appliquer une operation",
+        "instruction": "Ecris apply_op qui prend deux entiers et un operateur et retourne le resultat.",
+        "starterCode": "int\tapply_op(int a, int b, char op)\n{\n\t// Retourne a op b\n\t// TON CODE ICI\n}",
+        "solution": "int\tapply_op(int a, int b, char op)\n{\n\tif (op == '+')\n\t\treturn (a + b);\n\tif (op == '-')\n\t\treturn (a - b);\n\tif (op == '*')\n\t\treturn (a * b);\n\tif (op == '/')\n\t\treturn (a / b);\n\treturn (0);\n}",
+        "hint": "if/else pour chaque operateur. Attention : a est le premier operande (gauche).",
+        "difficulty": 1
+      },
+      {
+        "id": 4,
+        "title": "Evaluer une expression simple",
+        "instruction": "Evalue '3 4 +' en utilisant push, pop et apply_op.",
+        "starterCode": "int\tmain(void)\n{\n\t// Evaluer \"3 4 +\" manuellement\n\tpush(3);\n\tpush(4);\n\t// Depiler et appliquer l'operateur\n\t// TON CODE ICI\n\tft_putnbr(stack[0]);\n\twrite(1, \"\\n\", 1);\n\treturn (0);\n}",
+        "solution": "int\tmain(void)\n{\n\tint a, b;\n\n\tpush(3);\n\tpush(4);\n\tb = pop();\n\ta = pop();\n\tpush(apply_op(a, b, '+'));\n\tft_putnbr(stack[0]);\n\twrite(1, \"\\n\", 1);\n\treturn (0);\n}",
+        "hint": "Depiler b puis a (dans cet ordre), calculer a + b, empiler le resultat.",
+        "difficulty": 2
+      },
+      {
+        "id": 5,
+        "title": "Parser et evaluer une expression",
+        "instruction": "Ecris la boucle complete qui parse une chaine RPN et l'evalue.",
+        "starterCode": "void\teval_rpn(char *str)\n{\n\tint\ti = 0;\n\tint\ta, b;\n\n\twhile (str[i])\n\t{\n\t\twhile (str[i] == ' ')\n\t\t\ti++;\n\t\t// Si operateur : depiler, calculer, empiler\n\t\t// Si nombre : empiler ft_atoi\n\t\t// TON CODE ICI\n\t}\n\tft_putnbr(stack[0]);\n\twrite(1, \"\\n\", 1);\n}",
+        "solution": "void\teval_rpn(char *str)\n{\n\tint\ti = 0;\n\tint\ta, b;\n\n\twhile (str[i])\n\t{\n\t\twhile (str[i] == ' ')\n\t\t\ti++;\n\t\tif (str[i] && is_operator(str[i]) && (str[i + 1] == ' ' || str[i + 1] == '\\0'))\n\t\t{\n\t\t\tb = pop();\n\t\t\ta = pop();\n\t\t\tpush(apply_op(a, b, str[i]));\n\t\t\ti++;\n\t\t}\n\t\telse if (str[i])\n\t\t{\n\t\t\tpush(ft_atoi(str + i));\n\t\t\twhile (str[i] && str[i] != ' ')\n\t\t\t\ti++;\n\t\t}\n\t}\n\tft_putnbr(stack[0]);\n\twrite(1, \"\\n\", 1);\n}",
+        "hint": "Verifie si le caractere courant est un operateur suivi d'un espace ou fin de chaine. Sinon, c'est un nombre.",
+        "difficulty": 3
+      }
+    ]
+  },
+  "starterCode": "#include <unistd.h>\n#include <stdlib.h>\n\n#define MAX_STACK 100\n\nint\tg_stack[MAX_STACK];\nint\tg_top = -1;\n\nvoid\tft_putnbr(int n)\n{\n\tchar c;\n\tif (n == -2147483648) { write(1, \"-2147483648\", 11); return ; }\n\tif (n < 0) { write(1, \"-\", 1); n = -n; }\n\tif (n >= 10) ft_putnbr(n / 10);\n\tc = (n % 10) + '0';\n\twrite(1, &c, 1);\n}\n\nvoid\tpush(int val) { g_stack[++g_top] = val; }\nint\tpop(void) { return (g_stack[g_top--]); }\n\nint\tft_atoi(char *str)\n{\n\tint n = 0, sign = 1;\n\tif (*str == '-') { sign = -1; str++; }\n\twhile (*str >= '0' && *str <= '9')\n\t\tn = n * 10 + (*str++ - '0');\n\treturn (n * sign);\n}\n\nint\tapply_op(int a, int b, char op)\n{\n\t// Implemente +, -, *, /\n}\n\nint\tmain(int argc, char **argv)\n{\n\t// 1. Verifier argc == 2\n\t// 2. Parcourir argv[1] token par token\n\t// 3. Si nombre : push(ft_atoi)\n\t// 4. Si operateur : b=pop, a=pop, push(apply_op(a,b,op))\n\t// 5. Afficher le resultat (g_stack[0])\n\treturn (0);\n}",
+  "solution": "#include <unistd.h>\n#include <stdlib.h>\n\n#define MAX_STACK 100\n\nint\tg_stack[MAX_STACK];\nint\tg_top = -1;\n\nvoid\tft_putnbr(int n)\n{\n\tchar c;\n\tif (n == -2147483648) { write(1, \"-2147483648\", 11); return ; }\n\tif (n < 0) { write(1, \"-\", 1); n = -n; }\n\tif (n >= 10) ft_putnbr(n / 10);\n\tc = (n % 10) + '0';\n\twrite(1, &c, 1);\n}\n\nvoid\tpush(int val) { g_stack[++g_top] = val; }\nint\tpop(void) { return (g_stack[g_top--]); }\n\nint\tft_atoi(char *str)\n{\n\tint n = 0;\n\tint sign = 1;\n\n\tif (*str == '-') { sign = -1; str++; }\n\twhile (*str >= '0' && *str <= '9')\n\t\tn = n * 10 + (*str++ - '0');\n\treturn (n * sign);\n}\n\nint\tapply_op(int a, int b, char op)\n{\n\tif (op == '+')\n\t\treturn (a + b);\n\tif (op == '-')\n\t\treturn (a - b);\n\tif (op == '*')\n\t\treturn (a * b);\n\tif (op == '/')\n\t\treturn (a / b);\n\treturn (0);\n}\n\nint\tis_op_token(char *str, int i)\n{\n\tif ((str[i] == '+' || str[i] == '-' || str[i] == '*' || str[i] == '/')\n\t\t&& (str[i + 1] == ' ' || str[i + 1] == '\\0'))\n\t\treturn (1);\n\treturn (0);\n}\n\nint\tmain(int argc, char **argv)\n{\n\tchar\t*str;\n\tint\t\ti;\n\tint\t\ta;\n\tint\t\tb;\n\n\tif (argc != 2)\n\t\treturn (1);\n\tstr = argv[1];\n\ti = 0;\n\twhile (str[i])\n\t{\n\t\twhile (str[i] == ' ')\n\t\t\ti++;\n\t\tif (str[i] && is_op_token(str, i))\n\t\t{\n\t\t\tb = pop();\n\t\t\ta = pop();\n\t\t\tpush(apply_op(a, b, str[i]));\n\t\t\ti++;\n\t\t}\n\t\telse if (str[i])\n\t\t{\n\t\t\tpush(ft_atoi(str + i));\n\t\t\twhile (str[i] && str[i] != ' ')\n\t\t\t\ti++;\n\t\t}\n\t}\n\tft_putnbr(g_stack[0]);\n\twrite(1, \"\\n\", 1);\n\treturn (0);\n}",
+  "hints": [
+    "Pour distinguer l'operateur '-' du signe negatif, verifie que le caractere suivant est un espace ou la fin de chaine.",
+    "L'ordre du pop est important : b = pop() puis a = pop(), et le resultat est a op b.",
+    "Saute les espaces au debut de la boucle, puis identifie le type de token (nombre ou operateur)."
+  ],
+  "testCases": [
+    {
+      "id": 1,
+      "description": "'3 4 + 2 *' = (3+4)*2 = 14",
+      "stdin": "",
+      "expectedStdout": "14\n",
+      "expectedExitCode": 0,
+      "visible": true
+    },
+    {
+      "id": 2,
+      "description": "'5 3 - 2 1 + *' = (5-3)*(2+1) = 6",
+      "stdin": "",
+      "expectedStdout": "6\n",
+      "expectedExitCode": 0,
+      "visible": false
+    },
+    {
+      "id": 3,
+      "description": "'42' = 42 (un seul nombre)",
+      "stdin": "",
+      "expectedStdout": "42\n",
+      "expectedExitCode": 0,
+      "visible": false
+    }
+  ],
+  "constraints": {
+    "allowedFunctions": ["write"],
+    "forbiddenFunctions": ["printf", "puts", "atoi"],
+    "maxExecutionTime": 5000,
+    "maxMemory": 128
+  },
+  "relatedExercises": ["c-day53-ex00-ft-queue-init", "c-day53-ex02-ft-bracket-check"],
+  "resources": [
+    {
+      "title": "Notation polonaise inverse",
+      "url": "https://fr.wikipedia.org/wiki/Notation_polonaise_inverse",
+      "type": "documentation"
+    },
+    {
+      "title": "Evaluation d'expressions RPN en C",
+      "url": "https://www.geeksforgeeks.org/evaluation-of-postfix-expression/",
+      "type": "article"
+    }
+  ]
+}

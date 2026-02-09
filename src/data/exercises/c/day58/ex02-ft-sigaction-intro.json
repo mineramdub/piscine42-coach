@@ -1,0 +1,257 @@
+{
+  "id": "c-day58-ex02-ft-sigaction-intro",
+  "category": "c",
+  "day": 58,
+  "order": 2,
+  "title": "Utiliser sigaction au lieu de signal",
+  "description": "Reecris le programme de gestion de signaux en utilisant sigaction() au lieu de signal(). Installe un handler pour SIGINT qui affiche 'SIGINT intercepte (sigaction)!' et un handler pour SIGUSR1 qui affiche 'SIGUSR1 recu!'. Le programme attend les signaux dans une boucle avec pause(). Utilise la structure struct sigaction et le flag SA_RESTART.",
+  "difficulty": 4,
+  "points": 40,
+  "estimatedTime": 40,
+  "learningObjectives": [
+    "Comprendre les avantages de sigaction() par rapport a signal()",
+    "Maitriser la structure struct sigaction et ses champs",
+    "Savoir utiliser les flags SA_RESTART et SA_SIGINFO",
+    "Comprendre les masques de signaux avec sigemptyset/sigaddset",
+    "Ecrire du code de gestion de signaux portable et robuste"
+  ],
+  "learningContent": {
+    "lesson": {
+      "introduction": "La fonction signal() est simple mais a des comportements non portables entre systemes. sigaction() est la methode recommandee pour gerer les signaux de facon fiable et portable. Elle offre plus de controle : on peut bloquer des signaux pendant l'execution du handler, obtenir des informations supplementaires sur le signal, et choisir des options precises. A 42, sigaction est souvent prefere dans les projets comme minishell.",
+      "steps": [
+        {
+          "id": 1,
+          "title": "Pourquoi sigaction() ?",
+          "content": "**Problemes de signal() :**\n1. Sur certains systemes, le handler est reinitialise a SIG_DFL apres reception (il faut le reinstaller)\n2. Pas de controle sur les signaux bloques pendant le handler\n3. Comportement non portable entre Unix, Linux, macOS\n\n**Avantages de sigaction() :**\n1. Le handler reste installe (pas de reinitialisation)\n2. On peut bloquer d'autres signaux pendant le handler\n3. On peut obtenir des infos supplementaires (SA_SIGINFO)\n4. Comportement portable et bien defini\n5. Plus de controle avec les flags",
+          "codeExample": "// Avec signal() (non portable) :\nsignal(SIGINT, handler);\n// Sur certains systemes, apres reception de SIGINT,\n// le handler est remis a SIG_DFL !\n\n// Avec sigaction() (portable) :\nstruct sigaction sa;\nsa.sa_handler = handler;\nsigemptyset(&sa.sa_mask);\nsa.sa_flags = 0;\nsigaction(SIGINT, &sa, NULL);\n// Le handler reste installe definitivement",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Quel est le principal probleme de signal() que sigaction() resout ?",
+            "starterCode": "// Avec signal(), le handler peut etre ???\n// Avec sigaction(), le handler est ???",
+            "solution": "// Avec signal(), le handler peut etre reinitialise a SIG_DFL\n// apres la premiere reception (comportement System V)\n// Avec sigaction(), le handler reste installe definitivement"
+          }
+        },
+        {
+          "id": 2,
+          "title": "La structure struct sigaction",
+          "content": "sigaction() utilise une structure pour definir le comportement :\n\n```c\nstruct sigaction {\n    void (*sa_handler)(int);           // Handler simple\n    void (*sa_sigaction)(int, siginfo_t *, void *); // Handler etendu\n    sigset_t sa_mask;                  // Signaux bloques pendant le handler\n    int sa_flags;                      // Options (SA_RESTART, SA_SIGINFO, etc.)\n};\n```\n\n**sa_handler** : la fonction handler (comme avec signal())\n**sa_mask** : ensemble de signaux a bloquer pendant l'execution du handler\n**sa_flags** : options de comportement",
+          "codeExample": "#include <signal.h>\n\nvoid\thandler(int sig)\n{\n\t(void)sig;\n\twrite(1, \"Signal!\\n\", 8);\n}\n\nint\tmain(void)\n{\n\tstruct sigaction sa;\n\n\t// Configurer le handler\n\tsa.sa_handler = handler;\n\t// Vider le masque (ne bloquer aucun signal supplementaire)\n\tsigemptyset(&sa.sa_mask);\n\t// Flags : 0 ou SA_RESTART\n\tsa.sa_flags = 0;\n\t// Installer pour SIGINT\n\tsigaction(SIGINT, &sa, NULL);\n\t// Le 3eme argument (NULL) pourrait recevoir l'ancien sigaction\n\n\twhile (1)\n\t\tpause();\n\treturn (0);\n}",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "A quoi sert sigemptyset(&sa.sa_mask) ?",
+            "starterCode": "// sa.sa_mask contient : ???\n// sigemptyset vide le masque : ???\n// Si on ne le fait pas : ???",
+            "solution": "// sa.sa_mask contient l'ensemble des signaux a bloquer pendant le handler\n// sigemptyset vide le masque : aucun signal supplementaire n'est bloque\n// Si on ne le fait pas : le masque contient des valeurs indefinies"
+          }
+        },
+        {
+          "id": 3,
+          "title": "Les flags de sigaction",
+          "content": "**SA_RESTART** : Les appels systeme interrompus par le signal sont redemarres automatiquement. Sans ce flag, read(), write(), etc. retournent -1 avec errno = EINTR quand un signal arrive.\n\n**SA_SIGINFO** : Utilise sa_sigaction au lieu de sa_handler. Le handler etendu recoit plus d'informations (PID de l'expediteur, etc.).\n\n**SA_RESETHAND** : Reinitialise le handler a SIG_DFL apres reception (comme signal() System V).\n\n**SA_NODEFER** : Ne bloque pas le signal pendant l'execution du handler (par defaut, le signal courant est bloque).",
+          "codeExample": "#include <signal.h>\n\n// Avec SA_RESTART :\nstruct sigaction sa;\nsa.sa_handler = handler;\nsigemptyset(&sa.sa_mask);\nsa.sa_flags = SA_RESTART;\nsigaction(SIGINT, &sa, NULL);\n// Maintenant, si SIGINT arrive pendant read(),\n// read() est redemarré automatiquement\n\n// Avec SA_SIGINFO :\nvoid\tinfo_handler(int sig, siginfo_t *info, void *context)\n{\n\t(void)context;\n\t// info->si_pid = PID de l'expediteur\n\t// info->si_uid = UID de l'expediteur\n\twrite(1, \"Signal avec info!\\n\", 18);\n}\nsa.sa_sigaction = info_handler;\nsa.sa_flags = SA_SIGINFO;",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Que se passe-t-il si read() est interrompu par un signal SANS SA_RESTART ?",
+            "starterCode": "// Sans SA_RESTART :\n// read() est en cours...\n// SIGINT arrive, handler execute\n// read() retourne : ???\n// errno = ???",
+            "solution": "// Sans SA_RESTART :\n// read() retourne -1\n// errno = EINTR (interrupted system call)\n// Il faut verifier errno et relancer read() manuellement"
+          }
+        },
+        {
+          "id": 4,
+          "title": "Masques de signaux",
+          "content": "Le champ **sa_mask** permet de bloquer des signaux supplementaires pendant l'execution du handler. Par defaut, seul le signal courant est bloque (pour eviter la reentrance).\n\n**Fonctions pour manipuler les masques :**\n- `sigemptyset(&set)` : vide l'ensemble\n- `sigfillset(&set)` : remplit avec tous les signaux\n- `sigaddset(&set, SIGINT)` : ajoute SIGINT\n- `sigdelset(&set, SIGINT)` : retire SIGINT\n- `sigismember(&set, SIGINT)` : teste si SIGINT est dans l'ensemble\n\nOn peut aussi bloquer/debloquer des signaux avec `sigprocmask()`.",
+          "codeExample": "#include <signal.h>\n\nstruct sigaction sa;\nsa.sa_handler = handler;\n\n// Bloquer SIGUSR1 et SIGUSR2 pendant le handler de SIGINT :\nsigemptyset(&sa.sa_mask);\nsigaddset(&sa.sa_mask, SIGUSR1);\nsigaddset(&sa.sa_mask, SIGUSR2);\nsa.sa_flags = 0;\nsigaction(SIGINT, &sa, NULL);\n\n// Bloquer TOUS les signaux pendant le handler :\nsigfillset(&sa.sa_mask);\nsigaction(SIGINT, &sa, NULL);\n\n// Bloquer/debloquer manuellement :\nsigset_t block;\nsigemptyset(&block);\nsigaddset(&block, SIGINT);\nsigprocmask(SIG_BLOCK, &block, NULL);   // Bloque SIGINT\nsigprocmask(SIG_UNBLOCK, &block, NULL); // Debloque SIGINT",
+          "language": "c"
+        }
+      ]
+    },
+    "theory": [
+      {
+        "title": "sigaction() vs signal()",
+        "content": "sigaction() est la methode moderne et recommandee pour gerer les signaux. Elle corrige tous les problemes de portabilite de signal() et offre plus de fonctionnalites.",
+        "codeExamples": [
+          {
+            "title": "Comparaison signal vs sigaction",
+            "code": "// SIGNAL (simple mais non portable) :\nsignal(SIGINT, handler);\n// - Peut reinitialiser le handler (System V)\n// - Pas de controle sur le masque\n// - Pas d'info supplementaire\n\n// SIGACTION (robuste et portable) :\nstruct sigaction sa;\nsa.sa_handler = handler;\nsigemptyset(&sa.sa_mask);\nsa.sa_flags = SA_RESTART;\nsigaction(SIGINT, &sa, NULL);\n// - Handler reste installe\n// - Controle du masque\n// - Options avec flags\n// - Portable entre systemes",
+            "explanation": "sigaction est toujours preferable a signal pour du code robuste"
+          }
+        ],
+        "keyPoints": [
+          "signal() est simple mais non portable (comportement varie selon les systemes)",
+          "sigaction() est portable et offre plus de controle",
+          "Le handler reste installe avec sigaction (pas de reinitialisation)",
+          "SA_RESTART evite les erreurs EINTR sur les appels systeme"
+        ],
+        "commonMistakes": [
+          "Utiliser signal() pour du code qui doit etre portable",
+          "Melanger signal() et sigaction() dans le meme programme",
+          "Oublier d'initialiser tous les champs de struct sigaction"
+        ]
+      },
+      {
+        "title": "SA_SIGINFO et handler etendu",
+        "content": "Le flag SA_SIGINFO active le handler etendu qui recoit des informations supplementaires sur le signal, comme le PID de l'expediteur. C'est indispensable pour minitalk.",
+        "codeExamples": [
+          {
+            "title": "Handler avec SA_SIGINFO",
+            "code": "#include <signal.h>\n#include <unistd.h>\n\nvoid\thandler(int sig, siginfo_t *info, void *context)\n{\n\t(void)context;\n\t// info contient :\n\t// info->si_pid   : PID de l'expediteur\n\t// info->si_uid   : UID de l'expediteur\n\t// info->si_signo : numero du signal\n\t// info->si_code  : code de raison\n\tif (sig == SIGUSR1)\n\t\twrite(1, \"USR1 \", 5);\n\telse\n\t\twrite(1, \"USR2 \", 5);\n\t// On pourrait utiliser info->si_pid pour repondre\n}\n\nint main(void)\n{\n\tstruct sigaction sa;\n\tsa.sa_sigaction = handler; // Pas sa_handler !\n\tsigemptyset(&sa.sa_mask);\n\tsa.sa_flags = SA_SIGINFO;  // Active le handler etendu\n\tsigaction(SIGUSR1, &sa, NULL);\n\tsigaction(SIGUSR2, &sa, NULL);\n\twhile (1) pause();\n}",
+            "explanation": "SA_SIGINFO permet au handler de recevoir le PID de l'expediteur"
+          }
+        ],
+        "keyPoints": [
+          "SA_SIGINFO active le handler etendu a 3 parametres",
+          "siginfo_t contient si_pid (PID expediteur) et si_uid (UID)",
+          "On utilise sa_sigaction au lieu de sa_handler avec SA_SIGINFO",
+          "Indispensable pour minitalk (connaitre le PID du client)"
+        ],
+        "commonMistakes": [
+          "Utiliser sa_handler avec SA_SIGINFO (il faut sa_sigaction)",
+          "Oublier SA_SIGINFO dans sa_flags (le handler etendu n'est pas appele)",
+          "Ignorer le parametre context (toujours le caster en void)"
+        ]
+      },
+      {
+        "title": "sigprocmask et blocage de signaux",
+        "content": "sigprocmask() permet de bloquer ou debloquer des signaux manuellement. Un signal bloque est mis en attente et delivre quand il est debloque. C'est utile pour les sections critiques.",
+        "codeExamples": [
+          {
+            "title": "Bloquer et debloquer des signaux",
+            "code": "#include <signal.h>\n\n// Bloquer SIGINT :\nsigset_t mask;\nsigemptyset(&mask);\nsigaddset(&mask, SIGINT);\nsigprocmask(SIG_BLOCK, &mask, NULL);\n\n// Section critique : SIGINT ne sera pas delivre\n// (il est mis en attente)\n\n// Debloquer SIGINT :\nsigprocmask(SIG_UNBLOCK, &mask, NULL);\n// Si SIGINT etait en attente, il est delivre maintenant\n\n// Remplacer le masque complet :\nsigprocmask(SIG_SETMASK, &mask, NULL);\n\n// Lire le masque actuel :\nsigset_t old;\nsigprocmask(SIG_BLOCK, NULL, &old);\n// old contient le masque actuel",
+            "explanation": "sigprocmask controle quels signaux sont bloques pour le processus"
+          }
+        ],
+        "keyPoints": [
+          "SIG_BLOCK ajoute des signaux au masque de blocage",
+          "SIG_UNBLOCK retire des signaux du masque",
+          "SIG_SETMASK remplace le masque entier",
+          "Un signal bloque est mis en attente, pas perdu"
+        ],
+        "commonMistakes": [
+          "Oublier de debloquer les signaux apres une section critique",
+          "Bloquer SIGKILL ou SIGSTOP (impossible, ils ne peuvent pas etre bloques)",
+          "Confondre sa_mask (pendant le handler) et sigprocmask (global)"
+        ]
+      },
+      {
+        "title": "Bonnes pratiques avec sigaction",
+        "content": "Pour ecrire du code de gestion de signaux robuste, il faut suivre certaines regles. sigaction() facilite le respect de ces regles grace a ses options.",
+        "codeExamples": [
+          {
+            "title": "Pattern recommande avec sigaction",
+            "code": "#include <signal.h>\n#include <unistd.h>\n\nvolatile sig_atomic_t g_signal = 0;\n\nvoid\thandler(int sig)\n{\n\tg_signal = sig; // Juste lever un drapeau\n}\n\nvoid\tsetup_signals(void)\n{\n\tstruct sigaction sa;\n\n\tsa.sa_handler = handler;\n\tsigemptyset(&sa.sa_mask);\n\tsa.sa_flags = SA_RESTART;\n\tif (sigaction(SIGINT, &sa, NULL) == -1)\n\t\t_exit(1);\n\tif (sigaction(SIGTERM, &sa, NULL) == -1)\n\t\t_exit(1);\n\t// Ignorer SIGPIPE (utile pour les pipes)\n\tsa.sa_handler = SIG_IGN;\n\tsigaction(SIGPIPE, &sa, NULL);\n}\n\nint\tmain(void)\n{\n\tsetup_signals();\n\twhile (!g_signal)\n\t{\n\t\t// Travail principal\n\t\tpause();\n\t}\n\t// Traiter le signal hors du handler\n\treturn (0);\n}",
+            "explanation": "Le pattern recommande : handler minimaliste + traitement dans le main"
+          }
+        ],
+        "keyPoints": [
+          "Toujours initialiser TOUS les champs de struct sigaction",
+          "Utiliser SA_RESTART pour eviter les erreurs EINTR",
+          "Handler minimaliste : juste lever un drapeau",
+          "Verifier le retour de sigaction() (-1 = erreur)"
+        ],
+        "commonMistakes": [
+          "Ne pas initialiser sa_mask (contient des valeurs aleatoires)",
+          "Faire du travail complexe dans le handler au lieu du main",
+          "Oublier de verifier le retour de sigaction()"
+        ]
+      }
+    ],
+    "prepExercises": [
+      {
+        "id": 1,
+        "title": "sigaction basique",
+        "instruction": "Installe un handler pour SIGINT avec sigaction (pas signal). Affiche 'SIGINT!' a la reception.",
+        "starterCode": "#include <signal.h>\n#include <unistd.h>\n\nvoid\thandler(int sig)\n{\n\t(void)sig;\n\twrite(1, \"SIGINT!\\n\", 8);\n}\n\nint\tmain(void)\n{\n\t// Utilise sigaction pour installer le handler\n\t// TON CODE ICI\n\tpause();\n\treturn (0);\n}",
+        "solution": "#include <signal.h>\n#include <unistd.h>\n\nvoid\thandler(int sig)\n{\n\t(void)sig;\n\twrite(1, \"SIGINT!\\n\", 8);\n}\n\nint\tmain(void)\n{\n\tstruct sigaction sa;\n\tsa.sa_handler = handler;\n\tsigemptyset(&sa.sa_mask);\n\tsa.sa_flags = 0;\n\tsigaction(SIGINT, &sa, NULL);\n\tpause();\n\treturn (0);\n}",
+        "hint": "Remplis struct sigaction : sa_handler, sigemptyset(&sa.sa_mask), sa_flags = 0.",
+        "difficulty": 1
+      },
+      {
+        "id": 2,
+        "title": "SA_RESTART",
+        "instruction": "Installe un handler pour SIGINT avec SA_RESTART. Le programme fait un read() qui doit redemarrer apres le signal.",
+        "starterCode": "#include <signal.h>\n#include <unistd.h>\n\nvoid\thandler(int sig)\n{\n\t(void)sig;\n\twrite(1, \"Signal, read continue...\\n\", 25);\n}\n\nint\tmain(void)\n{\n\tchar buf[100];\n\t// Installe handler avec SA_RESTART\n\t// TON CODE ICI\n\tread(0, buf, 99); // read redemarrera apres le signal\n\twrite(1, buf, 5);\n\treturn (0);\n}",
+        "solution": "#include <signal.h>\n#include <unistd.h>\n\nvoid\thandler(int sig)\n{\n\t(void)sig;\n\twrite(1, \"Signal, read continue...\\n\", 25);\n}\n\nint\tmain(void)\n{\n\tchar buf[100];\n\tstruct sigaction sa;\n\tsa.sa_handler = handler;\n\tsigemptyset(&sa.sa_mask);\n\tsa.sa_flags = SA_RESTART;\n\tsigaction(SIGINT, &sa, NULL);\n\tread(0, buf, 99);\n\twrite(1, buf, 5);\n\treturn (0);\n}",
+        "hint": "sa.sa_flags = SA_RESTART pour que read() redemarré automatiquement apres le signal.",
+        "difficulty": 2
+      },
+      {
+        "id": 3,
+        "title": "Bloquer des signaux dans le masque",
+        "instruction": "Installe un handler pour SIGINT qui bloque SIGUSR1 pendant son execution.",
+        "starterCode": "#include <signal.h>\n#include <unistd.h>\n\nvoid\thandler(int sig)\n{\n\t(void)sig;\n\twrite(1, \"SIGINT handler (SIGUSR1 bloque)\\n\", 32);\n}\n\nint\tmain(void)\n{\n\tstruct sigaction sa;\n\t// Bloque SIGUSR1 pendant le handler de SIGINT\n\t// TON CODE ICI\n\tpause();\n\treturn (0);\n}",
+        "solution": "#include <signal.h>\n#include <unistd.h>\n\nvoid\thandler(int sig)\n{\n\t(void)sig;\n\twrite(1, \"SIGINT handler (SIGUSR1 bloque)\\n\", 32);\n}\n\nint\tmain(void)\n{\n\tstruct sigaction sa;\n\tsa.sa_handler = handler;\n\tsigemptyset(&sa.sa_mask);\n\tsigaddset(&sa.sa_mask, SIGUSR1);\n\tsa.sa_flags = 0;\n\tsigaction(SIGINT, &sa, NULL);\n\tpause();\n\treturn (0);\n}",
+        "hint": "sigaddset(&sa.sa_mask, SIGUSR1) bloque SIGUSR1 pendant le handler.",
+        "difficulty": 2
+      },
+      {
+        "id": 4,
+        "title": "SA_SIGINFO pour connaitre l'expediteur",
+        "instruction": "Utilise SA_SIGINFO pour afficher le PID de l'expediteur du signal.",
+        "starterCode": "#include <signal.h>\n#include <unistd.h>\n\nvoid\tft_putnbr(int n)\n{\n\tchar c;\n\tif (n >= 10) ft_putnbr(n / 10);\n\tc = (n % 10) + '0';\n\twrite(1, &c, 1);\n}\n\nvoid\thandler(int sig, siginfo_t *info, void *ctx)\n{\n\t(void)sig;\n\t(void)ctx;\n\t// Affiche le PID de l'expediteur avec info->si_pid\n\t// TON CODE ICI\n}\n\nint\tmain(void)\n{\n\t// Installe handler avec SA_SIGINFO\n\t// TON CODE ICI\n\twhile (1) pause();\n\treturn (0);\n}",
+        "solution": "#include <signal.h>\n#include <unistd.h>\n\nvoid\tft_putnbr(int n)\n{\n\tchar c;\n\tif (n >= 10) ft_putnbr(n / 10);\n\tc = (n % 10) + '0';\n\twrite(1, &c, 1);\n}\n\nvoid\thandler(int sig, siginfo_t *info, void *ctx)\n{\n\t(void)sig;\n\t(void)ctx;\n\twrite(1, \"Signal de PID \", 14);\n\tft_putnbr(info->si_pid);\n\twrite(1, \"\\n\", 1);\n}\n\nint\tmain(void)\n{\n\tstruct sigaction sa;\n\tsa.sa_sigaction = handler;\n\tsigemptyset(&sa.sa_mask);\n\tsa.sa_flags = SA_SIGINFO;\n\tsigaction(SIGUSR1, &sa, NULL);\n\twhile (1)\n\t\tpause();\n\treturn (0);\n}",
+        "hint": "sa.sa_sigaction = handler (pas sa_handler) et sa.sa_flags = SA_SIGINFO.",
+        "difficulty": 3
+      },
+      {
+        "id": 5,
+        "title": "Fonction d'installation generique",
+        "instruction": "Ecris une fonction setup_signal(int sig, void (*handler)(int)) qui installe le handler avec sigaction et SA_RESTART.",
+        "starterCode": "#include <signal.h>\n#include <unistd.h>\n\nvoid\tsetup_signal(int sig, void (*handler)(int))\n{\n\t// Installe handler pour sig avec sigaction\n\t// TON CODE ICI\n}\n\nvoid\tmy_handler(int sig)\n{\n\t(void)sig;\n\twrite(1, \"Signal gere!\\n\", 13);\n}\n\nint\tmain(void)\n{\n\tsetup_signal(SIGINT, my_handler);\n\tpause();\n\treturn (0);\n}",
+        "solution": "#include <signal.h>\n#include <unistd.h>\n\nvoid\tsetup_signal(int sig, void (*handler)(int))\n{\n\tstruct sigaction sa;\n\n\tsa.sa_handler = handler;\n\tsigemptyset(&sa.sa_mask);\n\tsa.sa_flags = SA_RESTART;\n\tsigaction(sig, &sa, NULL);\n}\n\nvoid\tmy_handler(int sig)\n{\n\t(void)sig;\n\twrite(1, \"Signal gere!\\n\", 13);\n}\n\nint\tmain(void)\n{\n\tsetup_signal(SIGINT, my_handler);\n\tpause();\n\treturn (0);\n}",
+        "hint": "Remplis struct sigaction dans la fonction et appelle sigaction(sig, &sa, NULL).",
+        "difficulty": 2
+      }
+    ]
+  },
+  "starterCode": "#include <signal.h>\n#include <unistd.h>\n\nvoid\thandle_sigint(int sig)\n{\n\t(void)sig;\n\t// Affiche \"SIGINT intercepte (sigaction)!\\n\"\n}\n\nvoid\thandle_sigusr1(int sig)\n{\n\t(void)sig;\n\t// Affiche \"SIGUSR1 recu!\\n\"\n}\n\nint\tmain(void)\n{\n\tstruct sigaction sa_int;\n\tstruct sigaction sa_usr;\n\n\t// 1. Configure sa_int pour SIGINT avec SA_RESTART\n\t// 2. Configure sa_usr pour SIGUSR1 avec SA_RESTART\n\t// 3. Installe avec sigaction()\n\t// 4. Affiche le PID et boucle avec pause()\n\treturn (0);\n}",
+  "solution": "#include <signal.h>\n#include <unistd.h>\n\nvoid\tft_putnbr(int n)\n{\n\tchar\tc;\n\n\tif (n >= 10)\n\t\tft_putnbr(n / 10);\n\tc = (n % 10) + '0';\n\twrite(1, &c, 1);\n}\n\nvoid\thandle_sigint(int sig)\n{\n\t(void)sig;\n\twrite(1, \"SIGINT intercepte (sigaction)!\\n\", 31);\n}\n\nvoid\thandle_sigusr1(int sig)\n{\n\t(void)sig;\n\twrite(1, \"SIGUSR1 recu!\\n\", 14);\n}\n\nint\tmain(void)\n{\n\tstruct sigaction sa_int;\n\tstruct sigaction sa_usr;\n\n\tsa_int.sa_handler = handle_sigint;\n\tsigemptyset(&sa_int.sa_mask);\n\tsa_int.sa_flags = SA_RESTART;\n\tsigaction(SIGINT, &sa_int, NULL);\n\tsa_usr.sa_handler = handle_sigusr1;\n\tsigemptyset(&sa_usr.sa_mask);\n\tsa_usr.sa_flags = SA_RESTART;\n\tsigaction(SIGUSR1, &sa_usr, NULL);\n\twrite(1, \"PID: \", 5);\n\tft_putnbr(getpid());\n\twrite(1, \"\\n\", 1);\n\twrite(1, \"En attente de signaux...\\n\", 25);\n\twhile (1)\n\t\tpause();\n\treturn (0);\n}",
+  "hints": [
+    "Remplis struct sigaction : sa_handler = ta_fonction, sigemptyset(&sa.sa_mask), sa_flags = SA_RESTART.",
+    "Appelle sigaction(SIGINT, &sa_int, NULL) et sigaction(SIGUSR1, &sa_usr, NULL) pour installer les handlers.",
+    "Affiche le PID avec getpid() pour pouvoir tester avec 'kill -SIGUSR1 <pid>' depuis un autre terminal."
+  ],
+  "testCases": [
+    {
+      "id": 1,
+      "description": "SIGINT affiche le bon message",
+      "stdin": "",
+      "expectedStdout": "SIGINT intercepte (sigaction)!\n",
+      "expectedExitCode": 0,
+      "visible": true
+    },
+    {
+      "id": 2,
+      "description": "SIGUSR1 affiche le bon message",
+      "stdin": "",
+      "expectedStdout": "SIGUSR1 recu!\n",
+      "expectedExitCode": 0,
+      "visible": false
+    },
+    {
+      "id": 3,
+      "description": "Le PID est affiche au demarrage",
+      "stdin": "",
+      "expectedStdout": "PID: *\nEn attente de signaux...\n",
+      "expectedExitCode": 0,
+      "visible": false
+    }
+  ],
+  "constraints": {
+    "allowedFunctions": ["write", "sigaction", "sigemptyset", "sigaddset", "kill", "getpid", "pause", "_exit"],
+    "forbiddenFunctions": ["printf", "signal", "system"],
+    "maxExecutionTime": 5000,
+    "maxMemory": 128
+  },
+  "relatedExercises": ["c-day58-ex00-ft-signal-handler", "c-day58-ex01-ft-signal-send"],
+  "resources": [
+    {
+      "title": "Man sigaction(2) - Linux manual page",
+      "url": "https://man7.org/linux/man-pages/man2/sigaction.2.html",
+      "type": "documentation"
+    },
+    {
+      "title": "sigaction vs signal - Differences et bonnes pratiques",
+      "url": "https://www.geeksforgeeks.org/sigaction-function-in-c/",
+      "type": "article"
+    }
+  ]
+}

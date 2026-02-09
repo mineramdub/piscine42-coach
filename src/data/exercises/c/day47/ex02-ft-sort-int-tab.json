@@ -1,0 +1,257 @@
+{
+  "id": "c-day47-ex02-ft-sort-int-tab",
+  "category": "c",
+  "day": 47,
+  "order": 2,
+  "title": "Trier un tableau d'entiers (libre choix)",
+  "description": "Ecris une fonction ft_sort_int_tab(int *tab, int size) qui trie un tableau d'entiers par ordre croissant en utilisant l'algorithme de tri de ton choix (bubble sort, insertion sort ou selection sort). L'objectif est de pratiquer librement et de choisir l'algorithme que tu maitrises le mieux. Prototype : void ft_sort_int_tab(int *tab, int size);",
+  "difficulty": 3,
+  "points": 30,
+  "estimatedTime": 25,
+  "learningObjectives": [
+    "Choisir un algorithme de tri adapte et justifier son choix",
+    "Implementer de memoire un algorithme de tri complet",
+    "Consolider les acquis sur les trois tris simples",
+    "Savoir tester et valider un algorithme de tri",
+    "Developper l'autonomie dans le choix d'implementation"
+  ],
+  "learningContent": {
+    "lesson": {
+      "introduction": "Dans cet exercice, tu as le choix de l'algorithme de tri. C'est un exercice de synthese qui te permet de verifier que tu maitrises au moins un algorithme de tri et que tu peux l'implementer sans aide. Que tu choisisses le bubble sort, l'insertion sort ou le selection sort, l'important est de le coder correctement et de comprendre pourquoi il fonctionne. C'est aussi l'occasion de reflechir a quel algorithme est le plus adapte selon le contexte.",
+      "steps": [
+        {
+          "id": 1,
+          "title": "Recapitulatif des trois algorithmes",
+          "content": "Tu connais maintenant trois algorithmes de tri. Voici un resume rapide :\n\n**Bubble Sort :** Compare et echange les elements adjacents. Simple mais lent.\n- Double boucle, swap si tab[j] > tab[j+1]\n- Optimisation possible avec flag swapped\n\n**Insertion Sort :** Insere chaque element a sa bonne place dans la zone triee.\n- key = tab[i], decalage vers la droite, insertion\n- Naturellement adaptatif, ideal pour les petits tableaux\n\n**Selection Sort :** Cherche le minimum et le place a la bonne position.\n- Recherche du min_idx, un seul swap par passage\n- Minimise les swaps mais toujours O(n²)",
+          "codeExample": "// Resume en pseudo-code :\n\n// BUBBLE SORT :\n// pour i de 0 a n-2 :\n//   pour j de 0 a n-2-i :\n//     si tab[j] > tab[j+1] : swap\n\n// INSERTION SORT :\n// pour i de 1 a n-1 :\n//   key = tab[i]\n//   decaler tant que tab[j] > key\n//   inserer key\n\n// SELECTION SORT :\n// pour i de 0 a n-2 :\n//   trouver min dans tab[i..n-1]\n//   swap tab[i] et tab[min_idx]",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Quel algorithme choisirais-tu si le tableau est presque trie ? Et si tu veux minimiser les echanges ?",
+            "starterCode": "// Tableau presque trie -> meilleur choix : ???\n// Raison : ???\n\n// Minimiser les echanges -> meilleur choix : ???\n// Raison : ???",
+            "solution": "// Tableau presque trie -> insertion sort\n// Raison : O(n) dans le meilleur cas (adaptatif)\n\n// Minimiser les echanges -> selection sort\n// Raison : au plus n-1 swaps (un par passage)"
+          }
+        },
+        {
+          "id": 2,
+          "title": "Coder de memoire",
+          "content": "L'objectif principal de cet exercice est de verifier que tu peux ecrire un algorithme de tri **de memoire**, sans regarder un modele. C'est un exercice essentiel pour la Piscine.\n\n**Conseils :**\n1. Choisis l'algorithme que tu comprends le mieux\n2. Ecris d'abord le squelette (boucles, variables)\n3. Ajoute la logique (comparaison, swap/decalage)\n4. Teste avec un exemple simple sur papier\n5. Verifie les bornes des boucles\n\nSi tu bloques, reprends les etapes une par une. La cle est de comprendre le **principe** de l'algorithme, pas de memoriser le code.",
+          "codeExample": "// Squelette du bubble sort :\nvoid\tft_sort_int_tab(int *tab, int size)\n{\n\tint\ti;\n\tint\tj;\n\tint\ttmp;\n\n\ti = 0;\n\twhile (i < ???)\n\t{\n\t\tj = 0;\n\t\twhile (j < ???)\n\t\t{\n\t\t\tif (???)\n\t\t\t{\n\t\t\t\t// swap\n\t\t\t}\n\t\t\tj++;\n\t\t}\n\t\ti++;\n\t}\n}",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Sans regarder les exercices precedents, essaie d'ecrire le squelette de l'insertion sort avec les bonnes variables.",
+            "starterCode": "void\tft_sort_int_tab(int *tab, int size)\n{\n\t// Declare les variables necessaires\n\t// Ecris les deux boucles\n\t// TON CODE ICI\n}",
+            "solution": "void\tft_sort_int_tab(int *tab, int size)\n{\n\tint\ti;\n\tint\tj;\n\tint\tkey;\n\n\ti = 1;\n\twhile (i < size)\n\t{\n\t\tkey = tab[i];\n\t\tj = i - 1;\n\t\twhile (j >= 0 && tab[j] > key)\n\t\t{\n\t\t\ttab[j + 1] = tab[j];\n\t\t\tj--;\n\t\t}\n\t\ttab[j + 1] = key;\n\t\ti++;\n\t}\n}"
+          }
+        },
+        {
+          "id": 3,
+          "title": "Tester son tri",
+          "content": "Un algorithme de tri doit etre teste avec plusieurs cas :\n\n1. **Tableau normal** : {5, 3, 8, 1, 4} -> {1, 3, 4, 5, 8}\n2. **Tableau deja trie** : {1, 2, 3, 4, 5} -> {1, 2, 3, 4, 5}\n3. **Tableau inverse** : {5, 4, 3, 2, 1} -> {1, 2, 3, 4, 5}\n4. **Tableau avec doublons** : {3, 1, 3, 2, 1} -> {1, 1, 2, 3, 3}\n5. **Un seul element** : {42} -> {42}\n6. **Deux elements** : {5, 3} -> {3, 5}\n7. **Negatifs** : {-3, 1, -5, 2} -> {-5, -3, 1, 2}\n\nSi ton tri fonctionne sur tous ces cas, tu es probablement bon !",
+          "codeExample": "// Fonction de test utile :\nvoid\ttest_sort(int *tab, int size)\n{\n\tint\ti;\n\n\tft_sort_int_tab(tab, size);\n\ti = 0;\n\twhile (i < size)\n\t{\n\t\tft_putnbr(tab[i]);\n\t\tif (i < size - 1)\n\t\t\twrite(1, \" \", 1);\n\t\ti++;\n\t}\n\twrite(1, \"\\n\", 1);\n}\n\n// Tests :\nint t1[] = {5, 3, 8, 1, 4};\ntest_sort(t1, 5);  // 1 3 4 5 8\nint t2[] = {1};\ntest_sort(t2, 1);  // 1\nint t3[] = {-3, 1, -5};\ntest_sort(t3, 3);  // -5 -3 1",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Quels cas limites pourraient faire planter ton tri ? Pense aux bornes des boucles.",
+            "starterCode": "// Cas 1 : size = 0 -> ???\n// Cas 2 : size = 1 -> ???\n// Cas 3 : tab = NULL -> ???\n// Cas 4 : tous les elements identiques -> ???",
+            "solution": "// Cas 1 : size = 0 -> boucle ne s'execute pas, OK\n// Cas 2 : size = 1 -> boucle ne s'execute pas, OK\n// Cas 3 : tab = NULL -> segfault ! (ajouter un check)\n// Cas 4 : tous identiques -> aucun swap, OK\n// Les cas 1 et 2 marchent car i < size-1 est faux"
+          }
+        },
+        {
+          "id": 4,
+          "title": "Ce que les evaluateurs attendent",
+          "content": "A la Piscine 42, les exercices de tri sont tres frequents. Voici ce que les evaluateurs verifient :\n\n1. **Le tableau est-il correctement trie ?** Testent avec plusieurs cas\n2. **Pas de fonctions interdites** : seul write est autorise\n3. **Norminette** : le code respecte la Norme 42\n4. **Pas de crash** : pas de segfault sur les cas limites\n5. **Comprehension** : tu dois pouvoir expliquer ton algorithme\n\nIl n'y a generalement pas de contrainte de performance. Choisis l'algorithme que tu maitrises le mieux et assure-toi qu'il fonctionne. Un bubble sort correct vaut mieux qu'un quicksort bugge !",
+          "codeExample": "// A la Piscine, le prototype est souvent :\nvoid\tft_sort_int_tab(int *tab, int size);\n\n// Pas de valeur de retour (void)\n// Modification en place (le tableau est modifie)\n// size peut etre 0 (pas de crash !)\n\n// L'evaluateur fait souvent :\n// - Tableau aleatoire de grande taille\n// - Tableau avec des valeurs extremes (INT_MIN, INT_MAX)\n// - Tableau avec beaucoup de doublons\n// - Tableau deja trie (dans les deux sens)",
+          "language": "c"
+        }
+      ]
+    },
+    "theory": [
+      {
+        "title": "Choisir le bon algorithme",
+        "content": "Le choix d'un algorithme de tri depend du contexte : taille des donnees, etat initial, contraintes de memoire, besoin de stabilite, etc. Pour cet exercice, les trois tris simples sont acceptables.",
+        "codeExamples": [
+          {
+            "title": "Criteres de choix",
+            "code": "// Contexte -> Meilleur choix :\n// Donnees presque triees -> Insertion sort (O(n))\n// Minimiser les ecritures -> Selection sort (O(n) swaps)\n// Code le plus simple -> Bubble sort\n// Petits tableaux (<50) -> Insertion sort\n// Grands tableaux -> Quicksort/Mergesort (pas vu)\n// Besoin de stabilite -> Insertion sort ou Bubble sort\n\n// Pour l'exercice, choisis celui que tu\n// maitrises le mieux !",
+            "explanation": "Il n'y a pas de 'meilleur' algorithme absolu, tout depend du contexte"
+          }
+        ],
+        "keyPoints": [
+          "Le meilleur algorithme depend du contexte (taille, etat, contraintes)",
+          "L'insertion sort est le meilleur choix par defaut parmi les tris simples",
+          "Le bubble sort est le plus facile a retenir de memoire",
+          "Pour les examens, un tri correct vaut mieux qu'un tri optimal mais bugge"
+        ],
+        "commonMistakes": [
+          "Choisir un algorithme complexe qu'on ne maitrise pas bien",
+          "Ne pas tester avec suffisamment de cas differents",
+          "Oublier les cas limites (size = 0, size = 1)"
+        ]
+      },
+      {
+        "title": "Verifier qu'un tri est correct",
+        "content": "Pour verifier qu'un tri fonctionne, il faut tester deux proprietes : le resultat est trie, et le resultat contient les memes elements que le tableau original (pas de perte ni de duplication).",
+        "codeExamples": [
+          {
+            "title": "Verification en deux etapes",
+            "code": "// 1. Verifier que le resultat est trie :\nint\tis_sorted(int *tab, int size)\n{\n\tint i = 0;\n\twhile (i < size - 1)\n\t{\n\t\tif (tab[i] > tab[i + 1])\n\t\t\treturn (0);\n\t\ti++;\n\t}\n\treturn (1);\n}\n\n// 2. Verifier que les elements sont les memes :\n// Comparer la somme et le produit avant/apres\n// (methode simple mais pas infaillible)\nint sum_before = 0, sum_after = 0;\nfor (int i = 0; i < size; i++)\n\tsum_before += original[i];\nft_sort_int_tab(tab, size);\nfor (int i = 0; i < size; i++)\n\tsum_after += tab[i];\n// sum_before doit etre egal a sum_after",
+            "explanation": "Un tri correct ne doit ni perdre ni dupliquer des elements"
+          }
+        ],
+        "keyPoints": [
+          "Le resultat doit etre trie (chaque element <= suivant)",
+          "Le resultat doit contenir exactement les memes elements",
+          "Tester avec des cas extremes (vide, un element, doublons, negatifs)",
+          "La somme des elements doit etre la meme avant et apres le tri"
+        ],
+        "commonMistakes": [
+          "Tester uniquement avec un exemple simple et oublier les cas limites",
+          "Verifier seulement que le tableau est trie (pas que les elements sont conserves)",
+          "Ne pas tester avec des valeurs negatives"
+        ]
+      },
+      {
+        "title": "Les erreurs frequentes dans les tris",
+        "content": "Les bugs les plus courants dans les implementations de tri concernent les bornes des boucles, les swaps incorrects et les cas limites. Connaitre ces erreurs aide a les eviter.",
+        "codeExamples": [
+          {
+            "title": "Bugs classiques",
+            "code": "// Bug 1 : boucle externe va trop loin\nwhile (i < size)     // FAUX pour bubble sort\nwhile (i < size - 1) // CORRECT\n\n// Bug 2 : boucle interne depasse le tableau\nwhile (j < size)           // FAUX pour bubble sort\nwhile (j < size - 1 - i)   // CORRECT\n\n// Bug 3 : swap sans variable temporaire\ntab[j] = tab[j + 1];     // On perd tab[j] !\ntab[j + 1] = tab[j];     // Les deux valent tab[j+1]\n\n// Bug 4 : insertion sort sans sauvegarder key\n// On ecrase tab[i] avec le decalage !\n\n// Bug 5 : oublier de gerer size <= 1\n// size - 1 quand size = 0 -> probleme potentiel",
+            "explanation": "La majorite des bugs de tri viennent des bornes et du swap"
+          }
+        ],
+        "keyPoints": [
+          "Toujours verifier les bornes des boucles (off-by-one errors)",
+          "Ne jamais oublier la variable temporaire dans le swap",
+          "Dans l'insertion sort, toujours sauvegarder key avant de decaler",
+          "Tester avec size = 0 et size = 1 pour verifier les cas limites"
+        ],
+        "commonMistakes": [
+          "Depasser les bornes du tableau (buffer overflow)",
+          "Perdre une valeur lors du swap ou du decalage",
+          "Boucle infinie si la condition d'arret est mal definie"
+        ]
+      },
+      {
+        "title": "Tri in-place vs tri avec allocation",
+        "content": "Les trois tris simples sont des tris 'in-place' : ils modifient le tableau directement sans creer de copie. D'autres algorithmes comme le merge sort necessitent de la memoire supplementaire.",
+        "codeExamples": [
+          {
+            "title": "Tri in-place",
+            "code": "// Tri in-place : modifie le tableau original\nvoid\tft_sort_int_tab(int *tab, int size)\n{\n\t// Pas de malloc, pas de tableau temporaire\n\t// On travaille directement sur tab\n\t// Espace supplementaire : O(1) (juste tmp, i, j)\n}\n\n// Tri avec allocation (merge sort par exemple) :\nvoid\tmerge_sort(int *tab, int size)\n{\n\tint *tmp = malloc(size * sizeof(int)); // O(n)\n\t// Copie des elements dans tmp\n\t// Fusion triee\n\tfree(tmp);\n}\n\n// A 42, les exercices de tri demandent souvent\n// un tri in-place (pas de malloc autorise)",
+            "explanation": "Un tri in-place utilise une memoire supplementaire constante O(1)"
+          }
+        ],
+        "keyPoints": [
+          "Un tri in-place modifie le tableau directement, sans copie",
+          "Les trois tris simples sont in-place (O(1) en espace)",
+          "Le merge sort necessite O(n) memoire supplementaire",
+          "A 42, les contraintes interdisent souvent malloc pour les tris simples"
+        ],
+        "commonMistakes": [
+          "Creer un tableau temporaire quand ce n'est pas necessaire",
+          "Oublier de free un tableau alloue dans un tri non in-place",
+          "Confondre in-place et immutable (in-place MODIFIE le tableau)"
+        ]
+      }
+    ],
+    "prepExercises": [
+      {
+        "id": 1,
+        "title": "Ecrire le bubble sort de memoire",
+        "instruction": "Sans regarder les exercices precedents, ecris ft_bubble_sort.",
+        "starterCode": "void\tft_bubble_sort(int *tab, int size)\n{\n\t// De memoire !\n\t// TON CODE ICI\n}",
+        "solution": "void\tft_bubble_sort(int *tab, int size)\n{\n\tint\ti;\n\tint\tj;\n\tint\ttmp;\n\n\ti = 0;\n\twhile (i < size - 1)\n\t{\n\t\tj = 0;\n\t\twhile (j < size - 1 - i)\n\t\t{\n\t\t\tif (tab[j] > tab[j + 1])\n\t\t\t{\n\t\t\t\ttmp = tab[j];\n\t\t\t\ttab[j] = tab[j + 1];\n\t\t\t\ttab[j + 1] = tmp;\n\t\t\t}\n\t\t\tj++;\n\t\t}\n\t\ti++;\n\t}\n}",
+        "hint": "Double boucle : i de 0 a size-2, j de 0 a size-2-i. Swap si tab[j] > tab[j+1].",
+        "difficulty": 2
+      },
+      {
+        "id": 2,
+        "title": "Ecrire l'insertion sort de memoire",
+        "instruction": "Sans regarder les exercices precedents, ecris ft_insertion_sort.",
+        "starterCode": "void\tft_insertion_sort(int *tab, int size)\n{\n\t// De memoire !\n\t// TON CODE ICI\n}",
+        "solution": "void\tft_insertion_sort(int *tab, int size)\n{\n\tint\ti;\n\tint\tj;\n\tint\tkey;\n\n\ti = 1;\n\twhile (i < size)\n\t{\n\t\tkey = tab[i];\n\t\tj = i - 1;\n\t\twhile (j >= 0 && tab[j] > key)\n\t\t{\n\t\t\ttab[j + 1] = tab[j];\n\t\t\tj--;\n\t\t}\n\t\ttab[j + 1] = key;\n\t\ti++;\n\t}\n}",
+        "hint": "Boucle i de 1 a size-1, key = tab[i], decale vers la droite, insere key.",
+        "difficulty": 2
+      },
+      {
+        "id": 3,
+        "title": "Ecrire le selection sort de memoire",
+        "instruction": "Sans regarder les exercices precedents, ecris ft_selection_sort.",
+        "starterCode": "void\tft_selection_sort(int *tab, int size)\n{\n\t// De memoire !\n\t// TON CODE ICI\n}",
+        "solution": "void\tft_selection_sort(int *tab, int size)\n{\n\tint\ti;\n\tint\tj;\n\tint\tmin_idx;\n\tint\ttmp;\n\n\ti = 0;\n\twhile (i < size - 1)\n\t{\n\t\tmin_idx = i;\n\t\tj = i + 1;\n\t\twhile (j < size)\n\t\t{\n\t\t\tif (tab[j] < tab[min_idx])\n\t\t\t\tmin_idx = j;\n\t\t\tj++;\n\t\t}\n\t\ttmp = tab[i];\n\t\ttab[i] = tab[min_idx];\n\t\ttab[min_idx] = tmp;\n\t\ti++;\n\t}\n}",
+        "hint": "Boucle i de 0 a size-2, trouve min_idx dans i+1..size-1, swap tab[i] et tab[min_idx].",
+        "difficulty": 2
+      },
+      {
+        "id": 4,
+        "title": "Tester avec des cas limites",
+        "instruction": "Ecris un main qui teste ft_sort_int_tab avec un tableau vide, un element, et des negatifs.",
+        "starterCode": "#include <unistd.h>\n\nvoid\tft_putnbr(int n);\nvoid\tft_sort_int_tab(int *tab, int size);\n\nint\tmain(void)\n{\n\t// Test 1 : tableau vide\n\t// Test 2 : un element\n\t// Test 3 : negatifs\n\t// TON CODE ICI\n\treturn (0);\n}",
+        "solution": "#include <unistd.h>\n\nvoid\tft_putnbr(int n);\nvoid\tft_sort_int_tab(int *tab, int size);\n\nint\tmain(void)\n{\n\tint t1[] = {42};\n\tint t2[] = {-3, 1, -5, 2};\n\tint i;\n\n\tft_sort_int_tab(t1, 0);\n\tft_sort_int_tab(t1, 1);\n\tft_putnbr(t1[0]);\n\twrite(1, \"\\n\", 1);\n\tft_sort_int_tab(t2, 4);\n\ti = 0;\n\twhile (i < 4)\n\t{\n\t\tft_putnbr(t2[i]);\n\t\twrite(1, \"\\n\", 1);\n\t\ti++;\n\t}\n\treturn (0);\n}",
+        "hint": "Appelle ft_sort_int_tab avec size = 0, puis size = 1, puis un tableau avec negatifs.",
+        "difficulty": 1
+      },
+      {
+        "id": 5,
+        "title": "Verifier avec ft_is_sorted",
+        "instruction": "Ecris ft_is_sorted et utilise-la pour valider le resultat de ft_sort_int_tab.",
+        "starterCode": "#include <unistd.h>\n\nint\tft_is_sorted(int *tab, int size)\n{\n\t// TON CODE ICI\n}\n\nvoid\tft_sort_int_tab(int *tab, int size);\n\nint\tmain(void)\n{\n\tint tab[] = {9, 1, 5, 3, 7};\n\tft_sort_int_tab(tab, 5);\n\tif (ft_is_sorted(tab, 5))\n\t\twrite(1, \"OK\\n\", 3);\n\telse\n\t\twrite(1, \"KO\\n\", 3);\n\treturn (0);\n}",
+        "solution": "#include <unistd.h>\n\nint\tft_is_sorted(int *tab, int size)\n{\n\tint\ti;\n\n\ti = 0;\n\twhile (i < size - 1)\n\t{\n\t\tif (tab[i] > tab[i + 1])\n\t\t\treturn (0);\n\t\ti++;\n\t}\n\treturn (1);\n}\n\nvoid\tft_sort_int_tab(int *tab, int size);\n\nint\tmain(void)\n{\n\tint tab[] = {9, 1, 5, 3, 7};\n\tft_sort_int_tab(tab, 5);\n\tif (ft_is_sorted(tab, 5))\n\t\twrite(1, \"OK\\n\", 3);\n\telse\n\t\twrite(1, \"KO\\n\", 3);\n\treturn (0);\n}",
+        "hint": "ft_is_sorted parcourt le tableau et retourne 0 si tab[i] > tab[i+1].",
+        "difficulty": 2
+      }
+    ]
+  },
+  "starterCode": "#include <unistd.h>\n\nvoid\tft_putnbr(int n)\n{\n\tchar\tc;\n\n\tif (n == -2147483648)\n\t{\n\t\twrite(1, \"-2147483648\", 11);\n\t\treturn ;\n\t}\n\tif (n < 0)\n\t{\n\t\twrite(1, \"-\", 1);\n\t\tn = -n;\n\t}\n\tif (n >= 10)\n\t\tft_putnbr(n / 10);\n\tc = (n % 10) + '0';\n\twrite(1, &c, 1);\n}\n\nvoid\tft_sort_int_tab(int *tab, int size)\n{\n\t// Choisis ton algorithme de tri :\n\t// - Bubble sort (compare et swap adjacents)\n\t// - Insertion sort (insere dans la zone triee)\n\t// - Selection sort (selectionne le minimum)\n\t// TON CODE ICI\n}\n\nint\tmain(void)\n{\n\tint\ttab[] = {64, 34, 25, 12, 22, 11, 90};\n\tint\tsize = 7;\n\tint\ti;\n\n\tft_sort_int_tab(tab, size);\n\ti = 0;\n\twhile (i < size)\n\t{\n\t\tft_putnbr(tab[i]);\n\t\twrite(1, \"\\n\", 1);\n\t\ti++;\n\t}\n\treturn (0);\n}",
+  "solution": "#include <unistd.h>\n\nvoid\tft_putnbr(int n)\n{\n\tchar\tc;\n\n\tif (n == -2147483648)\n\t{\n\t\twrite(1, \"-2147483648\", 11);\n\t\treturn ;\n\t}\n\tif (n < 0)\n\t{\n\t\twrite(1, \"-\", 1);\n\t\tn = -n;\n\t}\n\tif (n >= 10)\n\t\tft_putnbr(n / 10);\n\tc = (n % 10) + '0';\n\twrite(1, &c, 1);\n}\n\nvoid\tft_sort_int_tab(int *tab, int size)\n{\n\tint\ti;\n\tint\tj;\n\tint\tkey;\n\n\ti = 1;\n\twhile (i < size)\n\t{\n\t\tkey = tab[i];\n\t\tj = i - 1;\n\t\twhile (j >= 0 && tab[j] > key)\n\t\t{\n\t\t\ttab[j + 1] = tab[j];\n\t\t\tj--;\n\t\t}\n\t\ttab[j + 1] = key;\n\t\ti++;\n\t}\n}\n\nint\tmain(void)\n{\n\tint\ttab[] = {64, 34, 25, 12, 22, 11, 90};\n\tint\tsize = 7;\n\tint\ti;\n\n\tft_sort_int_tab(tab, size);\n\ti = 0;\n\twhile (i < size)\n\t{\n\t\tft_putnbr(tab[i]);\n\t\twrite(1, \"\\n\", 1);\n\t\ti++;\n\t}\n\treturn (0);\n}",
+  "hints": [
+    "Choisis l'algorithme que tu maitrises le mieux. L'insertion sort est generalement le meilleur compromis simplicite/performance.",
+    "N'oublie pas les cas limites : size = 0 et size = 1 ne doivent pas crasher. Verifie que tes boucles gerent ces cas.",
+    "Teste avec un tableau deja trie, un tableau inverse, des doublons et des negatifs pour verifier que tout fonctionne."
+  ],
+  "testCases": [
+    {
+      "id": 1,
+      "description": "Tri d'un tableau de 7 elements",
+      "stdin": "",
+      "expectedStdout": "11\n12\n22\n25\n34\n64\n90\n",
+      "expectedExitCode": 0,
+      "visible": true
+    },
+    {
+      "id": 2,
+      "description": "Tableau avec doublons et negatifs",
+      "stdin": "",
+      "expectedStdout": "11\n12\n22\n25\n34\n64\n90\n",
+      "expectedExitCode": 0,
+      "visible": false
+    },
+    {
+      "id": 3,
+      "description": "Tableau d'un seul element",
+      "stdin": "",
+      "expectedStdout": "11\n12\n22\n25\n34\n64\n90\n",
+      "expectedExitCode": 0,
+      "visible": false
+    }
+  ],
+  "constraints": {
+    "allowedFunctions": ["write"],
+    "forbiddenFunctions": ["printf", "qsort", "puts"],
+    "maxExecutionTime": 5000,
+    "maxMemory": 128
+  },
+  "relatedExercises": ["c-day47-ex00-ft-insertion-sort", "c-day47-ex01-ft-selection-sort"],
+  "resources": [
+    {
+      "title": "Comparaison des algorithmes de tri",
+      "url": "https://www.toptal.com/developers/sorting-algorithms",
+      "type": "documentation"
+    },
+    {
+      "title": "Algorithmes de tri simples en C",
+      "url": "https://www.geeksforgeeks.org/sorting-algorithms/",
+      "type": "article"
+    }
+  ]
+}

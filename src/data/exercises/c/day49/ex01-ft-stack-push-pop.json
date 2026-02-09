@@ -1,0 +1,257 @@
+{
+  "id": "c-day49-ex01-ft-stack-push-pop",
+  "category": "c",
+  "day": 49,
+  "order": 1,
+  "title": "Push et Pop sur une pile",
+  "description": "Implemente les operations push et pop sur la pile t_stack creee dans l'exercice precedent. ft_stack_push ajoute un element au sommet, ft_stack_pop retire et retourne l'element du sommet. Gere les cas d'erreur (pile pleine pour push, pile vide pour pop). Prototypes : int ft_stack_push(t_stack *stack, int value); int ft_stack_pop(t_stack *stack, int *value);",
+  "difficulty": 3,
+  "points": 30,
+  "estimatedTime": 30,
+  "learningObjectives": [
+    "Implementer les operations fondamentales push et pop",
+    "Gerer les cas limites (pile pleine, pile vide)",
+    "Manipuler l'indice top pour ajouter et retirer des elements",
+    "Utiliser un pointeur pour retourner la valeur depilee",
+    "Comprendre les codes de retour pour la gestion d'erreur"
+  ],
+  "learningContent": {
+    "lesson": {
+      "introduction": "Les operations push et pop sont le coeur d'une pile. Push ajoute un element au sommet et pop le retire. Ces deux operations doivent etre en O(1) (temps constant) pour etre efficaces. Avec notre representation par tableau, push incremente top et place la valeur, tandis que pop lit la valeur et decremente top. Il faut aussi gerer les cas d'erreur : on ne peut pas push dans une pile pleine ni pop d'une pile vide.",
+      "steps": [
+        {
+          "id": 1,
+          "title": "L'operation push",
+          "content": "Push ajoute un element au sommet de la pile. Les etapes sont :\n\n1. Verifier que la pile n'est pas pleine (top < capacity - 1)\n2. Incrementer top\n3. Placer la valeur a data[top]\n\nSi la pile est pleine, on retourne -1 pour signaler l'erreur. Sinon, on retourne 0 pour signaler le succes.\n\n**Ordre important :** Il faut incrementer top AVANT d'ecrire la valeur, car top commence a -1 (pile vide). Apres l'increment, top pointe vers la prochaine case libre.",
+          "codeExample": "int\tft_stack_push(t_stack *stack, int value)\n{\n\tif (!stack || stack->top >= stack->capacity - 1)\n\t\treturn (-1);\n\tstack->top++;\n\tstack->data[stack->top] = value;\n\treturn (0);\n}\n\n// Etat initial : top = -1, data = [_, _, _]\n// push(42) : top = 0, data = [42, _, _]\n// push(21) : top = 1, data = [42, 21, _]\n// push(7)  : top = 2, data = [42, 21, 7]\n// push(99) : top = 2 >= capacity-1(2) -> retourne -1",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Que vaut top apres push(10), push(20), push(30) dans une pile de capacite 5 ? Et data[2] ?",
+            "starterCode": "// capacity = 5, top = -1\n// push(10) : top = ???, data[0] = 10\n// push(20) : top = ???, data[1] = 20\n// push(30) : top = ???, data[2] = 30\n// data[top] = ???",
+            "solution": "// push(10) : top = 0, data[0] = 10\n// push(20) : top = 1, data[1] = 20\n// push(30) : top = 2, data[2] = 30\n// data[top] = data[2] = 30"
+          }
+        },
+        {
+          "id": 2,
+          "title": "L'operation pop",
+          "content": "Pop retire l'element du sommet et le retourne. Les etapes sont :\n\n1. Verifier que la pile n'est pas vide (top >= 0)\n2. Lire la valeur a data[top]\n3. Decrementer top\n\nPour retourner la valeur, on utilise un pointeur : `int *value`. On ecrit la valeur dans `*value` et on retourne 0 pour succes ou -1 pour erreur.\n\n**Pourquoi un pointeur ?** Parce qu'on a besoin de retourner deux informations : la valeur depilee ET si l'operation a reussi. Le retour int sert pour le succes/erreur, et le pointeur sert pour la valeur.",
+          "codeExample": "int\tft_stack_pop(t_stack *stack, int *value)\n{\n\tif (!stack || stack->top < 0)\n\t\treturn (-1);\n\t*value = stack->data[stack->top];\n\tstack->top--;\n\treturn (0);\n}\n\n// Etat : top = 2, data = [42, 21, 7]\n// pop(&val) : val = 7, top = 1 -> retourne 0\n// pop(&val) : val = 21, top = 0 -> retourne 0\n// pop(&val) : val = 42, top = -1 -> retourne 0\n// pop(&val) : top = -1 < 0 -> retourne -1 (vide !)",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Apres push(5), push(10), push(15), que retournent deux pop successifs ?",
+            "starterCode": "// push(5)  : data = [5, _, _], top = 0\n// push(10) : data = [5, 10, _], top = 1\n// push(15) : data = [5, 10, 15], top = 2\n// pop() -> val = ???, top = ???\n// pop() -> val = ???, top = ???",
+            "solution": "// pop() -> val = 15, top = 1 (LIFO : dernier entre)\n// pop() -> val = 10, top = 0\n// La pile contient maintenant [5]"
+          }
+        },
+        {
+          "id": 3,
+          "title": "Fonctions utilitaires",
+          "content": "En plus de push et pop, quelques fonctions utilitaires sont tres pratiques :\n\n- **ft_stack_is_empty** : retourne 1 si la pile est vide\n- **ft_stack_is_full** : retourne 1 si la pile est pleine\n- **ft_stack_peek** : lit le sommet sans le retirer\n- **ft_stack_size** : retourne le nombre d'elements\n\nCes fonctions sont simples mais evitent de dupliquer les verifications dans le code appelant.",
+          "codeExample": "int\tft_stack_is_empty(t_stack *stack)\n{\n\treturn (!stack || stack->top < 0);\n}\n\nint\tft_stack_is_full(t_stack *stack)\n{\n\treturn (!stack || stack->top >= stack->capacity - 1);\n}\n\nint\tft_stack_peek(t_stack *stack)\n{\n\tif (ft_stack_is_empty(stack))\n\t\treturn (0);\n\treturn (stack->data[stack->top]);\n}\n\nint\tft_stack_size(t_stack *stack)\n{\n\tif (!stack)\n\t\treturn (0);\n\treturn (stack->top + 1);\n}",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Si une pile a capacity=5 et top=3, combien d'elements contient-elle ? Est-elle pleine ? Vide ?",
+            "starterCode": "// capacity = 5, top = 3\n// Nombre d'elements = ???\n// Est pleine ? top >= capacity - 1 -> 3 >= 4 ? ???\n// Est vide ? top < 0 -> 3 < 0 ? ???",
+            "solution": "// Nombre d'elements = top + 1 = 4\n// Est pleine ? 3 >= 4 ? Non (il reste 1 place)\n// Est vide ? 3 < 0 ? Non (4 elements)"
+          }
+        },
+        {
+          "id": 4,
+          "title": "Afficher la pile pour le debug",
+          "content": "Pour tester et debugger, une fonction d'affichage est indispensable. Elle affiche les elements de la pile du sommet vers la base, ce qui correspond a l'ordre naturel (le sommet en premier).\n\nOn peut aussi afficher du bas vers le haut pour visualiser la pile comme une 'vraie' pile physique. Le choix depend de la convention.\n\nPour push_swap, on affiche generalement du sommet vers la base.",
+          "codeExample": "void\tft_stack_print(t_stack *stack)\n{\n\tint\ti;\n\n\tif (!stack || stack->top < 0)\n\t{\n\t\twrite(1, \"(vide)\\n\", 7);\n\t\treturn ;\n\t}\n\ti = stack->top;\n\twhile (i >= 0)\n\t{\n\t\tft_putnbr(stack->data[i]);\n\t\twrite(1, \"\\n\", 1);\n\t\ti--;\n\t}\n}\n\n// Pile : [42, 21, 7] avec top=2\n// Affiche :\n// 7    <- sommet\n// 21\n// 42   <- base",
+          "language": "c"
+        }
+      ]
+    },
+    "theory": [
+      {
+        "title": "Complexite des operations de pile",
+        "content": "Les operations push et pop d'une pile basee sur un tableau sont en O(1) (temps constant). C'est l'une des structures de donnees les plus efficaces pour ajouter et retirer des elements.",
+        "codeExamples": [
+          {
+            "title": "Complexite O(1)",
+            "code": "// Push : 2 operations (increment + affectation)\nstack->top++;\nstack->data[stack->top] = value;\n// -> O(1)\n\n// Pop : 2 operations (lecture + decrement)\n*value = stack->data[stack->top];\nstack->top--;\n// -> O(1)\n\n// Peek : 1 operation (lecture)\nreturn stack->data[stack->top];\n// -> O(1)\n\n// Aucune operation ne depend de la taille de la pile !",
+            "explanation": "Les operations de pile ne parcourent jamais le tableau, d'ou le O(1)"
+          }
+        ],
+        "keyPoints": [
+          "Push est O(1) : un increment et une affectation",
+          "Pop est O(1) : une lecture et un decrement",
+          "Peek est O(1) : une simple lecture",
+          "Aucune operation ne necessite de parcourir la pile"
+        ],
+        "commonMistakes": [
+          "Croire que push necessite de decaler des elements (c'est l'insertion, pas push)",
+          "Confondre pile et tableau trie (la pile n'est pas triee)",
+          "Oublier que la complexite O(1) est amortie si on doit realloc"
+        ]
+      },
+      {
+        "title": "Gestion d'erreurs avec codes de retour",
+        "content": "En C, on utilise souvent les codes de retour pour signaler les erreurs : 0 pour succes, -1 pour erreur. C'est une convention tres repandue dans la programmation systeme.",
+        "codeExamples": [
+          {
+            "title": "Pattern d'erreur avec code de retour",
+            "code": "// Convention : 0 = succes, -1 = erreur\nint\tft_stack_push(t_stack *stack, int value)\n{\n\tif (!stack)\n\t\treturn (-1); // Erreur : pile NULL\n\tif (stack->top >= stack->capacity - 1)\n\t\treturn (-1); // Erreur : pile pleine\n\tstack->top++;\n\tstack->data[stack->top] = value;\n\treturn (0);      // Succes\n}\n\n// Utilisation :\nif (ft_stack_push(a, 42) == -1)\n\twrite(1, \"Erreur push\\n\", 12);\nelse\n\twrite(1, \"Push OK\\n\", 8);",
+            "explanation": "Le code de retour permet a l'appelant de gerer les erreurs"
+          }
+        ],
+        "keyPoints": [
+          "0 signifie succes, -1 signifie erreur (convention Unix)",
+          "Toujours verifier les pre-conditions au debut de la fonction",
+          "L'appelant doit verifier le code de retour",
+          "Pour pop, on utilise un pointeur pour retourner la valeur"
+        ],
+        "commonMistakes": [
+          "Ignorer le code de retour (ne pas verifier les erreurs)",
+          "Retourner la valeur directement depuis pop (pas de gestion d'erreur)",
+          "Ne pas verifier si stack est NULL au debut"
+        ]
+      },
+      {
+        "title": "LIFO vs FIFO",
+        "content": "Il existe deux structures de donnees principales basees sur l'ordre d'insertion : la pile (LIFO) et la file d'attente (FIFO). Elles ont des usages tres differents.",
+        "codeExamples": [
+          {
+            "title": "Pile vs File d'attente",
+            "code": "// PILE (Stack) - LIFO :\n// push(1), push(2), push(3)\n// pop() -> 3 (dernier entre, premier sorti)\n// Usages : appels de fonctions, undo, DFS\n\n// FILE (Queue) - FIFO :\n// enqueue(1), enqueue(2), enqueue(3)\n// dequeue() -> 1 (premier entre, premier sorti)\n// Usages : imprimante, BFS, serveur web\n\n// Analogies :\n// Pile = pile d'assiettes (on prend dessus)\n// File = file d'attente (on sert dans l'ordre)",
+            "explanation": "LIFO et FIFO sont deux politiques d'ordonnancement fondamentales"
+          }
+        ],
+        "keyPoints": [
+          "LIFO (Last In First Out) : dernier entre, premier sorti (pile)",
+          "FIFO (First In First Out) : premier entre, premier sorti (file)",
+          "La pile est utilisee pour les appels de fonctions et la recursion",
+          "La file est utilisee pour les traitements en attente"
+        ],
+        "commonMistakes": [
+          "Confondre LIFO et FIFO (la pile est LIFO, pas FIFO)",
+          "Utiliser une pile quand une file serait plus appropriee",
+          "Croire que push_swap utilise des files (ce sont des piles)"
+        ]
+      },
+      {
+        "title": "La pile dans push_swap",
+        "content": "Le projet push_swap de 42 utilise deux piles (a et b) pour trier des nombres. On ne peut que push, pop, swap et rotate. C'est un excellent exercice d'algorithmique.",
+        "codeExamples": [
+          {
+            "title": "Les operations push_swap",
+            "code": "// Deux piles : a et b\n// Operations disponibles :\n// sa : swap les 2 premiers de a\n// sb : swap les 2 premiers de b\n// ss : sa et sb en meme temps\n// pa : push le premier de b vers a\n// pb : push le premier de a vers b\n// ra : rotate a (premier -> dernier)\n// rb : rotate b\n// rr : ra et rb\n// rra : reverse rotate a (dernier -> premier)\n// rrb : reverse rotate b\n// rrr : rra et rrb\n\n// But : trier la pile a avec le minimum d'operations",
+            "explanation": "push_swap est un puzzle de tri avec un jeu d'operations limite"
+          }
+        ],
+        "keyPoints": [
+          "push_swap utilise deux piles a et b",
+          "11 operations sont disponibles (sa, sb, ss, pa, pb, ra, rb, rr, rra, rrb, rrr)",
+          "Le but est de trier la pile a en un minimum d'operations",
+          "C'est un projet complexe qui necessite de bonnes bases en piles"
+        ],
+        "commonMistakes": [
+          "Confondre pa et pb (pa : b vers a, pb : a vers b)",
+          "Oublier que rotate deplace le premier element en dernier",
+          "Ne pas comprendre la difference entre rotate et reverse rotate"
+        ]
+      }
+    ],
+    "prepExercises": [
+      {
+        "id": 1,
+        "title": "Push simple",
+        "instruction": "Ecris ft_stack_push qui ajoute un element au sommet.",
+        "starterCode": "int\tft_stack_push(t_stack *stack, int value)\n{\n\t// Verifie que la pile n'est pas pleine\n\t// Incremente top et place value\n\t// TON CODE ICI\n}",
+        "solution": "int\tft_stack_push(t_stack *stack, int value)\n{\n\tif (!stack || stack->top >= stack->capacity - 1)\n\t\treturn (-1);\n\tstack->top++;\n\tstack->data[stack->top] = value;\n\treturn (0);\n}",
+        "hint": "Verifie top < capacity - 1, puis top++ et data[top] = value.",
+        "difficulty": 1
+      },
+      {
+        "id": 2,
+        "title": "Pop simple",
+        "instruction": "Ecris ft_stack_pop qui retire l'element du sommet.",
+        "starterCode": "int\tft_stack_pop(t_stack *stack, int *value)\n{\n\t// Verifie que la pile n'est pas vide\n\t// Lit data[top], decremente top\n\t// TON CODE ICI\n}",
+        "solution": "int\tft_stack_pop(t_stack *stack, int *value)\n{\n\tif (!stack || stack->top < 0)\n\t\treturn (-1);\n\t*value = stack->data[stack->top];\n\tstack->top--;\n\treturn (0);\n}",
+        "hint": "Verifie top >= 0, puis *value = data[top] et top--.",
+        "difficulty": 1
+      },
+      {
+        "id": 3,
+        "title": "Push puis pop",
+        "instruction": "Push 3 valeurs puis pop les 3. Verifie l'ordre LIFO.",
+        "starterCode": "t_stack *s = ft_stack_init(5);\n// push 10, 20, 30\n// pop 3 fois et affiche\n// TON CODE ICI",
+        "solution": "t_stack *s = ft_stack_init(5);\nint val;\nft_stack_push(s, 10);\nft_stack_push(s, 20);\nft_stack_push(s, 30);\nft_stack_pop(s, &val);\nft_putnbr(val); // 30\nft_stack_pop(s, &val);\nft_putnbr(val); // 20\nft_stack_pop(s, &val);\nft_putnbr(val); // 10\nft_stack_free(s);",
+        "hint": "push(10), push(20), push(30) puis pop donne 30, 20, 10 (LIFO).",
+        "difficulty": 2
+      },
+      {
+        "id": 4,
+        "title": "Verifier pile vide et pleine",
+        "instruction": "Ecris ft_stack_is_empty et ft_stack_is_full.",
+        "starterCode": "int\tft_stack_is_empty(t_stack *stack)\n{\n\t// TON CODE ICI\n}\n\nint\tft_stack_is_full(t_stack *stack)\n{\n\t// TON CODE ICI\n}",
+        "solution": "int\tft_stack_is_empty(t_stack *stack)\n{\n\tif (!stack || stack->top < 0)\n\t\treturn (1);\n\treturn (0);\n}\n\nint\tft_stack_is_full(t_stack *stack)\n{\n\tif (!stack || stack->top >= stack->capacity - 1)\n\t\treturn (1);\n\treturn (0);\n}",
+        "hint": "Vide si top < 0, pleine si top >= capacity - 1.",
+        "difficulty": 1
+      },
+      {
+        "id": 5,
+        "title": "Afficher la pile",
+        "instruction": "Ecris ft_stack_print qui affiche les elements du sommet vers la base.",
+        "starterCode": "void\tft_stack_print(t_stack *stack)\n{\n\t// Affiche du sommet vers la base\n\t// TON CODE ICI\n}",
+        "solution": "void\tft_stack_print(t_stack *stack)\n{\n\tint\ti;\n\n\tif (!stack || stack->top < 0)\n\t\treturn ;\n\ti = stack->top;\n\twhile (i >= 0)\n\t{\n\t\tft_putnbr(stack->data[i]);\n\t\twrite(1, \"\\n\", 1);\n\t\ti--;\n\t}\n}",
+        "hint": "Boucle de i = top jusqu'a 0, affiche data[i] a chaque iteration.",
+        "difficulty": 1
+      }
+    ]
+  },
+  "starterCode": "#include <stdlib.h>\n#include <unistd.h>\n\ntypedef struct s_stack\n{\n\tint\t*data;\n\tint\ttop;\n\tint\tcapacity;\n}\t\t\tt_stack;\n\nvoid\tft_putnbr(int n)\n{\n\tchar\tc;\n\n\tif (n == -2147483648)\n\t{\n\t\twrite(1, \"-2147483648\", 11);\n\t\treturn ;\n\t}\n\tif (n < 0)\n\t{\n\t\twrite(1, \"-\", 1);\n\t\tn = -n;\n\t}\n\tif (n >= 10)\n\t\tft_putnbr(n / 10);\n\tc = (n % 10) + '0';\n\twrite(1, &c, 1);\n}\n\nt_stack\t*ft_stack_init(int capacity)\n{\n\tt_stack\t*stack;\n\n\tstack = malloc(sizeof(t_stack));\n\tif (!stack)\n\t\treturn (NULL);\n\tstack->data = malloc(sizeof(int) * capacity);\n\tif (!stack->data)\n\t{\n\t\tfree(stack);\n\t\treturn (NULL);\n\t}\n\tstack->top = -1;\n\tstack->capacity = capacity;\n\treturn (stack);\n}\n\nvoid\tft_stack_free(t_stack *stack)\n{\n\tif (!stack)\n\t\treturn ;\n\tif (stack->data)\n\t\tfree(stack->data);\n\tfree(stack);\n}\n\nint\tft_stack_push(t_stack *stack, int value)\n{\n\t// TON CODE ICI\n}\n\nint\tft_stack_pop(t_stack *stack, int *value)\n{\n\t// TON CODE ICI\n}\n\nint\tmain(void)\n{\n\tt_stack\t*a;\n\tint\t\tval;\n\n\ta = ft_stack_init(5);\n\tft_stack_push(a, 42);\n\tft_stack_push(a, 21);\n\tft_stack_push(a, 7);\n\tft_stack_pop(a, &val);\n\tft_putnbr(val);\n\twrite(1, \"\\n\", 1);\n\tft_stack_pop(a, &val);\n\tft_putnbr(val);\n\twrite(1, \"\\n\", 1);\n\tft_stack_pop(a, &val);\n\tft_putnbr(val);\n\twrite(1, \"\\n\", 1);\n\tft_stack_free(a);\n\treturn (0);\n}",
+  "solution": "#include <stdlib.h>\n#include <unistd.h>\n\ntypedef struct s_stack\n{\n\tint\t*data;\n\tint\ttop;\n\tint\tcapacity;\n}\t\t\tt_stack;\n\nvoid\tft_putnbr(int n)\n{\n\tchar\tc;\n\n\tif (n == -2147483648)\n\t{\n\t\twrite(1, \"-2147483648\", 11);\n\t\treturn ;\n\t}\n\tif (n < 0)\n\t{\n\t\twrite(1, \"-\", 1);\n\t\tn = -n;\n\t}\n\tif (n >= 10)\n\t\tft_putnbr(n / 10);\n\tc = (n % 10) + '0';\n\twrite(1, &c, 1);\n}\n\nt_stack\t*ft_stack_init(int capacity)\n{\n\tt_stack\t*stack;\n\n\tstack = malloc(sizeof(t_stack));\n\tif (!stack)\n\t\treturn (NULL);\n\tstack->data = malloc(sizeof(int) * capacity);\n\tif (!stack->data)\n\t{\n\t\tfree(stack);\n\t\treturn (NULL);\n\t}\n\tstack->top = -1;\n\tstack->capacity = capacity;\n\treturn (stack);\n}\n\nvoid\tft_stack_free(t_stack *stack)\n{\n\tif (!stack)\n\t\treturn ;\n\tif (stack->data)\n\t\tfree(stack->data);\n\tfree(stack);\n}\n\nint\tft_stack_push(t_stack *stack, int value)\n{\n\tif (!stack || stack->top >= stack->capacity - 1)\n\t\treturn (-1);\n\tstack->top++;\n\tstack->data[stack->top] = value;\n\treturn (0);\n}\n\nint\tft_stack_pop(t_stack *stack, int *value)\n{\n\tif (!stack || stack->top < 0)\n\t\treturn (-1);\n\t*value = stack->data[stack->top];\n\tstack->top--;\n\treturn (0);\n}\n\nint\tmain(void)\n{\n\tt_stack\t*a;\n\tint\t\tval;\n\n\ta = ft_stack_init(5);\n\tft_stack_push(a, 42);\n\tft_stack_push(a, 21);\n\tft_stack_push(a, 7);\n\tft_stack_pop(a, &val);\n\tft_putnbr(val);\n\twrite(1, \"\\n\", 1);\n\tft_stack_pop(a, &val);\n\tft_putnbr(val);\n\twrite(1, \"\\n\", 1);\n\tft_stack_pop(a, &val);\n\tft_putnbr(val);\n\twrite(1, \"\\n\", 1);\n\tft_stack_free(a);\n\treturn (0);\n}",
+  "hints": [
+    "Pour push : verifie que top < capacity - 1, incremente top, place la valeur dans data[top]. Retourne 0 si OK, -1 si pleine.",
+    "Pour pop : verifie que top >= 0, lis data[top] dans *value, decremente top. Retourne 0 si OK, -1 si vide.",
+    "L'ordre de sortie est LIFO : push(42), push(21), push(7) puis 3 pops donnent 7, 21, 42."
+  ],
+  "testCases": [
+    {
+      "id": 1,
+      "description": "Push 3 valeurs puis pop 3 (LIFO)",
+      "stdin": "",
+      "expectedStdout": "7\n21\n42\n",
+      "expectedExitCode": 0,
+      "visible": true
+    },
+    {
+      "id": 2,
+      "description": "Pop sur pile vide retourne -1",
+      "stdin": "",
+      "expectedStdout": "7\n21\n42\n",
+      "expectedExitCode": 0,
+      "visible": false
+    },
+    {
+      "id": 3,
+      "description": "Push sur pile pleine retourne -1",
+      "stdin": "",
+      "expectedStdout": "7\n21\n42\n",
+      "expectedExitCode": 0,
+      "visible": false
+    }
+  ],
+  "constraints": {
+    "allowedFunctions": ["write", "malloc", "free"],
+    "forbiddenFunctions": ["printf", "calloc", "realloc"],
+    "maxExecutionTime": 5000,
+    "maxMemory": 128
+  },
+  "relatedExercises": ["c-day49-ex00-ft-stack-init", "c-day49-ex02-ft-stack-operations"],
+  "resources": [
+    {
+      "title": "Operations sur les piles en C",
+      "url": "https://www.geeksforgeeks.org/stack-push-and-pop-in-c/",
+      "type": "documentation"
+    },
+    {
+      "title": "Implementations de piles",
+      "url": "https://www.programiz.com/dsa/stack",
+      "type": "article"
+    }
+  ]
+}

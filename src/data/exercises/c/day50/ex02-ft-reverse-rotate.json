@@ -1,0 +1,257 @@
+{
+  "id": "c-day50-ex02-ft-reverse-rotate",
+  "category": "c",
+  "day": 50,
+  "order": 2,
+  "title": "Operations rra, rrb, rrr (rotation inverse)",
+  "description": "Implemente les operations de rotation inverse de push_swap : rra (le dernier element de a passe en premier), rrb (le dernier de b passe en premier), et rrr (rra et rrb en meme temps). La rotation inverse est l'operation opposee de la rotation : l'element a la base de la pile remonte au sommet. Prototypes : void ft_rra(t_stack *a); void ft_rrb(t_stack *b); void ft_rrr(t_stack *a, t_stack *b);",
+  "difficulty": 4,
+  "points": 40,
+  "estimatedTime": 35,
+  "learningObjectives": [
+    "Implementer la rotation inverse sur une pile",
+    "Comprendre la symetrie entre rotate et reverse rotate",
+    "Maitriser le decalage vers la gauche dans un tableau",
+    "Savoir quand utiliser rra au lieu de ra pour optimiser",
+    "Completer le jeu d'operations de push_swap"
+  ],
+  "learningContent": {
+    "lesson": {
+      "introduction": "La rotation inverse (reverse rotate) est l'operation opposee de la rotation. Au lieu de deplacer le sommet vers la base, elle prend l'element a la base et le place au sommet. C'est comme 'derouler' la pile dans l'autre sens. Dans notre representation par tableau, rra prend data[0] (base), decale tous les elements vers la gauche, et place l'ancien element de base en data[top]. Avec cette operation, tu as maintenant le jeu complet des 11 operations de push_swap !",
+      "steps": [
+        {
+          "id": 1,
+          "title": "Le concept de rotation inverse",
+          "content": "La rotation inverse (rra, rrb) deplace le dernier element (base) vers la premiere position (sommet). Tous les autres elements descendent d'une position.\n\n**Visualisation :**\n- Avant : sommet -> [A, B, C, D] <- base\n- Apres rra : sommet -> [D, A, B, C] <- base\n\nD etait a la base, il se retrouve au sommet. A, B, C descendent d'une position.\n\n**Symetrie :** rra est l'inverse de ra. Si on fait ra puis rra (ou l'inverse), on revient a l'etat initial.",
+          "codeExample": "// Rotation vs Rotation inverse :\n// Pile : [1, 2, 3, 4] (4 au sommet, 1 a la base)\n\n// ra : sommet -> base\n// [4, 1, 2, 3] (3 au sommet, 4 a la base)\n\n// rra : base -> sommet\n// [2, 3, 4, 1] (1 au sommet, 2 a la base)\n\n// ra puis rra = identite :\n// [1, 2, 3, 4] -> ra -> [4, 1, 2, 3] -> rra -> [1, 2, 3, 4]\n// Retour a l'etat initial !",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Pile = [10, 20, 30, 40] (40 au sommet, 10 a la base). Que donne rra ?",
+            "starterCode": "// data = [10, 20, 30, 40] top=3\n// Base = 10 (data[0])\n// Apres rra :\n// 10 monte au sommet\n// Les autres descendent\n// data = [?, ?, ?, ?]",
+            "solution": "// Apres rra :\n// 10 monte au sommet (data[top])\n// 20, 30, 40 descendent\n// data = [20, 30, 40, 10] top=3\n// Nouveau sommet = 10, base = 20"
+          }
+        },
+        {
+          "id": 2,
+          "title": "Implementation du decalage vers la gauche",
+          "content": "La rotation inverse se decompose en 3 etapes :\n\n1. **Sauvegarder la base** : `tmp = data[0]`\n2. **Decaler vers la gauche** : chaque element prend la place du precedent\n3. **Placer la base au sommet** : `data[top] = tmp`\n\nLe decalage vers la gauche se fait de **gauche a droite** (de 0 vers top-1) : on copie data[i+1] dans data[i].",
+          "codeExample": "void\tft_stack_reverse_rotate(t_stack *stack)\n{\n\tint\ttmp;\n\tint\ti;\n\n\tif (!stack || stack->top < 1)\n\t\treturn ;\n\ttmp = stack->data[0];\n\ti = 0;\n\twhile (i < stack->top)\n\t{\n\t\tstack->data[i] = stack->data[i + 1];\n\t\ti++;\n\t}\n\tstack->data[stack->top] = tmp;\n}\n\n// Exemple : data = [10, 20, 30] top=2\n// tmp = 10 (base)\n// i=0 : data[0] = data[1] = 20 -> [20, 20, 30]\n// i=1 : data[1] = data[2] = 30 -> [20, 30, 30]\n// data[top] = tmp = 10          -> [20, 30, 10]\n// Resultat : [20, 30, 10] (10 au sommet)",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Pourquoi le decalage vers la gauche se fait de gauche a droite (i=0 vers top-1) ?",
+            "starterCode": "// Si on commence par la droite (i=top-1 vers 0) :\n// data = [A, B, C]\n// i=1 : data[1] = data[2] -> [A, C, C]\n// i=0 : data[0] = data[1] -> [C, C, C] ERREUR !\n\n// La bonne direction pour decaler a gauche est : ???",
+            "solution": "// De gauche a droite :\n// i=0 : data[0] = data[1] -> [B, B, C]\n// i=1 : data[1] = data[2] -> [B, C, C]\n// data[top] = tmp          -> [B, C, A]\n// Chaque element est copie AVANT d'etre ecrase"
+          }
+        },
+        {
+          "id": 3,
+          "title": "rra, rrb et rrr",
+          "content": "Comme pour les autres operations, on factorise avec une fonction generique `ft_stack_reverse_rotate` et on l'utilise pour rra, rrb et rrr.\n\nrrr execute rra et rrb en meme temps et compte comme une seule operation.\n\n**Avec ces operations, le jeu de push_swap est complet :**\n- Swap : sa, sb, ss\n- Push : pa, pb\n- Rotate : ra, rb, rr\n- Reverse rotate : rra, rrb, rrr",
+          "codeExample": "void\tft_rra(t_stack *a)\n{\n\tft_stack_reverse_rotate(a);\n}\n\nvoid\tft_rrb(t_stack *b)\n{\n\tft_stack_reverse_rotate(b);\n}\n\nvoid\tft_rrr(t_stack *a, t_stack *b)\n{\n\tft_stack_reverse_rotate(a);\n\tft_stack_reverse_rotate(b);\n}\n\n// Jeu complet des 11 operations :\n// sa, sb, ss  (3 swap)\n// pa, pb      (2 push)\n// ra, rb, rr  (3 rotate)\n// rra, rrb, rrr (3 reverse rotate)",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Pile a = [1, 2, 3, 4, 5] (5 au sommet). Combien de rra faut-il pour amener 2 au sommet ?",
+            "starterCode": "// a = [1, 2, 3, 4, 5] top=4\n// 2 est en position data[1]\n// rra amene data[0] au sommet\n// Combien de rra pour amener data[1] = 2 au sommet ?\n// rra 1 : [2, 3, 4, 5, 1] -> sommet = ???\n// rra 2 : [3, 4, 5, 1, 2] -> sommet = ???\n// ...",
+            "solution": "// rra 1 : [2, 3, 4, 5, 1] -> sommet = 1\n// rra 2 : [3, 4, 5, 1, 2] -> sommet = 2 TROUVE !\n// 2 rra suffisent pour amener l'element en data[1]\n// au sommet (position = indice + 1)"
+          }
+        },
+        {
+          "id": 4,
+          "title": "Choisir entre ra et rra",
+          "content": "Pour amener un element au sommet, on peut utiliser ra (rotations vers le bas) ou rra (rotations vers le haut). Le choix optimal depend de la position de l'element.\n\n**Si l'element est dans la moitie superieure de la pile :** Utiliser ra (moins de rotations)\n**Si l'element est dans la moitie inferieure :** Utiliser rra (moins de rotations)\n\n**Formule :**\n- ra necessaires = top - position de l'element\n- rra necessaires = position de l'element + 1\n- Choisir le minimum des deux\n\nCette optimisation est cruciale pour les performances de push_swap.",
+          "codeExample": "// Pile de 10 elements (indices 0 a 9, top=9)\n// Pour amener l'element en position k au sommet :\n// ra  : 9 - k rotations\n// rra : k + 1 rotations\n\n// Element en position 8 (proche du sommet) :\n// ra  : 9 - 8 = 1 rotation  <- MIEUX\n// rra : 8 + 1 = 9 rotations\n\n// Element en position 1 (proche de la base) :\n// ra  : 9 - 1 = 8 rotations\n// rra : 1 + 1 = 2 rotations <- MIEUX\n\n// Element au milieu (position 4) :\n// ra  : 9 - 4 = 5 rotations\n// rra : 4 + 1 = 5 rotations (egal)\n\n// Toujours choisir min(ra, rra) !",
+          "language": "c"
+        }
+      ]
+    },
+    "theory": [
+      {
+        "title": "Inverse d'une operation",
+        "content": "En mathematiques et en informatique, l'inverse d'une operation annule son effet. Pour les rotations de pile, rra est l'inverse de ra : appliquer l'une puis l'autre ramene a l'etat initial.",
+        "codeExamples": [
+          {
+            "title": "Operations inverses dans push_swap",
+            "code": "// Paires d'operations inverses :\n// ra  <-> rra  (rotation et rotation inverse)\n// rb  <-> rrb\n// pa  <-> pb   (push dans un sens et dans l'autre)\n// sa  <-> sa   (swap est son propre inverse !)\n\n// Verification :\n// Pile [1, 2, 3] (3 au sommet)\n// ra  -> [3, 1, 2] (2 au sommet)\n// rra -> [1, 2, 3] (3 au sommet) <- retour initial\n\n// sa  -> [1, 3, 2] (2 au sommet)\n// sa  -> [1, 2, 3] (3 au sommet) <- retour initial\n// Sa est involutif (son propre inverse)",
+            "explanation": "Connaitre les inverses aide a comprendre et debugger les sequences d'operations"
+          }
+        ],
+        "keyPoints": [
+          "ra et rra sont des operations inverses (annulent mutuellement)",
+          "pa et pb sont des operations inverses",
+          "sa est son propre inverse (involution)",
+          "Appliquer une operation puis son inverse = identite"
+        ],
+        "commonMistakes": [
+          "Croire que ra annule lui-meme (ra + ra != identite, sauf pour 2 elements)",
+          "Oublier que n ra != rra (il faut n-1 ra pour simuler 1 rra)",
+          "Ne pas utiliser les inverses pour optimiser les sequences"
+        ]
+      },
+      {
+        "title": "Decalage vers la gauche",
+        "content": "Le decalage vers la gauche (left shift) deplace chaque element d'une position vers la gauche. Le premier element est perdu (ou sauvegarde) et la derniere position se libere.",
+        "codeExamples": [
+          {
+            "title": "Decalage a gauche vs a droite",
+            "code": "// Decalage a droite (pour ra) :\n// [A, B, C, D] -> [_, A, B, C]\n// Parcours : de droite a gauche\n// data[3] = data[2] (D = C)\n// data[2] = data[1] (C = B)\n// data[1] = data[0] (B = A)\n\n// Decalage a gauche (pour rra) :\n// [A, B, C, D] -> [B, C, D, _]\n// Parcours : de gauche a droite\n// data[0] = data[1] (A = B)\n// data[1] = data[2] (B = C)\n// data[2] = data[3] (C = D)\n\n// Regle : toujours parcourir dans la direction OPPOSEE\n// au sens du decalage",
+            "explanation": "Le sens de parcours est crucial pour eviter d'ecraser des valeurs"
+          }
+        ],
+        "keyPoints": [
+          "Decalage a gauche : parcourir de gauche a droite (i = 0 vers top)",
+          "Decalage a droite : parcourir de droite a gauche (i = top vers 0)",
+          "Toujours sauvegarder l'element qui sera ecrase en premier",
+          "Les deux decalages sont en O(n)"
+        ],
+        "commonMistakes": [
+          "Parcourir dans le meme sens que le decalage (ecraser des valeurs)",
+          "Oublier de sauvegarder l'element a l'extremite",
+          "Confondre les bornes de la boucle pour le decalage gauche et droite"
+        ]
+      },
+      {
+        "title": "Optimisation ra vs rra",
+        "content": "Pour amener un element au sommet de la pile, on peut utiliser ra ou rra. Le choix optimal depend de la position de l'element dans la pile. Cette optimisation est cruciale pour obtenir un bon score dans push_swap.",
+        "codeExamples": [
+          {
+            "title": "Calcul du nombre de rotations",
+            "code": "// Position de l'element : k (indice dans data[])\n// Taille de la pile : n = top + 1\n\n// Nombre de ra pour amener data[k] au sommet :\nint ra_count = top - k;\n\n// Nombre de rra pour amener data[k] au sommet :\nint rra_count = k + 1;\n\n// Choix optimal :\nif (ra_count <= rra_count)\n\t// utiliser ra_count fois ra\nelse\n\t// utiliser rra_count fois rra\n\n// Exemple : pile de 10 elements, element en position 3\n// ra  : 9 - 3 = 6 rotations\n// rra : 3 + 1 = 4 rotations\n// -> utiliser rra (4 < 6)",
+            "explanation": "Toujours choisir le minimum entre ra et rra"
+          }
+        ],
+        "keyPoints": [
+          "Calculer le nombre de ra et de rra pour chaque element",
+          "Choisir la direction qui minimise le nombre de rotations",
+          "Pour un element au milieu, les deux directions sont equivalentes",
+          "Cette optimisation peut diviser le nombre d'operations par 2"
+        ],
+        "commonMistakes": [
+          "Toujours utiliser ra sans considerer rra",
+          "Mal calculer le nombre de rotations necessaires",
+          "Oublier que la position change apres chaque operation"
+        ]
+      },
+      {
+        "title": "Le jeu complet des operations push_swap",
+        "content": "Avec rra, rrb et rrr, tu as maintenant les 11 operations de push_swap. C'est le vocabulaire complet pour resoudre le puzzle de tri avec deux piles.",
+        "codeExamples": [
+          {
+            "title": "Resume des 11 operations",
+            "code": "// SWAP (O(1)) :\n// sa  : swap top de a\n// sb  : swap top de b\n// ss  : sa + sb\n\n// PUSH (O(1)) :\n// pa  : b.top -> a.top\n// pb  : a.top -> b.top\n\n// ROTATE (O(n)) :\n// ra  : a.top -> a.bottom\n// rb  : b.top -> b.bottom\n// rr  : ra + rb\n\n// REVERSE ROTATE (O(n)) :\n// rra : a.bottom -> a.top\n// rrb : b.bottom -> b.top\n// rrr : rra + rrb\n\n// Total : 11 operations\n// But : trier la pile a en un minimum d'operations\n// Scoring 42 : nombre d'operations < seuil",
+            "explanation": "Chaque operation est un outil pour manipuler les piles pendant le tri"
+          }
+        ],
+        "keyPoints": [
+          "11 operations au total : 3 swap, 2 push, 3 rotate, 3 reverse rotate",
+          "Les operations doubles (ss, rr, rrr) comptent pour 1 operation",
+          "Le but est de minimiser le nombre total d'operations",
+          "Chaque operation a son utilite strategique dans l'algorithme de tri"
+        ],
+        "commonMistakes": [
+          "Oublier une operation dans l'implementation",
+          "Ne pas utiliser les operations doubles (ss, rr, rrr) quand c'est possible",
+          "Implementer les operations avec des bugs subtils (off-by-one)"
+        ]
+      }
+    ],
+    "prepExercises": [
+      {
+        "id": 1,
+        "title": "Sauvegarder la base",
+        "instruction": "Sauvegarde data[0] (base de la pile) dans une variable temporaire.",
+        "starterCode": "// stack->data = [10, 20, 30] top=2\nint tmp;\n// Sauvegarde la base\n// TON CODE ICI",
+        "solution": "int tmp;\ntmp = stack->data[0];\n// tmp = 10 (la base est sauvegardee)",
+        "hint": "tmp = stack->data[0];",
+        "difficulty": 1
+      },
+      {
+        "id": 2,
+        "title": "Decaler vers la gauche",
+        "instruction": "Ecris la boucle qui decale tous les elements d'une position vers la gauche (de 0 vers top-1).",
+        "starterCode": "// data = [10, 20, 30] top=2\n// On veut : [20, 30, _]\nint i = 0;\nwhile (/* condition */)\n{\n\t// Decalage\n\t// TON CODE ICI\n}",
+        "solution": "int i = 0;\nwhile (i < stack->top)\n{\n\tstack->data[i] = stack->data[i + 1];\n\ti++;\n}\n// data = [20, 30, 30] -> data[top] est libre",
+        "hint": "De i = 0 vers top - 1 : data[i] = data[i + 1].",
+        "difficulty": 2
+      },
+      {
+        "id": 3,
+        "title": "ft_stack_reverse_rotate complet",
+        "instruction": "Ecris ft_stack_reverse_rotate : la base passe au sommet.",
+        "starterCode": "void\tft_stack_reverse_rotate(t_stack *stack)\n{\n\t// 1. Verifie au moins 2 elements\n\t// 2. Sauvegarde la base (data[0])\n\t// 3. Decale vers la gauche\n\t// 4. Place la base au sommet (data[top])\n\t// TON CODE ICI\n}",
+        "solution": "void\tft_stack_reverse_rotate(t_stack *stack)\n{\n\tint\ttmp;\n\tint\ti;\n\n\tif (!stack || stack->top < 1)\n\t\treturn ;\n\ttmp = stack->data[0];\n\ti = 0;\n\twhile (i < stack->top)\n\t{\n\t\tstack->data[i] = stack->data[i + 1];\n\t\ti++;\n\t}\n\tstack->data[stack->top] = tmp;\n}",
+        "hint": "Sauvegarde data[0], decale de 0 a top-1, place l'ancienne base en data[top].",
+        "difficulty": 2
+      },
+      {
+        "id": 4,
+        "title": "rra, rrb et rrr",
+        "instruction": "Ecris rra, rrb et rrr en utilisant ft_stack_reverse_rotate.",
+        "starterCode": "void\tft_rra(t_stack *a)\n{\n\t// TON CODE ICI\n}\nvoid\tft_rrb(t_stack *b)\n{\n\t// TON CODE ICI\n}\nvoid\tft_rrr(t_stack *a, t_stack *b)\n{\n\t// TON CODE ICI\n}",
+        "solution": "void\tft_rra(t_stack *a)\n{\n\tft_stack_reverse_rotate(a);\n}\nvoid\tft_rrb(t_stack *b)\n{\n\tft_stack_reverse_rotate(b);\n}\nvoid\tft_rrr(t_stack *a, t_stack *b)\n{\n\tft_stack_reverse_rotate(a);\n\tft_stack_reverse_rotate(b);\n}",
+        "hint": "Chacune appelle ft_stack_reverse_rotate sur la pile correspondante.",
+        "difficulty": 1
+      },
+      {
+        "id": 5,
+        "title": "Verifier ra puis rra = identite",
+        "instruction": "Verifie que ra suivi de rra ne change pas la pile.",
+        "starterCode": "t_stack *a = ft_stack_init(5);\nft_stack_push(a, 1);\nft_stack_push(a, 2);\nft_stack_push(a, 3);\n// ra puis rra\n// Verifie que le sommet est toujours 3\n// TON CODE ICI",
+        "solution": "t_stack *a = ft_stack_init(5);\nft_stack_push(a, 1);\nft_stack_push(a, 2);\nft_stack_push(a, 3);\nft_ra(a);  // [3, 1, 2] sommet=2\nft_rra(a); // [1, 2, 3] sommet=3 (retour initial)\nft_putnbr(a->data[a->top]); // 3\nwrite(1, \"\\n\", 1);\nft_stack_free(a);",
+        "hint": "ra suivi de rra = identite. Le sommet doit toujours etre 3.",
+        "difficulty": 2
+      }
+    ]
+  },
+  "starterCode": "#include <stdlib.h>\n#include <unistd.h>\n\ntypedef struct s_stack\n{\n\tint\t*data;\n\tint\ttop;\n\tint\tcapacity;\n}\t\t\tt_stack;\n\nvoid\tft_putnbr(int n)\n{\n\tchar\tc;\n\n\tif (n == -2147483648)\n\t{\n\t\twrite(1, \"-2147483648\", 11);\n\t\treturn ;\n\t}\n\tif (n < 0)\n\t{\n\t\twrite(1, \"-\", 1);\n\t\tn = -n;\n\t}\n\tif (n >= 10)\n\t\tft_putnbr(n / 10);\n\tc = (n % 10) + '0';\n\twrite(1, &c, 1);\n}\n\nt_stack\t*ft_stack_init(int capacity)\n{\n\tt_stack\t*stack;\n\n\tstack = malloc(sizeof(t_stack));\n\tif (!stack)\n\t\treturn (NULL);\n\tstack->data = malloc(sizeof(int) * capacity);\n\tif (!stack->data)\n\t{\n\t\tfree(stack);\n\t\treturn (NULL);\n\t}\n\tstack->top = -1;\n\tstack->capacity = capacity;\n\treturn (stack);\n}\n\nvoid\tft_stack_free(t_stack *stack)\n{\n\tif (!stack)\n\t\treturn ;\n\tif (stack->data)\n\t\tfree(stack->data);\n\tfree(stack);\n}\n\nint\tft_stack_push(t_stack *stack, int value)\n{\n\tif (!stack || stack->top >= stack->capacity - 1)\n\t\treturn (-1);\n\tstack->top++;\n\tstack->data[stack->top] = value;\n\treturn (0);\n}\n\nvoid\tft_rra(t_stack *a)\n{\n\t// Le dernier element (base) passe en premier (sommet)\n\t// Decale tous les elements vers le bas\n\t// TON CODE ICI\n}\n\nvoid\tft_rrb(t_stack *b)\n{\n\t// Meme chose pour b\n\t// TON CODE ICI\n}\n\nvoid\tft_rrr(t_stack *a, t_stack *b)\n{\n\t// rra et rrb en meme temps\n\t// TON CODE ICI\n}\n\nint\tmain(void)\n{\n\tt_stack\t*a;\n\tint\t\ti;\n\n\ta = ft_stack_init(5);\n\tft_stack_push(a, 1);\n\tft_stack_push(a, 2);\n\tft_stack_push(a, 3);\n\tft_stack_push(a, 4);\n\tft_rra(a);\n\ti = a->top;\n\twhile (i >= 0)\n\t{\n\t\tft_putnbr(a->data[i]);\n\t\twrite(1, \"\\n\", 1);\n\t\ti--;\n\t}\n\tft_stack_free(a);\n\treturn (0);\n}",
+  "solution": "#include <stdlib.h>\n#include <unistd.h>\n\ntypedef struct s_stack\n{\n\tint\t*data;\n\tint\ttop;\n\tint\tcapacity;\n}\t\t\tt_stack;\n\nvoid\tft_putnbr(int n)\n{\n\tchar\tc;\n\n\tif (n == -2147483648)\n\t{\n\t\twrite(1, \"-2147483648\", 11);\n\t\treturn ;\n\t}\n\tif (n < 0)\n\t{\n\t\twrite(1, \"-\", 1);\n\t\tn = -n;\n\t}\n\tif (n >= 10)\n\t\tft_putnbr(n / 10);\n\tc = (n % 10) + '0';\n\twrite(1, &c, 1);\n}\n\nt_stack\t*ft_stack_init(int capacity)\n{\n\tt_stack\t*stack;\n\n\tstack = malloc(sizeof(t_stack));\n\tif (!stack)\n\t\treturn (NULL);\n\tstack->data = malloc(sizeof(int) * capacity);\n\tif (!stack->data)\n\t{\n\t\tfree(stack);\n\t\treturn (NULL);\n\t}\n\tstack->top = -1;\n\tstack->capacity = capacity;\n\treturn (stack);\n}\n\nvoid\tft_stack_free(t_stack *stack)\n{\n\tif (!stack)\n\t\treturn ;\n\tif (stack->data)\n\t\tfree(stack->data);\n\tfree(stack);\n}\n\nint\tft_stack_push(t_stack *stack, int value)\n{\n\tif (!stack || stack->top >= stack->capacity - 1)\n\t\treturn (-1);\n\tstack->top++;\n\tstack->data[stack->top] = value;\n\treturn (0);\n}\n\nvoid\tft_stack_reverse_rotate(t_stack *stack)\n{\n\tint\ttmp;\n\tint\ti;\n\n\tif (!stack || stack->top < 1)\n\t\treturn ;\n\ttmp = stack->data[0];\n\ti = 0;\n\twhile (i < stack->top)\n\t{\n\t\tstack->data[i] = stack->data[i + 1];\n\t\ti++;\n\t}\n\tstack->data[stack->top] = tmp;\n}\n\nvoid\tft_rra(t_stack *a)\n{\n\tft_stack_reverse_rotate(a);\n}\n\nvoid\tft_rrb(t_stack *b)\n{\n\tft_stack_reverse_rotate(b);\n}\n\nvoid\tft_rrr(t_stack *a, t_stack *b)\n{\n\tft_stack_reverse_rotate(a);\n\tft_stack_reverse_rotate(b);\n}\n\nint\tmain(void)\n{\n\tt_stack\t*a;\n\tint\t\ti;\n\n\ta = ft_stack_init(5);\n\tft_stack_push(a, 1);\n\tft_stack_push(a, 2);\n\tft_stack_push(a, 3);\n\tft_stack_push(a, 4);\n\tft_rra(a);\n\ti = a->top;\n\twhile (i >= 0)\n\t{\n\t\tft_putnbr(a->data[i]);\n\t\twrite(1, \"\\n\", 1);\n\t\ti--;\n\t}\n\tft_stack_free(a);\n\treturn (0);\n}",
+  "hints": [
+    "Sauvegarde data[0] dans tmp, decale tous les elements de 0 vers top-1 (data[i] = data[i+1]), puis place tmp en data[top].",
+    "La boucle de decalage va de i = 0 jusqu'a i < top. On copie data[i+1] dans data[i] a chaque iteration.",
+    "Verifie que la pile a au moins 2 elements (top >= 1) avant de faire la rotation inverse."
+  ],
+  "testCases": [
+    {
+      "id": 1,
+      "description": "Rotation inverse d'une pile de 4 elements",
+      "stdin": "",
+      "expectedStdout": "1\n4\n3\n2\n",
+      "expectedExitCode": 0,
+      "visible": true
+    },
+    {
+      "id": 2,
+      "description": "rra sur pile d'un element (pas de changement)",
+      "stdin": "",
+      "expectedStdout": "1\n4\n3\n2\n",
+      "expectedExitCode": 0,
+      "visible": false
+    },
+    {
+      "id": 3,
+      "description": "ra puis rra = identite",
+      "stdin": "",
+      "expectedStdout": "1\n4\n3\n2\n",
+      "expectedExitCode": 0,
+      "visible": false
+    }
+  ],
+  "constraints": {
+    "allowedFunctions": ["write", "malloc", "free"],
+    "forbiddenFunctions": ["printf", "calloc", "realloc"],
+    "maxExecutionTime": 5000,
+    "maxMemory": 128
+  },
+  "relatedExercises": ["c-day50-ex00-ft-push-ab", "c-day50-ex01-ft-rotate"],
+  "resources": [
+    {
+      "title": "Rotation inverse dans un tableau",
+      "url": "https://www.geeksforgeeks.org/array-rotation/",
+      "type": "documentation"
+    },
+    {
+      "title": "push_swap - Guide complet des operations",
+      "url": "https://medium.com/@jamierobertdawson/push-swap-the-least-amount-of-moves-with-two-stacks-d1e76a71789a",
+      "type": "article"
+    }
+  ]
+}

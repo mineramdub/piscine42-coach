@@ -1,0 +1,257 @@
+{
+  "id": "c-day57-ex00-ft-pipe-basic",
+  "category": "c",
+  "day": 57,
+  "order": 0,
+  "title": "Comprendre pipe() : communication entre processus",
+  "description": "Ecris un programme qui cree un pipe, fork un processus fils, et fait communiquer parent et fils via le pipe. Le fils ecrit la chaine 'Hello from child!' dans le pipe, et le parent la lit puis l'affiche sur la sortie standard. Utilise pipe() pour creer le canal de communication et close() pour fermer les extremites inutilisees.",
+  "difficulty": 3,
+  "points": 30,
+  "estimatedTime": 30,
+  "learningObjectives": [
+    "Comprendre le mecanisme des pipes Unix (tube de communication)",
+    "Maitriser l'appel systeme pipe() et les descripteurs fd[0] et fd[1]",
+    "Savoir fermer les extremites inutilisees d'un pipe",
+    "Comprendre le flux de donnees unidirectionnel dans un pipe",
+    "Combiner pipe() et fork() pour la communication inter-processus"
+  ],
+  "learningContent": {
+    "lesson": {
+      "introduction": "Un pipe (tube) est un mecanisme de communication entre processus sous Unix. Il fonctionne comme un tuyau : un processus ecrit d'un cote et un autre lit de l'autre cote. L'appel systeme pipe() cree deux descripteurs de fichiers : fd[0] pour la lecture et fd[1] pour l'ecriture. Les pipes sont la base de la commande '|' du shell et du projet pipex a 42. Comprendre les pipes est indispensable pour la programmation systeme.",
+      "steps": [
+        {
+          "id": 1,
+          "title": "Qu'est-ce qu'un pipe ?",
+          "content": "Un **pipe** est un canal de communication **unidirectionnel** entre processus. Il fonctionne en memoire (pas sur disque) et suit le principe **FIFO** (First In, First Out).\n\n**Caracteristiques :**\n- Unidirectionnel : les donnees vont dans un seul sens\n- fd[0] = bout de **lecture** (on lit depuis ce fd)\n- fd[1] = bout d'**ecriture** (on ecrit dans ce fd)\n- Capacite limitee (generalement 64 Ko sous Linux)\n- Si le pipe est vide, read() bloque\n- Si le pipe est plein, write() bloque",
+          "codeExample": "#include <unistd.h>\n#include <stdio.h>\n\nint\tmain(void)\n{\n\tint\tfd[2];\n\n\tif (pipe(fd) == -1)\n\t{\n\t\tprintf(\"Erreur pipe\\n\");\n\t\treturn (1);\n\t}\n\tprintf(\"fd[0] (lecture)  = %d\\n\", fd[0]);\n\tprintf(\"fd[1] (ecriture) = %d\\n\", fd[1]);\n\t// fd[0] = 3, fd[1] = 4 (typiquement)\n\tclose(fd[0]);\n\tclose(fd[1]);\n\treturn (0);\n}",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "fd[0] sert a la lecture ou a l'ecriture ? Et fd[1] ?",
+            "starterCode": "int fd[2];\npipe(fd);\n// fd[0] sert a : ???\n// fd[1] sert a : ???\n// Moyen mnemotechnique : ???",
+            "solution": "// fd[0] sert a la LECTURE (0 comme stdin)\n// fd[1] sert a l'ECRITURE (1 comme stdout)\n// Mnemotechnique : 0 = in (lecture), 1 = out (ecriture)"
+          }
+        },
+        {
+          "id": 2,
+          "title": "Ecrire et lire dans un pipe",
+          "content": "On utilise **write()** sur fd[1] pour ecrire et **read()** sur fd[0] pour lire. C'est exactement comme lire/ecrire dans un fichier, sauf que les donnees passent par la memoire.\n\n**Important :** read() retourne 0 quand toutes les extremites d'ecriture du pipe sont fermees (EOF). Il faut donc fermer fd[1] quand on a fini d'ecrire.",
+          "codeExample": "#include <unistd.h>\n\nint\tmain(void)\n{\n\tint\t\tfd[2];\n\tchar\tbuf[100];\n\tint\t\tn;\n\n\tpipe(fd);\n\t// Ecrire dans le pipe\n\twrite(fd[1], \"Bonjour\", 7);\n\tclose(fd[1]); // Fermer l'ecriture\n\t// Lire depuis le pipe\n\tn = read(fd[0], buf, 99);\n\tbuf[n] = '\\0';\n\twrite(1, buf, n); // Affiche \"Bonjour\"\n\twrite(1, \"\\n\", 1);\n\tclose(fd[0]);\n\treturn (0);\n}",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Pourquoi faut-il fermer fd[1] avant de lire avec read() ?",
+            "starterCode": "// Si fd[1] reste ouvert :\n// read(fd[0]) attend indefiniment car ???\n// Quand fd[1] est ferme :\n// read(fd[0]) retourne ???",
+            "solution": "// Si fd[1] reste ouvert :\n// read(fd[0]) attend indefiniment car il espere plus de donnees\n// Quand fd[1] est ferme :\n// read(fd[0]) retourne 0 (EOF) apres avoir lu toutes les donnees"
+          }
+        },
+        {
+          "id": 3,
+          "title": "Pipe + fork : communication parent/fils",
+          "content": "Le vrai interet des pipes est la communication entre processus. Le schema classique :\n1. Creer le pipe avec pipe(fd)\n2. Fork pour creer le fils\n3. Le **fils ferme fd[0]** (il n'a pas besoin de lire) et **ecrit dans fd[1]**\n4. Le **parent ferme fd[1]** (il n'a pas besoin d'ecrire) et **lit depuis fd[0]**\n\nChaque processus ferme l'extremite qu'il n'utilise pas !",
+          "codeExample": "#include <unistd.h>\n#include <sys/wait.h>\n\nint\tmain(void)\n{\n\tint\t\tfd[2];\n\tchar\tbuf[100];\n\tint\t\tn;\n\n\tpipe(fd);\n\tif (fork() == 0)\n\t{\n\t\t// FILS : ecrit dans le pipe\n\t\tclose(fd[0]); // Ferme lecture (inutile)\n\t\twrite(fd[1], \"Hello!\", 6);\n\t\tclose(fd[1]);\n\t\treturn (0);\n\t}\n\t// PARENT : lit depuis le pipe\n\tclose(fd[1]); // Ferme ecriture (inutile)\n\tn = read(fd[0], buf, 99);\n\tclose(fd[0]);\n\twrite(1, buf, n);\n\twrite(1, \"\\n\", 1);\n\twait(NULL);\n\treturn (0);\n}",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Le fils ferme fd[0] et le parent ferme fd[1]. Pourquoi est-ce important ?",
+            "starterCode": "// Si le fils ne ferme pas fd[0] : ???\n// Si le parent ne ferme pas fd[1] : ???",
+            "solution": "// Si le fils ne ferme pas fd[0] : fuite de descripteur (pas critique mais mauvais)\n// Si le parent ne ferme pas fd[1] : read() ne recevra JAMAIS EOF\n// car le pipe a encore une extremite d'ecriture ouverte !"
+          }
+        },
+        {
+          "id": 4,
+          "title": "Fermer les descripteurs : regle d'or",
+          "content": "La regle d'or avec les pipes est : **ferme ce que tu n'utilises pas**. Apres un fork, chaque processus a une copie des deux descripteurs (fd[0] et fd[1]). Il faut fermer les bouts inutilises dans CHAQUE processus.\n\n**Pourquoi c'est critique ?**\n- Un pipe a un **compteur de references** pour chaque bout\n- read() retourne 0 (EOF) seulement quand TOUTES les copies de fd[1] sont fermees\n- Si le parent garde fd[1] ouvert, read() dans le parent ne retournera jamais 0\n- Resultat : **deadlock** (le programme bloque pour toujours)\n\n**Regle simple :** Avant de lire, ferme ton fd[1]. Avant d'ecrire, ferme ton fd[0].",
+          "codeExample": "// PATTERN CORRECT :\npipe(fd);\nif (fork() == 0)\n{\n\tclose(fd[0]);    // Fils ferme lecture\n\twrite(fd[1], data, len);\n\tclose(fd[1]);    // Fils ferme ecriture (fini)\n\texit(0);\n}\nclose(fd[1]);        // Parent ferme ecriture\nn = read(fd[0], buf, size);\nclose(fd[0]);        // Parent ferme lecture (fini)\nwait(NULL);\n\n// ERREUR COURANTE (deadlock) :\npipe(fd);\nif (fork() == 0)\n{\n\twrite(fd[1], data, len);\n\tclose(fd[1]);\n\texit(0);\n}\n// Parent n'a PAS ferme fd[1] !\n// read va bloquer indefiniment !",
+          "language": "c"
+        }
+      ]
+    },
+    "theory": [
+      {
+        "title": "L'appel systeme pipe()",
+        "content": "pipe() cree un canal de communication unidirectionnel. Il prend un tableau de 2 entiers et le remplit avec deux descripteurs de fichiers connectes entre eux.",
+        "codeExamples": [
+          {
+            "title": "Creation et utilisation d'un pipe",
+            "code": "#include <unistd.h>\n\nint\tmain(void)\n{\n\tint fd[2]; // fd[0]=lecture, fd[1]=ecriture\n\n\tif (pipe(fd) == -1)\n\t\treturn (1); // Erreur (trop de fd ouverts, etc.)\n\t// fd[0] et fd[1] sont maintenant connectes\n\t// Ce qui est ecrit dans fd[1] peut etre lu dans fd[0]\n\twrite(fd[1], \"test\", 4);\n\tchar buf[5];\n\tread(fd[0], buf, 4);\n\tbuf[4] = '\\0';\n\t// buf contient \"test\"\n\tclose(fd[0]);\n\tclose(fd[1]);\n\treturn (0);\n}",
+            "explanation": "pipe() connecte fd[0] et fd[1] : ecrire dans fd[1] rend les donnees disponibles dans fd[0]"
+          }
+        ],
+        "keyPoints": [
+          "pipe(fd) remplit fd[0] (lecture) et fd[1] (ecriture)",
+          "Retourne 0 en cas de succes, -1 en cas d'erreur",
+          "Le pipe est en memoire, pas sur le disque (pas de nom de fichier)",
+          "La capacite d'un pipe est limitee (typiquement 64 Ko sous Linux)"
+        ],
+        "commonMistakes": [
+          "Confondre fd[0] et fd[1] (0 = lecture, 1 = ecriture)",
+          "Oublier de verifier le retour de pipe() (-1 = erreur)",
+          "Ne pas fermer les descripteurs apres utilisation (fuite de fd)"
+        ]
+      },
+      {
+        "title": "Pipe et fork : le pattern standard",
+        "content": "Le pipe prend tout son sens avec fork(). Apres un fork, les deux processus ont une copie des descripteurs. L'un ecrit, l'autre lit, et ils communiquent ainsi.",
+        "codeExamples": [
+          {
+            "title": "Communication fils vers parent",
+            "code": "int fd[2];\npipe(fd);           // Creer le pipe AVANT fork\npid_t pid = fork(); // Les deux ont fd[0] et fd[1]\n\nif (pid == 0)\n{\n\t// FILS = ecrivain\n\tclose(fd[0]);   // Pas besoin de lire\n\twrite(fd[1], \"data\", 4);\n\tclose(fd[1]);   // Signal EOF au lecteur\n\texit(0);\n}\n// PARENT = lecteur\nclose(fd[1]);       // Pas besoin d'ecrire\nchar buf[100];\nint n = read(fd[0], buf, 99);\nclose(fd[0]);\nwait(NULL);",
+            "explanation": "Le pipe doit etre cree AVANT le fork pour que les deux processus partagent les memes descripteurs"
+          }
+        ],
+        "keyPoints": [
+          "Creer le pipe AVANT le fork (sinon les processus ont des pipes differents)",
+          "Chaque processus ferme le bout qu'il n'utilise pas",
+          "Le fils ecrit -> le parent lit (ou inversement)",
+          "Fermer fd[1] dans le lecteur est OBLIGATOIRE pour que read retourne 0"
+        ],
+        "commonMistakes": [
+          "Creer le pipe APRES le fork (chaque processus a un pipe different)",
+          "Ne pas fermer fd[1] dans le lecteur (read bloque indefiniment)",
+          "Oublier wait() dans le parent (processus zombie)"
+        ]
+      },
+      {
+        "title": "Blocage et EOF dans les pipes",
+        "content": "Les pipes ont un comportement bloquant par defaut. read() bloque si le pipe est vide et write() bloque si le pipe est plein. Comprendre quand read() retourne 0 est crucial.",
+        "codeExamples": [
+          {
+            "title": "Comportement de read sur un pipe",
+            "code": "// Cas 1 : Pipe vide, fd[1] ouvert -> read BLOQUE\nread(fd[0], buf, 100); // Attend des donnees\n\n// Cas 2 : Pipe vide, fd[1] ferme -> read retourne 0 (EOF)\nclose(fd[1]);\nread(fd[0], buf, 100); // Retourne 0 immediatement\n\n// Cas 3 : Pipe a des donnees -> read les lit\nwrite(fd[1], \"abc\", 3);\nint n = read(fd[0], buf, 100); // n = 3\n\n// Cas 4 : Ecrire dans un pipe dont fd[0] est ferme\nclose(fd[0]);\nwrite(fd[1], \"abc\", 3); // -> SIGPIPE (signal)",
+            "explanation": "read retourne 0 seulement quand TOUTES les copies de fd[1] sont fermees"
+          }
+        ],
+        "keyPoints": [
+          "read() bloque si le pipe est vide et fd[1] est ouvert quelque part",
+          "read() retourne 0 (EOF) quand le pipe est vide ET fd[1] ferme partout",
+          "write() dans un pipe sans lecteur genere SIGPIPE",
+          "La taille du buffer de pipe est generalement 64 Ko (PIPE_BUF)"
+        ],
+        "commonMistakes": [
+          "Ne pas fermer fd[1] dans le processus lecteur (deadlock)",
+          "Ignorer le retour de read() (peut retourner moins que demande)",
+          "Ecrire dans un pipe dont tous les lecteurs sont fermes (crash SIGPIPE)"
+        ]
+      },
+      {
+        "title": "Pipes nommes vs pipes anonymes",
+        "content": "Les pipes crees par pipe() sont anonymes : ils n'ont pas de nom dans le systeme de fichiers et ne peuvent etre partages qu'entre processus de la meme famille (parent/fils). Les pipes nommes (FIFO) ont un nom dans le systeme de fichiers.",
+        "codeExamples": [
+          {
+            "title": "Comparaison pipe anonyme vs FIFO",
+            "code": "// Pipe anonyme (ce qu'on utilise) :\nint fd[2];\npipe(fd); // Pas de nom, partage via fork\n\n// Pipe nomme (FIFO) :\n#include <sys/stat.h>\nmkfifo(\"/tmp/mon_pipe\", 0644);\n// Peut etre ouvert par n'importe quel processus :\nint fd_fifo = open(\"/tmp/mon_pipe\", O_RDONLY);\n\n// Dans le shell, | utilise des pipes anonymes :\n// ls | grep .c\n// Equivalent a :\n// pipe(fd) + fork + dup2 + execve",
+            "explanation": "A 42, on utilise surtout les pipes anonymes (pipe()) avec fork"
+          }
+        ],
+        "keyPoints": [
+          "pipe() cree un pipe anonyme (pas de nom de fichier)",
+          "mkfifo() cree un pipe nomme (visible dans le systeme de fichiers)",
+          "Les pipes anonymes ne marchent qu'entre processus lies (fork)",
+          "Le shell utilise des pipes anonymes pour la commande |"
+        ],
+        "commonMistakes": [
+          "Essayer de partager un pipe anonyme entre processus non lies",
+          "Confondre pipe anonyme et pipe nomme (FIFO)",
+          "Oublier de supprimer un pipe nomme apres utilisation (unlink)"
+        ]
+      }
+    ],
+    "prepExercises": [
+      {
+        "id": 1,
+        "title": "Creer un pipe",
+        "instruction": "Ecris un programme qui cree un pipe et affiche les descripteurs fd[0] et fd[1].",
+        "starterCode": "#include <unistd.h>\n#include <stdio.h>\n\nint\tmain(void)\n{\n\tint fd[2];\n\t// Cree le pipe et affiche les fd\n\t// TON CODE ICI\n\treturn (0);\n}",
+        "solution": "#include <unistd.h>\n#include <stdio.h>\n\nint\tmain(void)\n{\n\tint fd[2];\n\n\tif (pipe(fd) == -1)\n\t\treturn (1);\n\tprintf(\"fd[0]=%d, fd[1]=%d\\n\", fd[0], fd[1]);\n\tclose(fd[0]);\n\tclose(fd[1]);\n\treturn (0);\n}",
+        "hint": "pipe(fd) remplit fd[0] et fd[1]. N'oublie pas de les fermer.",
+        "difficulty": 1
+      },
+      {
+        "id": 2,
+        "title": "Ecrire et lire dans un pipe",
+        "instruction": "Ecris 'test' dans fd[1] et lis-le depuis fd[0], puis affiche le resultat.",
+        "starterCode": "#include <unistd.h>\n\nint\tmain(void)\n{\n\tint fd[2];\n\tchar buf[100];\n\t// Pipe, write, read, affiche\n\t// TON CODE ICI\n\treturn (0);\n}",
+        "solution": "#include <unistd.h>\n\nint\tmain(void)\n{\n\tint fd[2];\n\tchar buf[100];\n\tint n;\n\n\tpipe(fd);\n\twrite(fd[1], \"test\", 4);\n\tclose(fd[1]);\n\tn = read(fd[0], buf, 99);\n\tclose(fd[0]);\n\twrite(1, buf, n);\n\twrite(1, \"\\n\", 1);\n\treturn (0);\n}",
+        "hint": "write(fd[1], \"test\", 4) puis close(fd[1]) puis read(fd[0], buf, 99).",
+        "difficulty": 1
+      },
+      {
+        "id": 3,
+        "title": "Pipe avec fork : fils ecrit, parent lit",
+        "instruction": "Fork un processus. Le fils ecrit 'Bonjour' dans le pipe, le parent le lit et l'affiche.",
+        "starterCode": "#include <unistd.h>\n#include <sys/wait.h>\n#include <stdlib.h>\n\nint\tmain(void)\n{\n\tint fd[2];\n\t// Pipe, fork, fils ecrit, parent lit\n\t// TON CODE ICI\n\treturn (0);\n}",
+        "solution": "#include <unistd.h>\n#include <sys/wait.h>\n#include <stdlib.h>\n\nint\tmain(void)\n{\n\tint fd[2];\n\tchar buf[100];\n\tint n;\n\n\tpipe(fd);\n\tif (fork() == 0)\n\t{\n\t\tclose(fd[0]);\n\t\twrite(fd[1], \"Bonjour\", 7);\n\t\tclose(fd[1]);\n\t\texit(0);\n\t}\n\tclose(fd[1]);\n\tn = read(fd[0], buf, 99);\n\tclose(fd[0]);\n\twrite(1, buf, n);\n\twrite(1, \"\\n\", 1);\n\twait(NULL);\n\treturn (0);\n}",
+        "hint": "Le fils ferme fd[0] et ecrit dans fd[1]. Le parent ferme fd[1] et lit depuis fd[0].",
+        "difficulty": 2
+      },
+      {
+        "id": 4,
+        "title": "Parent ecrit, fils lit",
+        "instruction": "Inverse le sens : le parent ecrit dans le pipe et le fils lit et affiche.",
+        "starterCode": "#include <unistd.h>\n#include <sys/wait.h>\n#include <stdlib.h>\n\nint\tmain(void)\n{\n\tint fd[2];\n\t// Pipe, fork, parent ecrit, fils lit\n\t// TON CODE ICI\n\treturn (0);\n}",
+        "solution": "#include <unistd.h>\n#include <sys/wait.h>\n#include <stdlib.h>\n\nint\tmain(void)\n{\n\tint fd[2];\n\tchar buf[100];\n\tint n;\n\n\tpipe(fd);\n\tif (fork() == 0)\n\t{\n\t\tclose(fd[1]);\n\t\tn = read(fd[0], buf, 99);\n\t\tclose(fd[0]);\n\t\twrite(1, buf, n);\n\t\twrite(1, \"\\n\", 1);\n\t\texit(0);\n\t}\n\tclose(fd[0]);\n\twrite(fd[1], \"Message du parent\", 17);\n\tclose(fd[1]);\n\twait(NULL);\n\treturn (0);\n}",
+        "hint": "Cette fois le fils ferme fd[1] et lit, le parent ferme fd[0] et ecrit.",
+        "difficulty": 2
+      },
+      {
+        "id": 5,
+        "title": "Lire en boucle depuis un pipe",
+        "instruction": "Le fils ecrit plusieurs messages. Le parent lit en boucle jusqu'a EOF (read retourne 0).",
+        "starterCode": "#include <unistd.h>\n#include <sys/wait.h>\n#include <stdlib.h>\n\nint\tmain(void)\n{\n\tint fd[2];\n\t// Fils ecrit 3 fois, parent lit en boucle\n\t// TON CODE ICI\n\treturn (0);\n}",
+        "solution": "#include <unistd.h>\n#include <sys/wait.h>\n#include <stdlib.h>\n\nint\tmain(void)\n{\n\tint fd[2];\n\tchar buf[100];\n\tint n;\n\n\tpipe(fd);\n\tif (fork() == 0)\n\t{\n\t\tclose(fd[0]);\n\t\twrite(fd[1], \"un \", 3);\n\t\twrite(fd[1], \"deux \", 5);\n\t\twrite(fd[1], \"trois\", 5);\n\t\tclose(fd[1]);\n\t\texit(0);\n\t}\n\tclose(fd[1]);\n\twhile ((n = read(fd[0], buf, 99)) > 0)\n\t\twrite(1, buf, n);\n\tclose(fd[0]);\n\twrite(1, \"\\n\", 1);\n\twait(NULL);\n\treturn (0);\n}",
+        "hint": "Boucle while ((n = read(fd[0], buf, 99)) > 0) pour lire jusqu'a EOF.",
+        "difficulty": 3
+      }
+    ]
+  },
+  "starterCode": "#include <unistd.h>\n#include <sys/wait.h>\n#include <stdlib.h>\n\nint\tmain(void)\n{\n\tint\t\tfd[2];\n\tchar\tbuf[100];\n\tint\t\tn;\n\n\t// 1. Cree un pipe avec pipe(fd)\n\t// 2. Fork un processus fils\n\t// 3. Fils : ferme fd[0], ecrit \"Hello from child!\" dans fd[1], ferme fd[1]\n\t// 4. Parent : ferme fd[1], lit depuis fd[0] dans buf, affiche buf\n\t// 5. Parent : ferme fd[0], attend le fils\n\treturn (0);\n}",
+  "solution": "#include <unistd.h>\n#include <sys/wait.h>\n#include <stdlib.h>\n\nint\tmain(void)\n{\n\tint\t\tfd[2];\n\tchar\tbuf[100];\n\tint\t\tn;\n\n\tif (pipe(fd) == -1)\n\t\treturn (1);\n\tif (fork() == 0)\n\t{\n\t\tclose(fd[0]);\n\t\twrite(fd[1], \"Hello from child!\", 17);\n\t\tclose(fd[1]);\n\t\texit(0);\n\t}\n\tclose(fd[1]);\n\tn = read(fd[0], buf, 99);\n\tclose(fd[0]);\n\twrite(1, buf, n);\n\twrite(1, \"\\n\", 1);\n\twait(NULL);\n\treturn (0);\n}",
+  "hints": [
+    "Cree le pipe AVANT le fork. pipe(fd) remplit fd[0] (lecture) et fd[1] (ecriture).",
+    "Le fils ferme fd[0] (pas besoin de lire) et ecrit dans fd[1]. Le parent ferme fd[1] (pas besoin d'ecrire) et lit depuis fd[0].",
+    "N'oublie pas de fermer tous les descripteurs et d'appeler wait(NULL) dans le parent pour eviter les zombies."
+  ],
+  "testCases": [
+    {
+      "id": 1,
+      "description": "Le parent affiche le message envoye par le fils",
+      "stdin": "",
+      "expectedStdout": "Hello from child!\n",
+      "expectedExitCode": 0,
+      "visible": true
+    },
+    {
+      "id": 2,
+      "description": "Les descripteurs sont correctement fermes",
+      "stdin": "",
+      "expectedStdout": "Hello from child!\n",
+      "expectedExitCode": 0,
+      "visible": false
+    },
+    {
+      "id": 3,
+      "description": "Le programme ne bloque pas (pas de deadlock)",
+      "stdin": "",
+      "expectedStdout": "Hello from child!\n",
+      "expectedExitCode": 0,
+      "visible": false
+    }
+  ],
+  "constraints": {
+    "allowedFunctions": ["write", "read", "pipe", "fork", "close", "wait", "waitpid", "exit"],
+    "forbiddenFunctions": ["printf", "system"],
+    "maxExecutionTime": 5000,
+    "maxMemory": 128
+  },
+  "relatedExercises": ["c-day57-ex01-ft-pipe-cmd", "c-day57-ex02-ft-mini-pipex"],
+  "resources": [
+    {
+      "title": "Man pipe(2) - Linux manual page",
+      "url": "https://man7.org/linux/man-pages/man2/pipe.2.html",
+      "type": "documentation"
+    },
+    {
+      "title": "Les pipes en C - Communication inter-processus",
+      "url": "https://www.geeksforgeeks.org/pipe-system-call/",
+      "type": "article"
+    }
+  ]
+}

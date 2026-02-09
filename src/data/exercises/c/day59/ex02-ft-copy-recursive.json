@@ -1,0 +1,257 @@
+{
+  "id": "c-day59-ex02-ft-copy-recursive",
+  "category": "c",
+  "day": 59,
+  "order": 2,
+  "title": "Copier un repertoire recursivement",
+  "description": "Ecris un programme qui prend deux arguments : un repertoire source et un repertoire destination. Le programme copie recursivement tout le contenu du repertoire source vers la destination, en recreant la structure des sous-repertoires. Pour chaque fichier regulier, le contenu est copie octet par octet. Les permissions sont preservees. Usage : ./ft_copy_recursive source destination.",
+  "difficulty": 5,
+  "points": 50,
+  "estimatedTime": 45,
+  "learningObjectives": [
+    "Implementer une recursion sur l'arborescence du systeme de fichiers",
+    "Combiner opendir/readdir avec stat pour distinguer fichiers et repertoires",
+    "Savoir creer des repertoires avec mkdir() en preservant les permissions",
+    "Maitriser la copie de fichiers avec open/read/write/close",
+    "Gerer les chemins relatifs et la construction de chemins"
+  ],
+  "learningContent": {
+    "lesson": {
+      "introduction": "Copier un repertoire recursivement est un exercice classique qui combine tout ce qu'on a appris sur la manipulation de fichiers : parcourir des repertoires, lire les metadonnees avec stat, copier des fichiers, et creer des repertoires. C'est le meme algorithme que la commande 'cp -r'. La recursion est naturelle car un repertoire peut contenir d'autres repertoires.",
+      "steps": [
+        {
+          "id": 1,
+          "title": "L'algorithme recursif",
+          "content": "L'algorithme pour copier recursivement est :\n\n1. Creer le repertoire destination avec mkdir()\n2. Ouvrir le repertoire source avec opendir()\n3. Pour chaque entree (readdir) :\n   - Si c'est un fichier : le copier\n   - Si c'est un repertoire : appel recursif\n4. Fermer le repertoire\n\nLa recursion s'arrete quand il n'y a plus de sous-repertoires.",
+          "codeExample": "void\tcopy_dir(char *src, char *dst)\n{\n\t// 1. mkdir(dst, permissions)\n\t// 2. dir = opendir(src)\n\t// 3. while (entry = readdir(dir))\n\t//    - Construire src_path et dst_path\n\t//    - Si fichier : copy_file(src_path, dst_path)\n\t//    - Si repertoire : copy_dir(src_path, dst_path) // RECURSION\n\t// 4. closedir(dir)\n}\n\n// Arbre :\n// src/\n//   a.txt\n//   sub/\n//     b.txt\n// -> copie en :\n// dst/\n//   a.txt\n//   sub/\n//     b.txt",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Quand la recursion s'arrete-t-elle ?",
+            "starterCode": "// copy_dir appelle copy_dir pour chaque sous-repertoire\n// La recursion s'arrete quand : ???",
+            "solution": "// La recursion s'arrete quand un repertoire ne contient\n// plus de sous-repertoires (seulement des fichiers)\n// readdir ne retourne que des fichiers, pas de repertoires\n// donc aucun appel recursif n'est fait"
+          }
+        },
+        {
+          "id": 2,
+          "title": "Creer un repertoire avec mkdir()",
+          "content": "**mkdir(path, mode)** cree un nouveau repertoire avec les permissions specifiees.\n\n- Retourne 0 en succes, -1 en erreur\n- Les permissions effectives sont `mode & ~umask`\n- Le repertoire parent doit exister\n\nPour preserver les permissions du repertoire source, on utilise les permissions obtenues par stat().",
+          "codeExample": "#include <sys/stat.h>\n\n// Creer un repertoire simple :\nmkdir(\"nouveau_dir\", 0755);\n// Permissions : rwxr-xr-x\n\n// Preserver les permissions de la source :\nstruct stat sb;\nstat(src_dir, &sb);\nmkdir(dst_dir, sb.st_mode & 0777);\n// Copie les permissions exactes\n\n// Erreurs possibles :\n// EEXIST : le repertoire existe deja\n// ENOENT : le chemin parent n'existe pas\n// EACCES : pas de permission de creation",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Pourquoi utilise-t-on sb.st_mode & 0777 et pas sb.st_mode directement ?",
+            "starterCode": "// sb.st_mode contient : ???\n// Le masque 0777 garde seulement : ???",
+            "solution": "// sb.st_mode contient le TYPE du fichier + les permissions\n// Le masque 0777 garde seulement les 9 bits de permissions (rwxrwxrwx)\n// Sans le masque, on passerait le type a mkdir, ce qui est incorrect"
+          }
+        },
+        {
+          "id": 3,
+          "title": "Copier un fichier",
+          "content": "Pour copier un fichier, on ouvre la source en lecture, on cree la destination en ecriture, et on transfere le contenu avec une boucle read/write.\n\nOn preserve les permissions en utilisant celles de la source pour open() de la destination.",
+          "codeExample": "void\tcopy_file(char *src, char *dst, mode_t mode)\n{\n\tint\t\tfd_src;\n\tint\t\tfd_dst;\n\tchar\tbuf[4096];\n\tint\t\tn;\n\n\tfd_src = open(src, O_RDONLY);\n\tif (fd_src == -1)\n\t\treturn ;\n\tfd_dst = open(dst, O_WRONLY | O_CREAT | O_TRUNC, mode & 0777);\n\tif (fd_dst == -1)\n\t{\n\t\tclose(fd_src);\n\t\treturn ;\n\t}\n\twhile ((n = read(fd_src, buf, 4096)) > 0)\n\t\twrite(fd_dst, buf, n);\n\tclose(fd_src);\n\tclose(fd_dst);\n}",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Pourquoi utilise-t-on un buffer de 4096 octets et pas 1 octet ?",
+            "starterCode": "// Avec buf[1] : read/write sont appeles ??? fois\n// Avec buf[4096] : read/write sont appeles ??? fois\n// Impact sur les performances : ???",
+            "solution": "// Avec buf[1] : read/write sont appeles une fois PAR OCTET (tres lent)\n// Avec buf[4096] : read/write sont appeles une fois PAR BLOC (rapide)\n// 4096 correspond a la taille d'une page memoire (optimal pour le systeme)"
+          }
+        },
+        {
+          "id": 4,
+          "title": "Le programme complet",
+          "content": "Le programme complet combine mkdir, copy_file et la recursion. Il doit gerer :\n- La verification des arguments\n- La distinction fichier/repertoire avec stat\n- Le filtrage de '.' et '..'\n- La construction des chemins\n- La gestion des erreurs\n\nLa fonction principale copy_dir() est recursive : elle s'appelle pour chaque sous-repertoire.",
+          "codeExample": "void\tcopy_dir(char *src, char *dst)\n{\n\tDIR\t\t\t\t*dir;\n\tstruct dirent\t*entry;\n\tstruct stat\t\tsb;\n\tchar\t\t\tsrc_path[1024];\n\tchar\t\t\tdst_path[1024];\n\n\tstat(src, &sb);\n\tmkdir(dst, sb.st_mode & 0777);\n\tdir = opendir(src);\n\tif (!dir)\n\t\treturn ;\n\twhile ((entry = readdir(dir)))\n\t{\n\t\tif (entry->d_name[0] == '.')\n\t\t\tcontinue ;\n\t\tbuild_path(src_path, src, entry->d_name);\n\t\tbuild_path(dst_path, dst, entry->d_name);\n\t\tstat(src_path, &sb);\n\t\tif (S_ISDIR(sb.st_mode))\n\t\t\tcopy_dir(src_path, dst_path);\n\t\telse if (S_ISREG(sb.st_mode))\n\t\t\tcopy_file(src_path, dst_path, sb.st_mode);\n\t}\n\tclosedir(dir);\n}",
+          "language": "c"
+        }
+      ]
+    },
+    "theory": [
+      {
+        "title": "Recursion sur le systeme de fichiers",
+        "content": "Le systeme de fichiers Unix est une structure arborescente. Les repertoires peuvent contenir des fichiers et d'autres repertoires, ce qui rend la recursion naturelle pour le parcours.",
+        "codeExamples": [
+          {
+            "title": "Parcours recursif d'un arbre",
+            "code": "// Structure d'un repertoire :\n// projet/\n//   src/\n//     main.c\n//     utils/\n//       helper.c\n//   include/\n//     header.h\n//   Makefile\n\n// Parcours recursif :\n// 1. Visite projet/ -> readdir donne src/, include/, Makefile\n// 2. src/ est un dir -> recursion dans src/\n//    2a. Visite src/ -> readdir donne main.c, utils/\n//    2b. utils/ est un dir -> recursion dans utils/\n//        Visite utils/ -> readdir donne helper.c\n//    Retour de la recursion\n// 3. include/ est un dir -> recursion dans include/\n//    Visite include/ -> readdir donne header.h\n// 4. Makefile est un fichier -> traiter",
+            "explanation": "La recursion suit naturellement la structure arborescente du systeme de fichiers"
+          }
+        ],
+        "keyPoints": [
+          "Chaque repertoire est un noeud de l'arbre avec des enfants",
+          "Les fichiers sont les feuilles (pas de recursion dessus)",
+          "Il faut toujours filtrer '.' et '..' pour eviter la boucle infinie",
+          "La profondeur de recursion est limitee par la pile (attention aux arborescences profondes)"
+        ],
+        "commonMistakes": [
+          "Oublier de filtrer '.' et '..' (boucle infinie !)",
+          "Ne pas distinguer fichiers et repertoires avant l'appel recursif",
+          "Recursion trop profonde qui cause un stack overflow"
+        ]
+      },
+      {
+        "title": "mkdir() et creation de repertoires",
+        "content": "mkdir() cree un nouveau repertoire. Le repertoire parent doit exister (mkdir ne cree pas les intermediaires comme mkdir -p).",
+        "codeExamples": [
+          {
+            "title": "Utilisation de mkdir",
+            "code": "#include <sys/stat.h>\n\n// Creer un repertoire :\nif (mkdir(\"nouveau\", 0755) == -1)\n\tperror(\"mkdir\");\n\n// Erreurs :\n// EEXIST : existe deja (pas forcement une erreur)\n// ENOENT : parent inexistant\n// EACCES : pas de permission\n\n// Gerer EEXIST (ignorer si ca existe deja) :\n#include <errno.h>\nif (mkdir(\"nouveau\", 0755) == -1 && errno != EEXIST)\n\tperror(\"mkdir\");",
+            "explanation": "mkdir cree un repertoire vide avec les permissions specifiees"
+          }
+        ],
+        "keyPoints": [
+          "mkdir(path, mode) cree le repertoire avec les permissions mode",
+          "Le repertoire parent doit exister",
+          "Les permissions effectives sont mode & ~umask",
+          "Retourne 0 en succes, -1 en erreur"
+        ],
+        "commonMistakes": [
+          "Essayer de creer un repertoire dont le parent n'existe pas",
+          "Ignorer EEXIST quand ce n'est pas une erreur",
+          "Oublier que umask modifie les permissions effectives"
+        ]
+      },
+      {
+        "title": "Copie de fichiers avec open/read/write",
+        "content": "La copie d'un fichier se fait en ouvrant la source en lecture, la destination en ecriture, et en transferant les donnees par blocs.",
+        "codeExamples": [
+          {
+            "title": "Copie efficace de fichier",
+            "code": "#include <fcntl.h>\n#include <unistd.h>\n\n#define BUF_SIZE 4096\n\nint\tcopy_file(char *src, char *dst, mode_t mode)\n{\n\tint\t\tfd_in;\n\tint\t\tfd_out;\n\tchar\tbuf[BUF_SIZE];\n\tssize_t\tn;\n\n\tfd_in = open(src, O_RDONLY);\n\tif (fd_in == -1)\n\t\treturn (-1);\n\tfd_out = open(dst, O_WRONLY | O_CREAT | O_TRUNC, mode);\n\tif (fd_out == -1)\n\t{\n\t\tclose(fd_in);\n\t\treturn (-1);\n\t}\n\twhile ((n = read(fd_in, buf, BUF_SIZE)) > 0)\n\t{\n\t\tif (write(fd_out, buf, n) != n)\n\t\t{\n\t\t\tclose(fd_in);\n\t\t\tclose(fd_out);\n\t\t\treturn (-1);\n\t\t}\n\t}\n\tclose(fd_in);\n\tclose(fd_out);\n\treturn (0);\n}",
+            "explanation": "Lire par blocs de 4096 est optimal car c'est la taille d'une page memoire"
+          }
+        ],
+        "keyPoints": [
+          "Lire par blocs (4096) est bien plus rapide que octet par octet",
+          "O_TRUNC vide le fichier destination s'il existe",
+          "Verifier que write ecrit bien tous les octets",
+          "Fermer les deux descripteurs en cas d'erreur"
+        ],
+        "commonMistakes": [
+          "Lire octet par octet (tres lent pour les gros fichiers)",
+          "Ne pas verifier le retour de write (ecriture partielle possible)",
+          "Oublier de fermer les fd en cas d'erreur (fuite)"
+        ]
+      },
+      {
+        "title": "Gestion des chemins et des erreurs",
+        "content": "La gestion des chemins est cruciale dans les programmes recursifs. Un bug dans la construction du chemin peut causer des ecrasements de fichiers ou des boucles infinies.",
+        "codeExamples": [
+          {
+            "title": "Construction robuste de chemins",
+            "code": "void\tbuild_path(char *buf, int bufsize, char *dir, char *name)\n{\n\tint len = 0;\n\tint i = 0;\n\n\twhile (dir[i] && len < bufsize - 2)\n\t\tbuf[len++] = dir[i++];\n\tif (len > 0 && buf[len - 1] != '/')\n\t\tbuf[len++] = '/';\n\ti = 0;\n\twhile (name[i] && len < bufsize - 1)\n\t\tbuf[len++] = name[i++];\n\tbuf[len] = '\\0';\n}\n\n// Verifications importantes :\n// - Ne pas copier un repertoire dans lui-meme\n// - Verifier que src != dst\n// - Gerer les liens symboliques (les ignorer ou les copier)",
+            "explanation": "La version robuste verifie la taille du buffer pour eviter les depassements"
+          }
+        ],
+        "keyPoints": [
+          "Toujours verifier la taille du buffer de chemin",
+          "Verifier que source et destination ne sont pas le meme repertoire",
+          "Gerer les erreurs de chaque appel systeme",
+          "Les liens symboliques necessitent un traitement special (readlink)"
+        ],
+        "commonMistakes": [
+          "Depassement de buffer dans la construction du chemin",
+          "Copier un repertoire dans lui-meme (boucle infinie)",
+          "Ne pas gerer les erreurs (continuer malgre une erreur de copie)"
+        ]
+      }
+    ],
+    "prepExercises": [
+      {
+        "id": 1,
+        "title": "mkdir basique",
+        "instruction": "Ecris un programme qui cree un repertoire dont le nom est passe en argument.",
+        "starterCode": "#include <sys/stat.h>\n#include <unistd.h>\n\nint\tmain(int argc, char **argv)\n{\n\t// Cree le repertoire argv[1]\n\t// TON CODE ICI\n\t(void)argc;\n\treturn (0);\n}",
+        "solution": "#include <sys/stat.h>\n#include <unistd.h>\n\nint\tmain(int argc, char **argv)\n{\n\tif (argc != 2)\n\t\treturn (1);\n\tif (mkdir(argv[1], 0755) == -1)\n\t{\n\t\twrite(2, \"Erreur mkdir\\n\", 13);\n\t\treturn (1);\n\t}\n\twrite(1, \"Repertoire cree\\n\", 16);\n\treturn (0);\n}",
+        "hint": "mkdir(argv[1], 0755) cree le repertoire avec les permissions rwxr-xr-x.",
+        "difficulty": 1
+      },
+      {
+        "id": 2,
+        "title": "Copier un fichier",
+        "instruction": "Ecris une fonction qui copie le contenu d'un fichier source vers un fichier destination.",
+        "starterCode": "#include <fcntl.h>\n#include <unistd.h>\n\nvoid\tcopy_file(char *src, char *dst)\n{\n\t// Ouvre src en lecture, dst en ecriture, copie le contenu\n\t// TON CODE ICI\n}\n\nint\tmain(int argc, char **argv)\n{\n\tif (argc == 3)\n\t\tcopy_file(argv[1], argv[2]);\n\treturn (0);\n}",
+        "solution": "#include <fcntl.h>\n#include <unistd.h>\n\nvoid\tcopy_file(char *src, char *dst)\n{\n\tint fd_src = open(src, O_RDONLY);\n\tint fd_dst;\n\tchar buf[4096];\n\tint n;\n\n\tif (fd_src == -1)\n\t\treturn ;\n\tfd_dst = open(dst, O_WRONLY | O_CREAT | O_TRUNC, 0644);\n\tif (fd_dst == -1)\n\t{\n\t\tclose(fd_src);\n\t\treturn ;\n\t}\n\twhile ((n = read(fd_src, buf, 4096)) > 0)\n\t\twrite(fd_dst, buf, n);\n\tclose(fd_src);\n\tclose(fd_dst);\n}\n\nint\tmain(int argc, char **argv)\n{\n\tif (argc == 3)\n\t\tcopy_file(argv[1], argv[2]);\n\treturn (0);\n}",
+        "hint": "open src en O_RDONLY, dst en O_WRONLY|O_CREAT|O_TRUNC, boucle read/write.",
+        "difficulty": 2
+      },
+      {
+        "id": 3,
+        "title": "Lister recursivement",
+        "instruction": "Ecris une fonction recursive qui affiche tous les fichiers d'un repertoire et ses sous-repertoires.",
+        "starterCode": "#include <dirent.h>\n#include <sys/stat.h>\n#include <unistd.h>\n\nvoid ft_putstr(char *s) { while (*s) write(1, s++, 1); }\nvoid build_path(char *b, char *d, char *n) { int i=0,j=0; while(d[i]) b[j++]=d[i++]; if(j>0&&b[j-1]!='/') b[j++]='/'; i=0; while(n[i]) b[j++]=n[i++]; b[j]=0; }\n\nvoid\tlist_recursive(char *path)\n{\n\t// Parcours recursif\n\t// TON CODE ICI\n}\n\nint\tmain(int argc, char **argv)\n{\n\tif (argc == 2)\n\t\tlist_recursive(argv[1]);\n\treturn (0);\n}",
+        "solution": "#include <dirent.h>\n#include <sys/stat.h>\n#include <unistd.h>\n\nvoid ft_putstr(char *s) { while (*s) write(1, s++, 1); }\nvoid build_path(char *b, char *d, char *n) { int i=0,j=0; while(d[i]) b[j++]=d[i++]; if(j>0&&b[j-1]!='/') b[j++]='/'; i=0; while(n[i]) b[j++]=n[i++]; b[j]=0; }\n\nvoid\tlist_recursive(char *path)\n{\n\tDIR *dir = opendir(path);\n\tstruct dirent *e;\n\tstruct stat sb;\n\tchar full[1024];\n\n\tif (!dir) return;\n\twhile ((e = readdir(dir)))\n\t{\n\t\tif (e->d_name[0] == '.') continue;\n\t\tbuild_path(full, path, e->d_name);\n\t\tft_putstr(full);\n\t\twrite(1, \"\\n\", 1);\n\t\tif (stat(full, &sb) == 0 && S_ISDIR(sb.st_mode))\n\t\t\tlist_recursive(full);\n\t}\n\tclosedir(dir);\n}\n\nint\tmain(int argc, char **argv)\n{\n\tif (argc == 2)\n\t\tlist_recursive(argv[1]);\n\treturn (0);\n}",
+        "hint": "Si stat dit que c'est un repertoire, appelle list_recursive recursivement.",
+        "difficulty": 3
+      },
+      {
+        "id": 4,
+        "title": "Copier un repertoire (non recursif)",
+        "instruction": "Copie les fichiers reguliers d'un repertoire (sans les sous-repertoires).",
+        "starterCode": "#include <dirent.h>\n#include <sys/stat.h>\n#include <fcntl.h>\n#include <unistd.h>\n\nvoid build_path(char *b, char *d, char *n) { int i=0,j=0; while(d[i]) b[j++]=d[i++]; if(j>0&&b[j-1]!='/') b[j++]='/'; i=0; while(n[i]) b[j++]=n[i++]; b[j]=0; }\n\nint\tmain(int argc, char **argv)\n{\n\t// Copie les fichiers de argv[1] vers argv[2]\n\t// TON CODE ICI\n\t(void)argc;\n\treturn (0);\n}",
+        "solution": "#include <dirent.h>\n#include <sys/stat.h>\n#include <fcntl.h>\n#include <unistd.h>\n\nvoid build_path(char *b, char *d, char *n) { int i=0,j=0; while(d[i]) b[j++]=d[i++]; if(j>0&&b[j-1]!='/') b[j++]='/'; i=0; while(n[i]) b[j++]=n[i++]; b[j]=0; }\nvoid copy_file(char *s, char *d, mode_t m) { int fi=open(s,0); int fo; char b[4096]; int n; if(fi==-1) return; fo=open(d,O_WRONLY|O_CREAT|O_TRUNC,m&0777); if(fo==-1){close(fi);return;} while((n=read(fi,b,4096))>0) write(fo,b,n); close(fi); close(fo); }\n\nint\tmain(int argc, char **argv)\n{\n\tDIR *dir;\n\tstruct dirent *e;\n\tstruct stat sb;\n\tchar sp[1024], dp[1024];\n\n\tif (argc != 3) return (1);\n\tmkdir(argv[2], 0755);\n\tdir = opendir(argv[1]);\n\tif (!dir) return (1);\n\twhile ((e = readdir(dir)))\n\t{\n\t\tif (e->d_name[0] == '.') continue;\n\t\tbuild_path(sp, argv[1], e->d_name);\n\t\tbuild_path(dp, argv[2], e->d_name);\n\t\tif (stat(sp, &sb) == 0 && S_ISREG(sb.st_mode))\n\t\t\tcopy_file(sp, dp, sb.st_mode);\n\t}\n\tclosedir(dir);\n\treturn (0);\n}",
+        "hint": "Cree le repertoire destination, parcours la source, copie chaque fichier regulier.",
+        "difficulty": 3
+      },
+      {
+        "id": 5,
+        "title": "Copie recursive complete",
+        "instruction": "Ajoute la recursion pour copier aussi les sous-repertoires.",
+        "starterCode": "#include <dirent.h>\n#include <sys/stat.h>\n#include <fcntl.h>\n#include <unistd.h>\n\n// Helpers fournis...\n\nvoid\tcopy_recursive(char *src, char *dst)\n{\n\t// Copie recursive : fichiers ET sous-repertoires\n\t// TON CODE ICI\n}\n\nint\tmain(int argc, char **argv)\n{\n\tif (argc == 3)\n\t\tcopy_recursive(argv[1], argv[2]);\n\treturn (0);\n}",
+        "solution": "#include <dirent.h>\n#include <sys/stat.h>\n#include <fcntl.h>\n#include <unistd.h>\n\nvoid build_path(char *b, char *d, char *n) { int i=0,j=0; while(d[i]) b[j++]=d[i++]; if(j>0&&b[j-1]!='/') b[j++]='/'; i=0; while(n[i]) b[j++]=n[i++]; b[j]=0; }\nvoid copy_file(char *s, char *d, mode_t m) { int fi=open(s,0); int fo; char b[4096]; int n; if(fi==-1) return; fo=open(d,O_WRONLY|O_CREAT|O_TRUNC,m&0777); if(fo==-1){close(fi);return;} while((n=read(fi,b,4096))>0) write(fo,b,n); close(fi); close(fo); }\n\nvoid\tcopy_recursive(char *src, char *dst)\n{\n\tDIR *dir;\n\tstruct dirent *e;\n\tstruct stat sb;\n\tchar sp[1024], dp[1024];\n\n\tstat(src, &sb);\n\tmkdir(dst, sb.st_mode & 0777);\n\tdir = opendir(src);\n\tif (!dir) return;\n\twhile ((e = readdir(dir)))\n\t{\n\t\tif (e->d_name[0] == '.') continue;\n\t\tbuild_path(sp, src, e->d_name);\n\t\tbuild_path(dp, dst, e->d_name);\n\t\tif (stat(sp, &sb) == -1) continue;\n\t\tif (S_ISDIR(sb.st_mode))\n\t\t\tcopy_recursive(sp, dp);\n\t\telse if (S_ISREG(sb.st_mode))\n\t\t\tcopy_file(sp, dp, sb.st_mode);\n\t}\n\tclosedir(dir);\n}\n\nint\tmain(int argc, char **argv)\n{\n\tif (argc == 3)\n\t\tcopy_recursive(argv[1], argv[2]);\n\treturn (0);\n}",
+        "hint": "Si S_ISDIR -> copy_recursive (recursion). Si S_ISREG -> copy_file.",
+        "difficulty": 4
+      }
+    ]
+  },
+  "starterCode": "#include <dirent.h>\n#include <sys/stat.h>\n#include <fcntl.h>\n#include <unistd.h>\n\nvoid\tft_putstr(char *s) { while (*s) write(1, s++, 1); }\n\nvoid\tbuild_path(char *buf, char *dir, char *name)\n{\n\t// Concatene dir + \"/\" + name\n}\n\nvoid\tcopy_file(char *src, char *dst, mode_t mode)\n{\n\t// Copie le fichier src vers dst en preservant mode\n}\n\nvoid\tcopy_dir(char *src, char *dst)\n{\n\t// 1. mkdir(dst, permissions de src)\n\t// 2. opendir(src)\n\t// 3. Pour chaque entree non cachee :\n\t//    - Si repertoire : copy_dir (recursion)\n\t//    - Si fichier : copy_file\n\t// 4. closedir\n}\n\nint\tmain(int argc, char **argv)\n{\n\tif (argc != 3)\n\t{\n\t\tft_putstr(\"Usage: ./ft_copy_recursive src dst\\n\");\n\t\treturn (1);\n\t}\n\tcopy_dir(argv[1], argv[2]);\n\treturn (0);\n}",
+  "solution": "#include <dirent.h>\n#include <sys/stat.h>\n#include <fcntl.h>\n#include <unistd.h>\n\nvoid\tft_putstr(char *s) { while (*s) write(1, s++, 1); }\n\nvoid\tbuild_path(char *buf, char *dir, char *name)\n{\n\tint\ti;\n\tint\tj;\n\n\ti = 0;\n\tj = 0;\n\twhile (dir[i])\n\t\tbuf[j++] = dir[i++];\n\tif (j > 0 && buf[j - 1] != '/')\n\t\tbuf[j++] = '/';\n\ti = 0;\n\twhile (name[i])\n\t\tbuf[j++] = name[i++];\n\tbuf[j] = '\\0';\n}\n\nvoid\tcopy_file(char *src, char *dst, mode_t mode)\n{\n\tint\t\tfd_src;\n\tint\t\tfd_dst;\n\tchar\tbuf[4096];\n\tint\t\tn;\n\n\tfd_src = open(src, O_RDONLY);\n\tif (fd_src == -1)\n\t\treturn ;\n\tfd_dst = open(dst, O_WRONLY | O_CREAT | O_TRUNC, mode & 0777);\n\tif (fd_dst == -1)\n\t{\n\t\tclose(fd_src);\n\t\treturn ;\n\t}\n\twhile ((n = read(fd_src, buf, 4096)) > 0)\n\t\twrite(fd_dst, buf, n);\n\tclose(fd_src);\n\tclose(fd_dst);\n}\n\nvoid\tcopy_dir(char *src, char *dst)\n{\n\tDIR\t\t\t\t*dir;\n\tstruct dirent\t*entry;\n\tstruct stat\t\tsb;\n\tchar\t\t\tsrc_path[1024];\n\tchar\t\t\tdst_path[1024];\n\n\tif (stat(src, &sb) == -1)\n\t\treturn ;\n\tmkdir(dst, sb.st_mode & 0777);\n\tdir = opendir(src);\n\tif (!dir)\n\t\treturn ;\n\twhile ((entry = readdir(dir)) != NULL)\n\t{\n\t\tif (entry->d_name[0] == '.')\n\t\t\tcontinue ;\n\t\tbuild_path(src_path, src, entry->d_name);\n\t\tbuild_path(dst_path, dst, entry->d_name);\n\t\tif (stat(src_path, &sb) == -1)\n\t\t\tcontinue ;\n\t\tif (S_ISDIR(sb.st_mode))\n\t\t\tcopy_dir(src_path, dst_path);\n\t\telse if (S_ISREG(sb.st_mode))\n\t\t\tcopy_file(src_path, dst_path, sb.st_mode);\n\t}\n\tclosedir(dir);\n}\n\nint\tmain(int argc, char **argv)\n{\n\tif (argc != 3)\n\t{\n\t\tft_putstr(\"Usage: ./ft_copy_recursive src dst\\n\");\n\t\treturn (1);\n\t}\n\tcopy_dir(argv[1], argv[2]);\n\tft_putstr(\"Copie terminee\\n\");\n\treturn (0);\n}",
+  "hints": [
+    "Cree d'abord build_path et copy_file. Puis ecris copy_dir qui utilise les deux.",
+    "Dans copy_dir : mkdir pour la destination, opendir la source, boucle readdir avec stat pour distinguer fichiers et repertoires.",
+    "Si S_ISDIR, appelle copy_dir recursivement. Si S_ISREG, appelle copy_file. N'oublie pas closedir."
+  ],
+  "testCases": [
+    {
+      "id": 1,
+      "description": "Copie un repertoire avec fichiers",
+      "stdin": "",
+      "expectedStdout": "Copie terminee\n",
+      "expectedExitCode": 0,
+      "visible": true
+    },
+    {
+      "id": 2,
+      "description": "Les sous-repertoires sont copies recursivement",
+      "stdin": "",
+      "expectedStdout": "structure identique a la source",
+      "expectedExitCode": 0,
+      "visible": false
+    },
+    {
+      "id": 3,
+      "description": "Source inexistante gere proprement",
+      "stdin": "",
+      "expectedStdout": "pas de crash",
+      "expectedExitCode": 0,
+      "visible": false
+    }
+  ],
+  "constraints": {
+    "allowedFunctions": ["write", "read", "open", "close", "opendir", "readdir", "closedir", "stat", "lstat", "mkdir"],
+    "forbiddenFunctions": ["printf", "system", "nftw"],
+    "maxExecutionTime": 5000,
+    "maxMemory": 128
+  },
+  "relatedExercises": ["c-day59-ex00-ft-file-info", "c-day59-ex01-ft-mini-ls"],
+  "resources": [
+    {
+      "title": "Man mkdir(2) - Linux manual page",
+      "url": "https://man7.org/linux/man-pages/man2/mkdir.2.html",
+      "type": "documentation"
+    },
+    {
+      "title": "Copie recursive de repertoire en C",
+      "url": "https://www.geeksforgeeks.org/c-program-copy-contents-one-file-another-file/",
+      "type": "article"
+    }
+  ]
+}

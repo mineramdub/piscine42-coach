@@ -1,0 +1,257 @@
+{
+  "id": "c-day58-ex01-ft-signal-send",
+  "category": "c",
+  "day": 58,
+  "order": 1,
+  "title": "Envoyer des signaux avec kill()",
+  "description": "Ecris un programme qui cree un processus fils. Le fils installe un handler pour SIGUSR1 et SIGUSR2, puis attend des signaux avec pause(). Le parent envoie SIGUSR1 au fils 3 fois, puis SIGUSR2 pour lui demander de quitter. Le fils affiche 'Ping!' a chaque SIGUSR1 et 'Pong! Arret.' a la reception de SIGUSR2 avant de quitter. Le parent attend la fin du fils.",
+  "difficulty": 4,
+  "points": 40,
+  "estimatedTime": 35,
+  "learningObjectives": [
+    "Maitriser kill() pour envoyer des signaux entre processus",
+    "Comprendre SIGUSR1 et SIGUSR2 comme signaux utilisateur",
+    "Savoir synchroniser parent et fils avec des signaux",
+    "Gerer l'envoi et la reception de signaux dans un meme programme",
+    "Comprendre les problemes de timing avec les signaux"
+  ],
+  "learningContent": {
+    "lesson": {
+      "introduction": "La fonction kill() permet d'envoyer un signal a un processus par son PID. Malgre son nom, kill() ne tue pas necessairement le processus : elle envoie le signal specifie. Avec SIGUSR1 et SIGUSR2, deux processus peuvent communiquer de facon simple. C'est le mecanisme utilise dans le projet minitalk a 42 pour transmettre des messages bit par bit.",
+      "steps": [
+        {
+          "id": 1,
+          "title": "La fonction kill()",
+          "content": "**kill(pid_t pid, int sig)** envoie le signal `sig` au processus `pid`.\n\n**Valeurs speciales de pid :**\n- `pid > 0` : envoie au processus specifique\n- `pid == 0` : envoie a tous les processus du meme groupe\n- `pid == -1` : envoie a tous les processus (attention !)\n\n**Retour :** 0 si succes, -1 si erreur (processus inexistant, pas de permission).",
+          "codeExample": "#include <signal.h>\n#include <unistd.h>\n\n// Envoyer SIGUSR1 au processus 12345 :\nkill(12345, SIGUSR1);\n\n// Envoyer SIGTERM a soi-meme :\nkill(getpid(), SIGTERM);\n// Equivalent a :\nraise(SIGTERM);\n\n// Verifier si un processus existe (signal 0) :\nif (kill(pid, 0) == 0)\n\twrite(1, \"Le processus existe\\n\", 20);\nelse\n\twrite(1, \"Le processus n'existe pas\\n\", 26);",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Que fait kill(pid, 0) ? Quel signal est envoye ?",
+            "starterCode": "// kill(pid, 0) envoie le signal : ???\n// Effet : ???\n// Utilite : ???",
+            "solution": "// kill(pid, 0) n'envoie AUCUN signal\n// Effet : verifie seulement si le processus existe\n// Utilite : tester si un processus est encore en vie"
+          }
+        },
+        {
+          "id": 2,
+          "title": "SIGUSR1 et SIGUSR2",
+          "content": "**SIGUSR1** (10) et **SIGUSR2** (12) sont des signaux reserves pour l'usage des programmeurs. Ils n'ont pas de signification predefinie.\n\nPar defaut, les deux terminent le processus. Il faut installer un handler pour les utiliser.\n\n**Usage courant :**\n- Communication entre processus parent/fils\n- Protocole de communication (minitalk)\n- Notification d'evenements",
+          "codeExample": "#include <signal.h>\n#include <unistd.h>\n\nvoid\thandler_usr1(int sig)\n{\n\t(void)sig;\n\twrite(1, \"SIGUSR1 recu\\n\", 13);\n}\n\nvoid\thandler_usr2(int sig)\n{\n\t(void)sig;\n\twrite(1, \"SIGUSR2 recu\\n\", 13);\n}\n\nint\tmain(void)\n{\n\tsignal(SIGUSR1, handler_usr1);\n\tsignal(SIGUSR2, handler_usr2);\n\t// Affiche le PID pour qu'un autre processus puisse envoyer\n\t// des signaux\n\twrite(1, \"PID: \", 5);\n\t// ... afficher getpid() ...\n\twhile (1)\n\t\tpause();\n\treturn (0);\n}",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Quelle est la difference entre SIGUSR1/SIGUSR2 et SIGINT/SIGTERM ?",
+            "starterCode": "// SIGINT/SIGTERM : ???\n// SIGUSR1/SIGUSR2 : ???",
+            "solution": "// SIGINT/SIGTERM ont une signification predefinie par le systeme\n// (interruption, terminaison)\n// SIGUSR1/SIGUSR2 n'ont PAS de signification predefinie\n// Le programmeur decide de leur signification"
+          }
+        },
+        {
+          "id": 3,
+          "title": "Communication parent/fils avec signaux",
+          "content": "On peut utiliser les signaux pour que le parent et le fils communiquent. Le schema classique :\n\n1. Le parent connait le PID du fils (retour de fork)\n2. Le fils connait le PID du parent (getppid())\n3. L'un envoie des signaux avec kill(), l'autre les recoit avec un handler\n\n**Attention au timing :** Il faut que le fils ait le temps d'installer ses handlers avant que le parent n'envoie des signaux. On peut utiliser usleep() ou un mecanisme de synchronisation.",
+          "codeExample": "#include <signal.h>\n#include <unistd.h>\n#include <sys/wait.h>\n#include <stdlib.h>\n\nvoid\thandler(int sig)\n{\n\tif (sig == SIGUSR1)\n\t\twrite(1, \"Ping!\\n\", 6);\n\telse if (sig == SIGUSR2)\n\t\twrite(1, \"Pong!\\n\", 6);\n}\n\nint\tmain(void)\n{\n\tpid_t pid = fork();\n\n\tif (pid == 0)\n\t{\n\t\t// FILS : installe handlers et attend\n\t\tsignal(SIGUSR1, handler);\n\t\tsignal(SIGUSR2, handler);\n\t\twhile (1)\n\t\t\tpause();\n\t}\n\t// PARENT : envoie des signaux au fils\n\tusleep(100000); // Laisser le temps au fils\n\tkill(pid, SIGUSR1);\n\tusleep(100000);\n\tkill(pid, SIGUSR2);\n\tusleep(100000);\n\tkill(pid, SIGTERM); // Terminer le fils\n\twait(NULL);\n\treturn (0);\n}",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Pourquoi met-on usleep() entre les envois de signaux ?",
+            "starterCode": "// Sans usleep entre les kill() :\n// Le fils pourrait ???\n// Les signaux pourraient ???",
+            "solution": "// Sans usleep, les signaux arrivent trop vite\n// Le fils pourrait ne pas avoir le temps de traiter chaque signal\n// Les signaux du meme type ne s'empilent PAS : si SIGUSR1\n// arrive pendant que le handler de SIGUSR1 s'execute,\n// le second peut etre perdu"
+          }
+        },
+        {
+          "id": 4,
+          "title": "Les limites des signaux",
+          "content": "Les signaux ont des limitations importantes :\n\n1. **Pas de file d'attente** : si le meme signal arrive deux fois avant d'etre traite, le second peut etre perdu\n2. **Pas de donnees** : un signal ne transporte pas d'information (juste un numero)\n3. **Pas d'ordre garanti** : les signaux peuvent arriver dans un ordre different de l'envoi\n4. **Race conditions** : le timing entre envoi et reception n'est pas garanti\n\nPour transmettre des donnees, minitalk encode chaque bit en SIGUSR1 (0) et SIGUSR2 (1).",
+          "codeExample": "// Les signaux ne s'empilent PAS :\n// Si on envoie 3 SIGUSR1 tres vite :\nkill(pid, SIGUSR1);\nkill(pid, SIGUSR1);\nkill(pid, SIGUSR1);\n// Le fils peut n'en recevoir qu'un ou deux !\n\n// Solution : attendre un accusé de reception\n// Parent envoie SIGUSR1 -> Fils recoit -> Fils envoie SIGUSR1 au parent\n// Parent recoit -> envoie le suivant\n\n// Ou utiliser usleep() entre chaque envoi :\nkill(pid, SIGUSR1);\nusleep(100); // 100 microsecondes\nkill(pid, SIGUSR1);\nusleep(100);\nkill(pid, SIGUSR1);",
+          "language": "c"
+        }
+      ]
+    },
+    "theory": [
+      {
+        "title": "kill() en detail",
+        "content": "kill() est l'appel systeme principal pour envoyer des signaux. Malgre son nom, il peut envoyer n'importe quel signal, pas seulement les signaux fatals.",
+        "codeExamples": [
+          {
+            "title": "Differentes utilisations de kill()",
+            "code": "#include <signal.h>\n\n// Envoyer a un processus specifique :\nkill(pid, SIGUSR1);\n\n// Envoyer a son propre groupe de processus :\nkill(0, SIGTERM);\n\n// Envoyer a un groupe specifique :\nkill(-pgid, SIGTERM); // pid negatif = groupe\n\n// Verifier l'existence d'un processus :\nif (kill(pid, 0) == -1)\n\tperror(\"Processus inexistant\");\n\n// Erreurs possibles :\n// ESRCH : processus inexistant\n// EPERM : pas la permission\n// EINVAL : signal invalide",
+            "explanation": "kill() est flexible : il peut cibler un processus, un groupe, ou juste tester l'existence"
+          }
+        ],
+        "keyPoints": [
+          "kill(pid, sig) envoie sig au processus pid",
+          "kill(pid, 0) teste si le processus existe sans envoyer de signal",
+          "kill(0, sig) envoie a tout le groupe de processus",
+          "Retourne 0 en succes, -1 en erreur (ESRCH, EPERM, EINVAL)"
+        ],
+        "commonMistakes": [
+          "Croire que kill() tue toujours le processus (il envoie juste un signal)",
+          "Envoyer un signal a un PID invalide sans verifier le retour",
+          "Oublier que les permissions comptent (meme UID requis)"
+        ]
+      },
+      {
+        "title": "Synchronisation avec les signaux",
+        "content": "Les signaux sont asynchrones par nature. Pour synchroniser des processus avec des signaux, il faut gerer le timing et s'assurer que le recepteur est pret.",
+        "codeExamples": [
+          {
+            "title": "Protocole simple avec accuse de reception",
+            "code": "// Parent envoie, fils confirme :\nvolatile sig_atomic_t g_ack = 0;\n\nvoid\tack_handler(int sig)\n{\n\t(void)sig;\n\tg_ack = 1;\n}\n\n// Dans le parent :\nsignal(SIGUSR1, ack_handler);\nkill(child_pid, SIGUSR1); // Envoie au fils\nwhile (!g_ack)            // Attend confirmation\n\tpause();\ng_ack = 0;\n\n// Dans le fils :\nvoid child_handler(int sig)\n{\n\t(void)sig;\n\twrite(1, \"Recu!\\n\", 6);\n\tkill(getppid(), SIGUSR1); // Confirme au parent\n}",
+            "explanation": "Un protocole avec accuse de reception evite la perte de signaux"
+          }
+        ],
+        "keyPoints": [
+          "Les signaux sont asynchrones : pas de garantie de timing",
+          "Un accuse de reception permet de synchroniser l'envoi",
+          "usleep() est une solution simple mais pas parfaite",
+          "pause() attend un signal sans consommer de CPU"
+        ],
+        "commonMistakes": [
+          "Envoyer des signaux sans laisser le temps au recepteur de les traiter",
+          "Ne pas gerer la perte possible de signaux",
+          "Utiliser une boucle active au lieu de pause() (gaspillage CPU)"
+        ]
+      },
+      {
+        "title": "raise() et abort()",
+        "content": "raise() envoie un signal au processus courant. abort() envoie SIGABRT, qui produit un core dump. Ces fonctions sont utiles pour l'auto-signalement.",
+        "codeExamples": [
+          {
+            "title": "raise et abort",
+            "code": "#include <signal.h>\n#include <stdlib.h>\n\n// raise(sig) = kill(getpid(), sig)\nraise(SIGUSR1); // S'envoie SIGUSR1\nraise(SIGTERM); // Se termine\n\n// abort() envoie SIGABRT (core dump)\nabort(); // Termine avec core dump\n\n// Utile pour les assertions :\nvoid\tft_assert(int condition, char *msg)\n{\n\tif (!condition)\n\t{\n\t\twrite(2, \"Assertion echouee: \", 19);\n\t\twrite(2, msg, ft_strlen(msg));\n\t\twrite(2, \"\\n\", 1);\n\t\tabort(); // Core dump pour debugger\n\t}\n}",
+            "explanation": "raise est un raccourci pour kill(getpid(), sig), abort envoie SIGABRT"
+          }
+        ],
+        "keyPoints": [
+          "raise(sig) est equivalent a kill(getpid(), sig)",
+          "abort() envoie SIGABRT et produit un core dump",
+          "raise est plus portable que kill(getpid(), ...) sur certains systemes",
+          "SIGABRT peut etre intercepte mais abort() le renvoie apres le handler"
+        ],
+        "commonMistakes": [
+          "Confondre raise() et kill() (raise s'envoie a soi-meme)",
+          "Essayer d'intercepter SIGABRT envoye par abort() (il est renvoye)",
+          "Oublier que raise() dans un thread n'envoie qu'au thread courant"
+        ]
+      },
+      {
+        "title": "Signaux et processus fils",
+        "content": "Apres un fork(), le fils herite des handlers de signaux du parent. Apres un execve(), les handlers sont reinitialises a SIG_DFL (car le code des handlers n'existe plus).",
+        "codeExamples": [
+          {
+            "title": "Heritage des signaux",
+            "code": "// Avant fork :\nsignal(SIGINT, my_handler);\nsignal(SIGTERM, SIG_IGN);\n\npid_t pid = fork();\n\n// Apres fork, le FILS a :\n// SIGINT -> my_handler (herite)\n// SIGTERM -> SIG_IGN (herite)\n\n// Apres execve dans le fils :\n// SIGINT -> SIG_DFL (handler perdu, code remplace)\n// SIGTERM -> SIG_IGN (les signaux ignores restent ignores)\n\n// Regle :\n// - Les handlers personnalises -> SIG_DFL apres exec\n// - SIG_IGN reste SIG_IGN apres exec\n// - SIG_DFL reste SIG_DFL apres exec",
+            "explanation": "Les handlers ne survivent pas a execve(), mais SIG_IGN si"
+          }
+        ],
+        "keyPoints": [
+          "fork() herite de tous les handlers de signaux du parent",
+          "execve() reinitialise les handlers a SIG_DFL",
+          "SIG_IGN est preserve apres execve()",
+          "Le fils peut modifier ses handlers independamment du parent"
+        ],
+        "commonMistakes": [
+          "Supposer que les handlers survivent a execve()",
+          "Oublier que le fils herite des handlers du parent apres fork",
+          "Ne pas reinstaller les handlers dans le fils quand necessaire"
+        ]
+      }
+    ],
+    "prepExercises": [
+      {
+        "id": 1,
+        "title": "Envoyer un signal a soi-meme",
+        "instruction": "Ecris un programme qui s'envoie SIGUSR1 a lui-meme avec raise() et affiche 'Auto-signal!'.",
+        "starterCode": "#include <signal.h>\n#include <unistd.h>\n\nvoid\thandler(int sig)\n{\n\t(void)sig;\n\t// Affiche le message\n}\n\nint\tmain(void)\n{\n\t// Installe handler et raise(SIGUSR1)\n\t// TON CODE ICI\n\treturn (0);\n}",
+        "solution": "#include <signal.h>\n#include <unistd.h>\n\nvoid\thandler(int sig)\n{\n\t(void)sig;\n\twrite(1, \"Auto-signal!\\n\", 13);\n}\n\nint\tmain(void)\n{\n\tsignal(SIGUSR1, handler);\n\traise(SIGUSR1);\n\treturn (0);\n}",
+        "hint": "signal(SIGUSR1, handler) puis raise(SIGUSR1) pour s'envoyer le signal.",
+        "difficulty": 1
+      },
+      {
+        "id": 2,
+        "title": "kill() vers un fils",
+        "instruction": "Fork un fils. Le parent envoie SIGUSR1 au fils. Le fils affiche 'Signal recu du parent!'.",
+        "starterCode": "#include <signal.h>\n#include <unistd.h>\n#include <sys/wait.h>\n#include <stdlib.h>\n\nvoid\thandler(int sig)\n{\n\t(void)sig;\n\twrite(1, \"Signal recu du parent!\\n\", 23);\n}\n\nint\tmain(void)\n{\n\t// Fork, fils attend signal, parent envoie\n\t// TON CODE ICI\n\treturn (0);\n}",
+        "solution": "#include <signal.h>\n#include <unistd.h>\n#include <sys/wait.h>\n#include <stdlib.h>\n\nvoid\thandler(int sig)\n{\n\t(void)sig;\n\twrite(1, \"Signal recu du parent!\\n\", 23);\n}\n\nint\tmain(void)\n{\n\tpid_t pid = fork();\n\tif (pid == 0)\n\t{\n\t\tsignal(SIGUSR1, handler);\n\t\tpause();\n\t\texit(0);\n\t}\n\tusleep(100000);\n\tkill(pid, SIGUSR1);\n\twait(NULL);\n\treturn (0);\n}",
+        "hint": "Le fils fait signal() puis pause(). Le parent fait usleep() puis kill(pid, SIGUSR1).",
+        "difficulty": 2
+      },
+      {
+        "id": 3,
+        "title": "Fils vers parent",
+        "instruction": "Le fils envoie SIGUSR1 au parent en utilisant getppid() et kill().",
+        "starterCode": "#include <signal.h>\n#include <unistd.h>\n#include <sys/wait.h>\n#include <stdlib.h>\n\nvoid\thandler(int sig)\n{\n\t(void)sig;\n\twrite(1, \"Parent: signal du fils!\\n\", 23);\n}\n\nint\tmain(void)\n{\n\t// Parent installe handler, fils envoie signal\n\t// TON CODE ICI\n\treturn (0);\n}",
+        "solution": "#include <signal.h>\n#include <unistd.h>\n#include <sys/wait.h>\n#include <stdlib.h>\n\nvoid\thandler(int sig)\n{\n\t(void)sig;\n\twrite(1, \"Parent: signal du fils!\\n\", 23);\n}\n\nint\tmain(void)\n{\n\tsignal(SIGUSR1, handler);\n\tpid_t pid = fork();\n\tif (pid == 0)\n\t{\n\t\tusleep(100000);\n\t\tkill(getppid(), SIGUSR1);\n\t\texit(0);\n\t}\n\tpause();\n\twait(NULL);\n\treturn (0);\n}",
+        "hint": "Le fils utilise getppid() pour obtenir le PID du parent et kill() pour envoyer.",
+        "difficulty": 2
+      },
+      {
+        "id": 4,
+        "title": "Ping-pong avec signaux",
+        "instruction": "Le parent envoie SIGUSR1 au fils, le fils repond avec SIGUSR2 au parent. Un aller-retour.",
+        "starterCode": "#include <signal.h>\n#include <unistd.h>\n#include <sys/wait.h>\n#include <stdlib.h>\n\n// TON CODE ICI\n\nint\tmain(void)\n{\n\t// Ping du parent, Pong du fils\n\t// TON CODE ICI\n\treturn (0);\n}",
+        "solution": "#include <signal.h>\n#include <unistd.h>\n#include <sys/wait.h>\n#include <stdlib.h>\n\nvoid\tparent_handler(int sig)\n{\n\t(void)sig;\n\twrite(1, \"Parent: Pong recu!\\n\", 19);\n}\n\nvoid\tchild_handler(int sig)\n{\n\t(void)sig;\n\twrite(1, \"Fils: Ping recu!\\n\", 17);\n\tkill(getppid(), SIGUSR2);\n}\n\nint\tmain(void)\n{\n\tsignal(SIGUSR2, parent_handler);\n\tpid_t pid = fork();\n\tif (pid == 0)\n\t{\n\t\tsignal(SIGUSR1, child_handler);\n\t\tpause();\n\t\texit(0);\n\t}\n\tusleep(100000);\n\twrite(1, \"Parent: Ping envoye!\\n\", 21);\n\tkill(pid, SIGUSR1);\n\tpause();\n\twait(NULL);\n\treturn (0);\n}",
+        "hint": "Fils recoit SIGUSR1, repond avec SIGUSR2 via kill(getppid(), SIGUSR2).",
+        "difficulty": 3
+      },
+      {
+        "id": 5,
+        "title": "Envoi multiple avec compteur",
+        "instruction": "Le parent envoie SIGUSR1 au fils 5 fois. Le fils compte les receptions et affiche le total.",
+        "starterCode": "#include <signal.h>\n#include <unistd.h>\n#include <sys/wait.h>\n#include <stdlib.h>\n\nvolatile sig_atomic_t g_count = 0;\n\nvoid\thandler(int sig)\n{\n\t(void)sig;\n\tg_count++;\n}\n\nint\tmain(void)\n{\n\t// Parent envoie 5 SIGUSR1, fils les compte\n\t// TON CODE ICI\n\treturn (0);\n}",
+        "solution": "#include <signal.h>\n#include <unistd.h>\n#include <sys/wait.h>\n#include <stdlib.h>\n\nvolatile sig_atomic_t g_count = 0;\nvolatile sig_atomic_t g_done = 0;\n\nvoid\tcount_handler(int sig)\n{\n\t(void)sig;\n\tg_count++;\n}\n\nvoid\tdone_handler(int sig)\n{\n\t(void)sig;\n\tg_done = 1;\n}\n\nvoid\tft_putnbr(int n)\n{\n\tchar c;\n\tif (n >= 10) ft_putnbr(n / 10);\n\tc = (n % 10) + '0';\n\twrite(1, &c, 1);\n}\n\nint\tmain(void)\n{\n\tpid_t pid = fork();\n\tif (pid == 0)\n\t{\n\t\tsignal(SIGUSR1, count_handler);\n\t\tsignal(SIGUSR2, done_handler);\n\t\twhile (!g_done)\n\t\t\tpause();\n\t\twrite(1, \"Recu: \", 6);\n\t\tft_putnbr(g_count);\n\t\twrite(1, \" signaux\\n\", 9);\n\t\texit(0);\n\t}\n\tusleep(100000);\n\tint i = 0;\n\twhile (i < 5)\n\t{\n\t\tkill(pid, SIGUSR1);\n\t\tusleep(50000);\n\t\ti++;\n\t}\n\tkill(pid, SIGUSR2);\n\twait(NULL);\n\treturn (0);\n}",
+        "hint": "usleep entre chaque kill pour eviter de perdre des signaux. SIGUSR2 pour finir.",
+        "difficulty": 3
+      }
+    ]
+  },
+  "starterCode": "#include <signal.h>\n#include <unistd.h>\n#include <sys/wait.h>\n#include <stdlib.h>\n\nvolatile sig_atomic_t g_done = 0;\n\nvoid\thandle_usr1(int sig)\n{\n\t(void)sig;\n\t// Affiche \"Ping!\\n\"\n}\n\nvoid\thandle_usr2(int sig)\n{\n\t(void)sig;\n\t// Affiche \"Pong! Arret.\\n\" et met g_done a 1\n}\n\nint\tmain(void)\n{\n\tpid_t\tpid;\n\n\t// 1. Fork un fils\n\t// 2. Fils : installe handlers SIGUSR1 et SIGUSR2, boucle pause()\n\t// 3. Parent : usleep, envoie SIGUSR1 3 fois, puis SIGUSR2\n\t// 4. Parent : wait\n\treturn (0);\n}",
+  "solution": "#include <signal.h>\n#include <unistd.h>\n#include <sys/wait.h>\n#include <stdlib.h>\n\nvolatile sig_atomic_t g_done = 0;\n\nvoid\thandle_usr1(int sig)\n{\n\t(void)sig;\n\twrite(1, \"Ping!\\n\", 6);\n}\n\nvoid\thandle_usr2(int sig)\n{\n\t(void)sig;\n\twrite(1, \"Pong! Arret.\\n\", 13);\n\tg_done = 1;\n}\n\nint\tmain(void)\n{\n\tpid_t\tpid;\n\tint\t\ti;\n\n\tpid = fork();\n\tif (pid == -1)\n\t\treturn (1);\n\tif (pid == 0)\n\t{\n\t\tsignal(SIGUSR1, handle_usr1);\n\t\tsignal(SIGUSR2, handle_usr2);\n\t\twhile (!g_done)\n\t\t\tpause();\n\t\texit(0);\n\t}\n\tusleep(100000);\n\ti = 0;\n\twhile (i < 3)\n\t{\n\t\tkill(pid, SIGUSR1);\n\t\tusleep(100000);\n\t\ti++;\n\t}\n\tkill(pid, SIGUSR2);\n\twait(NULL);\n\treturn (0);\n}",
+  "hints": [
+    "Le fils installe ses handlers avec signal() AVANT que le parent n'envoie. Le parent fait usleep(100000) pour laisser le temps.",
+    "Le parent envoie kill(pid, SIGUSR1) trois fois avec usleep() entre chaque envoi pour eviter de perdre des signaux.",
+    "SIGUSR2 met g_done a 1 dans le handler du fils, ce qui sort de la boucle while(!g_done) pause()."
+  ],
+  "testCases": [
+    {
+      "id": 1,
+      "description": "3 Ping et 1 Pong affiches",
+      "stdin": "",
+      "expectedStdout": "Ping!\nPing!\nPing!\nPong! Arret.\n",
+      "expectedExitCode": 0,
+      "visible": true
+    },
+    {
+      "id": 2,
+      "description": "Le fils se termine proprement apres SIGUSR2",
+      "stdin": "",
+      "expectedStdout": "le fils exit(0) apres reception de SIGUSR2",
+      "expectedExitCode": 0,
+      "visible": false
+    },
+    {
+      "id": 3,
+      "description": "Le parent attend le fils correctement",
+      "stdin": "",
+      "expectedStdout": "pas de zombie, wait retourne le PID du fils",
+      "expectedExitCode": 0,
+      "visible": false
+    }
+  ],
+  "constraints": {
+    "allowedFunctions": ["write", "signal", "kill", "getpid", "getppid", "fork", "wait", "waitpid", "pause", "usleep", "exit", "_exit"],
+    "forbiddenFunctions": ["printf", "system"],
+    "maxExecutionTime": 5000,
+    "maxMemory": 128
+  },
+  "relatedExercises": ["c-day58-ex00-ft-signal-handler", "c-day58-ex02-ft-sigaction-intro"],
+  "resources": [
+    {
+      "title": "Man kill(2) - Linux manual page",
+      "url": "https://man7.org/linux/man-pages/man2/kill.2.html",
+      "type": "documentation"
+    },
+    {
+      "title": "Communication inter-processus avec signaux",
+      "url": "https://www.geeksforgeeks.org/signals-c-set-2/",
+      "type": "article"
+    }
+  ]
+}

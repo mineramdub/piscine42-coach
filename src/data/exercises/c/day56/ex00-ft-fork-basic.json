@@ -1,0 +1,257 @@
+{
+  "id": "c-day56-ex00-ft-fork-basic",
+  "category": "c",
+  "day": 56,
+  "order": 0,
+  "title": "Comprendre fork() : creer un processus fils",
+  "description": "Ecris un programme qui utilise fork() pour creer un processus fils. Le processus parent doit afficher 'Je suis le parent, PID: [pid], fils: [pid_fils]' et le processus fils doit afficher 'Je suis le fils, PID: [pid], parent: [ppid]'. Utilise getpid() et getppid() pour obtenir les identifiants de processus. Le parent doit attendre la fin du fils avec wait(NULL) avant de quitter.",
+  "difficulty": 3,
+  "points": 30,
+  "estimatedTime": 30,
+  "learningObjectives": [
+    "Comprendre le concept de processus et l'appel systeme fork()",
+    "Savoir differencier le processus parent du processus fils via le retour de fork",
+    "Utiliser getpid() et getppid() pour identifier les processus",
+    "Comprendre la duplication de l'espace memoire lors d'un fork",
+    "Savoir attendre la fin d'un processus fils avec wait()"
+  ],
+  "learningContent": {
+    "lesson": {
+      "introduction": "Un processus est un programme en cours d'execution. Sous Unix/Linux, chaque processus possede un identifiant unique appele PID (Process ID). L'appel systeme fork() est l'un des plus fondamentaux : il permet de creer une copie quasi identique du processus courant. Le nouveau processus (fils) herite de presque tout du parent : code, variables, descripteurs de fichiers. Comprendre fork() est essentiel pour maitriser la programmation systeme et les projets comme pipex et minishell a 42.",
+      "steps": [
+        {
+          "id": 1,
+          "title": "Qu'est-ce qu'un processus ?",
+          "content": "Un processus est une instance d'un programme en cours d'execution. Chaque processus a :\n\n**PID** : un identifiant unique (Process ID)\n**PPID** : le PID de son parent (Parent Process ID)\n**Espace memoire** : sa propre copie de la memoire (pile, tas, etc.)\n**Descripteurs de fichiers** : stdin(0), stdout(1), stderr(2) et autres\n\nSous Linux, tous les processus forment un arbre. Le processus racine est `init` (PID 1). Chaque processus est cree par un parent via `fork()`.",
+          "codeExample": "#include <unistd.h>\n#include <stdio.h>\n\nint\tmain(void)\n{\n\tprintf(\"Mon PID : %d\\n\", getpid());\n\tprintf(\"PID de mon parent : %d\\n\", getppid());\n\treturn (0);\n}\n// Exemple de sortie :\n// Mon PID : 12345\n// PID de mon parent : 12300",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Que retourne getpid() et getppid() ? Quelle est la difference entre les deux ?",
+            "starterCode": "// getpid() retourne : ???\n// getppid() retourne : ???\n// Le parent d'un processus lance depuis le terminal est : ???",
+            "solution": "// getpid() retourne le PID du processus courant\n// getppid() retourne le PID du processus parent\n// Le parent d'un processus lance depuis le terminal est le shell (bash/zsh)"
+          }
+        },
+        {
+          "id": 2,
+          "title": "L'appel systeme fork()",
+          "content": "**fork()** cree un nouveau processus en dupliquant le processus appelant. Apres fork(), il y a DEUX processus qui executent le MEME code a partir du meme point.\n\n**Valeur de retour de fork() :**\n- Dans le **parent** : retourne le PID du fils (> 0)\n- Dans le **fils** : retourne 0\n- En cas d'**erreur** : retourne -1\n\nC'est la valeur de retour qui permet de differencier parent et fils !",
+          "codeExample": "#include <unistd.h>\n#include <stdio.h>\n\nint\tmain(void)\n{\n\tpid_t\tpid;\n\n\tpid = fork();\n\tif (pid == -1)\n\t{\n\t\tprintf(\"Erreur fork\\n\");\n\t\treturn (1);\n\t}\n\tif (pid == 0)\n\t\tprintf(\"Je suis le FILS (pid=%d)\\n\", getpid());\n\telse\n\t\tprintf(\"Je suis le PARENT (pid=%d, fils=%d)\\n\", getpid(), pid);\n\treturn (0);\n}",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Dans quel processus fork() retourne 0 ? Et dans lequel retourne-t-il une valeur positive ?",
+            "starterCode": "pid_t pid = fork();\nif (pid == 0)\n{\n\t// Qui suis-je ? ???\n}\nelse if (pid > 0)\n{\n\t// Qui suis-je ? ???\n}",
+            "solution": "pid_t pid = fork();\nif (pid == 0)\n{\n\t// Je suis le FILS (fork retourne 0 dans le fils)\n}\nelse if (pid > 0)\n{\n\t// Je suis le PARENT (fork retourne le PID du fils)\n}"
+          }
+        },
+        {
+          "id": 3,
+          "title": "La duplication de la memoire",
+          "content": "Lors d'un fork(), le fils recoit une **copie** de toute la memoire du parent. Les deux processus ont des espaces memoire **independants** : modifier une variable dans le fils n'affecte PAS le parent (et inversement).\n\n**Attention :** Les descripteurs de fichiers sont aussi dupliques. Si le parent a un fichier ouvert, le fils en a aussi une copie.\n\nEn pratique, Linux utilise le **Copy-On-Write (COW)** : la copie reelle n'a lieu que quand un processus modifie une page memoire.",
+          "codeExample": "#include <unistd.h>\n#include <stdio.h>\n\nint\tmain(void)\n{\n\tint\tx;\n\n\tx = 42;\n\tif (fork() == 0)\n\t{\n\t\tx = 100;\n\t\tprintf(\"Fils : x = %d\\n\", x);  // 100\n\t}\n\telse\n\t{\n\t\tprintf(\"Parent : x = %d\\n\", x); // 42\n\t}\n\treturn (0);\n}\n// Sortie :\n// Parent : x = 42\n// Fils : x = 100\n// Les deux x sont independants !",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Si on modifie une variable dans le fils apres un fork, est-ce que le parent voit la modification ?",
+            "starterCode": "int val = 10;\nfork();\n// Le fils change val = 20\n// Le parent lit val -> ???",
+            "solution": "// NON ! Le parent voit toujours val = 10\n// Le fils a sa propre copie de la memoire\n// Modifier val dans le fils ne change rien pour le parent"
+          }
+        },
+        {
+          "id": 4,
+          "title": "Attendre un processus fils avec wait()",
+          "content": "Quand un processus parent cree un fils, il doit l'**attendre** avec `wait()` ou `waitpid()`. Si le parent termine avant le fils :\n- Le fils devient un **processus orphelin** (adopte par init)\n- Si le fils termine avant que le parent ne fasse wait(), il devient un **processus zombie**\n\n**wait(NULL)** attend la fin de n'importe quel fils et retourne son PID.\n**waitpid(pid, &status, 0)** attend un fils specifique.\n\nIl est important de toujours attendre ses fils pour eviter les zombies.",
+          "codeExample": "#include <unistd.h>\n#include <stdio.h>\n#include <sys/wait.h>\n\nint\tmain(void)\n{\n\tpid_t\tpid;\n\n\tpid = fork();\n\tif (pid == 0)\n\t{\n\t\tprintf(\"Fils travaille...\\n\");\n\t\treturn (0);\n\t}\n\telse\n\t{\n\t\tprintf(\"Parent attend le fils...\\n\");\n\t\twait(NULL);\n\t\tprintf(\"Fils termine !\\n\");\n\t}\n\treturn (0);\n}",
+          "language": "c"
+        }
+      ]
+    },
+    "theory": [
+      {
+        "title": "L'appel systeme fork() en detail",
+        "content": "fork() est un appel systeme POSIX qui cree un nouveau processus. Le nouveau processus (fils) est une copie presque identique du parent. Les seules differences sont : le PID, le PPID, et la valeur de retour de fork().",
+        "codeExamples": [
+          {
+            "title": "Structure typique avec fork",
+            "code": "#include <unistd.h>\n#include <sys/wait.h>\n\nint\tmain(void)\n{\n\tpid_t\tpid;\n\n\tpid = fork();\n\tif (pid == -1)\n\t\treturn (1);\n\tif (pid == 0)\n\t{\n\t\t// Code du FILS\n\t}\n\telse\n\t{\n\t\t// Code du PARENT\n\t\twait(NULL);\n\t}\n\treturn (0);\n}",
+            "explanation": "Le pattern classique : fork, puis if/else sur pid pour separer le code parent/fils"
+          }
+        ],
+        "keyPoints": [
+          "fork() retourne 0 dans le fils, le PID du fils dans le parent, -1 en erreur",
+          "Apres fork(), les deux processus executent le meme code au meme point",
+          "Le fils herite des variables, descripteurs de fichiers et de l'environnement",
+          "Le type pid_t est defini dans <unistd.h> et <sys/types.h>"
+        ],
+        "commonMistakes": [
+          "Oublier de tester si fork() retourne -1 (erreur)",
+          "Confondre qui est le parent et qui est le fils (0 = fils, >0 = parent)",
+          "Ne pas inclure <sys/wait.h> pour wait()"
+        ]
+      },
+      {
+        "title": "Identification des processus",
+        "content": "Chaque processus a un PID unique attribue par le systeme. getpid() retourne le PID du processus courant, getppid() retourne celui du parent. Ces fonctions ne peuvent pas echouer.",
+        "codeExamples": [
+          {
+            "title": "Identification parent/fils",
+            "code": "#include <unistd.h>\n#include <stdio.h>\n\nint\tmain(void)\n{\n\tpid_t\tpid;\n\n\tpid = fork();\n\tif (pid == 0)\n\t{\n\t\tprintf(\"Fils: mon PID=%d, parent PID=%d\\n\",\n\t\t\tgetpid(), getppid());\n\t}\n\telse\n\t{\n\t\tprintf(\"Parent: mon PID=%d, fils PID=%d\\n\",\n\t\t\tgetpid(), pid);\n\t}\n\treturn (0);\n}",
+            "explanation": "getpid() et getppid() permettent de tracer les relations entre processus"
+          }
+        ],
+        "keyPoints": [
+          "getpid() retourne le PID du processus appelant",
+          "getppid() retourne le PID du processus parent",
+          "Le PID est unique a un instant donne (peut etre reutilise apres la mort du processus)",
+          "pid_t est un type entier signe (generalement int)"
+        ],
+        "commonMistakes": [
+          "Confondre getpid() et getppid()",
+          "Stocker le PID dans un int au lieu de pid_t (fonctionne mais pas propre)",
+          "Supposer que le PID du fils est PID_parent + 1 (pas garanti)"
+        ]
+      },
+      {
+        "title": "Processus zombies et orphelins",
+        "content": "Un zombie est un processus qui a termine mais dont le parent n'a pas encore lu son status avec wait(). Un orphelin est un processus dont le parent a termine avant lui. Comprendre ces etats est crucial pour ecrire du code systeme correct.",
+        "codeExamples": [
+          {
+            "title": "Creer un zombie (a eviter !)",
+            "code": "#include <unistd.h>\n#include <stdio.h>\n\nint\tmain(void)\n{\n\tpid_t pid = fork();\n\n\tif (pid == 0)\n\t{\n\t\tprintf(\"Fils termine\\n\");\n\t\treturn (0);\n\t}\n\t// Le parent ne fait PAS wait()\n\t// Le fils devient zombie !\n\tsleep(30); // Le zombie existe pendant 30s\n\treturn (0);\n}",
+            "explanation": "Sans wait(), le fils termine mais reste en tant que zombie dans la table des processus"
+          }
+        ],
+        "keyPoints": [
+          "Un zombie = fils termine, parent n'a pas fait wait()",
+          "Un orphelin = parent termine avant le fils, le fils est adopte par init",
+          "wait() ou waitpid() permettent de 'recolter' le status du fils",
+          "Les zombies occupent une entree dans la table des processus (ressource limitee)"
+        ],
+        "commonMistakes": [
+          "Ne jamais appeler wait() apres fork() (accumulation de zombies)",
+          "Appeler wait() alors qu'il n'y a pas de fils (retourne -1)",
+          "Oublier que le fils peut terminer AVANT que le parent appelle wait()"
+        ]
+      },
+      {
+        "title": "Copy-On-Write et performances",
+        "content": "Le mecanisme Copy-On-Write (COW) est une optimisation du noyau Linux. Au lieu de copier physiquement toute la memoire lors d'un fork(), le noyau partage les pages memoire en lecture seule. La copie reelle n'a lieu que quand un processus modifie une page.",
+        "codeExamples": [
+          {
+            "title": "Illustration du COW",
+            "code": "#include <unistd.h>\n#include <stdio.h>\n#include <stdlib.h>\n#include <sys/wait.h>\n\nint\tmain(void)\n{\n\tchar *buf = malloc(1024);\n\tbuf[0] = 'A';\n\t// Avant fork: parent et fils partagent la meme page\n\tif (fork() == 0)\n\t{\n\t\t// Ecriture -> COW declenche une copie\n\t\tbuf[0] = 'B';\n\t\tprintf(\"Fils: buf[0] = %c\\n\", buf[0]); // B\n\t\tfree(buf);\n\t\treturn (0);\n\t}\n\twait(NULL);\n\tprintf(\"Parent: buf[0] = %c\\n\", buf[0]); // A\n\tfree(buf);\n\treturn (0);\n}",
+            "explanation": "La copie physique de la page n'a lieu que quand le fils ecrit dans buf"
+          }
+        ],
+        "keyPoints": [
+          "COW evite de copier toute la memoire immediatement",
+          "La copie reelle n'a lieu qu'a la premiere ecriture",
+          "fork() est donc relativement rapide meme pour de gros processus",
+          "Chaque processus a sa propre copie apres modification"
+        ],
+        "commonMistakes": [
+          "Croire que fork() est lent a cause de la copie memoire (COW l'optimise)",
+          "Penser que parent et fils partagent la memoire apres fork() (non, elle est independante)",
+          "Oublier de free() la memoire dans les DEUX processus (parent ET fils)"
+        ]
+      }
+    ],
+    "prepExercises": [
+      {
+        "id": 1,
+        "title": "Premier fork",
+        "instruction": "Ecris un programme qui appelle fork() et affiche un message different selon le processus (parent ou fils).",
+        "starterCode": "#include <unistd.h>\n#include <stdio.h>\n\nint\tmain(void)\n{\n\tpid_t pid;\n\n\tpid = fork();\n\t// Gere les cas : erreur, fils, parent\n\t// TON CODE ICI\n\treturn (0);\n}",
+        "solution": "#include <unistd.h>\n#include <stdio.h>\n\nint\tmain(void)\n{\n\tpid_t pid;\n\n\tpid = fork();\n\tif (pid == -1)\n\t\treturn (1);\n\tif (pid == 0)\n\t\tprintf(\"Je suis le fils\\n\");\n\telse\n\t\tprintf(\"Je suis le parent\\n\");\n\treturn (0);\n}",
+        "hint": "Teste pid == 0 pour le fils et pid > 0 pour le parent.",
+        "difficulty": 1
+      },
+      {
+        "id": 2,
+        "title": "Afficher les PID",
+        "instruction": "Ecris un programme qui fork et affiche les PID de chaque processus avec getpid() et getppid().",
+        "starterCode": "#include <unistd.h>\n#include <stdio.h>\n\nint\tmain(void)\n{\n\tpid_t pid = fork();\n\t// Dans le fils : affiche son PID et le PID de son parent\n\t// Dans le parent : affiche son PID et le PID du fils\n\t// TON CODE ICI\n\treturn (0);\n}",
+        "solution": "#include <unistd.h>\n#include <stdio.h>\n\nint\tmain(void)\n{\n\tpid_t pid = fork();\n\tif (pid == -1)\n\t\treturn (1);\n\tif (pid == 0)\n\t\tprintf(\"Fils: PID=%d, PPID=%d\\n\", getpid(), getppid());\n\telse\n\t\tprintf(\"Parent: PID=%d, fils=%d\\n\", getpid(), pid);\n\treturn (0);\n}",
+        "hint": "getpid() pour le PID courant, getppid() pour le parent, pid (retour de fork) pour le PID du fils.",
+        "difficulty": 1
+      },
+      {
+        "id": 3,
+        "title": "Fork avec wait",
+        "instruction": "Ecris un programme ou le parent attend la fin du fils avec wait(NULL) avant d'afficher 'Parent termine'.",
+        "starterCode": "#include <unistd.h>\n#include <stdio.h>\n#include <sys/wait.h>\n\nint\tmain(void)\n{\n\tpid_t pid = fork();\n\t// Le fils affiche \"Fils termine\"\n\t// Le parent attend puis affiche \"Parent termine\"\n\t// TON CODE ICI\n\treturn (0);\n}",
+        "solution": "#include <unistd.h>\n#include <stdio.h>\n#include <sys/wait.h>\n\nint\tmain(void)\n{\n\tpid_t pid = fork();\n\tif (pid == -1)\n\t\treturn (1);\n\tif (pid == 0)\n\t{\n\t\tprintf(\"Fils termine\\n\");\n\t\treturn (0);\n\t}\n\twait(NULL);\n\tprintf(\"Parent termine\\n\");\n\treturn (0);\n}",
+        "hint": "Le parent appelle wait(NULL) avant son printf pour garantir l'ordre d'affichage.",
+        "difficulty": 2
+      },
+      {
+        "id": 4,
+        "title": "Variables independantes",
+        "instruction": "Demontre que le parent et le fils ont des copies independantes des variables apres fork().",
+        "starterCode": "#include <unistd.h>\n#include <stdio.h>\n#include <sys/wait.h>\n\nint\tmain(void)\n{\n\tint x = 42;\n\t// Fork, modifier x dans le fils, verifier dans le parent\n\t// TON CODE ICI\n\treturn (0);\n}",
+        "solution": "#include <unistd.h>\n#include <stdio.h>\n#include <sys/wait.h>\n\nint\tmain(void)\n{\n\tint x = 42;\n\tpid_t pid = fork();\n\tif (pid == -1)\n\t\treturn (1);\n\tif (pid == 0)\n\t{\n\t\tx = 100;\n\t\tprintf(\"Fils: x = %d\\n\", x);\n\t\treturn (0);\n\t}\n\twait(NULL);\n\tprintf(\"Parent: x = %d\\n\", x);\n\treturn (0);\n}",
+        "hint": "Modifie x dans le fils et verifie que le parent a toujours la valeur originale.",
+        "difficulty": 2
+      },
+      {
+        "id": 5,
+        "title": "Utiliser write au lieu de printf",
+        "instruction": "Reecris l'affichage parent/fils en utilisant write() et ft_putnbr() au lieu de printf.",
+        "starterCode": "#include <unistd.h>\n#include <sys/wait.h>\n\nvoid\tft_putnbr(int n)\n{\n\tchar c;\n\tif (n < 0) { write(1, \"-\", 1); n = -n; }\n\tif (n >= 10) ft_putnbr(n / 10);\n\tc = (n % 10) + '0';\n\twrite(1, &c, 1);\n}\n\nint\tmain(void)\n{\n\t// Fork et affiche les PID avec write et ft_putnbr\n\t// TON CODE ICI\n\treturn (0);\n}",
+        "solution": "#include <unistd.h>\n#include <sys/wait.h>\n\nvoid\tft_putnbr(int n)\n{\n\tchar c;\n\tif (n < 0) { write(1, \"-\", 1); n = -n; }\n\tif (n >= 10) ft_putnbr(n / 10);\n\tc = (n % 10) + '0';\n\twrite(1, &c, 1);\n}\n\nint\tmain(void)\n{\n\tpid_t pid = fork();\n\tif (pid == -1)\n\t\treturn (1);\n\tif (pid == 0)\n\t{\n\t\twrite(1, \"Fils PID: \", 10);\n\t\tft_putnbr(getpid());\n\t\twrite(1, \"\\n\", 1);\n\t\treturn (0);\n\t}\n\twait(NULL);\n\twrite(1, \"Parent PID: \", 12);\n\tft_putnbr(getpid());\n\twrite(1, \"\\n\", 1);\n\treturn (0);\n}",
+        "hint": "Utilise write(1, \"texte\", len) pour les chaines et ft_putnbr() pour les nombres.",
+        "difficulty": 2
+      }
+    ]
+  },
+  "starterCode": "#include <unistd.h>\n#include <sys/wait.h>\n\nvoid\tft_putnbr(int n)\n{\n\tchar\tc;\n\n\tif (n == -2147483648)\n\t{\n\t\twrite(1, \"-2147483648\", 11);\n\t\treturn ;\n\t}\n\tif (n < 0)\n\t{\n\t\twrite(1, \"-\", 1);\n\t\tn = -n;\n\t}\n\tif (n >= 10)\n\t\tft_putnbr(n / 10);\n\tc = (n % 10) + '0';\n\twrite(1, &c, 1);\n}\n\nint\tmain(void)\n{\n\tpid_t\tpid;\n\n\t// 1. Appelle fork()\n\t// 2. Gere l'erreur (-1)\n\t// 3. Si fils (pid == 0) : affiche \"Je suis le fils, PID: [pid], parent: [ppid]\\n\"\n\t// 4. Si parent : affiche \"Je suis le parent, PID: [pid], fils: [pid_fils]\\n\"\n\t// 5. Le parent attend le fils avec wait(NULL)\n\treturn (0);\n}",
+  "solution": "#include <unistd.h>\n#include <sys/wait.h>\n\nvoid\tft_putnbr(int n)\n{\n\tchar\tc;\n\n\tif (n == -2147483648)\n\t{\n\t\twrite(1, \"-2147483648\", 11);\n\t\treturn ;\n\t}\n\tif (n < 0)\n\t{\n\t\twrite(1, \"-\", 1);\n\t\tn = -n;\n\t}\n\tif (n >= 10)\n\t\tft_putnbr(n / 10);\n\tc = (n % 10) + '0';\n\twrite(1, &c, 1);\n}\n\nint\tmain(void)\n{\n\tpid_t\tpid;\n\n\tpid = fork();\n\tif (pid == -1)\n\t{\n\t\twrite(2, \"Erreur fork\\n\", 12);\n\t\treturn (1);\n\t}\n\tif (pid == 0)\n\t{\n\t\twrite(1, \"Je suis le fils, PID: \", 22);\n\t\tft_putnbr(getpid());\n\t\twrite(1, \", parent: \", 10);\n\t\tft_putnbr(getppid());\n\t\twrite(1, \"\\n\", 1);\n\t\treturn (0);\n\t}\n\twrite(1, \"Je suis le parent, PID: \", 24);\n\tft_putnbr(getpid());\n\twrite(1, \", fils: \", 8);\n\tft_putnbr(pid);\n\twrite(1, \"\\n\", 1);\n\twait(NULL);\n\treturn (0);\n}",
+  "hints": [
+    "Appelle fork() et stocke le retour dans une variable pid_t. Teste d'abord si fork a echoue (retour -1).",
+    "Utilise pid == 0 pour le code du fils et pid > 0 pour le parent. getpid() donne le PID courant, getppid() celui du parent.",
+    "N'oublie pas que le parent doit appeler wait(NULL) pour attendre la fin du fils et eviter les zombies."
+  ],
+  "testCases": [
+    {
+      "id": 1,
+      "description": "Le programme affiche les infos du parent et du fils",
+      "stdin": "",
+      "expectedStdout": "Je suis le parent, PID: *\nJe suis le fils, PID: *\n",
+      "expectedExitCode": 0,
+      "visible": true
+    },
+    {
+      "id": 2,
+      "description": "Le PID du fils correspond au PPID affiche",
+      "stdin": "",
+      "expectedStdout": "parent et fils affichent des PID coherents",
+      "expectedExitCode": 0,
+      "visible": false
+    },
+    {
+      "id": 3,
+      "description": "Le programme ne cree pas de zombie",
+      "stdin": "",
+      "expectedStdout": "le parent attend le fils correctement",
+      "expectedExitCode": 0,
+      "visible": false
+    }
+  ],
+  "constraints": {
+    "allowedFunctions": ["write", "fork", "getpid", "getppid", "wait", "waitpid"],
+    "forbiddenFunctions": ["printf", "system"],
+    "maxExecutionTime": 5000,
+    "maxMemory": 128
+  },
+  "relatedExercises": ["c-day56-ex01-ft-fork-exec", "c-day56-ex02-ft-wait-status"],
+  "resources": [
+    {
+      "title": "Man fork(2) - Linux manual page",
+      "url": "https://man7.org/linux/man-pages/man2/fork.2.html",
+      "type": "documentation"
+    },
+    {
+      "title": "Comprendre fork() en C - Guide complet",
+      "url": "https://www.geeksforgeeks.org/fork-system-call/",
+      "type": "article"
+    }
+  ]
+}

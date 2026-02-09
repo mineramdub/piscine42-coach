@@ -1,0 +1,257 @@
+{
+  "id": "c-day54-ex02-ft-fibonacci-memo",
+  "category": "c",
+  "day": 54,
+  "order": 2,
+  "title": "Fibonacci avec memoisation",
+  "description": "Ecris une fonction ft_fibonacci_memo qui calcule le n-ieme nombre de Fibonacci en utilisant la memoisation pour eviter les calculs redondants. Sans memoisation, fib(40) prend des secondes. Avec, c'est instantane. Utilise un tableau statique comme cache. Prototype : long long ft_fibonacci_memo(int n);",
+  "difficulty": 4,
+  "points": 40,
+  "estimatedTime": 35,
+  "learningObjectives": [
+    "Comprendre le probleme des appels redondants en recursion",
+    "Maitriser la technique de memoisation (cache des resultats)",
+    "Comparer les complexites O(2^n) vs O(n) pour Fibonacci",
+    "Utiliser un tableau statique ou global comme cache",
+    "Preparer les bases de la programmation dynamique"
+  ],
+  "learningContent": {
+    "lesson": {
+      "introduction": "La suite de Fibonacci est definie par : F(0) = 0, F(1) = 1, F(n) = F(n-1) + F(n-2). L'implementation recursive naive est elegante mais catastrophiquement lente car elle recalcule les memes valeurs des milliards de fois. Par exemple, fib(40) fait plus d'un milliard d'appels recursifs ! La memoisation resout ce probleme en stockant les resultats deja calcules dans un cache. Si la valeur est dans le cache, on la retourne directement. Sinon, on la calcule et on la stocke. Cela reduit la complexite de O(2^n) a O(n).",
+      "steps": [
+        {
+          "id": 1,
+          "title": "Le probleme de la recursion naive",
+          "content": "L'implementation naive de Fibonacci est simple mais exponentiellement lente. Chaque appel genere 2 appels, et les memes sous-problemes sont recalcules des millions de fois.\n\nPour fib(5) : fib(3) est calcule 2 fois, fib(2) est calcule 3 fois. Pour fib(40), le nombre d'appels depasse le milliard.",
+          "codeExample": "// Implementation naive : O(2^n)\nlong long\tft_fib_naive(int n)\n{\n\tif (n <= 0)\n\t\treturn (0);\n\tif (n == 1)\n\t\treturn (1);\n\treturn (ft_fib_naive(n - 1) + ft_fib_naive(n - 2));\n}\n\n// Arbre d'appels pour fib(5) :\n//              fib(5)\n//            /        \\\n//        fib(4)      fib(3)\n//        /    \\      /    \\\n//    fib(3) fib(2) fib(2) fib(1)\n//    /  \\    /  \\\n// fib(2) fib(1) fib(1) fib(0)\n// fib(3) est calcule 2 fois !\n// fib(2) est calcule 3 fois !",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Combien de fois fib(2) est-il calcule dans l'appel fib(6) naif ?",
+            "starterCode": "// Dessine l'arbre d'appels de fib(6)\n// ou compte les appels a fib(2)\n// fib(6) = fib(5) + fib(4)\n// fib(5) appelle fib(2) ??? fois\n// fib(4) appelle fib(2) ??? fois\n// Total : ???",
+            "solution": "// fib(6) = fib(5) + fib(4)\n// fib(5) contient 3 appels a fib(2)\n// fib(4) contient 2 appels a fib(2)\n// fib(6) appelle fib(2) au total 5 fois !\n// (c'est fib(5) lui-meme = 5)\n// Pour fib(40) : fib(2) serait calcule\n// plus de 60 millions de fois"
+          }
+        },
+        {
+          "id": 2,
+          "title": "La memoisation : stocker les resultats",
+          "content": "La memoisation consiste a stocker les resultats dans un tableau (cache). Avant de calculer fib(n), on verifie si la valeur est deja dans le cache. Si oui, on la retourne directement (O(1)). Sinon, on la calcule, on la stocke, et on la retourne.\n\n**Resultat :** Chaque valeur n'est calculee qu'une seule fois. La complexite passe de O(2^n) a O(n).",
+          "codeExample": "// Memoisation avec tableau global\n#define MAX_N 100\nlong long\tg_cache[MAX_N];\nint\t\t\tg_computed[MAX_N]; // 0 ou 1\n\nlong long\tft_fibonacci_memo(int n)\n{\n\tlong long\tresult;\n\n\tif (n <= 0)\n\t\treturn (0);\n\tif (n == 1)\n\t\treturn (1);\n\tif (g_computed[n])\n\t\treturn (g_cache[n]); // Deja calcule !\n\tresult = ft_fibonacci_memo(n - 1) + ft_fibonacci_memo(n - 2);\n\tg_cache[n] = result;\n\tg_computed[n] = 1;\n\treturn (result);\n}",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Avec memoisation, combien de fois fib(3) est-il calcule pour fib(6) ?",
+            "starterCode": "// fib(6) avec memo :\n// fib(6) appelle fib(5) et fib(4)\n// fib(5) appelle fib(4) et fib(3)\n// fib(4) a deja ete calcule par fib(5) -> ???\n// fib(3) : ???",
+            "solution": "// Avec memoisation, fib(3) est calcule\n// exactement UNE fois.\n// Tous les appels suivants retournent\n// directement la valeur du cache.\n// Chaque fib(k) pour k de 0 a 6 est\n// calcule exactement 1 fois -> O(n)"
+          }
+        },
+        {
+          "id": 3,
+          "title": "Utiliser un tableau avec valeur sentinelle",
+          "content": "Au lieu d'un tableau g_computed separe, on peut utiliser -1 comme valeur sentinelle dans le cache. Si cache[n] == -1, la valeur n'a pas encore ete calculee. Cela simplifie le code.\n\nOn initialise le tableau a -1 au debut du programme.",
+          "codeExample": "#define MAX_N 100\nlong long\tg_cache[MAX_N];\n\nvoid\tft_init_cache(void)\n{\n\tint\ti;\n\n\ti = 0;\n\twhile (i < MAX_N)\n\t{\n\t\tg_cache[i] = -1;\n\t\ti++;\n\t}\n}\n\nlong long\tft_fibonacci_memo(int n)\n{\n\tif (n <= 0)\n\t\treturn (0);\n\tif (n == 1)\n\t\treturn (1);\n\tif (g_cache[n] != -1)\n\t\treturn (g_cache[n]);\n\tg_cache[n] = ft_fibonacci_memo(n - 1) + ft_fibonacci_memo(n - 2);\n\treturn (g_cache[n]);\n}",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Pourquoi -1 est-il un bon choix comme valeur sentinelle pour Fibonacci ?",
+            "starterCode": "// Valeur sentinelle = valeur qui indique 'pas encore calcule'\n// -1 est bon car les nombres de Fibonacci sont ???\n// Est-ce que -1 peut etre un vrai resultat de Fibonacci ?",
+            "solution": "// Les nombres de Fibonacci sont toujours >= 0\n// (0, 1, 1, 2, 3, 5, 8, 13...)\n// Donc -1 ne peut jamais etre un vrai resultat\n// C'est un bon choix de sentinelle.\n// Pour d'autres fonctions, il faudrait adapter."
+          }
+        },
+        {
+          "id": 4,
+          "title": "Comparaison des performances",
+          "content": "La difference de performance entre la version naive et la version memoisee est spectaculaire. Pour fib(40), la version naive fait environ 1.6 milliard d'appels (2^40 ~ 10^12). La version memoisee fait seulement 79 appels (2*40 - 1).\n\nPour fib(50), la naive prendrait des heures. La memoisee est instantanee.\n\n**Programmation dynamique :** La memoisation est une forme de programmation dynamique 'top-down'. L'approche 'bottom-up' calcule les valeurs de 0 a n dans une boucle, sans recursion.",
+          "codeExample": "#include <unistd.h>\n\nint\tmain(void)\n{\n\tft_init_cache();\n\t// fib(10) = 55\n\tft_putnbr_ll(ft_fibonacci_memo(10));\n\twrite(1, \"\\n\", 1);\n\t// fib(40) = 102334155 (instantane avec memo !)\n\tft_putnbr_ll(ft_fibonacci_memo(40));\n\twrite(1, \"\\n\", 1);\n\t// fib(50) = 12586269025 (impossible sans memo)\n\tft_putnbr_ll(ft_fibonacci_memo(50));\n\twrite(1, \"\\n\", 1);\n\treturn (0);\n}\n\n// Comparaison des appels :\n// n=10 : naive ~177 appels, memo ~19 appels\n// n=40 : naive ~2 milliards, memo ~79 appels\n// n=50 : naive ~40 mille milliards (!), memo ~99 appels",
+          "language": "c"
+        }
+      ]
+    },
+    "theory": [
+      {
+        "title": "Recursion naive et explosion combinatoire",
+        "content": "La recursion naive pour Fibonacci cree un arbre binaire d'appels. A chaque niveau, le nombre d'appels double approximativement. La complexite est O(2^n), ce qui est inutilisable pour n > 40.",
+        "codeExamples": [
+          {
+            "title": "L'arbre d'appels explose",
+            "code": "// Nombre d'appels pour fib(n) naive :\n// n=5  : 15 appels\n// n=10 : 177 appels\n// n=20 : ~21 000 appels\n// n=30 : ~2.7 millions\n// n=40 : ~3.3 milliards\n// n=50 : ~40 mille milliards\n\n// La croissance est exponentielle : O(2^n)\n// C'est la meme croissance que fib(n) lui-meme !\n// (le nombre d'or phi^n ~ 1.618^n)",
+            "explanation": "L'arbre binaire d'appels croit exponentiellement, rendant la naive inutilisable"
+          }
+        ],
+        "keyPoints": [
+          "La recursion naive cree un arbre binaire d'appels",
+          "Le nombre d'appels est proportionnel a fib(n) lui-meme",
+          "La complexite est O(2^n), inacceptable pour n > 40",
+          "Le probleme est les sous-problemes identiques recalcules"
+        ],
+        "commonMistakes": [
+          "Penser que la recursion naive est acceptable pour les petites valeurs de n",
+          "Confondre la complexite O(n) de la boucle et O(2^n) de la recursion",
+          "Ne pas realiser que fib(40) prend deja plusieurs secondes en naif"
+        ]
+      },
+      {
+        "title": "Memoisation : principe et implementation",
+        "content": "La memoisation est une technique d'optimisation qui stocke les resultats des appels de fonction pour eviter de les recalculer. Elle transforme une complexite exponentielle en lineaire pour Fibonacci.",
+        "codeExamples": [
+          {
+            "title": "Avec et sans memoisation",
+            "code": "// Sans memo : chaque sous-probleme est recalcule\n// fib(5) calcule fib(3) deux fois, fib(2) trois fois\n\n// Avec memo : chaque sous-probleme est calcule UNE fois\n// Premier appel fib(3) : calcule et stocke\n// Deuxieme appel fib(3) : retourne du cache (O(1))\n\n// Le cache est un tableau : cache[n] = fib(n)\n// Initialise a -1 (sentinelle)\n// Avant de calculer : verifier si cache[n] != -1\n// Apres avoir calcule : stocker dans cache[n]",
+            "explanation": "La memoisation echange de la memoire contre du temps de calcul"
+          }
+        ],
+        "keyPoints": [
+          "La memoisation stocke les resultats deja calcules",
+          "Chaque sous-probleme n'est resolu qu'une seule fois",
+          "La complexite passe de O(2^n) a O(n)",
+          "Le cout supplementaire est O(n) en memoire pour le cache"
+        ],
+        "commonMistakes": [
+          "Oublier d'initialiser le cache (valeurs aleatoires interpretees comme des resultats)",
+          "Ne pas verifier le cache avant de calculer (pas d'optimisation)",
+          "Oublier de stocker le resultat dans le cache apres le calcul"
+        ]
+      },
+      {
+        "title": "Programmation dynamique top-down vs bottom-up",
+        "content": "La memoisation est l'approche 'top-down' de la programmation dynamique : on commence par le probleme principal et on descend vers les sous-problemes. L'approche 'bottom-up' commence par les sous-problemes les plus petits et remonte.",
+        "codeExamples": [
+          {
+            "title": "Fibonacci bottom-up (iteratif)",
+            "code": "// Bottom-up : calculer de fib(0) a fib(n)\nlong long\tft_fib_bottom_up(int n)\n{\n\tlong long\ta;\n\tlong long\tb;\n\tlong long\ttmp;\n\tint\t\t\ti;\n\n\tif (n <= 0) return (0);\n\tif (n == 1) return (1);\n\ta = 0; // fib(0)\n\tb = 1; // fib(1)\n\ti = 2;\n\twhile (i <= n)\n\t{\n\t\ttmp = a + b;\n\t\ta = b;\n\t\tb = tmp;\n\t\ti++;\n\t}\n\treturn (b);\n}\n// O(n) en temps, O(1) en memoire !",
+            "explanation": "L'approche bottom-up est souvent plus efficace en memoire car elle ne necessite pas de pile de recursion"
+          }
+        ],
+        "keyPoints": [
+          "Top-down (memoisation) : recursion + cache, facile a coder",
+          "Bottom-up (tabulation) : boucle iterative, plus efficace en memoire",
+          "Les deux approches ont la meme complexite temporelle O(n)",
+          "Bottom-up evite la pile de recursion (pas de risque de stack overflow)"
+        ],
+        "commonMistakes": [
+          "Confondre memoisation (top-down) et tabulation (bottom-up)",
+          "Penser que la recursion est toujours necessaire pour la programmation dynamique",
+          "Ne pas considerer l'approche bottom-up quand la memoire est limitee"
+        ]
+      },
+      {
+        "title": "Variables globales et statiques pour le cache",
+        "content": "En C, le cache peut etre un tableau global ou statique. Les variables globales sont accessibles partout, les statiques sont locales a la fonction mais persistent entre les appels.",
+        "codeExamples": [
+          {
+            "title": "Cache global vs statique",
+            "code": "// Cache global :\nlong long g_cache[100];\n// + Accessible partout (pour reinitialiser)\n// - Pollution de l'espace de noms\n\n// Cache statique local :\nlong long ft_fib(int n)\n{\n\tstatic long long cache[100] = {[0 ... 99] = -1};\n\t// + Encapsule dans la fonction\n\t// - Ne peut pas etre reinitialise de l'exterieur\n\t// Note : l'initialisation [0 ... 99] est une extension GCC\n}\n\n// Alternative : passer le cache en parametre\nlong long ft_fib(int n, long long *cache)\n{\n\tif (cache[n] != -1)\n\t\treturn (cache[n]);\n\t// ...\n}",
+            "explanation": "Le choix entre global, statique et parametre depend du contexte d'utilisation"
+          }
+        ],
+        "keyPoints": [
+          "Un tableau global est le plus simple pour un cache",
+          "static conserve la valeur entre les appels de fonction",
+          "Passer le cache en parametre est plus propre mais plus verbeux",
+          "Le cache doit etre initialise a une valeur sentinelle (-1)"
+        ],
+        "commonMistakes": [
+          "Declarer le cache comme variable locale non-statique (perdu a chaque appel)",
+          "Oublier d'initialiser le cache (contient des valeurs aleatoires)",
+          "Depasser la taille du cache (acces hors limites)"
+        ]
+      }
+    ],
+    "prepExercises": [
+      {
+        "id": 1,
+        "title": "Fibonacci naif recursif",
+        "instruction": "Ecris la version naive de Fibonacci (sans memoisation).",
+        "starterCode": "long long\tft_fib_naive(int n)\n{\n\t// Cas de base : n <= 0 -> 0, n == 1 -> 1\n\t// Recursion : fib(n-1) + fib(n-2)\n\t// TON CODE ICI\n}",
+        "solution": "long long\tft_fib_naive(int n)\n{\n\tif (n <= 0)\n\t\treturn (0);\n\tif (n == 1)\n\t\treturn (1);\n\treturn (ft_fib_naive(n - 1) + ft_fib_naive(n - 2));\n}",
+        "hint": "Si n <= 0 : 0. Si n == 1 : 1. Sinon : fib(n-1) + fib(n-2).",
+        "difficulty": 1
+      },
+      {
+        "id": 2,
+        "title": "Initialiser un tableau a -1",
+        "instruction": "Ecris une fonction qui initialise un tableau de long long a -1.",
+        "starterCode": "void\tft_init_cache(long long *cache, int size)\n{\n\t// Met chaque element a -1\n\t// TON CODE ICI\n}",
+        "solution": "void\tft_init_cache(long long *cache, int size)\n{\n\tint\ti;\n\n\ti = 0;\n\twhile (i < size)\n\t{\n\t\tcache[i] = -1;\n\t\ti++;\n\t}\n}",
+        "hint": "Boucle de 0 a size-1, cache[i] = -1.",
+        "difficulty": 1
+      },
+      {
+        "id": 3,
+        "title": "Verifier le cache avant de calculer",
+        "instruction": "Ecris la verification du cache : si la valeur existe, retourne-la.",
+        "starterCode": "long long\tft_fib_check(int n, long long *cache)\n{\n\t// Si cache[n] != -1 : retourner cache[n]\n\t// Sinon : calculer, stocker, retourner\n\t// TON CODE ICI\n}",
+        "solution": "long long\tft_fib_check(int n, long long *cache)\n{\n\tif (n <= 0)\n\t\treturn (0);\n\tif (n == 1)\n\t\treturn (1);\n\tif (cache[n] != -1)\n\t\treturn (cache[n]);\n\tcache[n] = ft_fib_check(n - 1, cache) + ft_fib_check(n - 2, cache);\n\treturn (cache[n]);\n}",
+        "hint": "Avant le calcul recursif, verifie cache[n] != -1. Apres le calcul, stocke dans cache[n].",
+        "difficulty": 2
+      },
+      {
+        "id": 4,
+        "title": "Fibonacci iteratif bottom-up",
+        "instruction": "Ecris Fibonacci en version iterative (bottom-up, sans recursion).",
+        "starterCode": "long long\tft_fib_iter(int n)\n{\n\tlong long\ta;\n\tlong long\tb;\n\tlong long\ttmp;\n\tint\t\t\ti;\n\n\t// a = fib(0), b = fib(1)\n\t// Boucle : tmp = a + b, a = b, b = tmp\n\t// TON CODE ICI\n}",
+        "solution": "long long\tft_fib_iter(int n)\n{\n\tlong long\ta;\n\tlong long\tb;\n\tlong long\ttmp;\n\tint\t\t\ti;\n\n\tif (n <= 0)\n\t\treturn (0);\n\tif (n == 1)\n\t\treturn (1);\n\ta = 0;\n\tb = 1;\n\ti = 2;\n\twhile (i <= n)\n\t{\n\t\ttmp = a + b;\n\t\ta = b;\n\t\tb = tmp;\n\t\ti++;\n\t}\n\treturn (b);\n}",
+        "hint": "Commence avec a=0 et b=1. A chaque etape : tmp = a+b, a = b, b = tmp.",
+        "difficulty": 2
+      },
+      {
+        "id": 5,
+        "title": "Comparer les performances",
+        "instruction": "Appelle fib_naive(30) et fib_memo(30) et compare le nombre d'appels.",
+        "starterCode": "int\tg_count_naive = 0;\nint\tg_count_memo = 0;\n\nlong long\tft_fib_naive_count(int n)\n{\n\tg_count_naive++;\n\tif (n <= 0) return (0);\n\tif (n == 1) return (1);\n\treturn (ft_fib_naive_count(n-1) + ft_fib_naive_count(n-2));\n}\n\n// Ecrire fib_memo_count avec compteur\n// Comparer g_count_naive et g_count_memo pour n=30",
+        "solution": "int\tg_count_naive = 0;\nint\tg_count_memo = 0;\nlong long\tg_cache[100];\n\nlong long\tft_fib_naive_count(int n)\n{\n\tg_count_naive++;\n\tif (n <= 0) return (0);\n\tif (n == 1) return (1);\n\treturn (ft_fib_naive_count(n-1) + ft_fib_naive_count(n-2));\n}\n\nlong long\tft_fib_memo_count(int n)\n{\n\tg_count_memo++;\n\tif (n <= 0) return (0);\n\tif (n == 1) return (1);\n\tif (g_cache[n] != -1) return (g_cache[n]);\n\tg_cache[n] = ft_fib_memo_count(n-1) + ft_fib_memo_count(n-2);\n\treturn (g_cache[n]);\n}\n// n=30 : naive ~2.7 millions appels, memo ~59 appels",
+        "hint": "Ajoute un compteur global dans chaque version et compare apres l'appel avec n=30.",
+        "difficulty": 3
+      }
+    ]
+  },
+  "starterCode": "#include <unistd.h>\n\n#define MAX_N 100\n\nlong long\tg_cache[MAX_N];\n\nvoid\tft_putnbr_ll(long long n)\n{\n\tchar c;\n\tif (n < 0) { write(1, \"-\", 1); n = -n; }\n\tif (n >= 10) ft_putnbr_ll(n / 10);\n\tc = (n % 10) + '0';\n\twrite(1, &c, 1);\n}\n\nvoid\tft_init_cache(void)\n{\n\tint\ti;\n\n\ti = 0;\n\twhile (i < MAX_N)\n\t{\n\t\tg_cache[i] = -1;\n\t\ti++;\n\t}\n}\n\nlong long\tft_fibonacci_memo(int n)\n{\n\t// 1. Cas de base : n <= 0 -> 0, n == 1 -> 1\n\t// 2. Si g_cache[n] != -1 : retourner g_cache[n]\n\t// 3. Calculer fib(n-1) + fib(n-2)\n\t// 4. Stocker dans g_cache[n]\n\t// 5. Retourner g_cache[n]\n\treturn (0);\n}\n\nint\tmain(void)\n{\n\tft_init_cache();\n\tft_putnbr_ll(ft_fibonacci_memo(10));\n\twrite(1, \"\\n\", 1);\n\tft_putnbr_ll(ft_fibonacci_memo(40));\n\twrite(1, \"\\n\", 1);\n\tft_putnbr_ll(ft_fibonacci_memo(0));\n\twrite(1, \"\\n\", 1);\n\treturn (0);\n}",
+  "solution": "#include <unistd.h>\n\n#define MAX_N 100\n\nlong long\tg_cache[MAX_N];\n\nvoid\tft_putnbr_ll(long long n)\n{\n\tchar c;\n\tif (n < 0) { write(1, \"-\", 1); n = -n; }\n\tif (n >= 10) ft_putnbr_ll(n / 10);\n\tc = (n % 10) + '0';\n\twrite(1, &c, 1);\n}\n\nvoid\tft_init_cache(void)\n{\n\tint\ti;\n\n\ti = 0;\n\twhile (i < MAX_N)\n\t{\n\t\tg_cache[i] = -1;\n\t\ti++;\n\t}\n}\n\nlong long\tft_fibonacci_memo(int n)\n{\n\tif (n <= 0)\n\t\treturn (0);\n\tif (n == 1)\n\t\treturn (1);\n\tif (g_cache[n] != -1)\n\t\treturn (g_cache[n]);\n\tg_cache[n] = ft_fibonacci_memo(n - 1) + ft_fibonacci_memo(n - 2);\n\treturn (g_cache[n]);\n}\n\nint\tmain(void)\n{\n\tft_init_cache();\n\tft_putnbr_ll(ft_fibonacci_memo(10));\n\twrite(1, \"\\n\", 1);\n\tft_putnbr_ll(ft_fibonacci_memo(40));\n\twrite(1, \"\\n\", 1);\n\tft_putnbr_ll(ft_fibonacci_memo(0));\n\twrite(1, \"\\n\", 1);\n\treturn (0);\n}",
+  "hints": [
+    "Initialise le cache a -1 avec ft_init_cache(). Avant de calculer, verifie si g_cache[n] != -1.",
+    "Si le cache contient la valeur, retourne-la directement. Sinon, calcule fib(n-1) + fib(n-2) et stocke dans g_cache[n].",
+    "N'oublie pas les cas de base : fib(0) = 0 et fib(1) = 1. Ces valeurs n'ont pas besoin d'etre cachees."
+  ],
+  "testCases": [
+    {
+      "id": 1,
+      "description": "fib(10)=55, fib(40)=102334155, fib(0)=0",
+      "stdin": "",
+      "expectedStdout": "55\n102334155\n0\n",
+      "expectedExitCode": 0,
+      "visible": true
+    },
+    {
+      "id": 2,
+      "description": "fib(1)=1, fib(2)=1, fib(20)=6765",
+      "stdin": "",
+      "expectedStdout": "1\n1\n6765\n",
+      "expectedExitCode": 0,
+      "visible": false
+    },
+    {
+      "id": 3,
+      "description": "fib(50)=12586269025 (impossible sans memo)",
+      "stdin": "",
+      "expectedStdout": "12586269025\n",
+      "expectedExitCode": 0,
+      "visible": false
+    }
+  ],
+  "constraints": {
+    "allowedFunctions": ["write"],
+    "forbiddenFunctions": ["printf", "malloc"],
+    "maxExecutionTime": 5000,
+    "maxMemory": 128
+  },
+  "relatedExercises": ["c-day54-ex00-ft-flood-fill", "c-day54-ex01-ft-power-recursive"],
+  "resources": [
+    {
+      "title": "Memoisation et programmation dynamique",
+      "url": "https://fr.wikipedia.org/wiki/M%C3%A9mo%C3%AFsation",
+      "type": "documentation"
+    },
+    {
+      "title": "Fibonacci avec memoisation en C",
+      "url": "https://www.geeksforgeeks.org/memoization-1d-2d-and-3d/",
+      "type": "article"
+    }
+  ]
+}
