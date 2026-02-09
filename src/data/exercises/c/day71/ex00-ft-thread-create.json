@@ -1,0 +1,257 @@
+{
+  "id": "c-day71-ex00-ft-thread-create",
+  "category": "c",
+  "day": 71,
+  "order": 0,
+  "title": "Creer un thread avec pthread_create",
+  "description": "Apprends a creer un thread en utilisant pthread_create. Tu vas comprendre comment lancer une fonction dans un thread separe, passer des arguments et recuperer le resultat.",
+  "difficulty": 4,
+  "points": 40,
+  "estimatedTime": 35,
+  "learningObjectives": [
+    "Comprendre le concept de thread et la programmation concurrente",
+    "Utiliser pthread_create pour lancer un thread",
+    "Passer des arguments a un thread via un pointeur void",
+    "Gerer le cycle de vie d'un thread (creation et terminaison)",
+    "Compiler avec le flag -pthread"
+  ],
+  "learningContent": {
+    "lesson": {
+      "introduction": "Les threads permettent d'executer plusieurs taches en parallele au sein d'un meme processus. Contrairement aux processus qui ont chacun leur propre espace memoire, les threads partagent le meme espace d'adressage. Cela les rend plus legers et plus rapides a creer, mais introduit aussi des problemes de synchronisation que nous verrons plus tard. La bibliotheque POSIX threads (pthreads) fournit les outils necessaires pour creer et gerer des threads en C.",
+      "steps": [
+        {
+          "id": 1,
+          "title": "Qu'est-ce qu'un thread ?",
+          "content": "Un **thread** (fil d'execution) est une unite d'execution au sein d'un processus. Chaque processus demarre avec un thread principal (le main). On peut creer des threads supplementaires pour executer du code en parallele.\n\n**Avantages des threads :**\n- Partage de memoire entre threads\n- Creation plus rapide qu'un processus\n- Communication facilitee\n\n**Inconvenients :**\n- Problemes de synchronisation\n- Race conditions possibles",
+          "codeExample": "#include <pthread.h>\n#include <stdio.h>\n\n// Un thread execute une fonction\n// Cette fonction prend un void* et retourne un void*\nvoid\t*routine(void *arg)\n{\n\tprintf(\"Je suis un thread !\\n\");\n\treturn (NULL);\n}",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Ecris une fonction routine qui affiche 'Bonjour depuis le thread' et retourne NULL.",
+            "starterCode": "#include <pthread.h>\n#include <stdio.h>\n\nvoid\t*routine(void *arg)\n{\n\t/* TON CODE ICI */\n}",
+            "solution": "#include <pthread.h>\n#include <stdio.h>\n\nvoid\t*routine(void *arg)\n{\n\t(void)arg;\n\tprintf(\"Bonjour depuis le thread\\n\");\n\treturn (NULL);\n}"
+          }
+        },
+        {
+          "id": 2,
+          "title": "pthread_create : creer un thread",
+          "content": "La fonction `pthread_create` lance un nouveau thread :\n\n```c\nint pthread_create(pthread_t *thread, const pthread_attr_t *attr,\n                   void *(*start_routine)(void *), void *arg);\n```\n\n- **thread** : pointeur vers l'identifiant du thread\n- **attr** : attributs (NULL pour defaut)\n- **start_routine** : fonction a executer\n- **arg** : argument passe a la fonction\n\nRetourne 0 en cas de succes.",
+          "codeExample": "#include <pthread.h>\n#include <stdio.h>\n\nvoid\t*routine(void *arg)\n{\n\tprintf(\"Thread cree !\\n\");\n\treturn (NULL);\n}\n\nint\tmain(void)\n{\n\tpthread_t\ttid;\n\n\tpthread_create(&tid, NULL, routine, NULL);\n\tpthread_join(tid, NULL);\n\treturn (0);\n}",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Cree un thread qui execute une routine affichant 'Thread actif'. N'oublie pas pthread_join.",
+            "starterCode": "#include <pthread.h>\n#include <stdio.h>\n\nvoid\t*routine(void *arg)\n{\n\tprintf(\"Thread actif\\n\");\n\treturn (NULL);\n}\n\nint\tmain(void)\n{\n\tpthread_t\ttid;\n\t/* TON CODE ICI */\n\treturn (0);\n}",
+            "solution": "#include <pthread.h>\n#include <stdio.h>\n\nvoid\t*routine(void *arg)\n{\n\t(void)arg;\n\tprintf(\"Thread actif\\n\");\n\treturn (NULL);\n}\n\nint\tmain(void)\n{\n\tpthread_t\ttid;\n\n\tpthread_create(&tid, NULL, routine, NULL);\n\tpthread_join(tid, NULL);\n\treturn (0);\n}"
+          }
+        },
+        {
+          "id": 3,
+          "title": "Passer des arguments a un thread",
+          "content": "Le dernier parametre de `pthread_create` est un `void *` qui permet de passer n'importe quel type de donnee au thread. On cast le pointeur dans la routine pour recuperer la valeur.\n\n**Attention** : ne jamais passer l'adresse d'une variable locale qui pourrait etre modifiee avant que le thread ne la lise !",
+          "codeExample": "#include <pthread.h>\n#include <stdio.h>\n\nvoid\t*routine(void *arg)\n{\n\tint\t*nb;\n\n\tnb = (int *)arg;\n\tprintf(\"Valeur recue : %d\\n\", *nb);\n\treturn (NULL);\n}\n\nint\tmain(void)\n{\n\tpthread_t\ttid;\n\tint\t\t\tnombre;\n\n\tnombre = 42;\n\tpthread_create(&tid, NULL, routine, &nombre);\n\tpthread_join(tid, NULL);\n\treturn (0);\n}",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Passe une chaine de caracteres en argument a un thread et affiche-la dans la routine.",
+            "starterCode": "#include <pthread.h>\n#include <stdio.h>\n\nvoid\t*routine(void *arg)\n{\n\t/* TON CODE ICI */\n}\n\nint\tmain(void)\n{\n\tpthread_t\ttid;\n\tchar\t\t*msg = \"Hello thread\";\n\t/* TON CODE ICI */\n\treturn (0);\n}",
+            "solution": "#include <pthread.h>\n#include <stdio.h>\n\nvoid\t*routine(void *arg)\n{\n\tchar\t*msg;\n\n\tmsg = (char *)arg;\n\tprintf(\"%s\\n\", msg);\n\treturn (NULL);\n}\n\nint\tmain(void)\n{\n\tpthread_t\ttid;\n\tchar\t\t*msg = \"Hello thread\";\n\n\tpthread_create(&tid, NULL, routine, msg);\n\tpthread_join(tid, NULL);\n\treturn (0);\n}"
+          }
+        },
+        {
+          "id": 4,
+          "title": "Compilation et bonnes pratiques",
+          "content": "Pour compiler un programme utilisant les pthreads, il faut ajouter le flag `-pthread` :\n\n```bash\ngcc -Wall -Wextra -Werror -pthread programme.c\n```\n\n**Bonnes pratiques :**\n- Toujours verifier la valeur de retour de `pthread_create`\n- Toujours faire `pthread_join` ou `pthread_detach`\n- Ne jamais passer l'adresse d'une variable de boucle directement\n- Caster proprement les arguments dans la routine",
+          "codeExample": "#include <pthread.h>\n#include <stdio.h>\n#include <stdlib.h>\n\nvoid\t*routine(void *arg)\n{\n\tint\tid;\n\n\tid = *(int *)arg;\n\tprintf(\"Thread %d demarre\\n\", id);\n\treturn (NULL);\n}\n\nint\tmain(void)\n{\n\tpthread_t\ttid;\n\tint\t\t\tid;\n\n\tid = 1;\n\tif (pthread_create(&tid, NULL, routine, &id) != 0)\n\t{\n\t\tperror(\"pthread_create\");\n\t\treturn (1);\n\t}\n\tpthread_join(tid, NULL);\n\treturn (0);\n}",
+          "language": "c"
+        }
+      ]
+    },
+    "theory": [
+      {
+        "title": "Processus vs Threads",
+        "content": "Un processus possede son propre espace memoire, ses descripteurs de fichiers et son propre contexte d'execution. Les threads au sein d'un meme processus partagent l'espace memoire (heap, data segment) mais ont chacun leur propre pile (stack). Cela rend la communication entre threads beaucoup plus simple qu'entre processus.",
+        "codeExamples": [
+          {
+            "title": "Thread avec memoire partagee",
+            "code": "#include <pthread.h>\n#include <stdio.h>\n\nint\tg_shared = 0;\n\nvoid\t*increment(void *arg)\n{\n\t(void)arg;\n\tg_shared++;\n\treturn (NULL);\n}",
+            "explanation": "La variable globale g_shared est accessible par tous les threads du processus."
+          }
+        ],
+        "keyPoints": [
+          "Les threads partagent le meme espace d'adressage du processus",
+          "Chaque thread possede sa propre pile (stack) et ses registres",
+          "La creation d'un thread est plus legere que celle d'un processus",
+          "Les threads partagent les descripteurs de fichiers ouverts"
+        ],
+        "commonMistakes": [
+          "Confondre fork() et pthread_create() - fork duplique le processus, pthread cree un thread",
+          "Oublier que les variables globales sont partagees entre threads",
+          "Penser que les variables locales d'un thread sont visibles par les autres"
+        ]
+      },
+      {
+        "title": "La fonction pthread_create en detail",
+        "content": "pthread_create prend quatre arguments : un pointeur vers pthread_t pour stocker l'identifiant, des attributs optionnels, la fonction a executer et un argument. La fonction de routine doit avoir le prototype void *(*)(void *). La valeur de retour 0 indique le succes.",
+        "codeExamples": [
+          {
+            "title": "Creation avec verification d'erreur",
+            "code": "pthread_t\ttid;\nint\t\t\tret;\n\nret = pthread_create(&tid, NULL, routine, NULL);\nif (ret != 0)\n{\n\tfprintf(stderr, \"Erreur creation thread: %d\\n\", ret);\n\treturn (1);\n}",
+            "explanation": "Toujours verifier le code de retour de pthread_create."
+          }
+        ],
+        "keyPoints": [
+          "pthread_create retourne 0 en cas de succes, un code d'erreur sinon",
+          "Le deuxieme argument NULL utilise les attributs par defaut",
+          "La routine doit retourner void* et prendre void* en parametre",
+          "L'identifiant pthread_t est stocke dans le premier argument"
+        ],
+        "commonMistakes": [
+          "Ne pas verifier la valeur de retour de pthread_create",
+          "Passer une fonction avec un mauvais prototype (pas void *(*)(void *))",
+          "Utiliser perror au lieu de strerror pour les erreurs pthread (pthread ne set pas errno)"
+        ]
+      },
+      {
+        "title": "Passage d'arguments aux threads",
+        "content": "L'argument passe a un thread est un void*, ce qui permet de passer n'importe quel type de donnee. Il faut caster correctement dans la routine. Attention particuliere aux variables de boucle : si on passe &i et que i change avant la lecture par le thread, le comportement est imprevisible.",
+        "codeExamples": [
+          {
+            "title": "Passage d'une structure",
+            "code": "typedef struct s_data\n{\n\tint\t\tid;\n\tchar\t*name;\n}\t\t\tt_data;\n\nvoid\t*routine(void *arg)\n{\n\tt_data\t*data;\n\n\tdata = (tt_data *)arg;\n\tprintf(\"Thread %d: %s\\n\", data->id, data->name);\n\treturn (NULL);\n}",
+            "explanation": "Passer une structure permet de transmettre plusieurs donnees a un thread."
+          }
+        ],
+        "keyPoints": [
+          "L'argument est un void* : il faut le caster dans la routine",
+          "On peut passer une structure pour transmettre plusieurs valeurs",
+          "Ne jamais passer l'adresse d'une variable de boucle sans precaution",
+          "Allouer sur le heap si la variable locale risque d'etre ecrasee"
+        ],
+        "commonMistakes": [
+          "Passer &i dans une boucle sans allocation - tous les threads lisent la meme adresse",
+          "Oublier de caster le void* dans le bon type dans la routine",
+          "Passer l'adresse d'une variable locale qui sort du scope avant la lecture"
+        ]
+      },
+      {
+        "title": "Compilation et flags pthread",
+        "content": "Les programmes utilisant les pthreads doivent etre compiles avec le flag -pthread (ou -lpthread sur certains systemes). Ce flag indique au compilateur de lier la bibliotheque pthread et d'activer les options necessaires pour le multi-threading.",
+        "codeExamples": [
+          {
+            "title": "Compilation avec Makefile",
+            "code": "CC = gcc\nCFLAGS = -Wall -Wextra -Werror -pthread\n\nall: programme\n\nprogramme: main.o\n\t$(CC) $(CFLAGS) -o $@ $^",
+            "explanation": "Le flag -pthread doit apparaitre dans CFLAGS pour la compilation et le linkage."
+          }
+        ],
+        "keyPoints": [
+          "Le flag -pthread est necessaire a la compilation ET au linkage",
+          "Sur certains systemes anciens on utilise -lpthread au linkage",
+          "Sans -pthread, les fonctions pthread_* ne seront pas trouvees",
+          "Le Makefile doit inclure -pthread dans les CFLAGS"
+        ],
+        "commonMistakes": [
+          "Oublier le flag -pthread lors de la compilation",
+          "Mettre -lpthread seulement au linkage et pas a la compilation",
+          "Ne pas inclure <pthread.h> en tete du fichier"
+        ]
+      }
+    ],
+    "prepExercises": [
+      {
+        "id": 1,
+        "title": "Routine simple",
+        "instruction": "Ecris une routine de thread qui affiche 'Thread demarre' et retourne NULL.",
+        "starterCode": "void\t*routine(void *arg)\n{\n\t/* TON CODE ICI */\n}",
+        "solution": "void\t*routine(void *arg)\n{\n\t(void)arg;\n\tprintf(\"Thread demarre\\n\");\n\treturn (NULL);\n}",
+        "hint": "N'oublie pas de caster arg en (void) si tu ne l'utilises pas.",
+        "difficulty": 1
+      },
+      {
+        "id": 2,
+        "title": "Creer et joindre un thread",
+        "instruction": "Cree un thread executant une routine, puis attends sa fin avec pthread_join.",
+        "starterCode": "int\tmain(void)\n{\n\tpthread_t\ttid;\n\t/* TON CODE ICI */\n\treturn (0);\n}",
+        "solution": "int\tmain(void)\n{\n\tpthread_t\ttid;\n\n\tpthread_create(&tid, NULL, routine, NULL);\n\tpthread_join(tid, NULL);\n\treturn (0);\n}",
+        "hint": "pthread_create prend 4 arguments : &tid, NULL, routine, NULL.",
+        "difficulty": 1
+      },
+      {
+        "id": 3,
+        "title": "Passer un entier",
+        "instruction": "Passe un entier en argument a un thread et affiche-le dans la routine.",
+        "starterCode": "void\t*routine(void *arg)\n{\n\t/* TON CODE ICI */\n}\n\nint\tmain(void)\n{\n\tpthread_t\ttid;\n\tint\t\t\tnb = 42;\n\t/* TON CODE ICI */\n\treturn (0);\n}",
+        "solution": "void\t*routine(void *arg)\n{\n\tint\t*nb = (int *)arg;\n\tprintf(\"%d\\n\", *nb);\n\treturn (NULL);\n}\n\nint\tmain(void)\n{\n\tpthread_t\ttid;\n\tint\t\t\tnb = 42;\n\n\tpthread_create(&tid, NULL, routine, &nb);\n\tpthread_join(tid, NULL);\n\treturn (0);\n}",
+        "hint": "Passe &nb comme dernier argument et caste arg en (int *) dans la routine.",
+        "difficulty": 2
+      },
+      {
+        "id": 4,
+        "title": "Gestion d'erreur",
+        "instruction": "Cree un thread avec verification du code de retour de pthread_create.",
+        "starterCode": "int\tmain(void)\n{\n\tpthread_t\ttid;\n\t/* TON CODE ICI */\n\treturn (0);\n}",
+        "solution": "int\tmain(void)\n{\n\tpthread_t\ttid;\n\n\tif (pthread_create(&tid, NULL, routine, NULL) != 0)\n\t{\n\t\tfprintf(stderr, \"Erreur creation thread\\n\");\n\t\treturn (1);\n\t}\n\tpthread_join(tid, NULL);\n\treturn (0);\n}",
+        "hint": "pthread_create retourne 0 si tout va bien.",
+        "difficulty": 2
+      },
+      {
+        "id": 5,
+        "title": "Passer une structure",
+        "instruction": "Definis une structure t_info avec un id et un message, passe-la a un thread.",
+        "starterCode": "typedef struct s_info\n{\n\tint\t\tid;\n\tchar\t*msg;\n}\t\t\tt_info;\n\nvoid\t*routine(void *arg)\n{\n\t/* TON CODE ICI */\n}\n\nint\tmain(void)\n{\n\t/* TON CODE ICI */\n}",
+        "solution": "typedef struct s_info\n{\n\tint\t\tid;\n\tchar\t*msg;\n}\t\t\tt_info;\n\nvoid\t*routine(void *arg)\n{\n\tt_info\t*info = (t_info *)arg;\n\tprintf(\"Thread %d: %s\\n\", info->id, info->msg);\n\treturn (NULL);\n}\n\nint\tmain(void)\n{\n\tpthread_t\ttid;\n\tt_info\t\tinfo;\n\n\tinfo.id = 1;\n\tinfo.msg = \"Hello\";\n\tpthread_create(&tid, NULL, routine, &info);\n\tpthread_join(tid, NULL);\n\treturn (0);\n}",
+        "hint": "Caste arg en (t_info *) dans la routine pour acceder aux champs.",
+        "difficulty": 3
+      }
+    ]
+  },
+  "starterCode": "#include <pthread.h>\n#include <stdio.h>\n#include <stdlib.h>\n\ntypedef struct s_data\n{\n\tint\t\tid;\n\tchar\t*message;\n}\t\t\tt_data;\n\nvoid\t*ft_thread_routine(void *arg)\n{\n\t// TODO: Caster arg en t_data*\n\t// TODO: Afficher \"Thread [id]: [message]\"\n\treturn (NULL);\n}\n\nint\tmain(void)\n{\n\tpthread_t\ttid;\n\tt_data\t\tdata;\n\n\tdata.id = 1;\n\tdata.message = \"Hello from thread\";\n\t// TODO: Creer le thread avec pthread_create\n\t// TODO: Attendre la fin du thread avec pthread_join\n\tprintf(\"Thread termine\\n\");\n\treturn (0);\n}",
+  "solution": "#include <pthread.h>\n#include <stdio.h>\n#include <stdlib.h>\n\ntypedef struct s_data\n{\n\tint\t\tid;\n\tchar\t*message;\n}\t\t\tt_data;\n\nvoid\t*ft_thread_routine(void *arg)\n{\n\tt_data\t*data;\n\n\tdata = (t_data *)arg;\n\tprintf(\"Thread %d: %s\\n\", data->id, data->message);\n\treturn (NULL);\n}\n\nint\tmain(void)\n{\n\tpthread_t\ttid;\n\tt_data\t\tdata;\n\n\tdata.id = 1;\n\tdata.message = \"Hello from thread\";\n\tif (pthread_create(&tid, NULL, ft_thread_routine, &data) != 0)\n\t{\n\t\tperror(\"pthread_create\");\n\t\treturn (1);\n\t}\n\tpthread_join(tid, NULL);\n\tprintf(\"Thread termine\\n\");\n\treturn (0);\n}",
+  "hints": [
+    "Utilise pthread_create(&tid, NULL, routine, &data) pour creer le thread",
+    "Caste l'argument void* en t_data* dans la routine du thread",
+    "N'oublie pas pthread_join pour attendre la fin du thread avant de quitter"
+  ],
+  "testCases": [
+    {
+      "id": 1,
+      "description": "Le programme affiche le message du thread puis 'Thread termine'",
+      "stdin": "",
+      "expectedStdout": "Thread 1: Hello from thread\nThread termine\n",
+      "expectedExitCode": 0,
+      "visible": true
+    },
+    {
+      "id": 2,
+      "description": "Verification que pthread_create est bien appele",
+      "stdin": "",
+      "expectedStdout": "Thread 1: Hello from thread\nThread termine\n",
+      "expectedExitCode": 0,
+      "visible": false
+    },
+    {
+      "id": 3,
+      "description": "Verification que pthread_join empeche une terminaison prematuree",
+      "stdin": "",
+      "expectedStdout": "Thread 1: Hello from thread\nThread termine\n",
+      "expectedExitCode": 0,
+      "visible": false
+    }
+  ],
+  "constraints": {
+    "allowedFunctions": ["pthread_create", "pthread_join", "printf", "perror", "write"],
+    "forbiddenFunctions": ["fork", "system"],
+    "maxExecutionTime": 5000,
+    "maxMemory": 128
+  },
+  "relatedExercises": ["c-day71-ex01-ft-thread-join", "c-day71-ex02-ft-thread-multiple"],
+  "resources": [
+    {
+      "title": "Manuel pthread_create",
+      "url": "https://man7.org/linux/man-pages/man3/pthread_create.3.html",
+      "type": "documentation"
+    },
+    {
+      "title": "Introduction aux threads POSIX",
+      "url": "https://computing.llnl.gov/tutorials/pthreads/",
+      "type": "article"
+    }
+  ]
+}

@@ -1,0 +1,257 @@
+{
+  "id": "c-day85-ex00-ft-errno-system",
+  "category": "c",
+  "day": 85,
+  "order": 0,
+  "title": "Systeme d'erreur personnalise avec errno",
+  "description": "Comprends le fonctionnement d'errno et cree un systeme d'erreur personnalise pour tes programmes. Definis des codes d'erreur, des messages associes et une fonction ft_perror qui affiche le message d'erreur correspondant. Implemente un equivalent simplifie de strerror et perror.",
+  "difficulty": 4,
+  "points": 40,
+  "estimatedTime": 35,
+  "learningObjectives": [
+    "Comprendre le fonctionnement de la variable globale errno",
+    "Utiliser perror et strerror pour afficher les messages d'erreur systeme",
+    "Creer un systeme d'erreur personnalise avec des codes et messages",
+    "Gerer les erreurs de maniere coherente dans un programme C",
+    "Implementer une fonction ft_perror qui imite le comportement de perror"
+  ],
+  "learningContent": {
+    "lesson": {
+      "introduction": "La gestion des erreurs est cruciale en programmation C. Contrairement aux exceptions de Java ou Python, le C utilise un systeme base sur des codes de retour et la variable globale errno. Quand une fonction systeme echoue, elle retourne generalement -1 ou NULL et place un code d'erreur dans errno. Les fonctions perror et strerror convertissent ce code en message lisible. Dans cet exercice, tu vas comprendre ce mecanisme et creer ton propre systeme d'erreur.",
+      "steps": [
+        {
+          "id": 1,
+          "title": "errno : la variable globale d'erreur",
+          "content": "**errno** est une variable globale (en realite une macro thread-safe) definie dans `<errno.h>`. Quand une fonction systeme echoue, elle met a jour errno avec un code d'erreur.\n\n**Codes courants :**\n- ENOENT (2) : fichier ou repertoire inexistant\n- EACCES (13) : permission refusee\n- ENOMEM (12) : memoire insuffisante\n- EINVAL (22) : argument invalide",
+          "codeExample": "#include <errno.h>\n#include <stdio.h>\n#include <string.h>\n\nint\tmain(void)\n{\n\tFILE\t*f;\n\n\tf = fopen(\"inexistant.txt\", \"r\");\n\tif (!f)\n\t{\n\t\tprintf(\"errno = %d\\n\", errno);\n\t\tprintf(\"Message : %s\\n\", strerror(errno));\n\t\tperror(\"fopen\");\n\t}\n\treturn (0);\n}\n// Sortie :\n// errno = 2\n// Message : No such file or directory\n// fopen: No such file or directory",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Quelle est la valeur de errno apres un appel systeme reussi ?",
+            "starterCode": "// Apres un appel reussi :\n// errno est-il mis a 0 ? ?\n// Regle : errno n'est significatif que si l'appel a ?\n// Il faut TOUJOURS verifier le retour avant errno",
+            "solution": "// Apres un appel reussi :\n// errno N'EST PAS mis a 0 ! Il garde sa valeur precedente\n// Regle : errno n'est significatif que si l'appel a ECHOUE\n// Il faut TOUJOURS verifier le retour avant errno\n// On peut mettre errno = 0 avant l'appel si necessaire"
+          }
+        },
+        {
+          "id": 2,
+          "title": "perror et strerror",
+          "content": "**perror(prefix)** affiche le message d'erreur correspondant a errno sur stderr, prefixe par la string donnee.\n\n**strerror(errnum)** retourne la string du message d'erreur pour le code donne.\n\nCes deux fonctions sont les outils standard pour afficher les erreurs systeme de maniere lisible.",
+          "codeExample": "// perror affiche sur stderr :\nperror(\"open\");\n// Sortie : open: No such file or directory\n\n// strerror retourne une string :\nchar *msg = strerror(EACCES);\nprintf(\"Erreur : %s\\n\", msg);\n// Sortie : Erreur : Permission denied\n\n// Combinaison courante :\nint fd = open(\"fichier\", O_RDONLY);\nif (fd == -1)\n{\n\tperror(\"open\");\n\treturn (1);\n}",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Quelle est la difference entre perror et strerror ? Quand utiliser l'un ou l'autre ?",
+            "starterCode": "// perror : affiche directement sur ?\n//          utilise errno ?\n//          format : \"prefix: message\"\n// strerror : retourne une ?\n//            prend un code en ?\n//            on decide quoi en faire",
+            "solution": "// perror : affiche directement sur STDERR\n//          utilise errno AUTOMATIQUEMENT\n//          format : \"prefix: message\"\n// strerror : retourne une STRING\n//            prend un code en PARAMETRE\n//            on decide quoi en faire\n// perror est plus simple, strerror est plus flexible"
+          }
+        },
+        {
+          "id": 3,
+          "title": "Creer un systeme d'erreur personnalise",
+          "content": "Pour tes propres programmes, tu peux creer un systeme similaire a errno. On definit des codes d'erreur, un tableau de messages, et des fonctions pour les afficher.\n\nC'est utile pour les projets complexes ou les erreurs applicatives sont differentes des erreurs systeme.",
+          "codeExample": "// Codes d'erreur personnalises\n#define FT_OK          0\n#define FT_ERR_MALLOC  1\n#define FT_ERR_OPEN    2\n#define FT_ERR_READ    3\n#define FT_ERR_ARGS    4\n#define FT_ERR_MAX     5\n\nstatic char\t*g_errors[] = {\n\t\"Succes\",\n\t\"Echec d'allocation memoire\",\n\t\"Impossible d'ouvrir le fichier\",\n\t\"Erreur de lecture\",\n\t\"Arguments invalides\",\n};\n\nchar\t*ft_strerror(int errnum)\n{\n\tif (errnum < 0 || errnum >= FT_ERR_MAX)\n\t\treturn (\"Erreur inconnue\");\n\treturn (g_errors[errnum]);\n}\n\nvoid\tft_perror(char *prefix, int errnum)\n{\n\tif (prefix)\n\t\twrite(2, prefix, ft_strlen(prefix));\n\twrite(2, \": \", 2);\n\twrite(2, ft_strerror(errnum), ft_strlen(ft_strerror(errnum)));\n\twrite(2, \"\\n\", 1);\n}",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Pourquoi utilise-t-on write(2, ...) au lieu de fprintf(stderr, ...) pour ft_perror ?",
+            "starterCode": "// write(2, ...) ecrit sur le descripteur 2 = ?\n// fprintf(stderr, ...) ecrit aussi sur stderr\n// Difference : write est un appel ?\n//              fprintf utilise un ? (buffering)\n// Dans un contexte d'erreur, on prefere ?",
+            "solution": "// write(2, ...) ecrit sur le descripteur 2 = STDERR\n// fprintf(stderr, ...) ecrit aussi sur stderr\n// Difference : write est un appel SYSTEME (direct)\n//              fprintf utilise un BUFFER (buffering)\n// Dans un contexte d'erreur, on prefere WRITE\n// car il ecrit immediatement sans risque de perte"
+          }
+        },
+        {
+          "id": 4,
+          "title": "Pattern de gestion d'erreur complete",
+          "content": "Un bon systeme d'erreur combine les erreurs systeme (errno) et les erreurs applicatives (codes personnalises). Voici un pattern complet utilise dans les projets professionels.",
+          "codeExample": "int\tft_process_file(char *path)\n{\n\tint\tfd;\n\tint\tret;\n\n\tif (!path)\n\t{\n\t\tft_perror(\"process_file\", FT_ERR_ARGS);\n\t\treturn (FT_ERR_ARGS);\n\t}\n\tfd = open(path, O_RDONLY);\n\tif (fd == -1)\n\t{\n\t\tperror(path);  // Erreur systeme\n\t\treturn (FT_ERR_OPEN);\n\t}\n\tret = ft_read_data(fd);\n\tclose(fd);\n\tif (ret == -1)\n\t{\n\t\tft_perror(path, FT_ERR_READ);\n\t\treturn (FT_ERR_READ);\n\t}\n\treturn (FT_OK);\n}",
+          "language": "c"
+        }
+      ]
+    },
+    "theory": [
+      {
+        "title": "Le systeme errno en C",
+        "content": "errno est le mecanisme standard de signalisation d'erreurs dans la libc. Comprendre ses subtilites est essentiel pour ecrire du code robuste.",
+        "codeExamples": [
+          {
+            "title": "Subtilites de errno",
+            "code": "#include <errno.h>\n\n// errno est une macro, pas une simple variable\n// Elle est thread-safe : chaque thread a son propre errno\n\n// Regle 1 : verifier le retour AVANT errno\nint fd = open(\"file\", O_RDONLY);\nif (fd == -1)  // Verifier d'abord\n\tperror(\"open\");  // Puis utiliser errno\n\n// Regle 2 : errno peut etre modifie par tout appel systeme\n// Sauvegarder errno si necessaire :\nint saved_errno = errno;\nclose(fd);  // Peut modifier errno\nerrno = saved_errno;  // Restaurer",
+            "explanation": "errno n'est fiable que immediatement apres l'echec d'un appel"
+          }
+        ],
+        "keyPoints": [
+          "errno est defini dans <errno.h> et est thread-safe",
+          "Il n'est significatif que si l'appel systeme a echoue (retour -1 ou NULL)",
+          "Tout appel systeme peut modifier errno, meme en cas de succes",
+          "Sauvegarder errno si on fait d'autres appels avant de l'utiliser"
+        ],
+        "commonMistakes": [
+          "Verifier errno sans verifier le retour de la fonction d'abord",
+          "Utiliser errno apres un autre appel systeme (qui l'a peut-etre modifie)",
+          "Croire que errno est remis a 0 apres un appel reussi"
+        ]
+      },
+      {
+        "title": "Codes d'erreur et messages",
+        "content": "Chaque code d'erreur a un message associe. Les codes sont definis dans <errno.h> et les messages sont accessibles via strerror.",
+        "codeExamples": [
+          {
+            "title": "Codes d'erreur courants",
+            "code": "// Codes les plus frequents :\n// ENOENT  (2)  : No such file or directory\n// EACCES  (13) : Permission denied\n// EEXIST  (17) : File exists\n// ENOTDIR (20) : Not a directory\n// EISDIR  (21) : Is a directory\n// EINVAL  (22) : Invalid argument\n// EMFILE  (24) : Too many open files\n// ENOMEM  (12) : Cannot allocate memory\n// EPIPE   (32) : Broken pipe",
+            "explanation": "Connaitre les codes courants aide au debugging rapide"
+          }
+        ],
+        "keyPoints": [
+          "Chaque code a un nom symbolique (ENOENT) et une valeur numerique (2)",
+          "strerror(code) retourne le message correspondant",
+          "Les codes sont standardises par POSIX mais les valeurs peuvent varier",
+          "On peut definir ses propres codes au-dessus des valeurs systeme"
+        ],
+        "commonMistakes": [
+          "Comparer errno avec des valeurs numeriques au lieu des constantes symboliques",
+          "Utiliser un code d'erreur personnalise qui entre en conflit avec un code systeme",
+          "Ignorer le message d'erreur et afficher seulement le code numerique"
+        ]
+      },
+      {
+        "title": "Patterns de gestion d'erreur en C",
+        "content": "Plusieurs patterns existent pour gerer les erreurs en C. Le choix depend de la complexite du programme et des conventions du projet.",
+        "codeExamples": [
+          {
+            "title": "Pattern retour de code d'erreur",
+            "code": "// Pattern 1 : retourner un code d'erreur\nint ft_do_something(void)\n{\n\tif (error_condition)\n\t\treturn (-1);  // ou un code specifique\n\treturn (0);  // succes\n}\n\n// Pattern 2 : retourner NULL pour les fonctions qui allouent\nchar *ft_create(void)\n{\n\tchar *ptr = malloc(100);\n\tif (!ptr)\n\t\treturn (NULL);\n\treturn (ptr);\n}\n\n// Pattern 3 : code de retour + message\nint ft_process(char *path)\n{\n\tint fd = open(path, O_RDONLY);\n\tif (fd == -1)\n\t{\n\t\tperror(path);\n\t\treturn (1);\n\t}\n\t// ...\n}",
+            "explanation": "Le pattern retour d'erreur est le plus courant en C"
+          }
+        ],
+        "keyPoints": [
+          "Les fonctions retournent -1 ou NULL en cas d'erreur",
+          "Le code d'erreur detaille est dans errno ou un parametre de sortie",
+          "perror est pratique pour les erreurs systeme avec un contexte",
+          "Les projets complexes definissent leurs propres codes d'erreur"
+        ],
+        "commonMistakes": [
+          "Ignorer les retours d'erreur des fonctions systeme",
+          "Afficher un message d'erreur sur stdout au lieu de stderr",
+          "Ne pas propager les erreurs vers l'appelant"
+        ]
+      },
+      {
+        "title": "Ecrire sur stderr",
+        "content": "Les messages d'erreur doivent etre ecrits sur stderr (descripteur 2) pour ne pas se melanger avec la sortie normale (stdout, descripteur 1).",
+        "codeExamples": [
+          {
+            "title": "Differentes facons d'ecrire sur stderr",
+            "code": "// Methode 1 : write sur le descripteur 2\nwrite(2, \"Erreur\\n\", 7);\n\n// Methode 2 : fprintf sur stderr\nfprintf(stderr, \"Erreur : %s\\n\", msg);\n\n// Methode 3 : perror (ecrit automatiquement sur stderr)\nperror(\"contexte\");\n\n// Methode 4 : dprintf (printf sur un descripteur)\ndprintf(2, \"Erreur %d : %s\\n\", code, msg);",
+            "explanation": "write(2, ...) est le plus basique et le plus fiable"
+          }
+        ],
+        "keyPoints": [
+          "stderr est le flux d'erreur standard (descripteur 2)",
+          "Les erreurs sur stderr ne se melangent pas avec stdout",
+          "perror ecrit automatiquement sur stderr",
+          "write(2, ...) est le plus direct et fonctionne meme si stdio est corrompu"
+        ],
+        "commonMistakes": [
+          "Ecrire les erreurs sur stdout avec printf (se melange avec la sortie)",
+          "Oublier le retour a la ligne dans les messages d'erreur",
+          "Utiliser puts pour les erreurs (ecrit sur stdout, pas stderr)"
+        ]
+      }
+    ],
+    "prepExercises": [
+      {
+        "id": 1,
+        "title": "Ecrire sur stderr",
+        "instruction": "Ecris une fonction ft_putstr_err qui ecrit une string sur stderr.",
+        "starterCode": "void\tft_putstr_err(char *str)\n{\n\t// A completer\n}",
+        "solution": "void\tft_putstr_err(char *str)\n{\n\tint\ti;\n\n\tif (!str)\n\t\treturn ;\n\ti = 0;\n\twhile (str[i])\n\t\ti++;\n\twrite(2, str, i);\n}",
+        "hint": "Calcule la longueur de la string puis ecris avec write(2, ...)",
+        "difficulty": 1
+      },
+      {
+        "id": 2,
+        "title": "Tableau de messages d'erreur",
+        "instruction": "Cree un tableau de 3 messages d'erreur et une fonction qui retourne le message pour un code donne.",
+        "starterCode": "char\t*ft_get_error(int code)\n{\n\t// A completer\n}",
+        "solution": "char\t*ft_get_error(int code)\n{\n\tstatic char\t*errors[] = {\n\t\t\"Succes\",\n\t\t\"Erreur d'allocation\",\n\t\t\"Fichier introuvable\"\n\t};\n\n\tif (code < 0 || code > 2)\n\t\treturn (\"Erreur inconnue\");\n\treturn (errors[code]);\n}",
+        "hint": "Utilise un tableau static de strings et retourne l'element a l'indice code",
+        "difficulty": 2
+      },
+      {
+        "id": 3,
+        "title": "Verifier errno apres open",
+        "instruction": "Ecris une fonction qui tente d'ouvrir un fichier et affiche le message d'erreur si ca echoue.",
+        "starterCode": "int\tft_open_safe(char *path)\n{\n\t// A completer\n}",
+        "solution": "int\tft_open_safe(char *path)\n{\n\tint\tfd;\n\n\tfd = open(path, O_RDONLY);\n\tif (fd == -1)\n\t\tperror(path);\n\treturn (fd);\n}",
+        "hint": "Appelle open, verifie le retour, utilise perror si -1",
+        "difficulty": 1
+      },
+      {
+        "id": 4,
+        "title": "Format d'erreur personnalise",
+        "instruction": "Ecris ft_error qui affiche 'Erreur: <prefix>: <message>' sur stderr.",
+        "starterCode": "void\tft_error(char *prefix, char *message)\n{\n\t// A completer\n}",
+        "solution": "void\tft_error(char *prefix, char *message)\n{\n\twrite(2, \"Erreur: \", 8);\n\tif (prefix)\n\t{\n\t\tint i = 0;\n\t\twhile (prefix[i]) i++;\n\t\twrite(2, prefix, i);\n\t\twrite(2, \": \", 2);\n\t}\n\tif (message)\n\t{\n\t\tint i = 0;\n\t\twhile (message[i]) i++;\n\t\twrite(2, message, i);\n\t}\n\twrite(2, \"\\n\", 1);\n}",
+        "hint": "Ecris chaque partie avec write(2, ...) en calculant les longueurs",
+        "difficulty": 2
+      },
+      {
+        "id": 5,
+        "title": "Propager une erreur",
+        "instruction": "Ecris une fonction qui appelle ft_open_safe et retourne un code d'erreur personnalise.",
+        "starterCode": "int\tft_process(char *path)\n{\n\t// Retourne 0 si ok, 1 si erreur d'ouverture\n\t// A completer\n}",
+        "solution": "int\tft_process(char *path)\n{\n\tint\tfd;\n\n\tfd = open(path, O_RDONLY);\n\tif (fd == -1)\n\t{\n\t\tperror(path);\n\t\treturn (1);\n\t}\n\tclose(fd);\n\treturn (0);\n}",
+        "hint": "Ouvre le fichier, retourne 1 avec perror si echec, ferme et retourne 0 si ok",
+        "difficulty": 2
+      }
+    ]
+  },
+  "starterCode": "#include <stdio.h>\n#include <unistd.h>\n#include <fcntl.h>\n#include <errno.h>\n#include <string.h>\n\n#define FT_OK          0\n#define FT_ERR_MALLOC  1\n#define FT_ERR_OPEN    2\n#define FT_ERR_ARGS    3\n\nchar\t*ft_strerror(int errnum)\n{\n\t// A completer\n}\n\nvoid\tft_perror(char *prefix, int errnum)\n{\n\t// A completer\n}\n\nint\tmain(void)\n{\n\tft_perror(\"test\", FT_ERR_MALLOC);\n\tft_perror(\"fichier\", FT_ERR_OPEN);\n\tprintf(\"%s\\n\", ft_strerror(FT_OK));\n\treturn (0);\n}",
+  "solution": "#include <stdio.h>\n#include <unistd.h>\n#include <fcntl.h>\n#include <errno.h>\n#include <string.h>\n\n#define FT_OK          0\n#define FT_ERR_MALLOC  1\n#define FT_ERR_OPEN    2\n#define FT_ERR_ARGS    3\n#define FT_ERR_MAX     4\n\nstatic char\t*g_errors[] = {\n\t\"Succes\",\n\t\"Echec d'allocation memoire\",\n\t\"Impossible d'ouvrir le fichier\",\n\t\"Arguments invalides\"\n};\n\nchar\t*ft_strerror(int errnum)\n{\n\tif (errnum < 0 || errnum >= FT_ERR_MAX)\n\t\treturn (\"Erreur inconnue\");\n\treturn (g_errors[errnum]);\n}\n\nvoid\tft_perror(char *prefix, int errnum)\n{\n\tchar\t*msg;\n\tint\t\ti;\n\n\tif (prefix)\n\t{\n\t\ti = 0;\n\t\twhile (prefix[i])\n\t\t\ti++;\n\t\twrite(2, prefix, i);\n\t\twrite(2, \": \", 2);\n\t}\n\tmsg = ft_strerror(errnum);\n\ti = 0;\n\twhile (msg[i])\n\t\ti++;\n\twrite(2, msg, i);\n\twrite(2, \"\\n\", 1);\n}\n\nint\tmain(void)\n{\n\tft_perror(\"test\", FT_ERR_MALLOC);\n\tft_perror(\"fichier\", FT_ERR_OPEN);\n\tprintf(\"%s\\n\", ft_strerror(FT_OK));\n\treturn (0);\n}",
+  "hints": [
+    "Definis un tableau static de strings indexe par les codes d'erreur",
+    "ft_strerror verifie les bornes et retourne le message du tableau ou 'Erreur inconnue'",
+    "ft_perror ecrit sur stderr (descripteur 2) avec write, pas printf"
+  ],
+  "testCases": [
+    {
+      "id": 1,
+      "description": "Afficher les messages d'erreur personnalises",
+      "stdin": "",
+      "expectedStdout": "Succes\n",
+      "expectedExitCode": 0,
+      "visible": true
+    },
+    {
+      "id": 2,
+      "description": "ft_strerror retourne le bon message pour chaque code",
+      "stdin": "",
+      "expectedStdout": "Echec d'allocation memoire\n",
+      "expectedExitCode": 0,
+      "visible": false
+    },
+    {
+      "id": 3,
+      "description": "Code invalide retourne Erreur inconnue",
+      "stdin": "",
+      "expectedStdout": "Erreur inconnue\n",
+      "expectedExitCode": 0,
+      "visible": false
+    }
+  ],
+  "constraints": {
+    "allowedFunctions": ["write", "printf", "open", "close", "perror", "strerror"],
+    "forbiddenFunctions": ["system"],
+    "maxExecutionTime": 5000,
+    "maxMemory": 128
+  },
+  "relatedExercises": ["c-day85-ex01-ft-cleanup-chain", "c-day85-ex02-ft-safe-operations"],
+  "resources": [
+    {
+      "title": "errno - Manuel Linux",
+      "url": "https://man7.org/linux/man-pages/man3/errno.3.html",
+      "type": "documentation"
+    },
+    {
+      "title": "Gestion des erreurs en C",
+      "url": "https://www.geeksforgeeks.org/error-handling-c-programs/",
+      "type": "article"
+    }
+  ]
+}

@@ -1,0 +1,257 @@
+{
+  "id": "c-day62-ex01-ft-btree-preorder",
+  "category": "c",
+  "day": 62,
+  "order": 1,
+  "title": "Parcours prefixe d'un arbre binaire",
+  "description": "Ecris la fonction ft_btree_preorder qui effectue un parcours prefixe (pre-order) d'un arbre binaire. La fonction prend la racine et une fonction void (*f)(void *) a appliquer a chaque element. Le parcours prefixe visite d'abord le noeud courant (racine), puis le sous-arbre gauche, puis le sous-arbre droit. Ce parcours est utile pour copier un arbre ou le serialiser.",
+  "difficulty": 4,
+  "points": 40,
+  "estimatedTime": 30,
+  "learningObjectives": [
+    "Comprendre le parcours prefixe (racine, gauche, droite)",
+    "Differencier le parcours prefixe du parcours infixe",
+    "Savoir que le prefixe permet de reconstruire un BST identique",
+    "Implementer le pattern RGD (Racine, Gauche, Droite)",
+    "Comprendre les applications pratiques du parcours prefixe"
+  ],
+  "learningContent": {
+    "lesson": {
+      "introduction": "Le parcours prefixe (pre-order) visite le noeud courant AVANT ses enfants. L'ordre est Racine, Gauche, Droite (RGD). Ce parcours est particulierement utile pour copier un arbre : en inserant les elements dans l'ordre du parcours prefixe dans un BST vide, on obtient exactement le meme arbre. Il est aussi utilise pour la serialisation (sauvegarde) d'arbres.",
+      "steps": [
+        {
+          "id": 1,
+          "title": "Ordre du parcours prefixe",
+          "content": "Le parcours prefixe suit l'ordre **Racine - Gauche - Droite** (RGD) :\n1. Traiter le noeud courant EN PREMIER\n2. Descendre recursivement dans le sous-arbre gauche\n3. Descendre recursivement dans le sous-arbre droit\n\nLe mot **prefixe** signifie que la racine est traitee **avant** les sous-arbres.",
+          "codeExample": "//        5\n//       / \\\n//      3   8\n//     / \\   \\\n//    1   4   9\n\n// Parcours prefixe : 5, 3, 1, 4, 8, 9\n// (la racine est toujours en premier)\n\n// Detail :\n// visite 5 (racine)\n// gauche(5) -> visite 3, gauche(3) -> visite 1\n//   gauche(1)->NULL, droite(1)->NULL\n//   droite(3) -> visite 4\n//   gauche(4)->NULL, droite(4)->NULL\n// droite(5) -> visite 8\n//   gauche(8)->NULL, droite(8) -> visite 9",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Quel est le parcours prefixe de l'arbre 10(5(2,7),15(12,20)) ?",
+            "starterCode": "//       10\n//      /  \\\n//     5   15\n//    / \\  / \\\n//   2  7 12 20\n// Prefixe : ???",
+            "solution": "// Prefixe : 10, 5, 2, 7, 15, 12, 20\n// La racine 10 est toujours en premier\n// Puis tout le sous-arbre gauche, puis tout le droit"
+          }
+        },
+        {
+          "id": 2,
+          "title": "Difference avec le parcours infixe",
+          "content": "La seule difference entre prefixe et infixe est le moment ou on appelle f(root->item) :\n- **Infixe** : f() est appele ENTRE les deux appels recursifs\n- **Prefixe** : f() est appele AVANT les deux appels recursifs\n\nUne seule ligne change dans le code !",
+          "codeExample": "// INFIXE (GRD) :\nvoid\tinorder(t_btree *root, void (*f)(void *))\n{\n\tif (!root) return ;\n\tinorder(root->left, f);   // G\n\tf(root->item);             // R  <- au milieu\n\tinorder(root->right, f);  // D\n}\n\n// PREFIXE (RGD) :\nvoid\tpreorder(t_btree *root, void (*f)(void *))\n{\n\tif (!root) return ;\n\tf(root->item);              // R  <- en premier\n\tpreorder(root->left, f);   // G\n\tpreorder(root->right, f);  // D\n}",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Pour l'arbre 5(3,8), donne le parcours infixe ET prefixe.",
+            "starterCode": "//   5\n//  / \\\n// 3   8\n// Infixe  : ???\n// Prefixe : ???",
+            "solution": "// Infixe  : 3, 5, 8 (trie)\n// Prefixe : 5, 3, 8 (racine d'abord)"
+          }
+        },
+        {
+          "id": 3,
+          "title": "Application : copier un arbre",
+          "content": "Le parcours prefixe est ideal pour **copier** un BST. Si on prend les elements dans l'ordre prefixe et qu'on les insere dans un BST vide, on obtient exactement le meme arbre.\n\nC'est parce que la racine est inseree en premier, puis les elements se placent naturellement aux bonnes positions.",
+          "codeExample": "// Arbre original (prefixe : 5, 3, 1, 4, 8, 9)\n//        5\n//       / \\\n//      3   8\n//     / \\   \\\n//    1   4   9\n\n// Insertion dans un BST vide dans l'ordre prefixe :\n// insert(5) -> racine = 5\n// insert(3) -> gauche de 5\n// insert(1) -> gauche de 3\n// insert(4) -> droite de 3\n// insert(8) -> droite de 5\n// insert(9) -> droite de 8\n// => MEME arbre !",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Si on insere les elements infixes (1,3,4,5,8,9) dans un BST vide, quel arbre obtient-on ?",
+            "starterCode": "// Insertion : 1, 3, 4, 5, 8, 9\n// insert(1) -> racine = 1\n// insert(3) -> ???\n// insert(4) -> ???\n// Quel type d'arbre ?",
+            "solution": "// 1 -> 3 (droite) -> 4 (droite) -> 5 -> 8 -> 9\n// On obtient un arbre DEGENERE (liste)\n// 1-3-4-5-8-9 tout a droite\n// C'est pourquoi le prefixe est meilleur pour copier !"
+          }
+        },
+        {
+          "id": 4,
+          "title": "Implementation complete",
+          "content": "L'implementation est quasi identique au parcours infixe, avec f(root->item) en premiere position. La beaute de cette approche est sa simplicite : trois lignes de code suffisent pour le cas recursif.",
+          "codeExample": "void\tft_btree_preorder(t_btree *root, void (*f)(void *))\n{\n\tif (!root)\n\t\treturn ;\n\tf(root->item);\n\tft_btree_preorder(root->left, f);\n\tft_btree_preorder(root->right, f);\n}\n\n// Test :\n// Arbre : 5(3(1,4),8(NULL,9))\n// ft_btree_preorder(root, print_int);\n// Affiche : 5 3 1 4 8 9",
+          "language": "c"
+        }
+      ]
+    },
+    "theory": [
+      {
+        "title": "Le parcours prefixe en detail",
+        "content": "Le parcours prefixe visite la racine avant les sous-arbres. C'est le parcours naturel pour les operations qui doivent traiter le parent avant les enfants, comme la copie d'arbre ou la serialisation.",
+        "codeExamples": [
+          {
+            "title": "Trace detaillee du parcours prefixe",
+            "code": "// Arbre : 5(3(1,4),8)\n// Execution de ft_btree_preorder :\n\n// preorder(5)\n//   f(5)         -> affiche 5\n//   preorder(3)\n//     f(3)       -> affiche 3\n//     preorder(1)\n//       f(1)     -> affiche 1\n//       preorder(NULL) -> return\n//       preorder(NULL) -> return\n//     preorder(4)\n//       f(4)     -> affiche 4\n//       preorder(NULL) -> return\n//       preorder(NULL) -> return\n//   preorder(8)\n//     f(8)       -> affiche 8\n//     preorder(NULL) -> return\n//     preorder(NULL) -> return\n// Sortie : 5 3 1 4 8",
+            "explanation": "On visite toujours la racine en premier, puis on descend a gauche, puis a droite."
+          }
+        ],
+        "keyPoints": [
+          "Ordre RGD : Racine d'abord, puis Gauche, puis Droite",
+          "La racine de l'arbre est toujours le premier element visite",
+          "La racine du sous-arbre gauche est le deuxieme element",
+          "Utile pour serialiser un arbre (la racine en premier facilite la reconstruction)"
+        ],
+        "commonMistakes": [
+          "Confondre prefixe (RGD) et infixe (GRD) en placant f() au mauvais endroit",
+          "Oublier que les sous-arbres NULL sont ignores (cas de base)",
+          "Penser que le prefixe donne les elements tries (c'est l'infixe)"
+        ]
+      },
+      {
+        "title": "Serialisation et deserialisation d'arbres",
+        "content": "La serialisation consiste a convertir un arbre en une sequence lineaire (chaine, fichier). Le parcours prefixe est ideal pour cela car il preserve la structure. Pour deserialiser, on reconstruit l'arbre en inserant les elements dans l'ordre prefixe.",
+        "codeExamples": [
+          {
+            "title": "Serialisation avec le prefixe",
+            "code": "// Arbre original :\n//        5\n//       / \\\n//      3   8\n\n// Serialisation (prefixe) : \"5 3 8\"\n\n// Deserialisation (insertion dans BST vide) :\n// insert(5) -> racine\n// insert(3) -> gauche de 5\n// insert(8) -> droite de 5\n// => Arbre identique !\n\n// Avec infixe \"3 5 8\" :\n// insert(3) -> racine\n// insert(5) -> droite de 3\n// insert(8) -> droite de 5\n// => Arbre DIFFERENT (degenere) !",
+            "explanation": "Le prefixe preserve la structure, pas l'infixe."
+          }
+        ],
+        "keyPoints": [
+          "Serialisation = convertir une structure en sequence lineaire",
+          "Le prefixe preserve la structure de l'arbre original",
+          "L'infixe ne preserve PAS la structure (donne un arbre degenere si trie)",
+          "Utile pour sauvegarder un arbre sur disque ou l'envoyer sur le reseau"
+        ],
+        "commonMistakes": [
+          "Utiliser le parcours infixe pour serialiser (perd la structure)",
+          "Oublier les marqueurs NULL pour les arbres non-BST",
+          "Ne pas gerer les arbres vides lors de la deserialisation"
+        ]
+      },
+      {
+        "title": "Parcours en profondeur vs en largeur",
+        "content": "Les parcours prefixe, infixe et postfixe sont des parcours en profondeur (DFS). Il existe aussi le parcours en largeur (BFS) qui visite les noeuds niveau par niveau. Le BFS utilise une file (queue) au lieu de la recursion.",
+        "codeExamples": [
+          {
+            "title": "DFS vs BFS",
+            "code": "//        5\n//       / \\\n//      3   8\n//     / \\   \\\n//    1   4   9\n\n// DFS prefixe : 5, 3, 1, 4, 8, 9\n// DFS infixe  : 1, 3, 4, 5, 8, 9\n// DFS postfixe: 1, 4, 3, 9, 8, 5\n\n// BFS (largeur) : 5, 3, 8, 1, 4, 9\n// (niveau par niveau, de gauche a droite)",
+            "explanation": "Le BFS visite tous les noeuds d'un niveau avant de passer au suivant."
+          }
+        ],
+        "keyPoints": [
+          "DFS (profondeur) : utilise la pile d'appels (recursion) ou une pile explicite",
+          "BFS (largeur) : utilise une file (queue) pour visiter niveau par niveau",
+          "Les trois DFS (pre/in/post) different juste par le moment du traitement",
+          "BFS est utile pour trouver le chemin le plus court ou le niveau d'un noeud"
+        ],
+        "commonMistakes": [
+          "Confondre DFS et BFS (le DFS descend d'abord, le BFS elargit d'abord)",
+          "Essayer d'implementer le BFS avec la recursion (il faut une file)",
+          "Croire que le BFS est toujours meilleur que le DFS (depend du probleme)"
+        ]
+      },
+      {
+        "title": "Notation polonaise et expressions",
+        "content": "Le parcours prefixe est lie a la notation polonaise (prefix notation) utilisee en mathematiques et en informatique. Dans cette notation, l'operateur precede ses operandes : + 3 4 au lieu de 3 + 4.",
+        "codeExamples": [
+          {
+            "title": "Arbre d'expression et notation prefixe",
+            "code": "// Expression : (3 + 4) * 5\n// Arbre d'expression :\n//        *\n//       / \\\n//      +   5\n//     / \\\n//    3   4\n\n// Prefixe : * + 3 4 5  (notation polonaise)\n// Infixe  : 3 + 4 * 5  (notation classique)\n// Postfixe: 3 4 + 5 *  (notation polonaise inversee)\n\n// La notation prefixe n'a pas besoin de parentheses !",
+            "explanation": "Chaque parcours correspond a une notation mathematique differente."
+          }
+        ],
+        "keyPoints": [
+          "Prefixe = notation polonaise (operateur avant operandes)",
+          "Infixe = notation classique (operateur entre operandes, besoin de parentheses)",
+          "Postfixe = notation polonaise inversee (operateur apres operandes)",
+          "Les calculatrices HP utilisent la notation postfixe (RPN)"
+        ],
+        "commonMistakes": [
+          "Confondre notation prefixe et postfixe (l'operateur change de place)",
+          "Oublier que l'infixe necessite des parentheses pour lever les ambiguites",
+          "Ne pas voir le lien entre les parcours d'arbres et les notations mathematiques"
+        ]
+      }
+    ],
+    "prepExercises": [
+      {
+        "id": 1,
+        "title": "Parcours prefixe a la main",
+        "instruction": "Donne le parcours prefixe de l'arbre 8(4(2,6),12(10,14)).",
+        "starterCode": "//       8\n//      / \\\n//     4  12\n//    / \\ / \\\n//   2  6 10 14\n// Prefixe : ???",
+        "solution": "// Prefixe : 8, 4, 2, 6, 12, 10, 14\n// Racine d'abord, puis sous-arbre gauche, puis droit",
+        "hint": "Racine (8), puis tout le sous-arbre gauche (4,2,6), puis tout le droit (12,10,14).",
+        "difficulty": 1
+      },
+      {
+        "id": 2,
+        "title": "Ecrire ft_btree_preorder",
+        "instruction": "Complete la fonction ft_btree_preorder.",
+        "starterCode": "void\tft_btree_preorder(t_btree *root, void (*f)(void *))\n{\n\tif (!root)\n\t\treturn ;\n\t// Ordre RGD ?\n}",
+        "solution": "void\tft_btree_preorder(t_btree *root, void (*f)(void *))\n{\n\tif (!root)\n\t\treturn ;\n\tf(root->item);\n\tft_btree_preorder(root->left, f);\n\tft_btree_preorder(root->right, f);\n}",
+        "hint": "f(root->item) en PREMIER, puis gauche, puis droite.",
+        "difficulty": 2
+      },
+      {
+        "id": 3,
+        "title": "Transformer infixe en prefixe",
+        "instruction": "Modifie cette fonction infixe pour en faire une prefixe.",
+        "starterCode": "void\tinorder(t_btree *root, void (*f)(void *))\n{\n\tif (!root) return ;\n\tinorder(root->left, f);\n\tf(root->item);\n\tinorder(root->right, f);\n}\n// Quelle ligne deplacer ?",
+        "solution": "void\tpreorder(t_btree *root, void (*f)(void *))\n{\n\tif (!root) return ;\n\tf(root->item);              // Deplace en premier\n\tpreorder(root->left, f);\n\tpreorder(root->right, f);\n}",
+        "hint": "Deplace f(root->item) avant les appels recursifs.",
+        "difficulty": 1
+      },
+      {
+        "id": 4,
+        "title": "Reconstruire un arbre",
+        "instruction": "Dessine le BST obtenu en inserant les elements du prefixe : 5, 3, 1, 4, 8.",
+        "starterCode": "// Insertions : 5, 3, 1, 4, 8\n// insert(5) -> racine\n// insert(3) -> ???\n// insert(1) -> ???\n// insert(4) -> ???\n// insert(8) -> ???",
+        "solution": "// insert(5) -> racine = 5\n// insert(3) -> 3 < 5, gauche de 5\n// insert(1) -> 1 < 5 < 3, gauche de 3\n// insert(4) -> 4 < 5, 4 > 3, droite de 3\n// insert(8) -> 8 > 5, droite de 5\n// Arbre : 5(3(1,4),8) - identique a l'original !",
+        "hint": "Insere chaque element dans un BST vide selon les regles du BST.",
+        "difficulty": 2
+      },
+      {
+        "id": 5,
+        "title": "Comparer les trois parcours",
+        "instruction": "Donne les parcours infixe, prefixe et postfixe de l'arbre 7(3(1,5),9).",
+        "starterCode": "//     7\n//    / \\\n//   3   9\n//  / \\\n// 1   5\n// Infixe   : ???\n// Prefixe  : ???\n// Postfixe : ???",
+        "solution": "// Infixe   : 1, 3, 5, 7, 9 (GRD - trie)\n// Prefixe  : 7, 3, 1, 5, 9 (RGD - racine d'abord)\n// Postfixe : 1, 5, 3, 9, 7 (GDR - racine en dernier)",
+        "hint": "Infixe=GRD, Prefixe=RGD, Postfixe=GDR. Applique chaque ordre a l'arbre.",
+        "difficulty": 2
+      }
+    ]
+  },
+  "starterCode": "#include <stdlib.h>\n\ntypedef struct s_btree\n{\n\tvoid\t\t\t*item;\n\tstruct s_btree\t*left;\n\tstruct s_btree\t*right;\n}\t\t\t\t\tt_btree;\n\nvoid\tft_btree_preorder(t_btree *root, void (*f)(void *))\n{\n\t// Parcours prefixe : Racine, Gauche, Droite\n\t(void)root;\n\t(void)f;\n}",
+  "solution": "#include <stdlib.h>\n\ntypedef struct s_btree\n{\n\tvoid\t\t\t*item;\n\tstruct s_btree\t*left;\n\tstruct s_btree\t*right;\n}\t\t\t\t\tt_btree;\n\nvoid\tft_btree_preorder(t_btree *root, void (*f)(void *))\n{\n\tif (!root)\n\t\treturn ;\n\tf(root->item);\n\tft_btree_preorder(root->left, f);\n\tft_btree_preorder(root->right, f);\n}",
+  "hints": [
+    "Le parcours prefixe suit l'ordre Racine, Gauche, Droite (RGD).",
+    "La seule difference avec l'infixe est la position de f(root->item) : en premier.",
+    "Le cas de base reste le meme : si root est NULL, on retourne."
+  ],
+  "testCases": [
+    {
+      "id": 1,
+      "description": "Parcours prefixe d'un BST",
+      "stdin": "",
+      "expectedStdout": "5 3 1 4 8 9\n",
+      "expectedExitCode": 0,
+      "visible": true
+    },
+    {
+      "id": 2,
+      "description": "Parcours prefixe d'un seul noeud",
+      "stdin": "",
+      "expectedStdout": "42\n",
+      "expectedExitCode": 0,
+      "visible": false
+    },
+    {
+      "id": 3,
+      "description": "Parcours prefixe d'un arbre vide",
+      "stdin": "",
+      "expectedStdout": "",
+      "expectedExitCode": 0,
+      "visible": false
+    }
+  ],
+  "constraints": {
+    "allowedFunctions": ["malloc", "free", "write"],
+    "forbiddenFunctions": ["printf"],
+    "maxExecutionTime": 5000,
+    "maxMemory": 128
+  },
+  "relatedExercises": ["c-day62-ex00-ft-btree-inorder", "c-day62-ex02-ft-btree-postorder"],
+  "resources": [
+    {
+      "title": "Parcours prefixe - Explication detaillee",
+      "url": "https://www.geeksforgeeks.org/tree-traversals-inorder-preorder-and-postorder/",
+      "type": "documentation"
+    },
+    {
+      "title": "Notation polonaise et arbres d'expression",
+      "url": "https://en.wikipedia.org/wiki/Polish_notation",
+      "type": "article"
+    }
+  ]
+}

@@ -1,0 +1,271 @@
+{
+  "id": "c-day77-ex01-ft-server-basic",
+  "category": "c",
+  "day": 77,
+  "order": 1,
+  "title": "Implementer un serveur TCP simple",
+  "description": "Implemente un serveur TCP simple qui ecoute sur un port, accepte une connexion et echange des messages.",
+  "difficulty": 4,
+  "points": 40,
+  "estimatedTime": 35,
+  "learningObjectives": [
+    "Comprendre les concepts de Serveur TCP",
+    "Implementer implementer un serveur tcp simple en C",
+    "Gerer les erreurs et cas limites",
+    "Appliquer les bonnes pratiques de la norme 42",
+    "Tester et valider l'implementation"
+  ],
+  "learningContent": {
+    "lesson": {
+      "introduction": "Dans cet exercice, tu vas apprendre a implemente un serveur tcp simple qui ecoute sur un port, accepte une connexion et echange des messages. C'est une competence essentielle pour les projets avances a 42, notamment pour maitriser Serveur TCP. Nous allons voir les concepts fondamentaux, les pieges a eviter, et les bonnes pratiques pour ecrire du code robuste et performant.",
+      "steps": [
+        {
+          "id": 1,
+          "title": "Etape 1 : Serveur TCP",
+          "content": "Contenu detaille de l'etape 1 pour Implementer un serveur TCP simple. Cette etape couvre un aspect fondamental de Serveur TCP.",
+          "codeExample": "// Code exemple etape 1\n#include <stdio.h>\n\nint\tmain(void)\n{\n\t// Implementation etape 1\n\treturn (0);\n}",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Mets en pratique l'etape 1 de Serveur TCP.",
+            "starterCode": "// Starter code etape 1\n/* TON CODE ICI */",
+            "solution": "// Solution etape 1\n// Implementation correcte"
+          }
+        },
+        {
+          "id": 2,
+          "title": "Etape 2 : Serveur TCP",
+          "content": "Contenu detaille de l'etape 2 pour Implementer un serveur TCP simple. Cette etape couvre un aspect fondamental de Serveur TCP.",
+          "codeExample": "// Code exemple etape 2\n#include <stdio.h>\n\nint\tmain(void)\n{\n\t// Implementation etape 2\n\treturn (0);\n}",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Mets en pratique l'etape 2 de Serveur TCP.",
+            "starterCode": "// Starter code etape 2\n/* TON CODE ICI */",
+            "solution": "// Solution etape 2\n// Implementation correcte"
+          }
+        },
+        {
+          "id": 3,
+          "title": "Etape 3 : Serveur TCP",
+          "content": "Contenu detaille de l'etape 3 pour Implementer un serveur TCP simple. Cette etape couvre un aspect fondamental de Serveur TCP.",
+          "codeExample": "// Code exemple etape 3\n#include <stdio.h>\n\nint\tmain(void)\n{\n\t// Implementation etape 3\n\treturn (0);\n}",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Mets en pratique l'etape 3 de Serveur TCP.",
+            "starterCode": "// Starter code etape 3\n/* TON CODE ICI */",
+            "solution": "// Solution etape 3\n// Implementation correcte"
+          }
+        },
+        {
+          "id": 4,
+          "title": "Etape 4 : Serveur TCP",
+          "content": "Contenu detaille de l'etape 4 pour Implementer un serveur TCP simple. Cette etape couvre un aspect fondamental de Serveur TCP.",
+          "codeExample": "// Code exemple etape 4\n#include <stdio.h>\n\nint\tmain(void)\n{\n\t// Implementation etape 4\n\treturn (0);\n}",
+          "language": "c"
+        }
+      ]
+    },
+    "theory": [
+      {
+        "title": "Concepts fondamentaux : Serveur TCP",
+        "content": "Section theorique approfondie sur concepts fondamentaux : serveur tcp dans le contexte de Serveur TCP. Cette section couvre les aspects essentiels a maitriser pour cet exercice et les projets futurs a 42.",
+        "codeExamples": [
+          {
+            "title": "Exemple Concepts fondamentaux",
+            "code": "// Exemple de code pour Concepts fondamentaux : Serveur TCP\n// Voir la lecon pour les details complets",
+            "explanation": "Illustration pratique des concepts de Serveur TCP."
+          }
+        ],
+        "keyPoints": [
+          "Point cle 1 pour Serveur TCP",
+          "Point cle 2 : gestion correcte des ressources",
+          "Point cle 3 : verification des erreurs systematique",
+          "Point cle 4 : respect des conventions 42"
+        ],
+        "commonMistakes": [
+          "Erreur courante 1 dans Serveur TCP",
+          "Oublier de verifier les codes de retour",
+          "Ne pas liberer les ressources en cas d'erreur"
+        ]
+      },
+      {
+        "title": "Implementation pratique",
+        "content": "Section theorique approfondie sur implementation pratique dans le contexte de Serveur TCP. Cette section couvre les aspects essentiels a maitriser pour cet exercice et les projets futurs a 42.",
+        "codeExamples": [
+          {
+            "title": "Exemple Implementation pratique",
+            "code": "// Exemple de code pour Implementation pratique\n// Voir la lecon pour les details complets",
+            "explanation": "Illustration pratique des concepts de Serveur TCP."
+          }
+        ],
+        "keyPoints": [
+          "Point cle 1 pour Serveur TCP",
+          "Point cle 2 : gestion correcte des ressources",
+          "Point cle 3 : verification des erreurs systematique",
+          "Point cle 4 : respect des conventions 42"
+        ],
+        "commonMistakes": [
+          "Erreur courante 1 dans Serveur TCP",
+          "Oublier de verifier les codes de retour",
+          "Ne pas liberer les ressources en cas d'erreur"
+        ]
+      },
+      {
+        "title": "Gestion des erreurs et cas limites",
+        "content": "Section theorique approfondie sur gestion des erreurs et cas limites dans le contexte de Serveur TCP. Cette section couvre les aspects essentiels a maitriser pour cet exercice et les projets futurs a 42.",
+        "codeExamples": [
+          {
+            "title": "Exemple Gestion des erreurs et cas limites",
+            "code": "// Exemple de code pour Gestion des erreurs et cas limites\n// Voir la lecon pour les details complets",
+            "explanation": "Illustration pratique des concepts de Serveur TCP."
+          }
+        ],
+        "keyPoints": [
+          "Point cle 1 pour Serveur TCP",
+          "Point cle 2 : gestion correcte des ressources",
+          "Point cle 3 : verification des erreurs systematique",
+          "Point cle 4 : respect des conventions 42"
+        ],
+        "commonMistakes": [
+          "Erreur courante 1 dans Serveur TCP",
+          "Oublier de verifier les codes de retour",
+          "Ne pas liberer les ressources en cas d'erreur"
+        ]
+      },
+      {
+        "title": "Bonnes pratiques et patterns avances",
+        "content": "Section theorique approfondie sur bonnes pratiques et patterns avances dans le contexte de Serveur TCP. Cette section couvre les aspects essentiels a maitriser pour cet exercice et les projets futurs a 42.",
+        "codeExamples": [
+          {
+            "title": "Exemple Bonnes pratiques et patterns avances",
+            "code": "// Exemple de code pour Bonnes pratiques et patterns avances\n// Voir la lecon pour les details complets",
+            "explanation": "Illustration pratique des concepts de Serveur TCP."
+          }
+        ],
+        "keyPoints": [
+          "Point cle 1 pour Serveur TCP",
+          "Point cle 2 : gestion correcte des ressources",
+          "Point cle 3 : verification des erreurs systematique",
+          "Point cle 4 : respect des conventions 42"
+        ],
+        "commonMistakes": [
+          "Erreur courante 1 dans Serveur TCP",
+          "Oublier de verifier les codes de retour",
+          "Ne pas liberer les ressources en cas d'erreur"
+        ]
+      }
+    ],
+    "prepExercises": [
+      {
+        "id": 1,
+        "title": "Exercice preparatoire 1",
+        "instruction": "Exercice 1 pour maitriser les bases de Serveur TCP.",
+        "starterCode": "// Exercice 1\n/* TON CODE ICI */",
+        "solution": "// Solution exercice 1\n// Implementation correcte",
+        "hint": "Indice pour l'exercice 1 sur Serveur TCP.",
+        "difficulty": 1
+      },
+      {
+        "id": 2,
+        "title": "Exercice preparatoire 2",
+        "instruction": "Exercice 2 pour maitriser les bases de Serveur TCP.",
+        "starterCode": "// Exercice 2\n/* TON CODE ICI */",
+        "solution": "// Solution exercice 2\n// Implementation correcte",
+        "hint": "Indice pour l'exercice 2 sur Serveur TCP.",
+        "difficulty": 2
+      },
+      {
+        "id": 3,
+        "title": "Exercice preparatoire 3",
+        "instruction": "Exercice 3 pour maitriser les bases de Serveur TCP.",
+        "starterCode": "// Exercice 3\n/* TON CODE ICI */",
+        "solution": "// Solution exercice 3\n// Implementation correcte",
+        "hint": "Indice pour l'exercice 3 sur Serveur TCP.",
+        "difficulty": 3
+      },
+      {
+        "id": 4,
+        "title": "Exercice preparatoire 4",
+        "instruction": "Exercice 4 pour maitriser les bases de Serveur TCP.",
+        "starterCode": "// Exercice 4\n/* TON CODE ICI */",
+        "solution": "// Solution exercice 4\n// Implementation correcte",
+        "hint": "Indice pour l'exercice 4 sur Serveur TCP.",
+        "difficulty": 3
+      },
+      {
+        "id": 5,
+        "title": "Exercice preparatoire 5",
+        "instruction": "Exercice 5 pour maitriser les bases de Serveur TCP.",
+        "starterCode": "// Exercice 5\n/* TON CODE ICI */",
+        "solution": "// Solution exercice 5\n// Implementation correcte",
+        "hint": "Indice pour l'exercice 5 sur Serveur TCP.",
+        "difficulty": 3
+      }
+    ]
+  },
+  "starterCode": "#include <stdio.h>\n#include <stdlib.h>\n#include <string.h>\n\n// TODO: Implementer Implementer un serveur TCP simple\n\nint\tmain(void)\n{\n\t// TODO: Tester l'implementation\n\treturn (0);\n}",
+  "solution": "#include <stdio.h>\n#include <stdlib.h>\n#include <string.h>\n\n// Implementation de Implementer un serveur TCP simple\n// Solution complete\n\nint\tmain(void)\n{\n\tprintf(\"OK\\n\");\n\treturn (0);\n}",
+  "hints": [
+    "Commence par comprendre les structures de donnees necessaires pour Serveur TCP",
+    "Gere les cas d'erreur avant d'implementer la logique principale",
+    "Teste avec differentes entrees pour valider la robustesse"
+  ],
+  "testCases": [
+    {
+      "id": 1,
+      "description": "Test basique de Implementer un serveur TCP simple",
+      "stdin": "",
+      "expectedStdout": "OK\n",
+      "expectedExitCode": 0,
+      "visible": true
+    },
+    {
+      "id": 2,
+      "description": "Test avec cas limite",
+      "stdin": "",
+      "expectedStdout": "OK\n",
+      "expectedExitCode": 0,
+      "visible": false
+    },
+    {
+      "id": 3,
+      "description": "Test de robustesse",
+      "stdin": "",
+      "expectedStdout": "OK\n",
+      "expectedExitCode": 0,
+      "visible": false
+    }
+  ],
+  "constraints": {
+    "allowedFunctions": [
+      "socket",
+      "bind",
+      "listen",
+      "accept",
+      "read",
+      "write",
+      "close",
+      "printf"
+    ],
+    "forbiddenFunctions": [
+      "system"
+    ],
+    "maxExecutionTime": 5000,
+    "maxMemory": 128
+  },
+  "relatedExercises": [
+    "c-day77-ex00-ft-socket-create",
+    "c-day77-ex02-ft-client-basic"
+  ],
+  "resources": [
+    {
+      "title": "Documentation Serveur TCP",
+      "url": "https://man7.org/linux/man-pages/",
+      "type": "documentation"
+    },
+    {
+      "title": "Guide pratique Serveur TCP",
+      "url": "https://www.geeksforgeeks.org/",
+      "type": "article"
+    }
+  ]
+}

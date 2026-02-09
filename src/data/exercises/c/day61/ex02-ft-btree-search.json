@@ -1,0 +1,257 @@
+{
+  "id": "c-day61-ex02-ft-btree-search",
+  "category": "c",
+  "day": 61,
+  "order": 2,
+  "title": "Rechercher un element dans un BST",
+  "description": "Ecris la fonction ft_btree_search qui recherche un element dans un arbre binaire de recherche. La fonction prend la racine (t_btree *root), un void *item a rechercher, et une fonction de comparaison. Elle retourne le noeud contenant l'element, ou NULL si l'element n'est pas trouve. La recherche exploite la propriete du BST pour descendre efficacement dans l'arbre.",
+  "difficulty": 4,
+  "points": 40,
+  "estimatedTime": 30,
+  "learningObjectives": [
+    "Implementer une recherche recursive dans un BST",
+    "Exploiter la propriete d'ordre du BST pour optimiser la recherche",
+    "Comprendre la complexite O(log n) vs O(n) selon l'equilibrage",
+    "Retourner un pointeur vers le noeud trouve ou NULL",
+    "Maitriser les cas de base de la recursion (noeud NULL, element trouve)"
+  ],
+  "learningContent": {
+    "lesson": {
+      "introduction": "La recherche dans un BST est l'operation la plus importante et illustre pourquoi cette structure est si utile. Grace a la propriete d'ordre, on n'a pas besoin de parcourir tout l'arbre : a chaque noeud, on elimine la moitie de l'arbre restant. C'est le meme principe que la recherche dichotomique dans un tableau trie, mais applique a une structure arborescente.",
+      "steps": [
+        {
+          "id": 1,
+          "title": "Principe de la recherche dans un BST",
+          "content": "L'algorithme de recherche est simple et elegant :\n1. Si le noeud courant est NULL, l'element n'existe pas\n2. Si l'element est egal au noeud courant, on l'a trouve\n3. Si l'element est inferieur, on cherche a gauche\n4. Sinon, on cherche a droite\n\nA chaque etape, on elimine un sous-arbre entier.",
+          "codeExample": "// Recherche de 4 dans le BST :\n//        5\n//       / \\\n//      3   8\n//     / \\\n//    1   4\n\n// Etape 1 : 4 < 5 -> gauche\n// Etape 2 : 4 > 3 -> droite\n// Etape 3 : 4 == 4 -> TROUVE !",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Combien de comparaisons faut-il pour chercher 9 dans cet arbre ?",
+            "starterCode": "// BST : 5(3(1,4),8(NULL,9))\n// Recherche de 9 :\n// Etape 1 : 9 > 5 -> ???\n// Etape 2 : ???",
+            "solution": "// Etape 1 : 9 > 5 -> droite (noeud 8)\n// Etape 2 : 9 > 8 -> droite (noeud 9)\n// Etape 3 : 9 == 9 -> TROUVE !\n// 3 comparaisons"
+          }
+        },
+        {
+          "id": 2,
+          "title": "Le cas de base : element non trouve",
+          "content": "Quand on arrive a un noeud NULL, cela signifie que l'element n'est pas dans l'arbre. C'est le cas de base de la recursion. On retourne NULL pour indiquer l'echec de la recherche.\n\nIl est important de tester ce cas EN PREMIER pour eviter un segfault.",
+          "codeExample": "// Recherche de 7 dans le BST :\n//        5\n//       / \\\n//      3   8\n\n// 7 > 5 -> droite (noeud 8)\n// 7 < 8 -> gauche (NULL)\n// NULL -> retourne NULL (non trouve)\n\nt_btree\t*search(t_btree *root, void *item)\n{\n\tif (!root)         // Cas de base : pas trouve\n\t\treturn (NULL);\n\t// ... suite\n}",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Que retourne la recherche de 10 dans un arbre vide (root = NULL) ?",
+            "starterCode": "t_btree *root = NULL;\nt_btree *result = ft_btree_search(root, &val, cmp);\n// result = ???",
+            "solution": "// root est NULL\n// Premier test : if (!root) return (NULL)\n// result = NULL\n// La recherche s'arrete immediatement"
+          }
+        },
+        {
+          "id": 3,
+          "title": "Comparaison et recursion",
+          "content": "On utilise la fonction de comparaison pour determiner la direction :\n- **cmp == 0** : element trouve, retourner le noeud\n- **cmp < 0** : element plus petit, chercher a gauche\n- **cmp > 0** : element plus grand, chercher a droite\n\nChaque appel recursif descend d'un niveau.",
+          "codeExample": "t_btree\t*ft_btree_search(t_btree *root, void *item,\n\t\tint (*cmp)(void *, void *))\n{\n\tint\tresult;\n\n\tif (!root)\n\t\treturn (NULL);\n\tresult = cmp(item, root->item);\n\tif (result == 0)\n\t\treturn (root);\n\tif (result < 0)\n\t\treturn (ft_btree_search(root->left, item, cmp));\n\treturn (ft_btree_search(root->right, item, cmp));\n}",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Reecris la fonction de recherche en version iterative (avec while).",
+            "starterCode": "t_btree\t*search_iter(t_btree *root, void *item,\n\t\tint (*cmp)(void *, void *))\n{\n\twhile (???)\n\t{\n\t\t// ...\n\t}\n\treturn (NULL);\n}",
+            "solution": "t_btree\t*search_iter(t_btree *root, void *item,\n\t\tint (*cmp)(void *, void *))\n{\n\tint\tresult;\n\n\twhile (root)\n\t{\n\t\tresult = cmp(item, root->item);\n\t\tif (result == 0)\n\t\t\treturn (root);\n\t\tif (result < 0)\n\t\t\troot = root->left;\n\t\telse\n\t\t\troot = root->right;\n\t}\n\treturn (NULL);\n}"
+          }
+        },
+        {
+          "id": 4,
+          "title": "Complexite et cas d'utilisation",
+          "content": "La recherche dans un BST est en O(h) ou h est la hauteur de l'arbre. Pour un arbre equilibre, h = log2(n), donc la recherche est en O(log n). C'est beaucoup plus rapide qu'une recherche lineaire en O(n).\n\nExemple : dans un arbre de 1 million de noeuds equilibre, il faut au maximum 20 comparaisons (log2(1000000) ~ 20).",
+          "codeExample": "// Comparaison recherche lineaire vs BST :\n// n = 1 000 000 elements\n\n// Liste chainee : O(n)\n// Pire cas : 1 000 000 comparaisons\n\n// BST equilibre : O(log n)\n// Pire cas : ~20 comparaisons\n\n// Tableau trie + dichotomie : O(log n)\n// Meme performance, mais insertion O(n)\n\n// BST : insertion ET recherche en O(log n)",
+          "language": "c"
+        }
+      ]
+    },
+    "theory": [
+      {
+        "title": "Recherche dans un BST vs recherche lineaire",
+        "content": "La recherche dans un BST exploite la propriete d'ordre pour eliminer la moitie des elements a chaque comparaison, comme la recherche dichotomique. Une recherche lineaire dans une liste doit examiner chaque element un par un.",
+        "codeExamples": [
+          {
+            "title": "Nombre de comparaisons selon la structure",
+            "code": "// Recherche de 42 parmi 15 elements\n\n// Liste chainee : 1 -> 5 -> 12 -> 15 -> 20 -> 25 -> 30\n//   -> 35 -> 40 -> 42 -> ... (10 comparaisons)\n\n// BST equilibre :\n//            20\n//         /      \\\n//       10        30\n//      /  \\      /  \\\n//     5   15   25   35\n//    / \\       \\    / \\\n//   1  8      28  32 40\n//                     \\\n//                     42\n// 20->30->35->40->42 (5 comparaisons)",
+            "explanation": "Le BST divise l'espace de recherche par 2 a chaque etape."
+          }
+        ],
+        "keyPoints": [
+          "BST equilibre : O(log n) comparaisons en moyenne",
+          "Liste chainee : O(n) comparaisons en moyenne",
+          "La recherche BST est identique a la dichotomie sur un tableau trie",
+          "L'avantage du BST sur le tableau trie : insertion en O(log n) vs O(n)"
+        ],
+        "commonMistakes": [
+          "Oublier que le pire cas du BST est O(n) si l'arbre est degenere",
+          "Parcourir tout l'arbre au lieu d'exploiter la propriete d'ordre",
+          "Ne pas gerer le cas ou l'element n'est pas dans l'arbre (retourner garbage)"
+        ]
+      },
+      {
+        "title": "Recursion et arbres",
+        "content": "Les arbres sont des structures naturellement recursives : chaque sous-arbre est lui-meme un arbre. Les algorithmes recursifs sur les arbres ont toujours un cas de base (noeud NULL ou feuille) et un cas recursif (descendre dans les sous-arbres).",
+        "codeExamples": [
+          {
+            "title": "Pattern recursif pour les arbres",
+            "code": "// Pattern general :\nresultat\toperation(t_btree *node)\n{\n\tif (!node)           // Cas de base\n\t\treturn (valeur_defaut);\n\t// Traiter le noeud courant\n\toperation(node->left);  // Sous-arbre gauche\n\toperation(node->right); // Sous-arbre droit\n}\n\n// Pour la recherche BST, on ne descend que\n// dans UN des deux sous-arbres (pas les deux)",
+            "explanation": "La recherche BST est optimisee : elle ne visite qu'un seul chemin de la racine a une feuille."
+          }
+        ],
+        "keyPoints": [
+          "Cas de base : noeud NULL (arbre vide ou fin de branche)",
+          "Cas recursif : descendre dans le sous-arbre gauche ou droit",
+          "La recherche BST ne descend que dans un seul sous-arbre a chaque etape",
+          "La profondeur de recursion = hauteur de l'arbre"
+        ],
+        "commonMistakes": [
+          "Oublier le cas de base (recursion infinie -> stack overflow)",
+          "Descendre dans les deux sous-arbres pour une recherche BST (inutile et O(n))",
+          "Ne pas retourner la valeur de l'appel recursif (perdre le resultat)"
+        ]
+      },
+      {
+        "title": "Retourner un pointeur depuis une recherche",
+        "content": "La fonction retourne un pointeur vers le noeud trouve, pas une copie de la donnee. Cela permet a l'appelant de modifier le noeud ou d'acceder a ses enfants. Si l'element n'est pas trouve, on retourne NULL.",
+        "codeExamples": [
+          {
+            "title": "Utilisation du resultat de recherche",
+            "code": "t_btree\t*found;\nint\tval = 42;\n\nfound = ft_btree_search(root, &val, cmp_int);\nif (found)\n{\n\tprintf(\"Trouve : %d\\n\", *(int *)found->item);\n\t// On peut aussi acceder a found->left, found->right\n}\nelse\n\tprintf(\"Non trouve\\n\");",
+            "explanation": "Toujours verifier si le resultat est NULL avant de l'utiliser."
+          }
+        ],
+        "keyPoints": [
+          "Retourner un pointeur vers le noeud permet de le modifier si necessaire",
+          "NULL indique que l'element n'a pas ete trouve",
+          "L'appelant doit toujours verifier le retour avant d'utiliser le pointeur",
+          "Ne pas retourner l'adresse d'une variable locale (dangling pointer)"
+        ],
+        "commonMistakes": [
+          "Utiliser le resultat sans verifier s'il est NULL (segfault)",
+          "Retourner une copie au lieu d'un pointeur (perd le lien avec l'arbre)",
+          "Modifier item sans comprendre que ca modifie l'arbre original"
+        ]
+      },
+      {
+        "title": "Version iterative vs recursive",
+        "content": "La recherche dans un BST peut etre implementee de maniere recursive ou iterative. La version iterative utilise une boucle while et est generalement plus efficace car elle n'utilise pas la pile d'appels. Les deux versions ont la meme complexite temporelle.",
+        "codeExamples": [
+          {
+            "title": "Comparaison recursive vs iterative",
+            "code": "// RECURSIVE\nt_btree\t*search_rec(t_btree *root, void *item,\n\t\tint (*cmp)(void *, void *))\n{\n\tif (!root)\n\t\treturn (NULL);\n\tif (cmp(item, root->item) == 0)\n\t\treturn (root);\n\tif (cmp(item, root->item) < 0)\n\t\treturn (search_rec(root->left, item, cmp));\n\treturn (search_rec(root->right, item, cmp));\n}\n\n// ITERATIVE\nt_btree\t*search_iter(t_btree *root, void *item,\n\t\tint (*cmp)(void *, void *))\n{\n\twhile (root)\n\t{\n\t\tint r = cmp(item, root->item);\n\t\tif (r == 0)\n\t\t\treturn (root);\n\t\troot = (r < 0) ? root->left : root->right;\n\t}\n\treturn (NULL);\n}",
+            "explanation": "La version iterative evite la surcharge de la pile d'appels recursifs."
+          }
+        ],
+        "keyPoints": [
+          "La version recursive est plus lisible et naturelle pour les arbres",
+          "La version iterative est plus efficace en memoire (pas de pile d'appels)",
+          "Les deux ont la meme complexite temporelle O(h)",
+          "La recherche BST est tail-recursive donc facilement convertible en iteratif"
+        ],
+        "commonMistakes": [
+          "Appeler cmp deux fois au lieu de stocker le resultat dans une variable",
+          "Dans la version iterative, oublier d'avancer le pointeur (boucle infinie)",
+          "Confondre recursion terminale et non-terminale"
+        ]
+      }
+    ],
+    "prepExercises": [
+      {
+        "id": 1,
+        "title": "Cas de base de la recherche",
+        "instruction": "Ecris le cas de base de ft_btree_search (noeud NULL).",
+        "starterCode": "t_btree\t*ft_btree_search(t_btree *root, void *item,\n\t\tint (*cmp)(void *, void *))\n{\n\t// Cas de base\n}",
+        "solution": "t_btree\t*ft_btree_search(t_btree *root, void *item,\n\t\tint (*cmp)(void *, void *))\n{\n\tif (!root)\n\t\treturn (NULL);\n\t// ... suite\n}",
+        "hint": "Si root est NULL, l'element n'est pas dans l'arbre. Retourne NULL.",
+        "difficulty": 1
+      },
+      {
+        "id": 2,
+        "title": "Cas element trouve",
+        "instruction": "Ecris le code pour detecter quand l'element est trouve.",
+        "starterCode": "// Apres le cas de base\nint result = cmp(item, root->item);\nif (result == ???)\n\treturn (???);",
+        "solution": "int result = cmp(item, root->item);\nif (result == 0)\n\treturn (root);",
+        "hint": "cmp retourne 0 quand les elements sont egaux. On retourne le noeud courant.",
+        "difficulty": 1
+      },
+      {
+        "id": 3,
+        "title": "Direction de la recherche",
+        "instruction": "Complete le code pour choisir la direction de recherche.",
+        "starterCode": "if (result < 0)\n\treturn (ft_btree_search(root->???, item, cmp));\nreturn (ft_btree_search(root->???, item, cmp));",
+        "solution": "if (result < 0)\n\treturn (ft_btree_search(root->left, item, cmp));\nreturn (ft_btree_search(root->right, item, cmp));",
+        "hint": "Si l'element est plus petit (cmp < 0), il est a gauche. Sinon a droite.",
+        "difficulty": 2
+      },
+      {
+        "id": 4,
+        "title": "Tracer une recherche",
+        "instruction": "Trace la recherche de 4 dans le BST 5(3(1,4),8(6,9)).",
+        "starterCode": "// Recherche de 4 :\n// Noeud 5 : cmp(4,5) = -1 -> ???\n// Noeud 3 : cmp(4,3) = 1 -> ???\n// Noeud ? : cmp(4,?) = ???",
+        "solution": "// Noeud 5 : cmp(4,5) = -1 -> gauche (3)\n// Noeud 3 : cmp(4,3) = 1 -> droite (4)\n// Noeud 4 : cmp(4,4) = 0 -> TROUVE !\n// 3 comparaisons",
+        "hint": "A chaque noeud, compare et descends dans la bonne direction.",
+        "difficulty": 2
+      },
+      {
+        "id": 5,
+        "title": "Recherche d'un element absent",
+        "instruction": "Trace la recherche de 7 dans le BST 5(3(1,4),8(NULL,9)).",
+        "starterCode": "// Recherche de 7 :\n// Noeud 5 : 7 > 5 -> ???\n// Noeud 8 : 7 < 8 -> ???\n// Noeud ? : ???",
+        "solution": "// Noeud 5 : 7 > 5 -> droite (8)\n// Noeud 8 : 7 < 8 -> gauche (NULL)\n// NULL -> retourne NULL (non trouve)\n// 2 comparaisons + 1 test NULL",
+        "hint": "Quand on arrive a un noeud NULL, l'element n'est pas dans l'arbre.",
+        "difficulty": 2
+      }
+    ]
+  },
+  "starterCode": "#include <stdlib.h>\n\ntypedef struct s_btree\n{\n\tvoid\t\t\t*item;\n\tstruct s_btree\t*left;\n\tstruct s_btree\t*right;\n}\t\t\t\t\tt_btree;\n\nt_btree\t*ft_btree_search(t_btree *root, void *item,\n\t\tint (*cmp)(void *, void *))\n{\n\t// Retourne le noeud contenant item\n\t// ou NULL si non trouve\n\t(void)root;\n\t(void)item;\n\t(void)cmp;\n\treturn (NULL);\n}",
+  "solution": "#include <stdlib.h>\n\ntypedef struct s_btree\n{\n\tvoid\t\t\t*item;\n\tstruct s_btree\t*left;\n\tstruct s_btree\t*right;\n}\t\t\t\t\tt_btree;\n\nt_btree\t*ft_btree_search(t_btree *root, void *item,\n\t\tint (*cmp)(void *, void *))\n{\n\tint\tresult;\n\n\tif (!root)\n\t\treturn (NULL);\n\tresult = cmp(item, root->item);\n\tif (result == 0)\n\t\treturn (root);\n\tif (result < 0)\n\t\treturn (ft_btree_search(root->left, item, cmp));\n\treturn (ft_btree_search(root->right, item, cmp));\n}",
+  "hints": [
+    "Le premier cas de base est root == NULL : retourne NULL (element non trouve).",
+    "Stocke le resultat de cmp dans une variable pour eviter de l'appeler deux fois.",
+    "Si cmp == 0, tu as trouve l'element. Si < 0, va a gauche. Sinon, va a droite."
+  ],
+  "testCases": [
+    {
+      "id": 1,
+      "description": "Recherche d'un element present",
+      "stdin": "",
+      "expectedStdout": "Trouve: 42\n",
+      "expectedExitCode": 0,
+      "visible": true
+    },
+    {
+      "id": 2,
+      "description": "Recherche d'un element absent",
+      "stdin": "",
+      "expectedStdout": "Non trouve\n",
+      "expectedExitCode": 0,
+      "visible": false
+    },
+    {
+      "id": 3,
+      "description": "Recherche dans un arbre vide",
+      "stdin": "",
+      "expectedStdout": "Non trouve\n",
+      "expectedExitCode": 0,
+      "visible": false
+    }
+  ],
+  "constraints": {
+    "allowedFunctions": ["malloc", "free"],
+    "forbiddenFunctions": ["calloc", "realloc", "printf"],
+    "maxExecutionTime": 5000,
+    "maxMemory": 128
+  },
+  "relatedExercises": ["c-day61-ex00-ft-btree-create", "c-day61-ex01-ft-btree-insert"],
+  "resources": [
+    {
+      "title": "Recherche dans un BST",
+      "url": "https://www.geeksforgeeks.org/binary-search-tree-set-1-search-and-insertion/",
+      "type": "documentation"
+    },
+    {
+      "title": "Complexite des operations BST",
+      "url": "https://en.wikipedia.org/wiki/Binary_search_tree#Operations",
+      "type": "article"
+    }
+  ]
+}

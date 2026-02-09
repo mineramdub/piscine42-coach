@@ -1,0 +1,257 @@
+{
+  "id": "c-day65-ex00-ft-hashtable-search",
+  "category": "c",
+  "day": 65,
+  "order": 0,
+  "title": "Rechercher dans une table de hachage",
+  "description": "Ecris la fonction ft_hashtable_search qui recherche une valeur par sa cle dans une table de hachage. La fonction calcule le hash de la cle pour trouver le bucket, puis parcourt la liste chainee du bucket en comparant les cles avec strcmp. Elle retourne un pointeur vers la valeur si trouvee, ou NULL sinon.",
+  "difficulty": 4,
+  "points": 40,
+  "estimatedTime": 30,
+  "learningObjectives": [
+    "Implementer la recherche par cle dans une table de hachage",
+    "Utiliser le hash pour localiser le bucket en O(1)",
+    "Parcourir la liste chainee du bucket pour trouver la cle",
+    "Retourner un pointeur vers la valeur ou NULL si non trouvee",
+    "Comprendre la complexite O(1) en moyenne de la recherche"
+  ],
+  "learningContent": {
+    "lesson": {
+      "introduction": "La recherche est l'operation la plus importante d'une table de hachage. Grace au hachage, on localise le bucket en O(1), puis on parcourt la liste chainee du bucket pour trouver la cle. En moyenne, si la table est bien dimensionnee, la liste chainee est tres courte et la recherche est O(1). C'est ce qui fait des tables de hachage la structure de donnees la plus utilisee pour les dictionnaires.",
+      "steps": [
+        {
+          "id": 1,
+          "title": "Localiser le bucket",
+          "content": "La premiere etape est de calculer le hash de la cle pour trouver le bucket. C'est une operation O(1) (temps constant). Le hash donne directement l'index du bucket a consulter.",
+          "codeExample": "unsigned long\tindex;\n\nindex = ht->hash(key, ht->size);\n// Maintenant on cherche dans ht->buckets[index]\n\n// Si le bucket est NULL, la cle n'existe pas\nif (!ht->buckets[index])\n\treturn (NULL);",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Pourquoi la localisation du bucket est O(1) et pas O(n) ?",
+            "starterCode": "// L'acces a un tableau par index est :\n// tab[42] = ???\n// La fonction hash calcule l'index en ???",
+            "solution": "// tab[42] est un acces direct en O(1)\n// La fonction hash parcourt la cle (O(k) ou k = len(key))\n// Mais k est generalement petit et constant\n// Donc l'ensemble est considere O(1)"
+          }
+        },
+        {
+          "id": 2,
+          "title": "Parcourir la liste chainee",
+          "content": "Dans le bucket, on parcourt la liste chainee en comparant chaque cle avec strcmp. Si on trouve une correspondance, on retourne la valeur. Si on atteint la fin de la liste (NULL), la cle n'existe pas.",
+          "codeExample": "t_entry\t*entry;\n\nentry = ht->buckets[index];\nwhile (entry)\n{\n\tif (strcmp(entry->key, key) == 0)\n\t\treturn (entry->value);\n\tentry = entry->next;\n}\nreturn (NULL); // Cle non trouvee",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Combien de comparaisons pour trouver 'age' dans ce bucket ?",
+            "starterCode": "// Bucket : [\"name\":A] -> [\"age\":25] -> [\"city\":P] -> NULL\n// Recherche de \"age\" :\n// strcmp(\"name\", \"age\") != 0 -> next\n// strcmp(\"age\", \"age\") == 0 -> ???\n// Comparaisons : ???",
+            "solution": "// 2 comparaisons pour trouver \"age\"\n// C'est la recherche dans la liste chainee du bucket\n// Si les collisions sont rares, le bucket est court"
+          }
+        },
+        {
+          "id": 3,
+          "title": "La fonction complete",
+          "content": "La fonction combine la localisation du bucket et le parcours de la liste. Elle est courte et efficace. On retourne un void* car la table est generique.",
+          "codeExample": "void\t*ft_hashtable_search(t_hashtable *ht, char *key)\n{\n\tunsigned long\tindex;\n\tt_entry\t\t\t*entry;\n\n\tindex = ht->hash(key, ht->size);\n\tentry = ht->buckets[index];\n\twhile (entry)\n\t{\n\t\tif (strcmp(entry->key, key) == 0)\n\t\t\treturn (entry->value);\n\t\tentry = entry->next;\n\t}\n\treturn (NULL);\n}",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Que retourne la recherche si la table est vide (tous les buckets NULL) ?",
+            "starterCode": "// Table vide, recherche de \"test\" :\n// index = hash(\"test\", size)\n// entry = buckets[index] = NULL\n// while (NULL) -> ???",
+            "solution": "// entry = NULL, la boucle while ne s'execute pas\n// On retourne NULL directement\n// C'est le comportement correct : cle non trouvee"
+          }
+        },
+        {
+          "id": 4,
+          "title": "Complexite de la recherche",
+          "content": "La complexite depend du nombre d'elements dans le bucket (longueur de la liste chainee) :\n- **Meilleur cas** : O(1) si la cle est en tete du bucket\n- **Cas moyen** : O(1) si le facteur de charge est < 1\n- **Pire cas** : O(n) si toutes les cles sont dans le meme bucket\n\nUne bonne fonction de hash minimise les collisions et maintient O(1).",
+          "codeExample": "// Table de 100 buckets, 50 elements :\n// Facteur de charge = 0.5\n// En moyenne 0.5 element par bucket\n// Recherche ~ O(1)\n\n// Table de 10 buckets, 1000 elements :\n// Facteur de charge = 100\n// En moyenne 100 elements par bucket\n// Recherche ~ O(100) = O(n)\n\n// Pire cas absolu : toutes les cles dans bucket[0]\n// Recherche = O(n) = parcours de liste",
+          "language": "c"
+        }
+      ]
+    },
+    "theory": [
+      {
+        "title": "Recherche O(1) : comment ca marche",
+        "content": "La table de hachage atteint O(1) en moyenne grace a deux proprietes : l'acces direct au tableau (O(1)) et la distribution uniforme du hash (peu de collisions). Le facteur de charge determine la performance reelle.",
+        "codeExamples": [
+          {
+            "title": "Comparaison avec d'autres structures",
+            "code": "// Recherche par cle :\n// Liste chainee : O(n)        - parcours lineaire\n// Tableau trie : O(log n)     - recherche dichotomique\n// BST equilibre : O(log n)    - parcours de l'arbre\n// Table de hachage : O(1)*    - acces direct\n// * en moyenne, avec bonne distribution\n\n// Pour n = 1 000 000 :\n// Liste : 500 000 comparaisons en moyenne\n// BST : ~20 comparaisons\n// Hash : ~1 comparaison",
+            "explanation": "La table de hachage est la plus rapide pour la recherche par cle exacte."
+          }
+        ],
+        "keyPoints": [
+          "O(1) en moyenne grace a l'acces direct par index",
+          "Depends de la qualite de la fonction de hash",
+          "Facteur de charge < 0.75 recommande pour maintenir O(1)",
+          "Le pire cas O(n) est rare avec une bonne distribution"
+        ],
+        "commonMistakes": [
+          "Croire que la recherche est TOUJOURS O(1) (le pire cas est O(n))",
+          "Ne pas considerer le cout du calcul du hash (O(k) pour une cle de longueur k)",
+          "Oublier que la comparaison de cles avec strcmp est O(k)"
+        ]
+      },
+      {
+        "title": "Recherche et types de retour",
+        "content": "La fonction retourne un void* vers la valeur trouvee. L'appelant doit caster le retour vers le type attendu. Si la cle n'est pas trouvee, on retourne NULL, qui est aussi une valeur valide pour void*.",
+        "codeExamples": [
+          {
+            "title": "Utilisation du resultat de recherche",
+            "code": "// Recherche et utilisation :\nvoid *result = ft_hashtable_search(ht, \"age\");\nif (result)\n\tprintf(\"Age = %d\\n\", *(int *)result);\nelse\n\tprintf(\"Cle non trouvee\\n\");\n\n// Attention si la valeur stockee est NULL :\nft_hashtable_insert(ht, \"nothing\", NULL);\nresult = ft_hashtable_search(ht, \"nothing\");\n// result == NULL, mais la cle EXISTE !\n// Comment distinguer cle absente vs valeur NULL ?",
+            "explanation": "Le retour NULL est ambigu si les valeurs peuvent etre NULL."
+          }
+        ],
+        "keyPoints": [
+          "Retourne void* : l'appelant doit caster vers le bon type",
+          "NULL signifie cle non trouvee",
+          "Ambiguite si la valeur stockee peut etre NULL",
+          "Alternative : retourner l'entree (t_entry *) au lieu de la valeur"
+        ],
+        "commonMistakes": [
+          "Utiliser le resultat sans verifier NULL (segfault)",
+          "Caster vers le mauvais type (corruption de donnees)",
+          "Confondre cle absente et valeur NULL"
+        ]
+      },
+      {
+        "title": "Comparaison de cles : strcmp vs ==",
+        "content": "En C, les chaines doivent etre comparees avec strcmp, pas avec ==. L'operateur == compare les adresses (pointeurs), pas le contenu. Deux chaines identiques peuvent avoir des adresses differentes.",
+        "codeExamples": [
+          {
+            "title": "Pourquoi strcmp est necessaire",
+            "code": "char *a = \"hello\";\nchar *b = strdup(\"hello\");\n\n// == compare les adresses\nif (a == b)\n\tprintf(\"meme adresse\\n\"); // NE s'affiche PAS\n\n// strcmp compare le contenu\nif (strcmp(a, b) == 0)\n\tprintf(\"meme contenu\\n\"); // S'affiche\n\n// Dans la table, la cle est dupliquee avec strdup\n// Donc l'adresse de la cle stockee != l'adresse de la cle cherchee\n// Il FAUT strcmp",
+            "explanation": "strdup cree une copie avec une adresse differente."
+          }
+        ],
+        "keyPoints": [
+          "strcmp compare le contenu des chaines caractere par caractere",
+          "== compare les adresses des pointeurs (pas le contenu)",
+          "strdup cree une copie avec une nouvelle adresse",
+          "strcmp retourne 0 si les chaines sont identiques"
+        ],
+        "commonMistakes": [
+          "Utiliser == pour comparer des chaines (compare les adresses)",
+          "Oublier que strcmp retourne 0 pour egalite (pas 1)",
+          "Ne pas gerer le cas ou une des chaines est NULL (segfault)"
+        ]
+      },
+      {
+        "title": "Optimisations de la recherche",
+        "content": "Plusieurs optimisations peuvent ameliorer les performances de la recherche : stockage du hash pre-calcule dans l'entree, deplacement de l'element trouve en tete (move-to-front), ou utilisation d'adressage ouvert au lieu du chainage.",
+        "codeExamples": [
+          {
+            "title": "Optimisation : stocker le hash",
+            "code": "typedef struct s_entry\n{\n\tchar\t\t\t*key;\n\tvoid\t\t\t*value;\n\tunsigned long\thash_value; // Hash pre-calcule\n\tstruct s_entry\t*next;\n}\t\t\t\t\tt_entry;\n\n// Recherche optimisee :\nwhile (entry)\n{\n\t// Comparer le hash d'abord (int vs int = rapide)\n\tif (entry->hash_value == target_hash\n\t\t&& strcmp(entry->key, key) == 0)\n\t\treturn (entry->value);\n\tentry = entry->next;\n}\n// strcmp n'est appele que si les hash coincident",
+            "explanation": "Comparer les hash est plus rapide que strcmp. On evite les strcmp inutiles."
+          }
+        ],
+        "keyPoints": [
+          "Stocker le hash pre-calcule evite de recalculer a chaque recherche",
+          "Comparer le hash (int) avant strcmp (chaine) est plus rapide",
+          "Move-to-front : deplacer l'element trouve en tete pour les recherches repetees",
+          "L'adressage ouvert evite les listes chainees (meilleur pour le cache)"
+        ],
+        "commonMistakes": [
+          "Optimiser prematureement (le chainage simple suffit souvent)",
+          "Comparer seulement les hash sans strcmp (collisions de hash possibles)",
+          "Rendre le code illisible pour gagner quelques nanosecondes"
+        ]
+      }
+    ],
+    "prepExercises": [
+      {
+        "id": 1,
+        "title": "Localiser le bucket",
+        "instruction": "Ecris le code qui calcule l'index du bucket pour la recherche.",
+        "starterCode": "unsigned long index = ht->???(???, ht->???);\nt_entry *entry = ht->???[index];",
+        "solution": "unsigned long index = ht->hash(key, ht->size);\nt_entry *entry = ht->buckets[index];",
+        "hint": "Utilise ht->hash avec key et ht->size pour calculer l'index.",
+        "difficulty": 1
+      },
+      {
+        "id": 2,
+        "title": "Parcourir le bucket",
+        "instruction": "Ecris la boucle qui parcourt la liste chainee du bucket.",
+        "starterCode": "while (???)\n{\n\tif (strcmp(entry->key, key) == 0)\n\t\treturn (entry->value);\n\tentry = entry->???;\n}\nreturn (???);",
+        "solution": "while (entry)\n{\n\tif (strcmp(entry->key, key) == 0)\n\t\treturn (entry->value);\n\tentry = entry->next;\n}\nreturn (NULL);",
+        "hint": "Boucle tant que entry n'est pas NULL. Compare avec strcmp.",
+        "difficulty": 2
+      },
+      {
+        "id": 3,
+        "title": "Fonction complete",
+        "instruction": "Ecris ft_hashtable_search au complet.",
+        "starterCode": "void *ft_hashtable_search(t_hashtable *ht, char *key)\n{\n\t// Hash, parcours, retourne\n}",
+        "solution": "void *ft_hashtable_search(t_hashtable *ht, char *key)\n{\n\tunsigned long index = ht->hash(key, ht->size);\n\tt_entry *entry = ht->buckets[index];\n\twhile (entry)\n\t{\n\t\tif (strcmp(entry->key, key) == 0)\n\t\t\treturn (entry->value);\n\t\tentry = entry->next;\n\t}\n\treturn (NULL);\n}",
+        "hint": "Calcule l'index, parcours la liste du bucket, retourne la valeur ou NULL.",
+        "difficulty": 2
+      },
+      {
+        "id": 4,
+        "title": "Recherche dans une table vide",
+        "instruction": "Que retourne ft_hashtable_search sur une table vide ?",
+        "starterCode": "// Table vide (tous buckets = NULL)\n// search(ht, \"test\")\n// index = hash(\"test\", size) = ???\n// entry = buckets[index] = ???",
+        "solution": "// index = un certain nombre\n// entry = buckets[index] = NULL\n// while (NULL) -> pas d'iteration\n// return (NULL)\n// La cle n'est pas trouvee",
+        "hint": "Tous les buckets sont NULL, donc entry est NULL et la boucle ne s'execute pas.",
+        "difficulty": 1
+      },
+      {
+        "id": 5,
+        "title": "Utiliser le resultat",
+        "instruction": "Ecris le code qui utilise ft_hashtable_search pour afficher une valeur.",
+        "starterCode": "void *val = ft_hashtable_search(ht, \"name\");\nif (???)\n\tprintf(\"name = %s\\n\", (???)(val));\nelse\n\tprintf(\"Non trouve\\n\");",
+        "solution": "void *val = ft_hashtable_search(ht, \"name\");\nif (val)\n\tprintf(\"name = %s\\n\", (char *)val);\nelse\n\tprintf(\"Non trouve\\n\");",
+        "hint": "Verifie que val n'est pas NULL, puis caste en char* pour une chaine.",
+        "difficulty": 1
+      }
+    ]
+  },
+  "starterCode": "#include <stdlib.h>\n#include <string.h>\n\ntypedef struct s_entry\n{\n\tchar\t\t\t*key;\n\tvoid\t\t\t*value;\n\tstruct s_entry\t*next;\n}\t\t\t\t\tt_entry;\n\ntypedef struct s_hashtable\n{\n\tt_entry\t\t\t**buckets;\n\tunsigned int\tsize;\n\tunsigned long\t(*hash)(char *, unsigned int);\n}\t\t\t\t\tt_hashtable;\n\nvoid\t*ft_hashtable_search(t_hashtable *ht, char *key)\n{\n\t// Recherche la valeur associee a key\n\t(void)ht;\n\t(void)key;\n\treturn (NULL);\n}",
+  "solution": "#include <stdlib.h>\n#include <string.h>\n\ntypedef struct s_entry\n{\n\tchar\t\t\t*key;\n\tvoid\t\t\t*value;\n\tstruct s_entry\t*next;\n}\t\t\t\t\tt_entry;\n\ntypedef struct s_hashtable\n{\n\tt_entry\t\t\t**buckets;\n\tunsigned int\tsize;\n\tunsigned long\t(*hash)(char *, unsigned int);\n}\t\t\t\t\tt_hashtable;\n\nvoid\t*ft_hashtable_search(t_hashtable *ht, char *key)\n{\n\tunsigned long\tindex;\n\tt_entry\t\t\t*entry;\n\n\tindex = ht->hash(key, ht->size);\n\tentry = ht->buckets[index];\n\twhile (entry)\n\t{\n\t\tif (strcmp(entry->key, key) == 0)\n\t\t\treturn (entry->value);\n\t\tentry = entry->next;\n\t}\n\treturn (NULL);\n}",
+  "hints": [
+    "Calcule l'index du bucket avec ht->hash(key, ht->size).",
+    "Parcours la liste chainee du bucket en comparant les cles avec strcmp.",
+    "Si strcmp retourne 0, tu as trouve la cle : retourne entry->value. Sinon retourne NULL."
+  ],
+  "testCases": [
+    {
+      "id": 1,
+      "description": "Recherche d'une cle existante",
+      "stdin": "",
+      "expectedStdout": "name=Alice\n",
+      "expectedExitCode": 0,
+      "visible": true
+    },
+    {
+      "id": 2,
+      "description": "Recherche d'une cle inexistante",
+      "stdin": "",
+      "expectedStdout": "NULL\n",
+      "expectedExitCode": 0,
+      "visible": false
+    },
+    {
+      "id": 3,
+      "description": "Recherche apres collision",
+      "stdin": "",
+      "expectedStdout": "val1=A val2=B\n",
+      "expectedExitCode": 0,
+      "visible": false
+    }
+  ],
+  "constraints": {
+    "allowedFunctions": ["malloc", "free", "strcmp"],
+    "forbiddenFunctions": ["printf"],
+    "maxExecutionTime": 5000,
+    "maxMemory": 128
+  },
+  "relatedExercises": ["c-day65-ex01-ft-hashtable-delete", "c-day65-ex02-ft-hashtable-free"],
+  "resources": [
+    {
+      "title": "Recherche dans une table de hachage",
+      "url": "https://www.geeksforgeeks.org/hashing-set-2-separate-chaining/",
+      "type": "documentation"
+    },
+    {
+      "title": "Complexite des tables de hachage",
+      "url": "https://en.wikipedia.org/wiki/Hash_table#Performance_analysis",
+      "type": "article"
+    }
+  ]
+}

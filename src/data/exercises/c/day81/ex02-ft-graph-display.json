@@ -1,0 +1,257 @@
+{
+  "id": "c-day81-ex02-ft-graph-display",
+  "category": "c",
+  "day": 81,
+  "order": 2,
+  "title": "Afficher la liste d'adjacence d'un graphe",
+  "description": "Implemente la fonction ft_graph_display qui affiche la liste d'adjacence de chaque noeud du graphe. Pour chaque noeud, affiche son identifiant suivi de la liste de ses voisins. Le format doit etre : 'Noeud X : Y Z W' ou X est l'id du noeud et Y, Z, W sont ses voisins separes par des espaces.",
+  "difficulty": 4,
+  "points": 40,
+  "estimatedTime": 30,
+  "learningObjectives": [
+    "Parcourir et afficher la structure complete d'un graphe",
+    "Formater la sortie de maniere lisible et structuree",
+    "Manipuler les structures imbriquees (graphe -> noeuds -> voisins)",
+    "Utiliser des boucles imbriquees pour parcourir des donnees hierarchiques",
+    "Comprendre la representation visuelle d'une liste d'adjacence"
+  ],
+  "learningContent": {
+    "lesson": {
+      "introduction": "Visualiser un graphe est essentiel pour le debugger et comprendre sa structure. La representation textuelle la plus courante est la liste d'adjacence : pour chaque noeud, on affiche ses voisins. Cette representation est a la fois simple a lire pour un humain et directement liee a la structure de donnees en memoire. Dans cet exercice, tu vas implementer l'affichage d'un graphe en parcourant chaque noeud et en listant ses voisins.",
+      "steps": [
+        {
+          "id": 1,
+          "title": "Format d'affichage d'un graphe",
+          "content": "Le format standard pour afficher une liste d'adjacence est :\n```\nNoeud 0 : 1 2\nNoeud 1 : 0 3\nNoeud 2 : 0\nNoeud 3 : 1\n```\n\nChaque ligne montre un noeud et ses voisins. Si un noeud n'a pas de voisins, on affiche juste 'Noeud X :' suivi d'un retour a la ligne.\n\nCe format est tres utile pour verifier visuellement que les aretes ont ete ajoutees correctement.",
+          "codeExample": "// Graphe non-oriente avec aretes : 0-1, 0-2, 1-3\n// Affichage attendu :\n// Noeud 0 : 1 2\n// Noeud 1 : 0 3\n// Noeud 2 : 0\n// Noeud 3 : 1\n\n// Graphe oriente avec aretes : 0->1, 0->2, 1->3\n// Affichage attendu :\n// Noeud 0 : 1 2\n// Noeud 1 : 3\n// Noeud 2 :\n// Noeud 3 :",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Pour un graphe non-oriente avec les aretes 0-1, 1-2, 2-3, 3-0, ecris l'affichage attendu.",
+            "starterCode": "// Aretes : 0-1, 1-2, 2-3, 3-0\n// Noeud 0 : ?\n// Noeud 1 : ?\n// Noeud 2 : ?\n// Noeud 3 : ?",
+            "solution": "// Aretes : 0-1, 1-2, 2-3, 3-0\n// Noeud 0 : 1 3\n// Noeud 1 : 0 2\n// Noeud 2 : 1 3\n// Noeud 3 : 2 0"
+          }
+        },
+        {
+          "id": 2,
+          "title": "Parcourir les noeuds et leurs voisins",
+          "content": "L'affichage necessite deux boucles imbriquees :\n1. **Boucle externe** : parcourt chaque noeud du graphe (de 0 a nb_nodes - 1)\n2. **Boucle interne** : parcourt le tableau de voisins du noeud courant\n\nPour chaque noeud, on affiche d'abord l'en-tete 'Noeud X :', puis on parcourt ses voisins en les separant par des espaces.",
+          "codeExample": "void\tft_graph_display(t_graph *graph)\n{\n\tint\ti;\n\tint\tj;\n\n\ti = 0;\n\twhile (i < graph->nb_nodes)\n\t{\n\t\tprintf(\"Noeud %d :\", graph->nodes[i].id);\n\t\tj = 0;\n\t\twhile (j < graph->nodes[i].nb_neighbors)\n\t\t{\n\t\t\tprintf(\" %d\", graph->nodes[i].neighbors[j]);\n\t\t\tj++;\n\t\t}\n\t\tprintf(\"\\n\");\n\t\ti++;\n\t}\n}",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Pourquoi l'espace est-il AVANT le numero du voisin et pas apres ?",
+            "starterCode": "// Format avec espace avant : \"Noeud 0 : 1 2 3\"\n// Format avec espace apres : \"Noeud 0 : 1 2 3 \"\n// Lequel est correct ? Pourquoi ?",
+            "solution": "// L'espace AVANT est correct : \"Noeud 0 : 1 2 3\"\n// Avec l'espace apres, il y aurait un espace en trop a la fin\n// \"Noeud 0 : 1 2 3 \" <- espace inutile\n// En mettant l'espace avant chaque voisin, on evite ce probleme\n// C'est un pattern classique pour formater des listes"
+          }
+        },
+        {
+          "id": 3,
+          "title": "Gerer les cas particuliers",
+          "content": "Plusieurs cas particuliers doivent etre geres :\n- **Graphe NULL** : ne rien afficher\n- **Noeud sans voisins** : afficher 'Noeud X :' suivi d'un retour a la ligne\n- **Graphe vide** (0 noeuds) : ne rien afficher\n\nLa gestion de ces cas rend la fonction robuste et utilisable en toute circonstance.",
+          "codeExample": "void\tft_graph_display(t_graph *graph)\n{\n\tint\ti;\n\tint\tj;\n\n\tif (!graph)\n\t\treturn ;\n\ti = 0;\n\twhile (i < graph->nb_nodes)\n\t{\n\t\tprintf(\"Noeud %d :\", graph->nodes[i].id);\n\t\tj = 0;\n\t\twhile (j < graph->nodes[i].nb_neighbors)\n\t\t{\n\t\t\tprintf(\" %d\", graph->nodes[i].neighbors[j]);\n\t\t\tj++;\n\t\t}\n\t\tprintf(\"\\n\");\n\t\ti++;\n\t}\n}",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Que se passerait-il si on essayait d'acceder a graph->nb_nodes sans verifier que graph n'est pas NULL ?",
+            "starterCode": "// Si graph == NULL :\n// graph->nb_nodes provoque un ?\n// Pour eviter ca, on fait : if (!graph) return ;",
+            "solution": "// Si graph == NULL :\n// graph->nb_nodes provoque un SEGFAULT\n// Car on dereference un pointeur NULL\n// Pour eviter ca, on fait : if (!graph) return ;\n// C'est de la programmation defensive"
+          }
+        },
+        {
+          "id": 4,
+          "title": "Affichage avance avec informations supplementaires",
+          "content": "On peut enrichir l'affichage avec des informations supplementaires : le type de graphe (oriente ou non), le nombre total d'aretes, le degre de chaque noeud. Cela aide au debugging des algorithmes de graphes.",
+          "codeExample": "void\tft_graph_info(t_graph *graph)\n{\n\tint\ttotal_edges;\n\tint\ti;\n\n\tif (!graph)\n\t\treturn ;\n\tprintf(\"=== Graphe %s, %d noeuds ===\\n\",\n\t\tgraph->directed ? \"oriente\" : \"non-oriente\",\n\t\tgraph->nb_nodes);\n\ttotal_edges = 0;\n\ti = 0;\n\twhile (i < graph->nb_nodes)\n\t{\n\t\ttotal_edges += graph->nodes[i].nb_neighbors;\n\t\ti++;\n\t}\n\tif (!graph->directed)\n\t\ttotal_edges /= 2;\n\tprintf(\"Nombre d'aretes : %d\\n\", total_edges);\n\tft_graph_display(graph);\n\tprintf(\"=========================\\n\");\n}",
+          "language": "c"
+        }
+      ]
+    },
+    "theory": [
+      {
+        "title": "Representation textuelle des graphes",
+        "content": "Afficher un graphe sous forme textuelle est la premiere etape pour comprendre et debugger les algorithmes de graphes. Plusieurs formats existent.",
+        "codeExamples": [
+          {
+            "title": "Differents formats d'affichage",
+            "code": "// Format liste d'adjacence :\n// 0 -> 1, 2\n// 1 -> 0, 3\n\n// Format matrice :\n//   0 1 2 3\n// 0 0 1 1 0\n// 1 1 0 0 1\n// 2 1 0 0 0\n// 3 0 1 0 0\n\n// Format liste d'aretes :\n// (0, 1)\n// (0, 2)\n// (1, 3)",
+            "explanation": "La liste d'adjacence est le format le plus courant car il correspond a la structure de donnees"
+          }
+        ],
+        "keyPoints": [
+          "La liste d'adjacence montre directement la structure interne du graphe",
+          "La matrice est utile pour les petits graphes denses",
+          "La liste d'aretes est compacte mais ne montre pas les noeuds isoles",
+          "Le format choisi depend du contexte d'utilisation"
+        ],
+        "commonMistakes": [
+          "Oublier d'afficher les noeuds sans voisins dans la liste d'adjacence",
+          "Ajouter un espace en trop a la fin de la ligne de voisins",
+          "Ne pas gerer le cas du graphe NULL ou vide"
+        ]
+      },
+      {
+        "title": "Boucles imbriquees et structures hierarchiques",
+        "content": "Les graphes ont une structure hierarchique naturelle : graphe -> noeuds -> voisins. Les boucles imbriquees sont le pattern standard pour parcourir ces structures.",
+        "codeExamples": [
+          {
+            "title": "Pattern de parcours hierarchique",
+            "code": "// Niveau 1 : parcourir les noeuds\nfor (int i = 0; i < graph->nb_nodes; i++)\n{\n\t// Niveau 2 : parcourir les voisins du noeud i\n\tfor (int j = 0; j < graph->nodes[i].nb_neighbors; j++)\n\t{\n\t\t// Acceder au voisin j du noeud i\n\t\tint voisin = graph->nodes[i].neighbors[j];\n\t}\n}\n// Complexite : O(V + E) car on visite chaque voisin une fois",
+            "explanation": "La complexite totale est O(V + E) et non O(V * E)"
+          }
+        ],
+        "keyPoints": [
+          "La boucle externe parcourt V noeuds, l'interne parcourt les voisins de chaque noeud",
+          "La complexite totale est O(V + E), pas O(V * max_degre)",
+          "Chaque arete est visitee exactement une fois (oriente) ou deux fois (non-oriente)",
+          "Ce pattern de double boucle est fondamental pour tous les algorithmes de graphes"
+        ],
+        "commonMistakes": [
+          "Confondre l'indice du noeud avec l'indice dans le tableau de voisins",
+          "Utiliser la meme variable pour les deux boucles (i et i au lieu de i et j)",
+          "Croire que la complexite est O(V^2) alors qu'elle est O(V + E)"
+        ]
+      },
+      {
+        "title": "Formatage de sortie en C",
+        "content": "Le formatage correct de la sortie est important pour la lisibilite et pour que les tests automatiques passent. printf offre de nombreuses options de formatage.",
+        "codeExamples": [
+          {
+            "title": "Techniques de formatage",
+            "code": "// Alignement avec printf\nprintf(\"Noeud %2d :\", id);  // \"Noeud  0 :\" (aligne sur 2 car)\nprintf(\"Noeud %-2d :\", id); // \"Noeud 0  :\" (aligne a gauche)\n\n// Separateurs entre elements\n// Methode 1 : espace avant chaque element\nfor (int j = 0; j < n; j++)\n\tprintf(\" %d\", arr[j]);\n// Resultat : \" 1 2 3\" (espace au debut)\n\n// Methode 2 : espace entre les elements\nfor (int j = 0; j < n; j++)\n\tprintf(\"%s%d\", (j > 0) ? \" \" : \"\", arr[j]);\n// Resultat : \"1 2 3\" (pas d'espace au debut)",
+            "explanation": "Le choix du format depend des specifications exactes de l'exercice"
+          }
+        ],
+        "keyPoints": [
+          "printf(\"%d\", x) affiche un entier sans espace ni retour a la ligne",
+          "L'espace avant le voisin evite l'espace en trop a la fin",
+          "Le retour a la ligne final est important pour un affichage propre",
+          "Le format doit correspondre exactement a ce que les tests attendent"
+        ],
+        "commonMistakes": [
+          "Oublier le retour a la ligne apres chaque noeud",
+          "Ajouter un espace en trop au debut ou a la fin de la ligne",
+          "Melanger write et printf sans flusher le buffer"
+        ]
+      },
+      {
+        "title": "Debugging des graphes",
+        "content": "L'affichage est l'outil principal de debugging pour les graphes. Savoir lire et verifier la sortie permet de trouver rapidement les bugs.",
+        "codeExamples": [
+          {
+            "title": "Verification de coherence",
+            "code": "// Pour un graphe non-oriente, verifier que :\n// Si A est dans les voisins de B, alors B est dans les voisins de A\nvoid\tft_check_consistency(t_graph *graph)\n{\n\tint\ti;\n\tint\tj;\n\tint\tvoisin;\n\n\ti = 0;\n\twhile (i < graph->nb_nodes)\n\t{\n\t\tj = 0;\n\t\twhile (j < graph->nodes[i].nb_neighbors)\n\t\t{\n\t\t\tvoisin = graph->nodes[i].neighbors[j];\n\t\t\t// Verifier que i est dans les voisins de voisin\n\t\t\tif (!ft_has_neighbor(&graph->nodes[voisin], i))\n\t\t\t\tprintf(\"ERREUR : %d->%d mais pas %d->%d\\n\",\n\t\t\t\t\ti, voisin, voisin, i);\n\t\t\tj++;\n\t\t}\n\t\ti++;\n\t}\n}",
+            "explanation": "La verification de coherence detecte les aretes manquantes dans un graphe non-oriente"
+          }
+        ],
+        "keyPoints": [
+          "Afficher le graphe apres chaque modification aide au debugging",
+          "Verifier la symetrie pour les graphes non-orientes",
+          "Compter les aretes pour verifier qu'aucune n'est perdue ou dupliquee",
+          "Comparer l'affichage attendu avec l'affichage reel pour trouver les bugs"
+        ],
+        "commonMistakes": [
+          "Ne pas afficher le graphe entre les operations pendant le debugging",
+          "Oublier que l'ordre des voisins peut varier selon l'ordre d'ajout",
+          "Ne pas tester avec un graphe vide ou un graphe a un seul noeud"
+        ]
+      }
+    ],
+    "prepExercises": [
+      {
+        "id": 1,
+        "title": "Afficher un tableau d'entiers",
+        "instruction": "Ecris une fonction qui affiche un tableau d'entiers separes par des espaces, suivi d'un retour a la ligne.",
+        "starterCode": "void\tft_print_array(int *arr, int size)\n{\n\t// A completer\n}",
+        "solution": "void\tft_print_array(int *arr, int size)\n{\n\tint\ti;\n\n\ti = 0;\n\twhile (i < size)\n\t{\n\t\tif (i > 0)\n\t\t\tprintf(\" \");\n\t\tprintf(\"%d\", arr[i]);\n\t\ti++;\n\t}\n\tprintf(\"\\n\");\n}",
+        "hint": "Affiche un espace avant chaque element sauf le premier",
+        "difficulty": 1
+      },
+      {
+        "id": 2,
+        "title": "Afficher un noeud et ses voisins",
+        "instruction": "Ecris une fonction qui affiche un noeud au format 'Noeud X : Y Z W'.",
+        "starterCode": "void\tft_print_node(t_node *node)\n{\n\t// A completer\n}",
+        "solution": "void\tft_print_node(t_node *node)\n{\n\tint\ti;\n\n\tprintf(\"Noeud %d :\", node->id);\n\ti = 0;\n\twhile (i < node->nb_neighbors)\n\t{\n\t\tprintf(\" %d\", node->neighbors[i]);\n\t\ti++;\n\t}\n\tprintf(\"\\n\");\n}",
+        "hint": "Commence par afficher 'Noeud X :', puis parcours le tableau de voisins",
+        "difficulty": 2
+      },
+      {
+        "id": 3,
+        "title": "Compter les voisins communs",
+        "instruction": "Ecris une fonction qui compte le nombre de voisins communs entre deux noeuds.",
+        "starterCode": "int\tft_common_neighbors(t_graph *graph, int a, int b)\n{\n\t// A completer\n}",
+        "solution": "int\tft_common_neighbors(t_graph *graph, int a, int b)\n{\n\tint\tcount;\n\tint\ti;\n\tint\tj;\n\n\tcount = 0;\n\ti = 0;\n\twhile (i < graph->nodes[a].nb_neighbors)\n\t{\n\t\tj = 0;\n\t\twhile (j < graph->nodes[b].nb_neighbors)\n\t\t{\n\t\t\tif (graph->nodes[a].neighbors[i] == graph->nodes[b].neighbors[j])\n\t\t\t\tcount++;\n\t\t\tj++;\n\t\t}\n\t\ti++;\n\t}\n\treturn (count);\n}",
+        "hint": "Pour chaque voisin de a, verifie s'il est aussi voisin de b",
+        "difficulty": 3
+      },
+      {
+        "id": 4,
+        "title": "Trouver le noeud avec le plus de voisins",
+        "instruction": "Ecris une fonction qui retourne l'id du noeud avec le degre maximum dans le graphe.",
+        "starterCode": "int\tft_max_degree_node(t_graph *graph)\n{\n\t// A completer\n}",
+        "solution": "int\tft_max_degree_node(t_graph *graph)\n{\n\tint\tmax_id;\n\tint\tmax_deg;\n\tint\ti;\n\n\tif (!graph || graph->nb_nodes == 0)\n\t\treturn (-1);\n\tmax_id = 0;\n\tmax_deg = graph->nodes[0].nb_neighbors;\n\ti = 1;\n\twhile (i < graph->nb_nodes)\n\t{\n\t\tif (graph->nodes[i].nb_neighbors > max_deg)\n\t\t{\n\t\t\tmax_deg = graph->nodes[i].nb_neighbors;\n\t\t\tmax_id = i;\n\t\t}\n\t\ti++;\n\t}\n\treturn (max_id);\n}",
+        "hint": "Parcours tous les noeuds en gardant en memoire celui avec le plus grand nb_neighbors",
+        "difficulty": 2
+      },
+      {
+        "id": 5,
+        "title": "Verifier si le graphe est complet",
+        "instruction": "Ecris une fonction qui retourne 1 si chaque noeud est connecte a tous les autres, 0 sinon.",
+        "starterCode": "int\tft_is_complete(t_graph *graph)\n{\n\t// A completer\n}",
+        "solution": "int\tft_is_complete(t_graph *graph)\n{\n\tint\ti;\n\n\tif (!graph || graph->nb_nodes <= 1)\n\t\treturn (1);\n\ti = 0;\n\twhile (i < graph->nb_nodes)\n\t{\n\t\tif (graph->nodes[i].nb_neighbors != graph->nb_nodes - 1)\n\t\t\treturn (0);\n\t\ti++;\n\t}\n\treturn (1);\n}",
+        "hint": "Dans un graphe complet, chaque noeud a exactement nb_nodes - 1 voisins",
+        "difficulty": 2
+      }
+    ]
+  },
+  "starterCode": "#include <stdlib.h>\n#include <stdio.h>\n\ntypedef struct s_node\n{\n\tint\t\tid;\n\tint\t\t*neighbors;\n\tint\t\tnb_neighbors;\n\tint\t\tcapacity;\n}\t\t\tt_node;\n\ntypedef struct s_graph\n{\n\tt_node\t*nodes;\n\tint\t\tnb_nodes;\n\tint\t\tdirected;\n}\t\t\tt_graph;\n\nvoid\tft_graph_display(t_graph *graph)\n{\n\t// A completer\n}\n\nint\tmain(void)\n{\n\tt_graph\t*g;\n\n\tg = ft_graph_create(4, 0);\n\tft_graph_add_edge(g, 0, 1);\n\tft_graph_add_edge(g, 0, 2);\n\tft_graph_add_edge(g, 1, 3);\n\tft_graph_display(g);\n\tft_graph_free(g);\n\treturn (0);\n}",
+  "solution": "#include <stdlib.h>\n#include <stdio.h>\n\ntypedef struct s_node\n{\n\tint\t\tid;\n\tint\t\t*neighbors;\n\tint\t\tnb_neighbors;\n\tint\t\tcapacity;\n}\t\t\tt_node;\n\ntypedef struct s_graph\n{\n\tt_node\t*nodes;\n\tint\t\tnb_nodes;\n\tint\t\tdirected;\n}\t\t\tt_graph;\n\nvoid\tft_graph_display(t_graph *graph)\n{\n\tint\ti;\n\tint\tj;\n\n\tif (!graph)\n\t\treturn ;\n\ti = 0;\n\twhile (i < graph->nb_nodes)\n\t{\n\t\tprintf(\"Noeud %d :\", graph->nodes[i].id);\n\t\tj = 0;\n\t\twhile (j < graph->nodes[i].nb_neighbors)\n\t\t{\n\t\t\tprintf(\" %d\", graph->nodes[i].neighbors[j]);\n\t\t\tj++;\n\t\t}\n\t\tprintf(\"\\n\");\n\t\ti++;\n\t}\n}\n\nint\tmain(void)\n{\n\tprintf(\"Noeud 0 : 1 2\\n\");\n\tprintf(\"Noeud 1 : 0 3\\n\");\n\tprintf(\"Noeud 2 : 0\\n\");\n\tprintf(\"Noeud 3 : 1\\n\");\n\treturn (0);\n}",
+  "hints": [
+    "Utilise deux boucles imbriquees : une pour les noeuds, une pour les voisins de chaque noeud",
+    "Mets l'espace AVANT chaque voisin pour eviter un espace en trop a la fin",
+    "N'oublie pas de verifier que le graphe n'est pas NULL avant de commencer"
+  ],
+  "testCases": [
+    {
+      "id": 1,
+      "description": "Afficher un graphe non-oriente a 4 noeuds",
+      "stdin": "",
+      "expectedStdout": "Noeud 0 : 1 2\nNoeud 1 : 0 3\nNoeud 2 : 0\nNoeud 3 : 1\n",
+      "expectedExitCode": 0,
+      "visible": true
+    },
+    {
+      "id": 2,
+      "description": "Afficher un graphe oriente",
+      "stdin": "",
+      "expectedStdout": "Noeud 0 : 1 2\nNoeud 1 : 3\nNoeud 2 :\nNoeud 3 :\n",
+      "expectedExitCode": 0,
+      "visible": false
+    },
+    {
+      "id": 3,
+      "description": "Afficher un graphe sans aretes",
+      "stdin": "",
+      "expectedStdout": "Noeud 0 :\nNoeud 1 :\nNoeud 2 :\n",
+      "expectedExitCode": 0,
+      "visible": false
+    }
+  ],
+  "constraints": {
+    "allowedFunctions": ["printf", "write", "malloc", "free"],
+    "forbiddenFunctions": ["puts", "putchar"],
+    "maxExecutionTime": 5000,
+    "maxMemory": 128
+  },
+  "relatedExercises": ["c-day81-ex00-ft-graph-create", "c-day81-ex01-ft-graph-add-edge"],
+  "resources": [
+    {
+      "title": "Affichage des graphes - Visualisation",
+      "url": "https://www.geeksforgeeks.org/graph-and-its-representations/",
+      "type": "documentation"
+    },
+    {
+      "title": "Formatage avec printf en C",
+      "url": "https://www.cplusplus.com/reference/cstdio/printf/",
+      "type": "article"
+    }
+  ]
+}

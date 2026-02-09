@@ -1,0 +1,257 @@
+{
+  "id": "c-day73-ex00-ft-philo-setup",
+  "category": "c",
+  "day": 73,
+  "order": 0,
+  "title": "Initialiser la table des philosophes",
+  "description": "Apprends a initialiser la structure de donnees pour le probleme des philosophes : structures, fourchettes (mutex), et parametres du programme.",
+  "difficulty": 4,
+  "points": 40,
+  "estimatedTime": 35,
+  "learningObjectives": [
+    "Comprendre le probleme des philosophes mangeurs",
+    "Concevoir les structures de donnees pour les philosophes et la table",
+    "Initialiser un tableau de mutex pour les fourchettes",
+    "Parser les arguments du programme (nb_philos, time_to_die, etc.)",
+    "Gerer la memoire et le nettoyage des ressources"
+  ],
+  "learningContent": {
+    "lesson": {
+      "introduction": "Le probleme des philosophes mangeurs est un probleme classique de synchronisation. N philosophes sont assis autour d'une table ronde. Entre chaque philosophe se trouve une fourchette (representee par un mutex). Chaque philosophe alterne entre manger, dormir et penser. Pour manger, un philosophe doit prendre les deux fourchettes adjacentes. Ce probleme illustre les deadlocks et la gestion de ressources partagees.",
+      "steps": [
+        {
+          "id": 1,
+          "title": "Le probleme des philosophes",
+          "content": "**N philosophes** sont assis en cercle. Il y a **N fourchettes**, une entre chaque paire de philosophes.\n\nChaque philosophe :\n1. **Pense** (ne fait rien)\n2. **Prend les 2 fourchettes** adjacentes (gauche et droite)\n3. **Mange** pendant un temps donne\n4. **Pose les fourchettes**\n5. **Dort** pendant un temps donne\n6. Retourne a 1.\n\nSi un philosophe ne mange pas pendant `time_to_die` ms, il meurt.",
+          "codeExample": "// Les parametres du programme :\n// ./philo nb_philos time_to_die time_to_eat time_to_sleep [max_meals]\n//\n// nb_philos    : nombre de philosophes (et de fourchettes)\n// time_to_die  : temps en ms avant qu'un philosophe meure (sans manger)\n// time_to_eat  : temps en ms que prend un repas\n// time_to_sleep: temps en ms que dure le sommeil\n// max_meals    : optionnel, nombre de repas pour terminer",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Ecris un main qui parse les arguments et affiche les parametres.",
+            "starterCode": "int\tmain(int argc, char **argv)\n{\n\tif (argc < 5 || argc > 6)\n\t{\n\t\tprintf(\"Usage: ./philo nb_p t_die t_eat t_sleep [meals]\\n\");\n\t\treturn (1);\n\t}\n\t/* TON CODE ICI : parse et affiche les arguments */\n\treturn (0);\n}",
+            "solution": "int\tmain(int argc, char **argv)\n{\n\tif (argc < 5 || argc > 6)\n\t{\n\t\tprintf(\"Usage: ./philo nb_p t_die t_eat t_sleep [meals]\\n\");\n\t\treturn (1);\n\t}\n\tprintf(\"Philos: %d\\n\", atoi(argv[1]));\n\tprintf(\"Time to die: %d\\n\", atoi(argv[2]));\n\tprintf(\"Time to eat: %d\\n\", atoi(argv[3]));\n\tprintf(\"Time to sleep: %d\\n\", atoi(argv[4]));\n\tif (argc == 6)\n\t\tprintf(\"Max meals: %d\\n\", atoi(argv[5]));\n\treturn (0);\n}"
+          }
+        },
+        {
+          "id": 2,
+          "title": "Les structures de donnees",
+          "content": "On a besoin de deux structures principales :\n1. **t_philo** : represente un philosophe (id, derniere fois qu'il a mange, nombre de repas)\n2. **t_table** : represente la table (parametres, fourchettes, philosophes, etat du jeu)\n\nChaque philosophe a un pointeur vers la table pour acceder aux parametres partages.",
+          "codeExample": "typedef struct s_table\tt_table;\n\ntypedef struct s_philo\n{\n\tint\t\t\t\tid;\n\tint\t\t\t\tmeals_eaten;\n\tlong long\t\tlast_meal_time;\n\tpthread_t\t\tthread;\n\tpthread_mutex_t\t*left_fork;\n\tpthread_mutex_t\t*right_fork;\n\tt_table\t\t\t*table;\n}\tt_philo;\n\ntypedef struct s_table\n{\n\tint\t\t\t\tnb_philos;\n\tint\t\t\t\ttime_to_die;\n\tint\t\t\t\ttime_to_eat;\n\tint\t\t\t\ttime_to_sleep;\n\tint\t\t\t\tmax_meals;\n\tint\t\t\t\tsomeone_died;\n\tlong long\t\tstart_time;\n\tpthread_mutex_t\t*forks;\n\tpthread_mutex_t\tprint_mutex;\n\tt_philo\t\t\t*philos;\n}\tt_table;",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Definis les structures t_philo et t_table avec les champs necessaires.",
+            "starterCode": "typedef struct s_table\tt_table;\n\ntypedef struct s_philo\n{\n\t/* TON CODE ICI */\n}\tt_philo;\n\ntypedef struct s_table\n{\n\t/* TON CODE ICI */\n}\tt_table;",
+            "solution": "typedef struct s_table\tt_table;\n\ntypedef struct s_philo\n{\n\tint\t\t\t\tid;\n\tint\t\t\t\tmeals_eaten;\n\tlong long\t\tlast_meal_time;\n\tpthread_t\t\tthread;\n\tpthread_mutex_t\t*left_fork;\n\tpthread_mutex_t\t*right_fork;\n\tt_table\t\t\t*table;\n}\tt_philo;\n\ntypedef struct s_table\n{\n\tint\t\t\t\tnb_philos;\n\tint\t\t\t\ttime_to_die;\n\tint\t\t\t\ttime_to_eat;\n\tint\t\t\t\ttime_to_sleep;\n\tint\t\t\t\tmax_meals;\n\tint\t\t\t\tsomeone_died;\n\tlong long\t\tstart_time;\n\tpthread_mutex_t\t*forks;\n\tpthread_mutex_t\tprint_mutex;\n\tt_philo\t\t\t*philos;\n}\tt_table;"
+          }
+        },
+        {
+          "id": 3,
+          "title": "Initialiser les fourchettes (mutex)",
+          "content": "Les fourchettes sont representees par un tableau de mutex. Chaque philosophe a une fourchette gauche et droite :\n- Fourchette gauche = forks[id]\n- Fourchette droite = forks[(id + 1) % nb_philos]\n\nLe modulo assure que le dernier philosophe partage une fourchette avec le premier.",
+          "codeExample": "int\tinit_forks(t_table *table)\n{\n\tint\ti;\n\n\ttable->forks = malloc(sizeof(pthread_mutex_t) * table->nb_philos);\n\tif (!table->forks)\n\t\treturn (1);\n\ti = 0;\n\twhile (i < table->nb_philos)\n\t{\n\t\tpthread_mutex_init(&table->forks[i], NULL);\n\t\ti++;\n\t}\n\treturn (0);\n}",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Ecris une fonction qui initialise les fourchettes et assigne gauche/droite a chaque philosophe.",
+            "starterCode": "int\tinit_forks(t_table *table)\n{\n\t/* TON CODE ICI */\n}\n\nvoid\tassign_forks(t_table *table)\n{\n\tint\ti;\n\t/* TON CODE ICI */\n}",
+            "solution": "int\tinit_forks(t_table *table)\n{\n\tint\ti;\n\n\ttable->forks = malloc(sizeof(pthread_mutex_t) * table->nb_philos);\n\tif (!table->forks)\n\t\treturn (1);\n\ti = 0;\n\twhile (i < table->nb_philos)\n\t{\n\t\tpthread_mutex_init(&table->forks[i], NULL);\n\t\ti++;\n\t}\n\treturn (0);\n}\n\nvoid\tassign_forks(t_table *table)\n{\n\tint\ti;\n\n\ti = 0;\n\twhile (i < table->nb_philos)\n\t{\n\t\ttable->philos[i].left_fork = &table->forks[i];\n\t\ttable->philos[i].right_fork = &table->forks[(i + 1) % table->nb_philos];\n\t\ti++;\n\t}\n}"
+          }
+        },
+        {
+          "id": 4,
+          "title": "Fonction d'initialisation complete",
+          "content": "La fonction d'initialisation regroupe le parsing des arguments, l'allocation des structures, l'initialisation des fourchettes et des philosophes. Elle doit gerer les erreurs d'allocation et retourner un code d'erreur si necessaire.\n\nUne fonction de nettoyage (cleanup) est egalement indispensable pour liberer toutes les ressources.",
+          "codeExample": "int\tinit_table(t_table *table, int argc, char **argv)\n{\n\tint\ti;\n\n\ttable->nb_philos = atoi(argv[1]);\n\ttable->time_to_die = atoi(argv[2]);\n\ttable->time_to_eat = atoi(argv[3]);\n\ttable->time_to_sleep = atoi(argv[4]);\n\ttable->max_meals = -1;\n\tif (argc == 6)\n\t\ttable->max_meals = atoi(argv[5]);\n\ttable->someone_died = 0;\n\ttable->philos = malloc(sizeof(t_philo) * table->nb_philos);\n\tif (!table->philos || init_forks(table))\n\t\treturn (1);\n\tpthread_mutex_init(&table->print_mutex, NULL);\n\ti = -1;\n\twhile (++i < table->nb_philos)\n\t{\n\t\ttable->philos[i].id = i + 1;\n\t\ttable->philos[i].meals_eaten = 0;\n\t\ttable->philos[i].table = table;\n\t\ttable->philos[i].left_fork = &table->forks[i];\n\t\ttable->philos[i].right_fork = &table->forks[(i + 1) % table->nb_philos];\n\t}\n\treturn (0);\n}",
+          "language": "c"
+        }
+      ]
+    },
+    "theory": [
+      {
+        "title": "Le probleme des philosophes mangeurs",
+        "content": "Propose par Dijkstra en 1965, le probleme des philosophes mangeurs est un probleme classique de synchronisation. Il illustre les defis de l'allocation de ressources partagees sans deadlock ni famine. Chaque fourchette est une ressource partagee entre deux philosophes adjacents.",
+        "codeExamples": [
+          {
+            "title": "Disposition de la table",
+            "code": "// Table ronde avec 5 philosophes :\n//       P0\n//   F4      F0\n// P4          P1\n//   F3      F1\n//       P3\n//     F2\n//       P2\n// Philo i utilise fork[i] (gauche) et fork[(i+1)%5] (droite)",
+            "explanation": "Chaque philosophe partage ses fourchettes avec ses voisins."
+          }
+        ],
+        "keyPoints": [
+          "N philosophes et N fourchettes disposes en cercle",
+          "Chaque philosophe a besoin de 2 fourchettes pour manger",
+          "Le probleme principal est d'eviter deadlocks et famine",
+          "C'est le sujet du projet 'philosophers' a 42"
+        ],
+        "commonMistakes": [
+          "Confondre le numero du philosophe et l'index de ses fourchettes",
+          "Oublier le cas special du dernier philosophe (fourchette circulaire)",
+          "Ne pas gerer le cas d'un seul philosophe (une seule fourchette)"
+        ]
+      },
+      {
+        "title": "Conception des structures",
+        "content": "Une bonne conception des structures est essentielle. Le philosophe doit avoir un acces rapide a ses fourchettes et aux parametres de la simulation. La table centralise les informations partagees. Les pointeurs vers les mutex evitent la duplication.",
+        "codeExamples": [
+          {
+            "title": "Relations entre structures",
+            "code": "// t_table contient :\n//   - forks[N] : tableau de mutex (fourchettes)\n//   - philos[N] : tableau de philosophes\n//   - parametres de simulation\n//\n// t_philo contient :\n//   - left_fork : pointeur vers forks[id]\n//   - right_fork : pointeur vers forks[(id+1) % N]\n//   - table : pointeur vers la table",
+            "explanation": "Les pointeurs relient les structures sans dupliquer les donnees."
+          }
+        ],
+        "keyPoints": [
+          "Chaque philosophe pointe vers ses deux fourchettes",
+          "La table centralise les parametres et l'etat global",
+          "Le mutex print_mutex protege les affichages",
+          "someone_died est un flag partage qui arrete la simulation"
+        ],
+        "commonMistakes": [
+          "Stocker des copies de mutex au lieu de pointeurs",
+          "Ne pas prevoir de mutex pour l'affichage (sorties melangees)",
+          "Oublier le champ last_meal_time pour detecter la mort"
+        ]
+      },
+      {
+        "title": "Gestion du temps",
+        "content": "Le temps est crucial dans les philosophes. On utilise gettimeofday pour obtenir le temps courant en millisecondes. Le timestamp est relatif au debut de la simulation pour faciliter la lecture.",
+        "codeExamples": [
+          {
+            "title": "Fonction de temps en ms",
+            "code": "#include <sys/time.h>\n\nlong long\tget_time_ms(void)\n{\n\tstruct timeval\ttv;\n\n\tgettimeofday(&tv, NULL);\n\treturn ((long long)tv.tv_sec * 1000\n\t\t+ (long long)tv.tv_usec / 1000);\n}",
+            "explanation": "Convertit gettimeofday en millisecondes pour faciliter les calculs."
+          }
+        ],
+        "keyPoints": [
+          "gettimeofday donne le temps en secondes et microsecondes",
+          "Convertir en millisecondes pour les comparaisons",
+          "Le timestamp est relatif au start_time de la simulation",
+          "usleep prend des microsecondes (1ms = 1000us)"
+        ],
+        "commonMistakes": [
+          "Confondre millisecondes et microsecondes dans usleep",
+          "Ne pas stocker le temps de debut pour les timestamps relatifs",
+          "Utiliser sleep au lieu de usleep (precision insuffisante)"
+        ]
+      },
+      {
+        "title": "Nettoyage des ressources",
+        "content": "Le nettoyage est crucial : il faut detruire tous les mutex et liberer toute la memoire. Une fonction cleanup dediee assure que tout est libere proprement, meme en cas d'erreur pendant l'initialisation.",
+        "codeExamples": [
+          {
+            "title": "Fonction de nettoyage",
+            "code": "void\tcleanup(t_table *table)\n{\n\tint\ti;\n\n\ti = 0;\n\twhile (i < table->nb_philos)\n\t{\n\t\tpthread_mutex_destroy(&table->forks[i]);\n\t\ti++;\n\t}\n\tpthread_mutex_destroy(&table->print_mutex);\n\tfree(table->forks);\n\tfree(table->philos);\n}",
+            "explanation": "Detruire chaque mutex avant de liberer le tableau."
+          }
+        ],
+        "keyPoints": [
+          "Detruire chaque mutex individuellement avec pthread_mutex_destroy",
+          "Liberer les tableaux alloues (forks, philos)",
+          "Appeler cleanup meme en cas d'erreur pour eviter les fuites",
+          "L'ordre de destruction n'a pas d'importance (inverse de l'init par convention)"
+        ],
+        "commonMistakes": [
+          "Free le tableau de mutex sans detruire chaque mutex d'abord",
+          "Oublier de detruire le print_mutex",
+          "Ne pas appeler cleanup en cas d'erreur d'initialisation"
+        ]
+      }
+    ],
+    "prepExercises": [
+      {
+        "id": 1,
+        "title": "Parser les arguments",
+        "instruction": "Parse les arguments du programme et stocke-les dans une structure t_table.",
+        "starterCode": "int\tparse_args(t_table *table, int argc, char **argv)\n{\n\t/* TON CODE ICI */\n}",
+        "solution": "int\tparse_args(t_table *table, int argc, char **argv)\n{\n\tif (argc < 5 || argc > 6)\n\t\treturn (1);\n\ttable->nb_philos = atoi(argv[1]);\n\ttable->time_to_die = atoi(argv[2]);\n\ttable->time_to_eat = atoi(argv[3]);\n\ttable->time_to_sleep = atoi(argv[4]);\n\ttable->max_meals = -1;\n\tif (argc == 6)\n\t\ttable->max_meals = atoi(argv[5]);\n\treturn (0);\n}",
+        "hint": "argc == 6 signifie que max_meals est specifie. Sinon -1 (illimite).",
+        "difficulty": 1
+      },
+      {
+        "id": 2,
+        "title": "Allouer les tableaux",
+        "instruction": "Alloue les tableaux de philosophes et de fourchettes.",
+        "starterCode": "int\talloc_table(t_table *table)\n{\n\t/* TON CODE ICI */\n}",
+        "solution": "int\talloc_table(t_table *table)\n{\n\ttable->philos = malloc(sizeof(t_philo) * table->nb_philos);\n\tif (!table->philos)\n\t\treturn (1);\n\ttable->forks = malloc(sizeof(pthread_mutex_t) * table->nb_philos);\n\tif (!table->forks)\n\t{\n\t\tfree(table->philos);\n\t\treturn (1);\n\t}\n\treturn (0);\n}",
+        "hint": "N'oublie pas de liberer philos si l'allocation de forks echoue.",
+        "difficulty": 2
+      },
+      {
+        "id": 3,
+        "title": "Initialiser les mutex",
+        "instruction": "Initialise tous les mutex des fourchettes et le mutex d'affichage.",
+        "starterCode": "int\tinit_mutexes(t_table *table)\n{\n\t/* TON CODE ICI */\n}",
+        "solution": "int\tinit_mutexes(t_table *table)\n{\n\tint\ti;\n\n\ti = 0;\n\twhile (i < table->nb_philos)\n\t{\n\t\tif (pthread_mutex_init(&table->forks[i], NULL) != 0)\n\t\t\treturn (1);\n\t\ti++;\n\t}\n\tif (pthread_mutex_init(&table->print_mutex, NULL) != 0)\n\t\treturn (1);\n\treturn (0);\n}",
+        "hint": "Boucle sur nb_philos et initialise chaque fork. Puis le print_mutex.",
+        "difficulty": 2
+      },
+      {
+        "id": 4,
+        "title": "Assigner les fourchettes",
+        "instruction": "Assigne la fourchette gauche et droite a chaque philosophe.",
+        "starterCode": "void\tassign_forks(t_table *table)\n{\n\t/* TON CODE ICI */\n}",
+        "solution": "void\tassign_forks(t_table *table)\n{\n\tint\ti;\n\n\ti = 0;\n\twhile (i < table->nb_philos)\n\t{\n\t\ttable->philos[i].left_fork = &table->forks[i];\n\t\ttable->philos[i].right_fork = &table->forks[(i + 1) % table->nb_philos];\n\t\ti++;\n\t}\n}",
+        "hint": "Fourchette droite = forks[(i + 1) % nb_philos] pour la circularite.",
+        "difficulty": 2
+      },
+      {
+        "id": 5,
+        "title": "Fonction get_time_ms",
+        "instruction": "Ecris une fonction qui retourne le temps courant en millisecondes.",
+        "starterCode": "#include <sys/time.h>\n\nlong long\tget_time_ms(void)\n{\n\t/* TON CODE ICI */\n}",
+        "solution": "#include <sys/time.h>\n\nlong long\tget_time_ms(void)\n{\n\tstruct timeval\ttv;\n\n\tgettimeofday(&tv, NULL);\n\treturn ((long long)tv.tv_sec * 1000\n\t\t+ (long long)tv.tv_usec / 1000);\n}",
+        "hint": "tv.tv_sec * 1000 + tv.tv_usec / 1000 donne le temps en ms.",
+        "difficulty": 2
+      }
+    ]
+  },
+  "starterCode": "#include <pthread.h>\n#include <stdio.h>\n#include <stdlib.h>\n#include <sys/time.h>\n\ntypedef struct s_table\tt_table;\n\ntypedef struct s_philo\n{\n\tint\t\t\t\tid;\n\tint\t\t\t\tmeals_eaten;\n\tlong long\t\tlast_meal_time;\n\tpthread_t\t\tthread;\n\tpthread_mutex_t\t*left_fork;\n\tpthread_mutex_t\t*right_fork;\n\tt_table\t\t\t*table;\n}\tt_philo;\n\ntypedef struct s_table\n{\n\tint\t\t\t\tnb_philos;\n\tint\t\t\t\ttime_to_die;\n\tint\t\t\t\ttime_to_eat;\n\tint\t\t\t\ttime_to_sleep;\n\tint\t\t\t\tmax_meals;\n\tint\t\t\t\tsomeone_died;\n\tlong long\t\tstart_time;\n\tpthread_mutex_t\t*forks;\n\tpthread_mutex_t\tprint_mutex;\n\tt_philo\t\t\t*philos;\n}\tt_table;\n\nint\tft_init_table(t_table *table, int argc, char **argv)\n{\n\t// TODO: Parser les arguments\n\t// TODO: Allouer philos et forks\n\t// TODO: Initialiser les mutex\n\t// TODO: Assigner les fourchettes\n\treturn (0);\n}\n\nvoid\tft_cleanup(t_table *table)\n{\n\t// TODO: Detruire les mutex et liberer la memoire\n}\n\nint\tmain(int argc, char **argv)\n{\n\tt_table\ttable;\n\n\tif (ft_init_table(&table, argc, argv))\n\t\treturn (1);\n\tprintf(\"Table initialisee : %d philosophes\\n\", table.nb_philos);\n\tft_cleanup(&table);\n\treturn (0);\n}",
+  "solution": "#include <pthread.h>\n#include <stdio.h>\n#include <stdlib.h>\n#include <sys/time.h>\n\ntypedef struct s_table\tt_table;\n\ntypedef struct s_philo\n{\n\tint\t\t\t\tid;\n\tint\t\t\t\tmeals_eaten;\n\tlong long\t\tlast_meal_time;\n\tpthread_t\t\tthread;\n\tpthread_mutex_t\t*left_fork;\n\tpthread_mutex_t\t*right_fork;\n\tt_table\t\t\t*table;\n}\tt_philo;\n\ntypedef struct s_table\n{\n\tint\t\t\t\tnb_philos;\n\tint\t\t\t\ttime_to_die;\n\tint\t\t\t\ttime_to_eat;\n\tint\t\t\t\ttime_to_sleep;\n\tint\t\t\t\tmax_meals;\n\tint\t\t\t\tsomeone_died;\n\tlong long\t\tstart_time;\n\tpthread_mutex_t\t*forks;\n\tpthread_mutex_t\tprint_mutex;\n\tt_philo\t\t\t*philos;\n}\tt_table;\n\nint\tft_init_table(t_table *table, int argc, char **argv)\n{\n\tint\ti;\n\n\tif (argc < 5 || argc > 6)\n\t\treturn (1);\n\ttable->nb_philos = atoi(argv[1]);\n\ttable->time_to_die = atoi(argv[2]);\n\ttable->time_to_eat = atoi(argv[3]);\n\ttable->time_to_sleep = atoi(argv[4]);\n\ttable->max_meals = (argc == 6) ? atoi(argv[5]) : -1;\n\ttable->someone_died = 0;\n\ttable->philos = malloc(sizeof(t_philo) * table->nb_philos);\n\ttable->forks = malloc(sizeof(pthread_mutex_t) * table->nb_philos);\n\tif (!table->philos || !table->forks)\n\t\treturn (1);\n\ti = -1;\n\twhile (++i < table->nb_philos)\n\t\tpthread_mutex_init(&table->forks[i], NULL);\n\tpthread_mutex_init(&table->print_mutex, NULL);\n\ti = -1;\n\twhile (++i < table->nb_philos)\n\t{\n\t\ttable->philos[i].id = i + 1;\n\t\ttable->philos[i].meals_eaten = 0;\n\t\ttable->philos[i].table = table;\n\t\ttable->philos[i].left_fork = &table->forks[i];\n\t\ttable->philos[i].right_fork = &table->forks[(i + 1) % table->nb_philos];\n\t}\n\treturn (0);\n}\n\nvoid\tft_cleanup(t_table *table)\n{\n\tint\ti;\n\n\ti = -1;\n\twhile (++i < table->nb_philos)\n\t\tpthread_mutex_destroy(&table->forks[i]);\n\tpthread_mutex_destroy(&table->print_mutex);\n\tfree(table->forks);\n\tfree(table->philos);\n}\n\nint\tmain(int argc, char **argv)\n{\n\tt_table\ttable;\n\n\tif (ft_init_table(&table, argc, argv))\n\t\treturn (1);\n\tprintf(\"Table initialisee : %d philosophes\\n\", table.nb_philos);\n\tft_cleanup(&table);\n\treturn (0);\n}",
+  "hints": [
+    "Utilise atoi pour parser chaque argument et verifie que argc est 5 ou 6",
+    "N'oublie pas le modulo pour la fourchette droite : (i + 1) % nb_philos",
+    "La fonction cleanup doit detruire chaque mutex avant de free les tableaux"
+  ],
+  "testCases": [
+    {
+      "id": 1,
+      "description": "Initialisation avec 5 philosophes",
+      "stdin": "",
+      "expectedStdout": "Table initialisee : 5 philosophes\n",
+      "expectedExitCode": 0,
+      "visible": true
+    },
+    {
+      "id": 2,
+      "description": "Arguments insuffisants retourne erreur",
+      "stdin": "",
+      "expectedStdout": "",
+      "expectedExitCode": 1,
+      "visible": false
+    },
+    {
+      "id": 3,
+      "description": "Pas de fuite memoire (valgrind clean)",
+      "stdin": "",
+      "expectedStdout": "Table initialisee : 5 philosophes\n",
+      "expectedExitCode": 0,
+      "visible": false
+    }
+  ],
+  "constraints": {
+    "allowedFunctions": ["malloc", "free", "pthread_mutex_init", "pthread_mutex_destroy", "printf", "atoi", "gettimeofday"],
+    "forbiddenFunctions": ["system"],
+    "maxExecutionTime": 5000,
+    "maxMemory": 128
+  },
+  "relatedExercises": ["c-day73-ex01-ft-philo-routine", "c-day73-ex02-ft-philo-monitor"],
+  "resources": [
+    {
+      "title": "Probleme des philosophes - Wikipedia",
+      "url": "https://fr.wikipedia.org/wiki/D%C3%AEner_des_philosophes",
+      "type": "documentation"
+    },
+    {
+      "title": "Philosophers 42 - Guide",
+      "url": "https://harm-smits.github.io/42docs/projects/philosophers",
+      "type": "article"
+    }
+  ]
+}

@@ -1,0 +1,257 @@
+{
+  "id": "c-day63-ex01-ft-btree-count",
+  "category": "c",
+  "day": 63,
+  "order": 1,
+  "title": "Compter les noeuds d'un arbre binaire",
+  "description": "Ecris la fonction ft_btree_count qui compte et retourne le nombre total de noeuds dans un arbre binaire. L'algorithme est recursif : le nombre de noeuds est 1 (le noeud courant) + le nombre de noeuds du sous-arbre gauche + le nombre de noeuds du sous-arbre droit. Un arbre vide contient 0 noeuds.",
+  "difficulty": 4,
+  "points": 40,
+  "estimatedTime": 30,
+  "learningObjectives": [
+    "Compter recursivement les noeuds d'un arbre binaire",
+    "Maitriser le pattern de combinaison recursive (1 + gauche + droite)",
+    "Comprendre la relation entre nombre de noeuds et hauteur",
+    "Gerer le cas de base de l'arbre vide",
+    "Etendre le comptage a des variantes (feuilles, noeuds internes)"
+  ],
+  "learningContent": {
+    "lesson": {
+      "introduction": "Compter les noeuds d'un arbre est une operation fondamentale qui illustre le pattern recursif de combinaison. C'est une variante du calcul de hauteur : au lieu de prendre le max des deux sous-arbres, on prend la somme. Cette operation est utile pour verifier la taille d'un arbre, allouer un tableau de la bonne taille, ou calculer des statistiques.",
+      "steps": [
+        {
+          "id": 1,
+          "title": "Principe du comptage recursif",
+          "content": "L'algorithme est simple et intuitif :\n- **Cas de base** : un arbre vide (NULL) contient 0 noeuds\n- **Cas recursif** : le nombre de noeuds = 1 (moi) + noeuds a gauche + noeuds a droite\n\nChaque noeud se compte lui-meme et delegue le comptage de ses sous-arbres.",
+          "codeExample": "//        5          total = 5 noeuds\n//       / \\\n//      3   8        gauche = 3, droite = 1\n//     / \\\n//    1   4\n\n// count(5) = 1 + count(3) + count(8)\n//          = 1 + (1 + count(1) + count(4)) + (1 + 0 + 0)\n//          = 1 + (1 + 1 + 1) + 1\n//          = 5",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Combien de noeuds dans l'arbre 10(5(2,7),15(12,20)) ?",
+            "starterCode": "//       10\n//      /  \\\n//     5   15\n//    / \\  / \\\n//   2  7 12 20\n// Nombre de noeuds = ???",
+            "solution": "// count = 1 + count(gauche) + count(droite)\n// count(10) = 1 + count(5) + count(15)\n// count(5) = 1 + 1 + 1 = 3\n// count(15) = 1 + 1 + 1 = 3\n// count(10) = 1 + 3 + 3 = 7 noeuds"
+          }
+        },
+        {
+          "id": 2,
+          "title": "Implementation",
+          "content": "L'implementation est tres courte : trois lignes pour le cas recursif. C'est un exemple parfait de la puissance de la recursion sur les arbres.\n\nLa complexite est O(n) car chaque noeud est visite exactement une fois.",
+          "codeExample": "int\tft_btree_count(t_btree *root)\n{\n\tif (!root)\n\t\treturn (0);\n\treturn (1 + ft_btree_count(root->left)\n\t\t+ ft_btree_count(root->right));\n}",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Ecris une version qui compte seulement les feuilles.",
+            "starterCode": "int\tcount_leaves(t_btree *root)\n{\n\tif (!root)\n\t\treturn (0);\n\tif (???)\n\t\treturn (1);\n\treturn (count_leaves(root->left)\n\t\t+ count_leaves(root->right));\n}",
+            "solution": "int\tcount_leaves(t_btree *root)\n{\n\tif (!root)\n\t\treturn (0);\n\tif (!root->left && !root->right)\n\t\treturn (1);\n\treturn (count_leaves(root->left)\n\t\t+ count_leaves(root->right));\n}"
+          }
+        },
+        {
+          "id": 3,
+          "title": "Variantes de comptage",
+          "content": "On peut adapter le comptage pour compter differents types de noeuds :\n- **Feuilles** : noeuds sans enfants (left == NULL && right == NULL)\n- **Noeuds internes** : noeuds avec au moins un enfant\n- **Noeuds avec un seul enfant** : exactement un enfant NULL",
+          "codeExample": "// Compter les noeuds internes (non-feuilles)\nint\tcount_internal(t_btree *root)\n{\n\tif (!root || (!root->left && !root->right))\n\t\treturn (0);\n\treturn (1 + count_internal(root->left)\n\t\t+ count_internal(root->right));\n}\n\n// Relation : noeuds = feuilles + internes\n// Pour un arbre plein : feuilles = internes + 1",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Pour l'arbre 5(3(1,4),8), combien de feuilles et de noeuds internes ?",
+            "starterCode": "//      5\n//     / \\\n//    3   8\n//   / \\\n//  1   4\n// Feuilles : ???\n// Noeuds internes : ???\n// Total : ???",
+            "solution": "// Feuilles : 1, 4, 8 -> 3 feuilles\n// Noeuds internes : 5, 3 -> 2 noeuds internes\n// Total : 3 + 2 = 5 noeuds\n// feuilles = internes + 1 (arbre plein)"
+          }
+        },
+        {
+          "id": 4,
+          "title": "Comptage et allocation",
+          "content": "Une application pratique du comptage est d'allouer un tableau de la bonne taille pour stocker tous les elements de l'arbre. On compte d'abord les noeuds, puis on alloue, puis on remplit avec un parcours.",
+          "codeExample": "// Convertir un arbre en tableau trie\nint\t*tree_to_array(t_btree *root)\n{\n\tint\tcount;\n\tint\t*arr;\n\tint\tidx;\n\n\tcount = ft_btree_count(root);\n\tif (count == 0)\n\t\treturn (NULL);\n\tarr = malloc(sizeof(int) * count);\n\tif (!arr)\n\t\treturn (NULL);\n\tidx = 0;\n\t// Remplir arr avec un parcours infixe\n\t// (utilise une variable globale ou un pointeur pour idx)\n\treturn (arr);\n}",
+          "language": "c"
+        }
+      ]
+    },
+    "theory": [
+      {
+        "title": "Pattern recursif de sommation sur les arbres",
+        "content": "Le comptage de noeuds est un cas particulier du pattern de sommation sur les arbres. Ce pattern s'applique a toute operation qui combine les resultats des sous-arbres par addition : somme des valeurs, comptage conditionnel, etc.",
+        "codeExamples": [
+          {
+            "title": "Differentes sommations sur un arbre",
+            "code": "// Compter tous les noeuds\nint\tcount_all(t_btree *r)\n{\n\tif (!r) return (0);\n\treturn (1 + count_all(r->left) + count_all(r->right));\n}\n\n// Somme des valeurs\nint\tsum_values(t_btree *r)\n{\n\tif (!r) return (0);\n\treturn (*(int *)r->item + sum_values(r->left)\n\t\t+ sum_values(r->right));\n}\n\n// Compter les noeuds pairs\nint\tcount_even(t_btree *r)\n{\n\tif (!r) return (0);\n\treturn ((*(int *)r->item % 2 == 0 ? 1 : 0)\n\t\t+ count_even(r->left) + count_even(r->right));\n}",
+            "explanation": "Le meme pattern s'adapte a differentes conditions de comptage."
+          }
+        ],
+        "keyPoints": [
+          "Le pattern est : valeur_base pour NULL, sinon contribution + gauche + droite",
+          "La contribution du noeud courant peut etre 1, la valeur, ou conditionnelle",
+          "La complexite est toujours O(n) car chaque noeud est visite une fois",
+          "Ce pattern peut etre combine avec un parcours (infixe, prefixe, postfixe)"
+        ],
+        "commonMistakes": [
+          "Oublier le +1 pour compter le noeud courant (sous-compter)",
+          "Retourner 1 au lieu de 0 pour le cas de base NULL",
+          "Ne pas adapter la condition pour les variantes (feuilles, pairs, etc.)"
+        ]
+      },
+      {
+        "title": "Complexite du comptage",
+        "content": "Le comptage visite chaque noeud exactement une fois, donc la complexite temporelle est O(n). La complexite spatiale depend de la hauteur de l'arbre (pile de recursion) : O(log n) pour un arbre equilibre, O(n) pour un arbre degenere.",
+        "codeExamples": [
+          {
+            "title": "Nombre d'appels recursifs",
+            "code": "// Pour un arbre de n noeuds :\n// - n appels recursifs sur des noeuds non-NULL\n// - (n+1) appels sur des noeuds NULL (cas de base)\n// - Total : 2n + 1 appels\n\n// Arbre de 5 noeuds : 11 appels\n// Arbre de 1000 noeuds : 2001 appels\n\n// Complexite temporelle : O(n)\n// Complexite spatiale :\n//   Equilibre : O(log n) (pile de recursion)\n//   Degenere : O(n) (pile de recursion)",
+            "explanation": "Chaque noeud genere 2 appels recursifs, et il y a n+1 pointeurs NULL."
+          }
+        ],
+        "keyPoints": [
+          "Complexite temporelle : O(n) pour tout arbre",
+          "Complexite spatiale : O(h) ou h est la hauteur (pile de recursion)",
+          "Nombre total d'appels : 2n + 1 (n noeuds + n+1 NULL)",
+          "Pas de moyen d'ameliorer en dessous de O(n) car il faut visiter chaque noeud"
+        ],
+        "commonMistakes": [
+          "Croire que le comptage peut etre fait en O(log n) (impossible sans cache)",
+          "Oublier la complexite spatiale de la recursion",
+          "Ne pas considerer le pire cas (arbre degenere) pour la complexite spatiale"
+        ]
+      },
+      {
+        "title": "Relations entre les metriques d'arbre",
+        "content": "Il existe des relations mathematiques entre le nombre de noeuds, la hauteur, le nombre de feuilles et le nombre de noeuds internes d'un arbre binaire. Ces relations aident a verifier nos algorithmes.",
+        "codeExamples": [
+          {
+            "title": "Relations fondamentales",
+            "code": "// Pour un arbre binaire :\n// n = total de noeuds\n// f = nombre de feuilles\n// i = nombre de noeuds internes\n// h = hauteur\n\n// Toujours vrai :\n// n = f + i\n\n// Arbre binaire plein (0 ou 2 enfants) :\n// f = i + 1\n// n = 2i + 1 (toujours impair)\n\n// Arbre complet de hauteur h :\n// n = 2^(h+1) - 1\n// f = 2^h\n// i = 2^h - 1",
+            "explanation": "Ces formules permettent de verifier la coherence des resultats."
+          }
+        ],
+        "keyPoints": [
+          "Total = feuilles + noeuds internes (toujours vrai)",
+          "Arbre plein : feuilles = internes + 1",
+          "Arbre complet de hauteur h : 2^(h+1) - 1 noeuds",
+          "h+1 <= n <= 2^(h+1) - 1 (bornes sur n en fonction de h)"
+        ],
+        "commonMistakes": [
+          "Confondre arbre plein (0 ou 2 enfants) et complet (tous niveaux remplis)",
+          "Appliquer la formule f = i + 1 a un arbre non plein",
+          "Oublier que ces relations sont des bornes, pas des egalites en general"
+        ]
+      },
+      {
+        "title": "Stocker la taille dans la structure",
+        "content": "Pour eviter de recalculer le nombre de noeuds a chaque fois (O(n)), on peut stocker la taille dans la structure de l'arbre. On met a jour la taille a chaque insertion ou suppression. C'est un compromis espace-temps classique.",
+        "codeExamples": [
+          {
+            "title": "Structure avec taille integree",
+            "code": "typedef struct s_bst\n{\n\tt_btree\t*root;\n\tint\t\tsize;   // Nombre total de noeuds\n\tint\t\theight; // Hauteur (optionnel)\n}\t\t\t\tt_bst;\n\nvoid\tbst_insert(t_bst *bst, void *item, int (*cmp)(void *, void *))\n{\n\tft_btree_insert(&bst->root, item, cmp);\n\tbst->size++; // O(1) au lieu de recalculer\n}\n\nint\tbst_count(t_bst *bst)\n{\n\treturn (bst->size); // O(1) !\n}",
+            "explanation": "Maintenir un compteur est O(1) au lieu de O(n) pour chaque requete."
+          }
+        ],
+        "keyPoints": [
+          "Stocker la taille evite le recalcul en O(n) a chaque fois",
+          "Mettre a jour a l'insertion (+1) et a la suppression (-1)",
+          "C'est un compromis memoire/temps classique",
+          "Pattern utilise dans les structures de donnees professionnelles"
+        ],
+        "commonMistakes": [
+          "Oublier de mettre a jour la taille lors d'une suppression",
+          "Desynchroniser la taille stockee et la taille reelle",
+          "Ne pas initialiser la taille a 0 dans la structure"
+        ]
+      }
+    ],
+    "prepExercises": [
+      {
+        "id": 1,
+        "title": "Comptage basique",
+        "instruction": "Combien de noeuds dans l'arbre 5(3(1,NULL),8(NULL,9)) ?",
+        "starterCode": "//      5\n//     / \\\n//    3   8\n//   /     \\\n//  1       9\n// count = ???",
+        "solution": "// count(5) = 1 + count(3) + count(8)\n// count(3) = 1 + count(1) + count(NULL) = 1 + 1 + 0 = 2\n// count(8) = 1 + count(NULL) + count(9) = 1 + 0 + 1 = 2\n// count(5) = 1 + 2 + 2 = 5 noeuds",
+        "hint": "1 + count(gauche) + count(droite). NULL = 0.",
+        "difficulty": 1
+      },
+      {
+        "id": 2,
+        "title": "Ecrire ft_btree_count",
+        "instruction": "Complete la fonction ft_btree_count.",
+        "starterCode": "int\tft_btree_count(t_btree *root)\n{\n\tif (!root)\n\t\treturn (???);\n\treturn (??? + ft_btree_count(root->left)\n\t\t+ ft_btree_count(root->right));\n}",
+        "solution": "int\tft_btree_count(t_btree *root)\n{\n\tif (!root)\n\t\treturn (0);\n\treturn (1 + ft_btree_count(root->left)\n\t\t+ ft_btree_count(root->right));\n}",
+        "hint": "NULL = 0, sinon 1 + gauche + droite.",
+        "difficulty": 2
+      },
+      {
+        "id": 3,
+        "title": "Compter les feuilles",
+        "instruction": "Ecris count_leaves qui compte seulement les feuilles.",
+        "starterCode": "int\tcount_leaves(t_btree *root)\n{\n\t// Une feuille n'a pas d'enfants\n}",
+        "solution": "int\tcount_leaves(t_btree *root)\n{\n\tif (!root)\n\t\treturn (0);\n\tif (!root->left && !root->right)\n\t\treturn (1);\n\treturn (count_leaves(root->left)\n\t\t+ count_leaves(root->right));\n}",
+        "hint": "Si les deux enfants sont NULL, c'est une feuille (retourne 1).",
+        "difficulty": 2
+      },
+      {
+        "id": 4,
+        "title": "Somme des valeurs",
+        "instruction": "Ecris une fonction qui calcule la somme des entiers dans l'arbre.",
+        "starterCode": "int\tsum_tree(t_btree *root)\n{\n\t// Somme de tous les item (int)\n}",
+        "solution": "int\tsum_tree(t_btree *root)\n{\n\tif (!root)\n\t\treturn (0);\n\treturn (*(int *)root->item + sum_tree(root->left)\n\t\t+ sum_tree(root->right));\n}",
+        "hint": "Meme pattern que count, mais remplace 1 par *(int *)root->item.",
+        "difficulty": 2
+      },
+      {
+        "id": 5,
+        "title": "Verifier les relations",
+        "instruction": "Pour l'arbre plein 5(3(1,4),8(7,9)), verifie que feuilles = internes + 1.",
+        "starterCode": "//        5\n//       / \\\n//      3   8\n//     / \\ / \\\n//    1  4 7  9\n// Feuilles = ???\n// Internes = ???\n// Relation : ???",
+        "solution": "// Feuilles : 1, 4, 7, 9 -> 4\n// Internes : 5, 3, 8 -> 3\n// 4 = 3 + 1 -> VRAI !\n// Total : 4 + 3 = 7 noeuds",
+        "hint": "Feuilles = noeuds sans enfants. Internes = noeuds avec enfants.",
+        "difficulty": 2
+      }
+    ]
+  },
+  "starterCode": "#include <stdlib.h>\n\ntypedef struct s_btree\n{\n\tvoid\t\t\t*item;\n\tstruct s_btree\t*left;\n\tstruct s_btree\t*right;\n}\t\t\t\t\tt_btree;\n\nint\tft_btree_count(t_btree *root)\n{\n\t// Retourne le nombre de noeuds\n\t// Arbre vide = 0\n\t(void)root;\n\treturn (0);\n}",
+  "solution": "#include <stdlib.h>\n\ntypedef struct s_btree\n{\n\tvoid\t\t\t*item;\n\tstruct s_btree\t*left;\n\tstruct s_btree\t*right;\n}\t\t\t\t\tt_btree;\n\nint\tft_btree_count(t_btree *root)\n{\n\tif (!root)\n\t\treturn (0);\n\treturn (1 + ft_btree_count(root->left)\n\t\t+ ft_btree_count(root->right));\n}",
+  "hints": [
+    "Le cas de base est root == NULL : retourne 0 (pas de noeuds).",
+    "Le cas recursif retourne 1 (le noeud courant) + le comptage des deux sous-arbres.",
+    "La complexite est O(n) car chaque noeud est visite exactement une fois."
+  ],
+  "testCases": [
+    {
+      "id": 1,
+      "description": "Comptage d'un arbre de 5 noeuds",
+      "stdin": "",
+      "expectedStdout": "5\n",
+      "expectedExitCode": 0,
+      "visible": true
+    },
+    {
+      "id": 2,
+      "description": "Comptage d'un arbre vide",
+      "stdin": "",
+      "expectedStdout": "0\n",
+      "expectedExitCode": 0,
+      "visible": false
+    },
+    {
+      "id": 3,
+      "description": "Comptage d'un arbre avec un seul noeud",
+      "stdin": "",
+      "expectedStdout": "1\n",
+      "expectedExitCode": 0,
+      "visible": false
+    }
+  ],
+  "constraints": {
+    "allowedFunctions": ["malloc", "free"],
+    "forbiddenFunctions": ["printf"],
+    "maxExecutionTime": 5000,
+    "maxMemory": 128
+  },
+  "relatedExercises": ["c-day63-ex00-ft-btree-height", "c-day63-ex02-ft-btree-free"],
+  "resources": [
+    {
+      "title": "Taille d'un arbre binaire",
+      "url": "https://www.geeksforgeeks.org/write-a-c-program-to-calculate-size-of-a-tree/",
+      "type": "documentation"
+    },
+    {
+      "title": "Proprietes des arbres binaires",
+      "url": "https://en.wikipedia.org/wiki/Binary_tree#Properties_of_binary_trees",
+      "type": "article"
+    }
+  ]
+}

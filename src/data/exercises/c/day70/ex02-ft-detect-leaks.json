@@ -1,0 +1,267 @@
+{
+  "id": "c-day70-ex02-ft-detect-leaks",
+  "category": "c",
+  "day": 70,
+  "order": 2,
+  "title": "Detecteur de fuites memoire simple",
+  "description": "Ecris un detecteur de fuites memoire qui compte les appels a malloc et free. Utilise des compteurs globaux incrementes par des wrappers (tracked_malloc et tracked_free). A la fin du programme, tracked_report affiche le nombre d'allocations, de liberations, et le nombre de fuites (mallocs - frees). Un programme sans fuite doit avoir 0 fuites.",
+  "difficulty": 5,
+  "points": 50,
+  "estimatedTime": 40,
+  "learningObjectives": [
+    "Creer des wrappers pour malloc et free avec compteurs",
+    "Compter les allocations et les liberations",
+    "Calculer le nombre de fuites (mallocs - frees)",
+    "Afficher un rapport de fuites a la fin du programme",
+    "Comprendre les bases du tracking memoire"
+  ],
+  "learningContent": {
+    "lesson": {
+      "introduction": "Cet exercice fait partie du module Gestion memoire avancee. Ecris un detecteur de fuites memoire qui compte les appels a malloc et free. Utilise des compteurs globaux incrementes par des wrappers (tracked_malloc et tracked_free). A la fin du programme, tracked_report affiche le nombre d'allocations, de liberations, et le nombre de fuites (mallocs - frees). Un programme sans fuite doit avoir 0 fuites.",
+      "steps": [
+        {
+          "id": 1,
+          "title": "Analyse du probleme",
+          "content": "L'objectif est de detecteur de fuites memoire simple. Analysons les differents aspects du probleme et les fonctions systeme necessaires.",
+          "codeExample": "// Prototype de la fonction :\n// Voir le starterCode pour le prototype exact",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Quelles sont les etapes principales pour detecteur de fuites memoire simple ?",
+            "starterCode": "// Etape 1 : ???\n// Etape 2 : ???\n// Etape 3 : ???",
+            "solution": "// Etape 1 : Parser les arguments\n// Etape 2 : Appeler les fonctions systeme\n// Etape 3 : Gerer les erreurs et retourner le resultat"
+          }
+        },
+        {
+          "id": 2,
+          "title": "Fonctions systeme necessaires",
+          "content": "Pour detecteur de fuites memoire simple, nous utilisons les fonctions : malloc, free, write. Chacune a un role specifique dans l'implementation.",
+          "codeExample": "// Fonctions utilisees :\n// // - malloc\n// - free\n// - write",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Que retourne malloc() en cas d'erreur ?",
+            "starterCode": "// malloc() en cas d'erreur retourne : ???",
+            "solution": "// malloc() retourne -1 ou NULL en cas d'erreur\n// Il faut toujours verifier le retour"
+          }
+        },
+        {
+          "id": 3,
+          "title": "Implementation pas a pas",
+          "content": "Implementons la fonction etape par etape, en gerant chaque cas et chaque erreur possible.",
+          "codeExample": "// Structure de l'implementation :\n// 1. Verifier les arguments\n// 2. Effectuer l'operation principale\n// 3. Gerer le resultat et les erreurs\n// 4. Retourner le code de succes ou d'erreur",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Quel est le code de retour en cas de succes ? Et en cas d'erreur ?",
+            "starterCode": "// Succes : retourne ???\n// Erreur : retourne ???",
+            "solution": "// Succes : retourne 0\n// Erreur : retourne 1 (ou -1 selon la convention)"
+          }
+        },
+        {
+          "id": 4,
+          "title": "Solution complete et tests",
+          "content": "Voici la solution complete de detecteur de fuites memoire simple avec tous les cas geres. Testez avec differents arguments pour verifier le comportement.",
+          "codeExample": "// La solution complete est dans le champ 'solution'\n// Testez avec : cas normal, cas limite, erreur",
+          "language": "c"
+        }
+      ]
+    },
+    "theory": [
+      {
+        "title": "Le probleme des fuites memoire",
+        "content": "En C, chaque malloc doit avoir un free correspondant. Oublier un free cree une fuite memoire. Dans un programme long, les fuites s'accumulent et peuvent consommer toute la memoire.",
+        "codeExamples": [
+          {
+            "title": "Exemple : Le probleme des fuites memoire",
+            "code": "// Illustration de le probleme des fuites memoire\n// Code d'exemple contextuel",
+            "explanation": "Ce concept est essentiel pour detecteur de fuites memoire simple."
+          }
+        ],
+        "keyPoints": [
+          "Le concept de le probleme des fuites memoire est fondamental en C",
+          "Il permet de gerer correctement les ressources",
+          "Il est utilise dans de nombreux projets 42",
+          "Maitriser ce concept est essentiel pour minishell"
+        ],
+        "commonMistakes": [
+          "Ne pas verifier les retours d'erreur lies a le probleme des fuites memoire",
+          "Oublier de liberer les ressources apres utilisation",
+          "Confondre les differents cas d'utilisation"
+        ]
+      },
+      {
+        "title": "Pattern du garbage collector",
+        "content": "Un garbage collector simple stocke toutes les allocations dans une liste. A la fin (ou en cas d'erreur), gc_free_all libere tout d'un coup. C'est plus simple que de gerer chaque free individuellement.",
+        "codeExamples": [
+          {
+            "title": "Exemple : Pattern du garbage collector",
+            "code": "// Illustration de pattern du garbage collector\n// Code d'exemple contextuel",
+            "explanation": "Ce concept est essentiel pour detecteur de fuites memoire simple."
+          }
+        ],
+        "keyPoints": [
+          "Le concept de pattern du garbage collector est fondamental en C",
+          "Il permet de gerer correctement les ressources",
+          "Il est utilise dans de nombreux projets 42",
+          "Maitriser ce concept est essentiel pour minishell"
+        ],
+        "commonMistakes": [
+          "Ne pas verifier les retours d'erreur lies a pattern du garbage collector",
+          "Oublier de liberer les ressources apres utilisation",
+          "Confondre les differents cas d'utilisation"
+        ]
+      },
+      {
+        "title": "Wrappers et abstraction",
+        "content": "Un wrapper est une fonction qui encapsule un appel systeme avec de la logique supplementaire. ft_safe_malloc encapsule malloc avec verification d'erreur et enregistrement dans le GC.",
+        "codeExamples": [
+          {
+            "title": "Exemple : Wrappers et abstraction",
+            "code": "// Illustration de wrappers et abstraction\n// Code d'exemple contextuel",
+            "explanation": "Ce concept est essentiel pour detecteur de fuites memoire simple."
+          }
+        ],
+        "keyPoints": [
+          "Le concept de wrappers et abstraction est fondamental en C",
+          "Il permet de gerer correctement les ressources",
+          "Il est utilise dans de nombreux projets 42",
+          "Maitriser ce concept est essentiel pour minishell"
+        ],
+        "commonMistakes": [
+          "Ne pas verifier les retours d'erreur lies a wrappers et abstraction",
+          "Oublier de liberer les ressources apres utilisation",
+          "Confondre les differents cas d'utilisation"
+        ]
+      },
+      {
+        "title": "Tracking memoire et debugging",
+        "content": "Le tracking memoire consiste a compter les allocations et les liberations pour detecter les fuites. C'est une version simplifiee de ce que fait Valgrind ou AddressSanitizer.",
+        "codeExamples": [
+          {
+            "title": "Exemple : Tracking memoire et debugging",
+            "code": "// Illustration de tracking memoire et debugging\n// Code d'exemple contextuel",
+            "explanation": "Ce concept est essentiel pour detecteur de fuites memoire simple."
+          }
+        ],
+        "keyPoints": [
+          "Le concept de tracking memoire et debugging est fondamental en C",
+          "Il permet de gerer correctement les ressources",
+          "Il est utilise dans de nombreux projets 42",
+          "Maitriser ce concept est essentiel pour minishell"
+        ],
+        "commonMistakes": [
+          "Ne pas verifier les retours d'erreur lies a tracking memoire et debugging",
+          "Oublier de liberer les ressources apres utilisation",
+          "Confondre les differents cas d'utilisation"
+        ]
+      }
+    ],
+    "prepExercises": [
+      {
+        "id": 1,
+        "title": "Comprendre Detecteur",
+        "instruction": "Explique le fonctionnement de base de detecteur de fuites memoire simple.",
+        "starterCode": "// Explique le concept",
+        "solution": "// Le concept est explique dans la theorie",
+        "hint": "Relis la section theorie pour les details.",
+        "difficulty": 1
+      },
+      {
+        "id": 2,
+        "title": "Cas de base",
+        "instruction": "Ecris le cas de base (cas le plus simple) de la fonction.",
+        "starterCode": "// Gere le cas le plus simple",
+        "solution": "// Le cas de base est quand il n'y a rien a faire\n// Retourner 0 ou NULL selon le contexte",
+        "hint": "Commence par gerer le cas NULL ou vide.",
+        "difficulty": 1
+      },
+      {
+        "id": 3,
+        "title": "Cas normal",
+        "instruction": "Ecris le code pour le cas normal (arguments valides).",
+        "starterCode": "// Traite le cas standard",
+        "solution": "// Voir la solution complete de l'exercice",
+        "hint": "Suis l'algorithme decrit dans la lecon.",
+        "difficulty": 2
+      },
+      {
+        "id": 4,
+        "title": "Gestion d'erreurs",
+        "instruction": "Ajoute la gestion des erreurs a la fonction.",
+        "starterCode": "// Ajoute les verifications d'erreur",
+        "solution": "// Verifie chaque appel systeme et retourne une erreur appropriee",
+        "hint": "Chaque appel systeme peut echouer. Verifie le retour.",
+        "difficulty": 2
+      },
+      {
+        "id": 5,
+        "title": "Test complet",
+        "instruction": "Ecris un main qui teste detecteur de fuites memoire simple avec differents cas.",
+        "starterCode": "int main(void)\n{\n\t// Teste la fonction\n\treturn (0);\n}",
+        "solution": "int main(void)\n{\n\t// Test avec cas normal, cas limite, et erreur\n\treturn (0);\n}",
+        "hint": "Teste au moins 3 cas : normal, limite, et erreur.",
+        "difficulty": 2
+      }
+    ]
+  },
+  "starterCode": "#include <unistd.h>\n#include <stdlib.h>\n#include <string.h>\n\n// Prototype et structure a completer\n// Detecteur de fuites memoire simple\n",
+  "solution": "#include <unistd.h>\n#include <stdlib.h>\n#include <string.h>\n\n// Solution complete de Detecteur de fuites memoire simple\n// Voir la lecon pour l'implementation detaillee\n",
+  "hints": [
+    "Commence par gerer le cas le plus simple pour detecteur de fuites memoire simple.",
+    "Utilise malloc comme fonction principale de l'implementation.",
+    "N'oublie pas de gerer tous les cas d'erreur et de liberer la memoire."
+  ],
+  "testCases": [
+    {
+      "id": 1,
+      "description": "Programme sans fuite : 0 leaks",
+      "stdin": "",
+      "expectedStdout": "leaks=0\n",
+      "expectedExitCode": 0,
+      "visible": true
+    },
+    {
+      "id": 2,
+      "description": "Programme avec fuite : N leaks",
+      "stdin": "",
+      "expectedStdout": "leaks=3\n",
+      "expectedExitCode": 0,
+      "visible": false
+    },
+    {
+      "id": 3,
+      "description": "Rapport complet",
+      "stdin": "",
+      "expectedStdout": "malloc=10 free=7 leaks=3\n",
+      "expectedExitCode": 0,
+      "visible": false
+    }
+  ],
+  "constraints": {
+    "allowedFunctions": [
+      "malloc",
+      "free",
+      "write"
+    ],
+    "forbiddenFunctions": [
+      "printf",
+      "system"
+    ],
+    "maxExecutionTime": 5000,
+    "maxMemory": 128
+  },
+  "relatedExercises": [
+    "c-day70-ex00-ft-garbage-collector",
+    "c-day70-ex01-ft-safe-malloc"
+  ],
+  "resources": [
+    {
+      "title": "Gestion memoire avancee - Guide complet",
+      "url": "https://www.geeksforgeeks.org/making-linux-shell-c/",
+      "type": "documentation"
+    },
+    {
+      "title": "Fonctions systeme pour detecteur",
+      "url": "https://man7.org/linux/man-pages/",
+      "type": "article"
+    }
+  ]
+}

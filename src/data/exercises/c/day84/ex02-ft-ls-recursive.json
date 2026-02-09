@@ -1,0 +1,257 @@
+{
+  "id": "c-day84-ex02-ft-ls-recursive",
+  "category": "c",
+  "day": 84,
+  "order": 2,
+  "title": "Parcours recursif des sous-repertoires (-R)",
+  "description": "Implemente la fonction ft_ls_recursive qui liste le contenu d'un repertoire et de tous ses sous-repertoires recursivement, comme ls -R. Pour chaque sous-repertoire rencontre, affiche son chemin puis son contenu. Gere les cas speciaux : ignorer '.' et '..', construire les chemins complets, et limiter la profondeur de recursion.",
+  "difficulty": 5,
+  "points": 50,
+  "estimatedTime": 45,
+  "learningObjectives": [
+    "Implementer un parcours recursif de l'arborescence de fichiers",
+    "Construire des chemins complets en concatenant repertoire et nom",
+    "Distinguer fichiers et repertoires avec stat/S_ISDIR",
+    "Filtrer les entrees speciales '.' et '..' pour eviter les boucles infinies",
+    "Gerer la profondeur de recursion et les erreurs de permissions"
+  ],
+  "learningContent": {
+    "lesson": {
+      "introduction": "L'option -R de ls liste recursivement tous les sous-repertoires. C'est un cas classique de recursion sur une arborescence : pour chaque repertoire, on liste son contenu, et pour chaque sous-repertoire dans ce contenu, on relance la meme operation. La difficulte technique est de construire les chemins complets et de filtrer les entrees speciales '.' et '..' qui causeraient des boucles infinies. Cet exercice combine la lecture de repertoires, la recursion et la gestion robuste des erreurs.",
+      "steps": [
+        {
+          "id": 1,
+          "title": "Principe de la recursion sur les repertoires",
+          "content": "Le parcours recursif d'une arborescence suit ce schema :\n1. Ouvrir le repertoire courant\n2. Pour chaque entree :\n   a. Si c'est '.' ou '..', l'ignorer\n   b. Afficher le nom\n   c. Si c'est un sous-repertoire, l'ajouter a une liste\n3. Fermer le repertoire\n4. Pour chaque sous-repertoire de la liste, relancer le parcours\n\nOn separe l'affichage de la recursion pour que l'ordre soit correct.",
+          "codeExample": "// Arborescence :\n// dir/\n//   a.txt\n//   sub/\n//     b.txt\n//     deep/\n//       c.txt\n//   d.txt\n\n// Sortie de ls -R dir/ :\n// dir/:\n// a.txt  d.txt  sub\n//\n// dir/sub/:\n// b.txt  deep\n//\n// dir/sub/deep/:\n// c.txt",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Pourquoi doit-on ignorer '.' et '..' dans le parcours recursif ?",
+            "starterCode": "// '.' = le repertoire courant\n// '..' = le repertoire parent\n// Si on ne les ignore pas :\n// dir/ -> dir/./ -> dir/././ -> ... BOUCLE ?\n// dir/ -> dir/../dir/ -> dir/../dir/../dir/ -> ...",
+            "solution": "// '.' = le repertoire courant\n// '..' = le repertoire parent\n// Si on ne les ignore pas :\n// dir/ -> dir/./ -> dir/././ -> ... BOUCLE INFINIE\n// dir/ -> dir/../dir/ -> dir/../dir/../dir/ -> ...\n// Les deux causent des boucles infinies\n// Il FAUT les filtrer pour eviter la recursion infinie"
+          }
+        },
+        {
+          "id": 2,
+          "title": "Construire les chemins complets",
+          "content": "readdir retourne seulement le nom du fichier, pas le chemin complet. Pour utiliser stat ou ouvrir un sous-repertoire, il faut construire le chemin complet : repertoire + '/' + nom.\n\n**Exemple :** Si on parcourt '/home/user' et on trouve 'Documents', le chemin complet est '/home/user/Documents'.",
+          "codeExample": "void\tft_build_path(char *buf, int buf_size,\n\tchar *dir, char *name)\n{\n\tint\tlen;\n\n\tlen = 0;\n\twhile (dir[len] && len < buf_size - 2)\n\t{\n\t\tbuf[len] = dir[len];\n\t\tlen++;\n\t}\n\tif (len > 0 && buf[len - 1] != '/')\n\t\tbuf[len++] = '/';\n\twhile (*name && len < buf_size - 1)\n\t\tbuf[len++] = *name++;\n\tbuf[len] = '\\0';\n}",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Que se passe-t-il si le repertoire se termine deja par '/' ?",
+            "starterCode": "// dir = \"/home/user/\", name = \"file.txt\"\n// Sans verification : \"/home/user//file.txt\" -> double /\n// Avec verification : \"/home/user/file.txt\" -> correct\n// Le double / fonctionne-t-il ? ?",
+            "solution": "// dir = \"/home/user/\", name = \"file.txt\"\n// Sans verification : \"/home/user//file.txt\" -> double /\n// Avec verification : \"/home/user/file.txt\" -> correct\n// Le double / fonctionne en pratique (Unix l'accepte)\n// mais c'est plus propre de le gerer correctement"
+          }
+        },
+        {
+          "id": 3,
+          "title": "Implementation de ft_ls_recursive",
+          "content": "L'implementation en deux phases : d'abord lister les fichiers du repertoire courant, puis recurser dans les sous-repertoires. On stocke les noms des sous-repertoires pour les traiter apres la fermeture du repertoire courant.",
+          "codeExample": "void\tft_ls_recursive(char *path)\n{\n\tDIR\t\t\t\t*dir;\n\tstruct dirent\t*entry;\n\tstruct stat\t\tbuf;\n\tchar\t\t\tfull_path[1024];\n\tchar\t\t\t*subdirs[256];\n\tint\t\t\t\tnb_sub;\n\tint\t\t\t\ti;\n\n\tdir = opendir(path);\n\tif (!dir)\n\t\treturn ;\n\tprintf(\"%s:\\n\", path);\n\tnb_sub = 0;\n\twhile ((entry = readdir(dir)))\n\t{\n\t\tif (entry->d_name[0] == '.')\n\t\t\tcontinue ;\n\t\tprintf(\"%s\\n\", entry->d_name);\n\t\tft_build_path(full_path, 1024, path, entry->d_name);\n\t\tif (stat(full_path, &buf) == 0 && S_ISDIR(buf.st_mode))\n\t\t\tsubdirs[nb_sub++] = strdup(full_path);\n\t}\n\tclosedir(dir);\n\tprintf(\"\\n\");\n\ti = 0;\n\twhile (i < nb_sub)\n\t{\n\t\tft_ls_recursive(subdirs[i]);\n\t\tfree(subdirs[i]);\n\t\ti++;\n\t}\n}",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Pourquoi stocke-t-on les sous-repertoires au lieu de recurser immediatement ?",
+            "starterCode": "// Si on recurse immediatement dans readdir :\n// 1. Le DIR* du repertoire parent reste ouvert\n// 2. On ouvre un nouveau DIR* pour le sous-repertoire\n// 3. Trop de DIR* ouverts = ? de descripteurs\n// 4. L'ordre d'affichage serait ?",
+            "solution": "// Si on recurse immediatement dans readdir :\n// 1. Le DIR* du repertoire parent reste ouvert\n// 2. On ouvre un nouveau DIR* pour le sous-repertoire\n// 3. Trop de DIR* ouverts = EPUISEMENT de descripteurs\n// 4. L'ordre d'affichage serait MELANGE\n// En stockant d'abord, on ferme le DIR* parent avant\n// de recurser, et l'ordre est correct"
+          }
+        },
+        {
+          "id": 4,
+          "title": "Gestion des erreurs et limites",
+          "content": "Plusieurs erreurs peuvent survenir : permission refusee, liens symboliques circulaires, arborescences tres profondes. Il faut gerer ces cas pour eviter les crashs et les boucles infinies.",
+          "codeExample": "// Gestion des erreurs :\nvoid\tft_ls_recursive_safe(char *path, int depth)\n{\n\tDIR\t*dir;\n\n\tif (depth > 100)\n\t{\n\t\tprintf(\"Profondeur max atteinte\\n\");\n\t\treturn ;\n\t}\n\tdir = opendir(path);\n\tif (!dir)\n\t{\n\t\tperror(path);\n\t\treturn ;\n\t}\n\t// ... parcours ...\n\tclosedir(dir);\n\t// Recurser avec depth + 1\n\tft_ls_recursive_safe(subdir, depth + 1);\n}",
+          "language": "c"
+        }
+      ]
+    },
+    "theory": [
+      {
+        "title": "Recursion sur les arborescences de fichiers",
+        "content": "Le parcours recursif d'une arborescence est un pattern fondamental en programmation systeme. Il est utilise par ls -R, find, du, chmod -R, etc.",
+        "codeExamples": [
+          {
+            "title": "Schema general du parcours recursif",
+            "code": "void\twalk(char *path)\n{\n\t// 1. Ouvrir le repertoire\n\t// 2. Lire chaque entree\n\t//    - Filtrer . et ..\n\t//    - Traiter le fichier/dossier\n\t//    - Si dossier : stocker pour recursion\n\t// 3. Fermer le repertoire\n\t// 4. Recurser dans les sous-repertoires\n}\n// C'est un parcours pre-ordre de l'arbre du systeme de fichiers",
+            "explanation": "Le parcours pre-ordre traite le noeud avant ses enfants"
+          }
+        ],
+        "keyPoints": [
+          "On traite le repertoire courant avant de recurser dans les sous-repertoires",
+          "Les entrees '.' et '..' doivent absolument etre filtrees",
+          "Il faut construire le chemin complet pour stat et opendir",
+          "La profondeur de recursion doit etre limitee pour eviter le stack overflow"
+        ],
+        "commonMistakes": [
+          "Ne pas filtrer '.' et '..' ce qui cause une recursion infinie",
+          "Passer seulement le nom du fichier a stat au lieu du chemin complet",
+          "Ne pas fermer le DIR* avec closedir (fuite de descripteurs de fichiers)"
+        ]
+      },
+      {
+        "title": "Gestion des descripteurs de fichiers",
+        "content": "Chaque appel a opendir utilise un descripteur de fichier. Le systeme a une limite (souvent 1024). Il faut les gerer avec soin.",
+        "codeExamples": [
+          {
+            "title": "Limite des descripteurs",
+            "code": "// Verifier la limite :\n#include <sys/resource.h>\nstruct rlimit rl;\ngetrlimit(RLIMIT_NOFILE, &rl);\nprintf(\"Max FD: %ld\\n\", rl.rlim_cur); // souvent 1024\n\n// Chaque opendir() utilise 1 descripteur\n// Si on recurse sans fermer, on peut atteindre la limite\n// Solution : fermer le DIR* avant de recurser",
+            "explanation": "Fermer les descripteurs inutilises est une bonne pratique essentielle"
+          }
+        ],
+        "keyPoints": [
+          "Chaque opendir consomme un descripteur de fichier",
+          "La limite systeme est souvent 1024 descripteurs par processus",
+          "Fermer le DIR* avant de recurser libere le descripteur",
+          "ulimit -n affiche la limite courante"
+        ],
+        "commonMistakes": [
+          "Ouvrir des repertoires sans jamais les fermer (fuite de descripteurs)",
+          "Recurser avec le DIR* parent encore ouvert (gaspillage de descripteurs)",
+          "Ne pas gerer l'erreur d'opendir quand la limite est atteinte"
+        ]
+      },
+      {
+        "title": "Construction de chemins",
+        "content": "Construire des chemins corrects est essentiel. Les erreurs de chemin sont une source frequente de bugs dans les programmes systeme.",
+        "codeExamples": [
+          {
+            "title": "Chemins relatifs et absolus",
+            "code": "// Chemin absolu : commence par /\n// /home/user/Documents/file.txt\n\n// Chemin relatif : par rapport au repertoire courant\n// Documents/file.txt\n\n// Construction :\n// dir = \"/home/user\"\n// name = \"file.txt\"\n// result = \"/home/user/file.txt\"\n\n// Attention aux cas limites :\n// dir = \"/\" -> \"/file.txt\" (pas \"//file.txt\")\n// dir = \".\" -> \"./file.txt\"\n// dir = \"\" -> erreur !",
+            "explanation": "Il faut gerer le / final et les cas limites"
+          }
+        ],
+        "keyPoints": [
+          "Toujours construire le chemin complet avant d'appeler stat ou opendir",
+          "Gerer le cas ou le repertoire se termine deja par '/'",
+          "Utiliser un buffer assez grand (PATH_MAX = 4096 sur Linux)",
+          "Verifier la longueur pour eviter les buffer overflows"
+        ],
+        "commonMistakes": [
+          "Buffer trop petit pour le chemin (overflow si arborescence profonde)",
+          "Double '/' entre le repertoire et le nom",
+          "Oublier le '\\0' final dans le chemin construit"
+        ]
+      },
+      {
+        "title": "Filtrage des entrees de repertoire",
+        "content": "readdir retourne toutes les entrees du repertoire, y compris les fichiers caches et les entrees speciales. Il faut filtrer selon les besoins.",
+        "codeExamples": [
+          {
+            "title": "Filtrer les entrees",
+            "code": "// Entrees speciales (toujours filtrer en recursion) :\nif (entry->d_name[0] == '.' && entry->d_name[1] == '\\0')\n\tcontinue;  // \".\"\nif (entry->d_name[0] == '.' && entry->d_name[1] == '.'\n\t&& entry->d_name[2] == '\\0')\n\tcontinue;  // \"..\"\n\n// Fichiers caches (commencent par .) :\n// ls sans -a les ignore\nif (entry->d_name[0] == '.')\n\tcontinue;  // Ignore tous les fichiers caches",
+            "explanation": "Le filtre le plus simple ignore tout ce qui commence par '.'"
+          }
+        ],
+        "keyPoints": [
+          "'.' et '..' sont des entrees speciales presentes dans tout repertoire",
+          "Les fichiers caches commencent par '.' (convention Unix)",
+          "ls sans -a ignore les fichiers caches, ls -a les montre",
+          "Le filtre d_name[0] == '.' est le plus simple mais ignore aussi les caches"
+        ],
+        "commonMistakes": [
+          "Tester seulement '.' et oublier '..' (boucle en montant dans l'arborescence)",
+          "Filtrer tous les fichiers commencant par '.' quand on veut seulement '.' et '..'",
+          "Ne pas tester le caractere suivant : '.hidden' n'est pas '.'"
+        ]
+      }
+    ],
+    "prepExercises": [
+      {
+        "id": 1,
+        "title": "Filtrer les entrees speciales",
+        "instruction": "Ecris une fonction qui retourne 1 si le nom est '.' ou '..', 0 sinon.",
+        "starterCode": "int\tft_is_special(char *name)\n{\n\t// A completer\n}",
+        "solution": "int\tft_is_special(char *name)\n{\n\tif (name[0] == '.' && name[1] == '\\0')\n\t\treturn (1);\n\tif (name[0] == '.' && name[1] == '.' && name[2] == '\\0')\n\t\treturn (1);\n\treturn (0);\n}",
+        "hint": "Teste si le nom est exactement \".\" ou \"..\" en verifiant chaque caractere",
+        "difficulty": 1
+      },
+      {
+        "id": 2,
+        "title": "Tester si c'est un repertoire",
+        "instruction": "Ecris une fonction qui retourne 1 si le chemin est un repertoire, 0 sinon.",
+        "starterCode": "int\tft_is_dir(char *path)\n{\n\t// A completer\n}",
+        "solution": "int\tft_is_dir(char *path)\n{\n\tstruct stat\tbuf;\n\n\tif (stat(path, &buf) == -1)\n\t\treturn (0);\n\treturn (S_ISDIR(buf.st_mode));\n}",
+        "hint": "Utilise stat pour obtenir les infos du fichier, puis S_ISDIR pour tester le type",
+        "difficulty": 2
+      },
+      {
+        "id": 3,
+        "title": "Concatener deux strings",
+        "instruction": "Ecris une fonction qui concatene deux strings avec un '/' entre elles dans un buffer.",
+        "starterCode": "void\tft_join_path(char *buf, char *a, char *b)\n{\n\t// A completer\n}",
+        "solution": "void\tft_join_path(char *buf, char *a, char *b)\n{\n\tint\ti;\n\tint\tj;\n\n\ti = 0;\n\twhile (a[i])\n\t{\n\t\tbuf[i] = a[i];\n\t\ti++;\n\t}\n\tif (i > 0 && buf[i - 1] != '/')\n\t\tbuf[i++] = '/';\n\tj = 0;\n\twhile (b[j])\n\t\tbuf[i++] = b[j++];\n\tbuf[i] = '\\0';\n}",
+        "hint": "Copie a, ajoute / si necessaire, puis copie b",
+        "difficulty": 2
+      },
+      {
+        "id": 4,
+        "title": "Lister un repertoire simple",
+        "instruction": "Ecris une fonction qui affiche les noms des fichiers d'un repertoire (sans . ni ..).",
+        "starterCode": "void\tft_list_dir(char *path)\n{\n\t// A completer\n}",
+        "solution": "void\tft_list_dir(char *path)\n{\n\tDIR\t\t\t\t*dir;\n\tstruct dirent\t*entry;\n\n\tdir = opendir(path);\n\tif (!dir)\n\t\treturn ;\n\twhile ((entry = readdir(dir)))\n\t{\n\t\tif (entry->d_name[0] != '.')\n\t\t\tprintf(\"%s\\n\", entry->d_name);\n\t}\n\tclosedir(dir);\n}",
+        "hint": "Ouvre avec opendir, lis avec readdir, filtre les noms commencant par '.', ferme avec closedir",
+        "difficulty": 2
+      },
+      {
+        "id": 5,
+        "title": "Copier une string avec allocation",
+        "instruction": "Ecris ft_strdup qui alloue et copie une string (comme strdup).",
+        "starterCode": "char\t*ft_strdup(char *src)\n{\n\t// A completer\n}",
+        "solution": "char\t*ft_strdup(char *src)\n{\n\tchar\t*dst;\n\tint\t\tlen;\n\tint\t\ti;\n\n\tlen = 0;\n\twhile (src[len])\n\t\tlen++;\n\tdst = (char *)malloc(sizeof(char) * (len + 1));\n\tif (!dst)\n\t\treturn (NULL);\n\ti = 0;\n\twhile (i <= len)\n\t{\n\t\tdst[i] = src[i];\n\t\ti++;\n\t}\n\treturn (dst);\n}",
+        "hint": "Calcule la longueur, alloue len + 1, copie caractere par caractere",
+        "difficulty": 2
+      }
+    ]
+  },
+  "starterCode": "#include <stdio.h>\n#include <stdlib.h>\n#include <dirent.h>\n#include <sys/stat.h>\n#include <string.h>\n\nvoid\tft_ls_recursive(char *path)\n{\n\t// A completer\n}\n\nint\tmain(int argc, char **argv)\n{\n\tif (argc == 2)\n\t\tft_ls_recursive(argv[1]);\n\telse\n\t\tft_ls_recursive(\".\");\n\treturn (0);\n}",
+  "solution": "#include <stdio.h>\n#include <stdlib.h>\n#include <dirent.h>\n#include <sys/stat.h>\n#include <string.h>\n\nvoid\tft_ls_recursive(char *path)\n{\n\tDIR\t\t\t\t*dir;\n\tstruct dirent\t*entry;\n\tstruct stat\t\tbuf;\n\tchar\t\t\tfull[1024];\n\tchar\t\t\t*subs[256];\n\tint\t\t\t\tns;\n\tint\t\t\t\ti;\n\n\tdir = opendir(path);\n\tif (!dir)\n\t\treturn ;\n\tprintf(\"%s:\\n\", path);\n\tns = 0;\n\twhile ((entry = readdir(dir)))\n\t{\n\t\tif (entry->d_name[0] == '.')\n\t\t\tcontinue ;\n\t\tprintf(\"%s\\n\", entry->d_name);\n\t\tsnprintf(full, 1024, \"%s/%s\", path, entry->d_name);\n\t\tif (stat(full, &buf) == 0 && S_ISDIR(buf.st_mode))\n\t\t\tsubs[ns++] = strdup(full);\n\t}\n\tclosedir(dir);\n\tprintf(\"\\n\");\n\ti = 0;\n\twhile (i < ns)\n\t{\n\t\tft_ls_recursive(subs[i]);\n\t\tfree(subs[i]);\n\t\ti++;\n\t}\n}\n\nint\tmain(int argc, char **argv)\n{\n\tif (argc == 2)\n\t\tft_ls_recursive(argv[1]);\n\telse\n\t\tft_ls_recursive(\".\");\n\treturn (0);\n}",
+  "hints": [
+    "Stocke les chemins des sous-repertoires dans un tableau pendant la lecture, puis recurse apres closedir",
+    "Construis le chemin complet (repertoire + '/' + nom) avant d'appeler stat",
+    "Filtre les entrees commencant par '.' pour ignorer les fichiers caches et '.' / '..'"
+  ],
+  "testCases": [
+    {
+      "id": 1,
+      "description": "Lister recursivement un repertoire avec sous-dossiers",
+      "stdin": "",
+      "expectedStdout": ".:\nfile.txt\nsubdir\n\n./subdir:\nfile2.txt\n\n",
+      "expectedExitCode": 0,
+      "visible": true
+    },
+    {
+      "id": 2,
+      "description": "Repertoire sans sous-repertoires",
+      "stdin": "",
+      "expectedStdout": ".:\nfile1.txt\nfile2.txt\n\n",
+      "expectedExitCode": 0,
+      "visible": false
+    },
+    {
+      "id": 3,
+      "description": "Repertoire inexistant ne produit pas de sortie",
+      "stdin": "",
+      "expectedStdout": "",
+      "expectedExitCode": 0,
+      "visible": false
+    }
+  ],
+  "constraints": {
+    "allowedFunctions": ["malloc", "free", "printf", "write", "opendir", "readdir", "closedir", "stat", "lstat", "strdup"],
+    "forbiddenFunctions": ["system", "popen", "nftw"],
+    "maxExecutionTime": 5000,
+    "maxMemory": 128
+  },
+  "relatedExercises": ["c-day84-ex00-ft-ls-sort", "c-day84-ex01-ft-ls-format"],
+  "resources": [
+    {
+      "title": "Parcours recursif de repertoires en C",
+      "url": "https://www.geeksforgeeks.org/c-program-list-files-sub-directories-directory/",
+      "type": "documentation"
+    },
+    {
+      "title": "opendir/readdir - Tutoriel",
+      "url": "https://www.ibm.com/docs/en/zos/2.4.0?topic=functions-opendir-open-directory",
+      "type": "article"
+    }
+  ]
+}

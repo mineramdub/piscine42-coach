@@ -1,0 +1,257 @@
+{
+  "id": "c-day71-ex02-ft-thread-multiple",
+  "category": "c",
+  "day": 71,
+  "order": 2,
+  "title": "Creer et gerer plusieurs threads simultanes",
+  "description": "Apprends a creer et gerer plusieurs threads en parallele avec un tableau de pthread_t. Comprends comment passer des arguments differents a chaque thread et les joindre tous.",
+  "difficulty": 4,
+  "points": 40,
+  "estimatedTime": 40,
+  "learningObjectives": [
+    "Creer plusieurs threads avec un tableau de pthread_t",
+    "Passer des arguments uniques a chaque thread",
+    "Joindre tous les threads dans une boucle",
+    "Eviter le piege du passage de variable de boucle par adresse",
+    "Gerer la memoire des arguments et resultats des threads"
+  ],
+  "learningContent": {
+    "lesson": {
+      "introduction": "Creer un seul thread est utile, mais la vraie puissance des threads vient de la capacite a en creer plusieurs pour paralleliser le travail. Par exemple, un serveur web cree un thread par client, ou un calcul lourd est divise entre plusieurs threads. La difficulte principale est de passer des arguments uniques a chaque thread sans tomber dans le piege classique du passage de variable de boucle.",
+      "steps": [
+        {
+          "id": 1,
+          "title": "Tableau de threads",
+          "content": "Pour gerer N threads, on utilise un tableau de `pthread_t`. Chaque element stocke l'identifiant d'un thread. On cree les threads dans une boucle, puis on les join dans une autre boucle.\n\n**Important** : creer tous les threads d'abord, puis les joindre. Ne pas joindre dans la meme boucle que la creation !",
+          "codeExample": "#include <pthread.h>\n#include <stdio.h>\n\n#define NB_THREADS 4\n\nvoid\t*routine(void *arg)\n{\n\t(void)arg;\n\tprintf(\"Hello depuis un thread\\n\");\n\treturn (NULL);\n}\n\nint\tmain(void)\n{\n\tpthread_t\tthreads[NB_THREADS];\n\tint\t\t\ti;\n\n\ti = 0;\n\twhile (i < NB_THREADS)\n\t{\n\t\tpthread_create(&threads[i], NULL, routine, NULL);\n\t\ti++;\n\t}\n\ti = 0;\n\twhile (i < NB_THREADS)\n\t{\n\t\tpthread_join(threads[i], NULL);\n\t\ti++;\n\t}\n\treturn (0);\n}",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Cree un tableau de 3 threads, lance-les puis join-les tous.",
+            "starterCode": "#define NB 3\n\nint\tmain(void)\n{\n\tpthread_t\ttids[NB];\n\tint\t\t\ti;\n\t/* TON CODE ICI */\n\treturn (0);\n}",
+            "solution": "#define NB 3\n\nint\tmain(void)\n{\n\tpthread_t\ttids[NB];\n\tint\t\t\ti;\n\n\ti = 0;\n\twhile (i < NB)\n\t{\n\t\tpthread_create(&tids[i], NULL, routine, NULL);\n\t\ti++;\n\t}\n\ti = 0;\n\twhile (i < NB)\n\t{\n\t\tpthread_join(tids[i], NULL);\n\t\ti++;\n\t}\n\treturn (0);\n}"
+          }
+        },
+        {
+          "id": 2,
+          "title": "Le piege de la variable de boucle",
+          "content": "Un piege classique : passer `&i` a chaque thread dans la boucle de creation. Comme `i` change a chaque iteration, tous les threads risquent de lire la meme valeur (ou une valeur incorrecte).\n\n**Solution** : utiliser un tableau d'arguments ou allouer la memoire pour chaque argument.",
+          "codeExample": "// MAUVAIS : tous les threads partagent &i\ni = 0;\nwhile (i < NB_THREADS)\n{\n\tpthread_create(&threads[i], NULL, routine, &i); // BUG !\n\ti++;\n}\n\n// BON : chaque thread a son propre argument\nint\tids[NB_THREADS];\ni = 0;\nwhile (i < NB_THREADS)\n{\n\tids[i] = i;\n\tpthread_create(&threads[i], NULL, routine, &ids[i]);\n\ti++;\n}",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Corrige le code pour que chaque thread recoit son propre numero d'identification.",
+            "starterCode": "int\tmain(void)\n{\n\tpthread_t\ttids[4];\n\tint\t\t\ti;\n\n\ti = 0;\n\twhile (i < 4)\n\t{\n\t\tpthread_create(&tids[i], NULL, routine, &i);\n\t\ti++;\n\t}\n\t/* ... join ... */\n}",
+            "solution": "int\tmain(void)\n{\n\tpthread_t\ttids[4];\n\tint\t\t\tids[4];\n\tint\t\t\ti;\n\n\ti = 0;\n\twhile (i < 4)\n\t{\n\t\tids[i] = i;\n\t\tpthread_create(&tids[i], NULL, routine, &ids[i]);\n\t\ti++;\n\t}\n\ti = 0;\n\twhile (i < 4)\n\t\tpthread_join(tids[i++], NULL);\n}"
+          }
+        },
+        {
+          "id": 3,
+          "title": "Utiliser des structures pour les arguments",
+          "content": "Quand chaque thread a besoin de plusieurs informations, on utilise un tableau de structures. Chaque thread recoit un pointeur vers sa propre structure dans le tableau.",
+          "codeExample": "typedef struct s_thread_data\n{\n\tint\t\tid;\n\tint\t\tstart;\n\tint\t\tend;\n}\t\t\tt_thread_data;\n\nvoid\t*routine(void *arg)\n{\n\tt_thread_data\t*data;\n\n\tdata = (t_thread_data *)arg;\n\tprintf(\"Thread %d traite [%d-%d]\\n\",\n\t\tdata->id, data->start, data->end);\n\treturn (NULL);\n}\n\nint\tmain(void)\n{\n\tpthread_t\t\tthreads[4];\n\tt_thread_data\tdata[4];\n\tint\t\t\t\ti;\n\n\ti = 0;\n\twhile (i < 4)\n\t{\n\t\tdata[i].id = i;\n\t\tdata[i].start = i * 25;\n\t\tdata[i].end = (i + 1) * 25;\n\t\tpthread_create(&threads[i], NULL, routine, &data[i]);\n\t\ti++;\n\t}\n\ti = 0;\n\twhile (i < 4)\n\t\tpthread_join(threads[i++], NULL);\n\treturn (0);\n}",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Cree une structure avec un id et un message. Lance 3 threads avec des donnees differentes.",
+            "starterCode": "typedef struct s_info\n{\n\tint\t\tid;\n\tchar\t*msg;\n}\t\t\tt_info;\n\n/* TON CODE ICI */",
+            "solution": "typedef struct s_info\n{\n\tint\t\tid;\n\tchar\t*msg;\n}\t\t\tt_info;\n\nvoid\t*routine(void *arg)\n{\n\tt_info *info = (t_info *)arg;\n\tprintf(\"Thread %d: %s\\n\", info->id, info->msg);\n\treturn (NULL);\n}\n\nint\tmain(void)\n{\n\tpthread_t\ttids[3];\n\tt_info\t\tinfos[3];\n\tchar\t\t*msgs[] = {\"Bonjour\", \"Salut\", \"Hey\"};\n\tint\t\t\ti;\n\n\ti = -1;\n\twhile (++i < 3)\n\t{\n\t\tinfos[i].id = i;\n\t\tinfos[i].msg = msgs[i];\n\t\tpthread_create(&tids[i], NULL, routine, &infos[i]);\n\t}\n\ti = -1;\n\twhile (++i < 3)\n\t\tpthread_join(tids[i], NULL);\n\treturn (0);\n}"
+          }
+        },
+        {
+          "id": 4,
+          "title": "Recuperer les resultats de tous les threads",
+          "content": "On peut recuperer la valeur de retour de chaque thread dans un tableau de pointeurs. Chaque thread alloue son resultat, et le main les recupere via pthread_join puis les libere.\n\nC'est le pattern classique pour le calcul parallele : diviser le travail, collecter les resultats.",
+          "codeExample": "#include <pthread.h>\n#include <stdio.h>\n#include <stdlib.h>\n\n#define NB 4\n\nvoid\t*compute(void *arg)\n{\n\tint\t*id;\n\tint\t*res;\n\n\tid = (int *)arg;\n\tres = malloc(sizeof(int));\n\t*res = (*id) * (*id);\n\treturn ((void *)res);\n}\n\nint\tmain(void)\n{\n\tpthread_t\ttids[NB];\n\tint\t\t\tids[NB];\n\tint\t\t\t*results[NB];\n\tint\t\t\ti;\n\n\ti = -1;\n\twhile (++i < NB)\n\t{\n\t\tids[i] = i + 1;\n\t\tpthread_create(&tids[i], NULL, compute, &ids[i]);\n\t}\n\ti = -1;\n\twhile (++i < NB)\n\t{\n\t\tpthread_join(tids[i], (void **)&results[i]);\n\t\tprintf(\"Thread %d: %d\\n\", i + 1, *results[i]);\n\t\tfree(results[i]);\n\t}\n\treturn (0);\n}",
+          "language": "c"
+        }
+      ]
+    },
+    "theory": [
+      {
+        "title": "Gestion de tableaux de threads",
+        "content": "Quand on travaille avec plusieurs threads, on stocke leurs identifiants dans un tableau de pthread_t. La creation se fait dans une premiere boucle et le join dans une seconde. Il est important de separer ces deux etapes pour que tous les threads s'executent en parallele.",
+        "codeExamples": [
+          {
+            "title": "Pattern creation/join separes",
+            "code": "pthread_t\tthreads[N];\nint\t\t\ti;\n\ni = -1;\nwhile (++i < N)\n\tpthread_create(&threads[i], NULL, routine, NULL);\ni = -1;\nwhile (++i < N)\n\tpthread_join(threads[i], NULL);",
+            "explanation": "Separer creation et join permet l'execution parallele de tous les threads."
+          }
+        ],
+        "keyPoints": [
+          "Separer la boucle de creation et la boucle de join",
+          "Chaque pthread_t identifie un thread de facon unique",
+          "Le nombre de threads est souvent defini par une macro ou un parametre",
+          "Trop de threads peut degrader les performances (context switching)"
+        ],
+        "commonMistakes": [
+          "Joindre dans la meme boucle que la creation (execution sequentielle)",
+          "Creer un nombre excessif de threads (superieur au nombre de coeurs)",
+          "Ne pas verifier les erreurs de creation pour chaque thread"
+        ]
+      },
+      {
+        "title": "Passage d'arguments unique par thread",
+        "content": "Chaque thread doit recevoir ses propres arguments. Le piege classique est de passer l'adresse d'une variable de boucle qui change avant que le thread ne lise sa valeur. La solution est d'utiliser un tableau d'arguments ou d'allouer la memoire individuellement.",
+        "codeExamples": [
+          {
+            "title": "Tableau d'arguments",
+            "code": "int\targs[NB];\nint\ti;\n\ni = -1;\nwhile (++i < NB)\n{\n\targs[i] = i;\n\tpthread_create(&tids[i], NULL, routine, &args[i]);\n}",
+            "explanation": "Chaque thread recoit un pointeur vers un element different du tableau."
+          }
+        ],
+        "keyPoints": [
+          "Utiliser un tableau d'arguments pour donner une valeur unique a chaque thread",
+          "L'adresse de chaque element du tableau reste stable",
+          "On peut aussi utiliser malloc pour chaque argument",
+          "Les structures permettent de passer plusieurs valeurs par thread"
+        ],
+        "commonMistakes": [
+          "Passer &i directement dans la boucle de creation",
+          "Modifier le tableau d'arguments apres creation des threads",
+          "Oublier que le thread peut lire l'argument a n'importe quel moment"
+        ]
+      },
+      {
+        "title": "Collecte des resultats",
+        "content": "Pour recuperer les resultats de plusieurs threads, on utilise un tableau de pointeurs void*. Chaque thread alloue son resultat et le retourne. Apres le join, le main recupere et traite chaque resultat individuellement.",
+        "codeExamples": [
+          {
+            "title": "Collecte dans un tableau",
+            "code": "void\t*results[NB];\nint\t\ti;\n\ni = -1;\nwhile (++i < NB)\n{\n\tpthread_join(tids[i], &results[i]);\n\t// Traiter results[i]\n\tfree(results[i]);\n}",
+            "explanation": "Chaque resultat est stocke dans un element du tableau puis libere apres usage."
+          }
+        ],
+        "keyPoints": [
+          "Utiliser un tableau de void* pour stocker les resultats",
+          "Chaque thread alloue son propre resultat sur le heap",
+          "Le main est responsable de free chaque resultat apres usage",
+          "On peut agreger les resultats apres avoir tout collecte"
+        ],
+        "commonMistakes": [
+          "Oublier de free les resultats alloues par les threads",
+          "Acceder aux resultats avant que tous les threads soient join",
+          "Retourner une variable locale du thread au lieu d'un malloc"
+        ]
+      },
+      {
+        "title": "Performance et nombre de threads",
+        "content": "Le nombre optimal de threads depend du nombre de coeurs CPU et de la nature du travail (CPU-bound vs I/O-bound). Creer plus de threads que de coeurs pour du calcul pur n'ameliore pas les performances et peut meme les degrader a cause du context switching.",
+        "codeExamples": [
+          {
+            "title": "Detecter le nombre de coeurs",
+            "code": "#include <unistd.h>\n\nint\tmain(void)\n{\n\tlong\tnb_cores;\n\n\tnb_cores = sysconf(_SC_NPROCESSORS_ONLN);\n\tprintf(\"Nombre de coeurs: %ld\\n\", nb_cores);\n\treturn (0);\n}",
+            "explanation": "sysconf permet de connaitre le nombre de coeurs disponibles."
+          }
+        ],
+        "keyPoints": [
+          "Pour du CPU-bound, nb_threads ~= nb_coeurs est optimal",
+          "Pour du I/O-bound, on peut avoir plus de threads que de coeurs",
+          "sysconf(_SC_NPROCESSORS_ONLN) donne le nombre de coeurs",
+          "Le context switching a un cout non negligeable"
+        ],
+        "commonMistakes": [
+          "Creer des centaines de threads pour du calcul pur",
+          "Ignorer la nature du travail (CPU vs I/O) pour choisir le nombre de threads",
+          "Ne pas adapter le nombre de threads a la machine cible"
+        ]
+      }
+    ],
+    "prepExercises": [
+      {
+        "id": 1,
+        "title": "Deux threads simples",
+        "instruction": "Cree 2 threads qui affichent chacun 'Hello' puis join-les.",
+        "starterCode": "int\tmain(void)\n{\n\tpthread_t\tt1, t2;\n\t/* TON CODE ICI */\n\treturn (0);\n}",
+        "solution": "int\tmain(void)\n{\n\tpthread_t\tt1, t2;\n\n\tpthread_create(&t1, NULL, routine, NULL);\n\tpthread_create(&t2, NULL, routine, NULL);\n\tpthread_join(t1, NULL);\n\tpthread_join(t2, NULL);\n\treturn (0);\n}",
+        "hint": "Cree les deux threads d'abord, puis join les deux ensuite.",
+        "difficulty": 1
+      },
+      {
+        "id": 2,
+        "title": "Tableau de 5 threads",
+        "instruction": "Cree un tableau de 5 threads, lance-les dans une boucle et join-les dans une autre.",
+        "starterCode": "#define NB 5\n\nint\tmain(void)\n{\n\tpthread_t\tthreads[NB];\n\t/* TON CODE ICI */\n}",
+        "solution": "#define NB 5\n\nint\tmain(void)\n{\n\tpthread_t\tthreads[NB];\n\tint\t\t\ti;\n\n\ti = -1;\n\twhile (++i < NB)\n\t\tpthread_create(&threads[i], NULL, routine, NULL);\n\ti = -1;\n\twhile (++i < NB)\n\t\tpthread_join(threads[i], NULL);\n\treturn (0);\n}",
+        "hint": "Deux boucles while separees : une pour create, une pour join.",
+        "difficulty": 2
+      },
+      {
+        "id": 3,
+        "title": "Arguments uniques",
+        "instruction": "Donne a chaque thread un numero unique (0, 1, 2) sans le bug de la variable de boucle.",
+        "starterCode": "void\t*routine(void *arg)\n{\n\tprintf(\"Thread %d\\n\", *(int *)arg);\n\treturn (NULL);\n}\n\nint\tmain(void)\n{\n\t/* TON CODE ICI */\n}",
+        "solution": "void\t*routine(void *arg)\n{\n\tprintf(\"Thread %d\\n\", *(int *)arg);\n\treturn (NULL);\n}\n\nint\tmain(void)\n{\n\tpthread_t\ttids[3];\n\tint\t\t\tids[3];\n\tint\t\t\ti;\n\n\ti = -1;\n\twhile (++i < 3)\n\t{\n\t\tids[i] = i;\n\t\tpthread_create(&tids[i], NULL, routine, &ids[i]);\n\t}\n\ti = -1;\n\twhile (++i < 3)\n\t\tpthread_join(tids[i], NULL);\n\treturn (0);\n}",
+        "hint": "Utilise un tableau int ids[3] et passe &ids[i] a chaque thread.",
+        "difficulty": 2
+      },
+      {
+        "id": 4,
+        "title": "Structures par thread",
+        "instruction": "Cree un tableau de structures avec id et valeur, passe chaque structure a un thread.",
+        "starterCode": "typedef struct s_data\n{\n\tint\tid;\n\tint\tvalue;\n}\tt_data;\n\n/* TON CODE ICI */",
+        "solution": "typedef struct s_data\n{\n\tint\tid;\n\tint\tvalue;\n}\tt_data;\n\nvoid\t*routine(void *arg)\n{\n\tt_data *d = (t_data *)arg;\n\tprintf(\"Thread %d: %d\\n\", d->id, d->value);\n\treturn (NULL);\n}\n\nint\tmain(void)\n{\n\tpthread_t\ttids[3];\n\tt_data\t\tdata[3];\n\tint\t\t\ti;\n\n\ti = -1;\n\twhile (++i < 3)\n\t{\n\t\tdata[i].id = i;\n\t\tdata[i].value = (i + 1) * 10;\n\t\tpthread_create(&tids[i], NULL, routine, &data[i]);\n\t}\n\ti = -1;\n\twhile (++i < 3)\n\t\tpthread_join(tids[i], NULL);\n\treturn (0);\n}",
+        "hint": "Passe &data[i] comme argument a chaque thread.",
+        "difficulty": 3
+      },
+      {
+        "id": 5,
+        "title": "Collecte de resultats",
+        "instruction": "Lance 3 threads qui calculent chacun le carre de leur id. Recupere et affiche les resultats.",
+        "starterCode": "void\t*compute(void *arg)\n{\n\tint\t*res = malloc(sizeof(int));\n\t*res = (*(int *)arg) * (*(int *)arg);\n\treturn ((void *)res);\n}\n\n/* TON CODE ICI */",
+        "solution": "void\t*compute(void *arg)\n{\n\tint\t*res = malloc(sizeof(int));\n\t*res = (*(int *)arg) * (*(int *)arg);\n\treturn ((void *)res);\n}\n\nint\tmain(void)\n{\n\tpthread_t\ttids[3];\n\tint\t\t\tids[3];\n\tint\t\t\t*results[3];\n\tint\t\t\ti;\n\n\ti = -1;\n\twhile (++i < 3)\n\t{\n\t\tids[i] = i + 1;\n\t\tpthread_create(&tids[i], NULL, compute, &ids[i]);\n\t}\n\ti = -1;\n\twhile (++i < 3)\n\t{\n\t\tpthread_join(tids[i], (void **)&results[i]);\n\t\tprintf(\"%d^2 = %d\\n\", i + 1, *results[i]);\n\t\tfree(results[i]);\n\t}\n\treturn (0);\n}",
+        "hint": "Utilise pthread_join(tids[i], (void **)&results[i]) pour recuperer chaque resultat.",
+        "difficulty": 3
+      }
+    ]
+  },
+  "starterCode": "#include <pthread.h>\n#include <stdio.h>\n#include <stdlib.h>\n\n#define NB_THREADS 4\n\ntypedef struct s_thread_data\n{\n\tint\tid;\n\tint\tstart;\n\tint\tend;\n}\tt_thread_data;\n\nvoid\t*ft_sum_range(void *arg)\n{\n\t// TODO: Caster arg en t_thread_data*\n\t// TODO: Calculer la somme de start a end-1\n\t// TODO: Allouer et retourner le resultat\n\treturn (NULL);\n}\n\nint\tmain(void)\n{\n\tpthread_t\t\tthreads[NB_THREADS];\n\tt_thread_data\tdata[NB_THREADS];\n\tint\t\t\t\t*results[NB_THREADS];\n\tint\t\t\t\ttotal;\n\tint\t\t\t\ti;\n\n\t// TODO: Initialiser data pour chaque thread (diviser 0-100 en 4 parts)\n\t// TODO: Creer les threads\n\t// TODO: Joindre les threads et collecter les resultats\n\t// TODO: Calculer et afficher le total\n\treturn (0);\n}",
+  "solution": "#include <pthread.h>\n#include <stdio.h>\n#include <stdlib.h>\n\n#define NB_THREADS 4\n\ntypedef struct s_thread_data\n{\n\tint\tid;\n\tint\tstart;\n\tint\tend;\n}\tt_thread_data;\n\nvoid\t*ft_sum_range(void *arg)\n{\n\tt_thread_data\t*data;\n\tint\t\t\t\t*result;\n\tint\t\t\t\ti;\n\n\tdata = (t_thread_data *)arg;\n\tresult = malloc(sizeof(int));\n\t*result = 0;\n\ti = data->start;\n\twhile (i < data->end)\n\t{\n\t\t*result += i;\n\t\ti++;\n\t}\n\treturn ((void *)result);\n}\n\nint\tmain(void)\n{\n\tpthread_t\t\tthreads[NB_THREADS];\n\tt_thread_data\tdata[NB_THREADS];\n\tint\t\t\t\t*results[NB_THREADS];\n\tint\t\t\t\ttotal;\n\tint\t\t\t\ti;\n\n\ti = -1;\n\twhile (++i < NB_THREADS)\n\t{\n\t\tdata[i].id = i;\n\t\tdata[i].start = i * 25;\n\t\tdata[i].end = (i + 1) * 25;\n\t\tpthread_create(&threads[i], NULL, ft_sum_range, &data[i]);\n\t}\n\ttotal = 0;\n\ti = -1;\n\twhile (++i < NB_THREADS)\n\t{\n\t\tpthread_join(threads[i], (void **)&results[i]);\n\t\ttotal += *results[i];\n\t\tfree(results[i]);\n\t}\n\tprintf(\"Total: %d\\n\", total);\n\treturn (0);\n}",
+  "hints": [
+    "Divise l'intervalle 0-100 en 4 parts egales : [0-25], [25-50], [50-75], [75-100]",
+    "Chaque thread recoit &data[i] avec son propre start et end",
+    "Apres les joins, additionne tous les resultats pour obtenir le total"
+  ],
+  "testCases": [
+    {
+      "id": 1,
+      "description": "La somme de 0 a 99 repartie sur 4 threads donne 4950",
+      "stdin": "",
+      "expectedStdout": "Total: 4950\n",
+      "expectedExitCode": 0,
+      "visible": true
+    },
+    {
+      "id": 2,
+      "description": "Verification que tous les threads sont bien crees et joins",
+      "stdin": "",
+      "expectedStdout": "Total: 4950\n",
+      "expectedExitCode": 0,
+      "visible": false
+    },
+    {
+      "id": 3,
+      "description": "Pas de fuite memoire (tous les resultats sont liberes)",
+      "stdin": "",
+      "expectedStdout": "Total: 4950\n",
+      "expectedExitCode": 0,
+      "visible": false
+    }
+  ],
+  "constraints": {
+    "allowedFunctions": ["pthread_create", "pthread_join", "malloc", "free", "printf"],
+    "forbiddenFunctions": ["fork", "system"],
+    "maxExecutionTime": 5000,
+    "maxMemory": 128
+  },
+  "relatedExercises": ["c-day71-ex00-ft-thread-create", "c-day71-ex01-ft-thread-join"],
+  "resources": [
+    {
+      "title": "Threads multiples en C",
+      "url": "https://man7.org/linux/man-pages/man7/pthreads.7.html",
+      "type": "documentation"
+    },
+    {
+      "title": "Calcul parallele avec pthreads",
+      "url": "https://hpc-tutorials.llnl.gov/posix/",
+      "type": "article"
+    }
+  ]
+}

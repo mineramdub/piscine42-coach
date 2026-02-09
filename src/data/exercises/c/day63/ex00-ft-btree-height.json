@@ -1,0 +1,257 @@
+{
+  "id": "c-day63-ex00-ft-btree-height",
+  "category": "c",
+  "day": 63,
+  "order": 0,
+  "title": "Calculer la hauteur d'un arbre binaire",
+  "description": "Ecris la fonction ft_btree_height qui calcule et retourne la hauteur d'un arbre binaire. La hauteur est definie comme le nombre d'aretes sur le plus long chemin de la racine a une feuille. Un arbre vide a une hauteur de -1, un arbre avec un seul noeud a une hauteur de 0. L'algorithme est recursif : la hauteur est 1 + max(hauteur_gauche, hauteur_droite).",
+  "difficulty": 4,
+  "points": 40,
+  "estimatedTime": 30,
+  "learningObjectives": [
+    "Calculer recursivement la hauteur d'un arbre binaire",
+    "Comprendre la notion de hauteur et de profondeur dans un arbre",
+    "Utiliser la fonction max pour combiner les resultats des sous-arbres",
+    "Gerer les cas de base (arbre vide, feuille)",
+    "Analyser la complexite de l'algorithme de calcul de hauteur"
+  ],
+  "learningContent": {
+    "lesson": {
+      "introduction": "La hauteur d'un arbre binaire est une mesure fondamentale qui determine l'efficacite des operations sur l'arbre. Un arbre equilibre a une hauteur de log2(n), tandis qu'un arbre degenere a une hauteur de n-1. Calculer la hauteur est une operation recursive classique qui illustre comment combiner les resultats de deux sous-arbres.",
+      "steps": [
+        {
+          "id": 1,
+          "title": "Definition de la hauteur",
+          "content": "La **hauteur** d'un arbre est le nombre d'aretes (liens) sur le plus long chemin de la racine a une feuille.\n- Arbre vide (NULL) : hauteur = -1 (convention)\n- Un seul noeud : hauteur = 0\n- Sinon : 1 + max(hauteur gauche, hauteur droite)\n\nAttention : certaines definitions comptent les noeuds au lieu des aretes (hauteur + 1).",
+          "codeExample": "//        5          hauteur = 2\n//       / \\\n//      3   8        hauteur = 1 (sous-arbre gauche)\n//     / \\\n//    1   4          hauteur = 0 (feuilles)\n\n// Hauteur de 5 : 1 + max(hauteur(3), hauteur(8))\n//              = 1 + max(1, 0)\n//              = 1 + 1 = 2\n\n// Hauteur de 3 : 1 + max(hauteur(1), hauteur(4))\n//              = 1 + max(0, 0) = 1",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Quelle est la hauteur de l'arbre 10(5(2(1,NULL),7),15) ?",
+            "starterCode": "//       10\n//      /  \\\n//     5   15\n//    / \\\n//   2   7\n//  /\n// 1\n// Hauteur = ???",
+            "solution": "// Hauteur de 1 = 0 (feuille)\n// Hauteur de 2 = 1 + max(0, -1) = 1\n// Hauteur de 7 = 0, Hauteur de 15 = 0\n// Hauteur de 5 = 1 + max(1, 0) = 2\n// Hauteur de 10 = 1 + max(2, 0) = 3"
+          }
+        },
+        {
+          "id": 2,
+          "title": "Algorithme recursif",
+          "content": "L'algorithme est elegamment recursif :\n1. **Cas de base** : si le noeud est NULL, retourner -1\n2. **Cas recursif** : calculer la hauteur des deux sous-arbres et retourner 1 + le maximum des deux\n\nChaque noeud est visite une seule fois, donc la complexite est O(n).",
+          "codeExample": "int\tft_btree_height(t_btree *root)\n{\n\tint\tleft_h;\n\tint\tright_h;\n\n\tif (!root)\n\t\treturn (-1);\n\tleft_h = ft_btree_height(root->left);\n\tright_h = ft_btree_height(root->right);\n\tif (left_h > right_h)\n\t\treturn (1 + left_h);\n\treturn (1 + right_h);\n}",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Pourquoi retourne-t-on -1 pour un arbre vide et pas 0 ?",
+            "starterCode": "// Si NULL retourne 0 :\n// Feuille = 1 + max(0, 0) = 1 (FAUX, devrait etre 0)\n\n// Si NULL retourne -1 :\n// Feuille = 1 + max(-1, -1) = ???",
+            "solution": "// Si NULL retourne -1 :\n// Feuille = 1 + max(-1, -1) = 1 + (-1) = 0 (CORRECT)\n// La convention -1 pour NULL permet que les feuilles\n// aient une hauteur de 0"
+          }
+        },
+        {
+          "id": 3,
+          "title": "Fonction max maison",
+          "content": "On a besoin d'une fonction max pour comparer les hauteurs des deux sous-arbres. En C, il n'y a pas de fonction max integree (contrairement a d'autres langages). On peut l'ecrire en une ligne ou utiliser un operateur ternaire.",
+          "codeExample": "// Version fonction\nint\tft_max(int a, int b)\n{\n\tif (a > b)\n\t\treturn (a);\n\treturn (b);\n}\n\n// Version inline dans le code\nint height = 1 + ((left_h > right_h) ? left_h : right_h);\n\n// Utilisation dans ft_btree_height\nreturn (1 + ft_max(left_h, right_h));",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Ecris ft_btree_height en utilisant l'operateur ternaire pour max.",
+            "starterCode": "int\tft_btree_height(t_btree *root)\n{\n\tint\tl;\n\tint\tr;\n\n\tif (!root)\n\t\treturn (-1);\n\tl = ft_btree_height(root->left);\n\tr = ft_btree_height(root->right);\n\treturn (1 + ???);\n}",
+            "solution": "int\tft_btree_height(t_btree *root)\n{\n\tint\tl;\n\tint\tr;\n\n\tif (!root)\n\t\treturn (-1);\n\tl = ft_btree_height(root->left);\n\tr = ft_btree_height(root->right);\n\treturn (1 + ((l > r) ? l : r));\n}"
+          }
+        },
+        {
+          "id": 4,
+          "title": "Hauteur et equilibrage",
+          "content": "La hauteur est directement liee a l'efficacite d'un BST. Un arbre equilibre (ou la difference de hauteur entre les sous-arbres est au plus 1) a une hauteur de O(log n). Un arbre degenere a une hauteur de O(n).\n\nLe calcul de hauteur est utilise dans les arbres AVL pour verifier l'equilibrage apres chaque insertion.",
+          "codeExample": "// Arbre equilibre (n=7, h=2) :\n//        4\n//       / \\\n//      2   6\n//     / \\ / \\\n//    1  3 5  7\n// h = 2, log2(7) ~ 2.8 -> OK\n\n// Arbre degenere (n=7, h=6) :\n// 1-2-3-4-5-6-7 (tout a droite)\n// h = 6 = n-1 -> MAUVAIS\n\n// Verification d'equilibrage (AVL) :\nint\tis_balanced(t_btree *root)\n{\n\tif (!root)\n\t\treturn (1);\n\tint diff = ft_btree_height(root->left)\n\t\t- ft_btree_height(root->right);\n\tif (diff < -1 || diff > 1)\n\t\treturn (0);\n\treturn (is_balanced(root->left)\n\t\t&& is_balanced(root->right));\n}",
+          "language": "c"
+        }
+      ]
+    },
+    "theory": [
+      {
+        "title": "Hauteur vs profondeur",
+        "content": "La hauteur et la profondeur sont deux mesures differentes. La profondeur d'un noeud est sa distance a la racine (nombre d'aretes depuis la racine). La hauteur d'un noeud est sa distance a la feuille la plus eloignee. La hauteur de l'arbre = hauteur de la racine = profondeur maximale.",
+        "codeExamples": [
+          {
+            "title": "Hauteur et profondeur de chaque noeud",
+            "code": "//        5         profondeur=0, hauteur=2\n//       / \\\n//      3   8       prof=1, h=1    prof=1, h=0\n//     / \\\n//    1   4         prof=2, h=0    prof=2, h=0\n\n// Profondeur : distance depuis la racine (en descendant)\n// Hauteur : distance depuis la feuille la plus loin (en montant)\n// Hauteur de l'arbre = hauteur de la racine = profondeur max",
+            "explanation": "La profondeur croit en descendant, la hauteur croit en montant."
+          }
+        ],
+        "keyPoints": [
+          "Profondeur d'un noeud = nombre d'aretes depuis la racine",
+          "Hauteur d'un noeud = nombre d'aretes vers la feuille la plus loin",
+          "Hauteur de l'arbre = hauteur de la racine",
+          "Profondeur de la racine = 0, hauteur des feuilles = 0"
+        ],
+        "commonMistakes": [
+          "Confondre hauteur et profondeur (directions opposees)",
+          "Compter les noeuds au lieu des aretes (off-by-one)",
+          "Oublier que la hauteur d'un arbre vide est -1 (pas 0)"
+        ]
+      },
+      {
+        "title": "Combiner les resultats recursifs",
+        "content": "Le calcul de hauteur illustre un pattern recursif important : combiner les resultats de deux appels recursifs. On calcule independamment les hauteurs gauche et droite, puis on les combine avec max et +1.",
+        "codeExamples": [
+          {
+            "title": "Pattern de combinaison recursive",
+            "code": "// Pattern general :\nint\tcompute(t_btree *node)\n{\n\tint\tleft_val;\n\tint\tright_val;\n\n\tif (!node)                    // cas de base\n\t\treturn (valeur_base);\n\tleft_val = compute(node->left);   // sous-arbre gauche\n\tright_val = compute(node->right); // sous-arbre droit\n\treturn (combiner(left_val, right_val)); // combinaison\n}\n\n// Hauteur : base=-1, combiner=1+max\n// Comptage : base=0, combiner=1+left+right\n// Somme : base=0, combiner=item+left+right",
+            "explanation": "Ce pattern s'applique a de nombreux problemes sur les arbres."
+          }
+        ],
+        "keyPoints": [
+          "Calculer independamment les resultats des sous-arbres gauche et droit",
+          "Combiner les deux resultats avec une operation (max, +, min, etc.)",
+          "Le cas de base definit la valeur pour les noeuds NULL",
+          "Chaque noeud est visite une seule fois : complexite O(n)"
+        ],
+        "commonMistakes": [
+          "Oublier de stocker le resultat recursif dans une variable",
+          "Appeler la fonction recursive deux fois au lieu de stocker le resultat",
+          "Utiliser le mauvais cas de base (0 au lieu de -1 pour la hauteur)"
+        ]
+      },
+      {
+        "title": "Relation entre hauteur et nombre de noeuds",
+        "content": "Pour un arbre binaire de n noeuds, la hauteur h est bornee : log2(n) <= h <= n-1. L'arbre le plus compact (complet) a une hauteur de floor(log2(n)). L'arbre le plus etendu (degenere) a une hauteur de n-1.",
+        "codeExamples": [
+          {
+            "title": "Bornes sur la hauteur",
+            "code": "// n = nombre de noeuds, h = hauteur\n\n// Arbre complet (h minimum) :\n// n = 2^(h+1) - 1 noeuds\n// h = floor(log2(n))\n// Ex : n=15 -> h=3, n=7 -> h=2\n\n// Arbre degenere (h maximum) :\n// n = h + 1 noeuds\n// h = n - 1\n// Ex : n=7 -> h=6\n\n// Pour n=1000 :\n// h_min = 9 (arbre complet)\n// h_max = 999 (arbre degenere)",
+            "explanation": "L'equilibrage de l'arbre determine l'efficacite des operations."
+          }
+        ],
+        "keyPoints": [
+          "Hauteur minimale : floor(log2(n)) pour un arbre complet",
+          "Hauteur maximale : n - 1 pour un arbre degenere (liste)",
+          "Un arbre complet de hauteur h a 2^(h+1) - 1 noeuds",
+          "Les arbres equilibres (AVL) garantissent h = O(log n)"
+        ],
+        "commonMistakes": [
+          "Croire que la hauteur est toujours log2(n) (seulement si equilibre)",
+          "Oublier le floor() dans floor(log2(n))",
+          "Confondre arbre complet (tous les niveaux remplis) et arbre plein (0 ou 2 enfants)"
+        ]
+      },
+      {
+        "title": "Applications du calcul de hauteur",
+        "content": "Le calcul de hauteur est utilise dans de nombreux algorithmes : verification d'equilibrage (AVL), calcul du diametre d'un arbre, determination de la complexite des operations BST, et optimisation de structures de donnees.",
+        "codeExamples": [
+          {
+            "title": "Verification d'equilibrage AVL",
+            "code": "// Un arbre AVL est equilibre si pour chaque noeud :\n// |hauteur(gauche) - hauteur(droite)| <= 1\n\nint\tbalance_factor(t_btree *node)\n{\n\tif (!node)\n\t\treturn (0);\n\treturn (ft_btree_height(node->left)\n\t\t- ft_btree_height(node->right));\n}\n\n// Attention : cet algo est O(n^2) !\n// Pour O(n), combiner hauteur et verification\n// dans un seul parcours recursif",
+            "explanation": "Le facteur d'equilibrage doit etre -1, 0 ou 1 pour un arbre AVL."
+          }
+        ],
+        "keyPoints": [
+          "AVL : verifier |h_gauche - h_droite| <= 1 pour chaque noeud",
+          "Diametre : plus long chemin entre deux noeuds (passe par un ancetre commun)",
+          "Complexite BST : les operations sont O(h), donc O(log n) si equilibre",
+          "Attention a ne pas recalculer la hauteur inutilement (memoisation)"
+        ],
+        "commonMistakes": [
+          "Verifier l'equilibrage seulement a la racine (il faut verifier chaque noeud)",
+          "Calculer la hauteur a chaque noeud de facon naive (O(n^2) au lieu de O(n))",
+          "Confondre facteur d'equilibrage et hauteur"
+        ]
+      }
+    ],
+    "prepExercises": [
+      {
+        "id": 1,
+        "title": "Hauteur d'un arbre simple",
+        "instruction": "Calcule la hauteur de l'arbre 5(3(1,4),8).",
+        "starterCode": "//      5\n//     / \\\n//    3   8\n//   / \\\n//  1   4\n// Hauteur = ???",
+        "solution": "// h(1) = 0, h(4) = 0\n// h(3) = 1 + max(0, 0) = 1\n// h(8) = 0\n// h(5) = 1 + max(1, 0) = 2\n// Hauteur = 2",
+        "hint": "Calcule la hauteur de chaque feuille (0), puis remonte.",
+        "difficulty": 1
+      },
+      {
+        "id": 2,
+        "title": "Cas de base",
+        "instruction": "Que retourne ft_btree_height pour NULL et pour une feuille ?",
+        "starterCode": "// ft_btree_height(NULL) = ???\n// ft_btree_height(feuille) = 1 + max(???, ???) = ???",
+        "solution": "// ft_btree_height(NULL) = -1\n// ft_btree_height(feuille) = 1 + max(-1, -1) = 1 + (-1) = 0",
+        "hint": "NULL = -1. Feuille a deux enfants NULL, donc 1 + max(-1,-1) = 0.",
+        "difficulty": 1
+      },
+      {
+        "id": 3,
+        "title": "Ecrire ft_max",
+        "instruction": "Ecris une fonction ft_max qui retourne le plus grand de deux entiers.",
+        "starterCode": "int\tft_max(int a, int b)\n{\n\t// Retourne le max\n}",
+        "solution": "int\tft_max(int a, int b)\n{\n\tif (a > b)\n\t\treturn (a);\n\treturn (b);\n}",
+        "hint": "Compare a et b, retourne le plus grand.",
+        "difficulty": 1
+      },
+      {
+        "id": 4,
+        "title": "Ecrire ft_btree_height",
+        "instruction": "Complete la fonction ft_btree_height.",
+        "starterCode": "int\tft_btree_height(t_btree *root)\n{\n\tint\tleft_h;\n\tint\tright_h;\n\n\tif (!root)\n\t\treturn (???);\n\tleft_h = ft_btree_height(root->left);\n\tright_h = ft_btree_height(root->right);\n\treturn (???);\n}",
+        "solution": "int\tft_btree_height(t_btree *root)\n{\n\tint\tleft_h;\n\tint\tright_h;\n\n\tif (!root)\n\t\treturn (-1);\n\tleft_h = ft_btree_height(root->left);\n\tright_h = ft_btree_height(root->right);\n\tif (left_h > right_h)\n\t\treturn (1 + left_h);\n\treturn (1 + right_h);\n}",
+        "hint": "Cas de base : -1. Recursion : 1 + max des deux hauteurs.",
+        "difficulty": 2
+      },
+      {
+        "id": 5,
+        "title": "Hauteur d'un arbre degenere",
+        "instruction": "Quelle est la hauteur d'un arbre degenere de 5 noeuds ?",
+        "starterCode": "// 1 -> 2 -> 3 -> 4 -> 5 (tout a droite)\n// Hauteur = ???",
+        "solution": "// 1(NULL,2(NULL,3(NULL,4(NULL,5))))\n// h(5) = 0, h(4) = 1, h(3) = 2, h(2) = 3, h(1) = 4\n// Hauteur = 4 = n - 1",
+        "hint": "Chaque noeud n'a qu'un enfant, la hauteur est n - 1.",
+        "difficulty": 2
+      }
+    ]
+  },
+  "starterCode": "#include <stdlib.h>\n\ntypedef struct s_btree\n{\n\tvoid\t\t\t*item;\n\tstruct s_btree\t*left;\n\tstruct s_btree\t*right;\n}\t\t\t\t\tt_btree;\n\nint\tft_btree_height(t_btree *root)\n{\n\t// Retourne la hauteur de l'arbre\n\t// Arbre vide = -1, feuille = 0\n\t(void)root;\n\treturn (0);\n}",
+  "solution": "#include <stdlib.h>\n\ntypedef struct s_btree\n{\n\tvoid\t\t\t*item;\n\tstruct s_btree\t*left;\n\tstruct s_btree\t*right;\n}\t\t\t\t\tt_btree;\n\nint\tft_btree_height(t_btree *root)\n{\n\tint\tleft_h;\n\tint\tright_h;\n\n\tif (!root)\n\t\treturn (-1);\n\tleft_h = ft_btree_height(root->left);\n\tright_h = ft_btree_height(root->right);\n\tif (left_h > right_h)\n\t\treturn (1 + left_h);\n\treturn (1 + right_h);\n}",
+  "hints": [
+    "Le cas de base est root == NULL : retourne -1 (convention pour que les feuilles aient hauteur 0).",
+    "Calcule la hauteur des deux sous-arbres et retourne 1 + max des deux.",
+    "Utilise un if ou l'operateur ternaire pour calculer le max de left_h et right_h."
+  ],
+  "testCases": [
+    {
+      "id": 1,
+      "description": "Hauteur d'un arbre equilibre",
+      "stdin": "",
+      "expectedStdout": "2\n",
+      "expectedExitCode": 0,
+      "visible": true
+    },
+    {
+      "id": 2,
+      "description": "Hauteur d'un arbre vide",
+      "stdin": "",
+      "expectedStdout": "-1\n",
+      "expectedExitCode": 0,
+      "visible": false
+    },
+    {
+      "id": 3,
+      "description": "Hauteur d'un arbre degenere",
+      "stdin": "",
+      "expectedStdout": "4\n",
+      "expectedExitCode": 0,
+      "visible": false
+    }
+  ],
+  "constraints": {
+    "allowedFunctions": ["malloc", "free"],
+    "forbiddenFunctions": ["printf"],
+    "maxExecutionTime": 5000,
+    "maxMemory": 128
+  },
+  "relatedExercises": ["c-day63-ex01-ft-btree-count", "c-day63-ex02-ft-btree-free"],
+  "resources": [
+    {
+      "title": "Hauteur d'un arbre binaire",
+      "url": "https://www.geeksforgeeks.org/write-a-c-program-to-find-the-maximum-depth-or-height-of-a-tree/",
+      "type": "documentation"
+    },
+    {
+      "title": "Arbres equilibres (AVL)",
+      "url": "https://en.wikipedia.org/wiki/AVL_tree",
+      "type": "article"
+    }
+  ]
+}

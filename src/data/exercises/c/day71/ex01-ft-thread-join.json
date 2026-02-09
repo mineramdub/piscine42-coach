@@ -1,0 +1,257 @@
+{
+  "id": "c-day71-ex01-ft-thread-join",
+  "category": "c",
+  "day": 71,
+  "order": 1,
+  "title": "Attendre la fin d'un thread avec pthread_join",
+  "description": "Apprends a utiliser pthread_join pour attendre la terminaison d'un thread et recuperer sa valeur de retour. Comprends la difference entre join et detach.",
+  "difficulty": 4,
+  "points": 40,
+  "estimatedTime": 35,
+  "learningObjectives": [
+    "Comprendre le fonctionnement de pthread_join",
+    "Recuperer la valeur de retour d'un thread",
+    "Differencier pthread_join et pthread_detach",
+    "Gerer la synchronisation basique entre threads",
+    "Eviter les fuites de ressources avec les threads"
+  ],
+  "learningContent": {
+    "lesson": {
+      "introduction": "Quand on cree un thread, il s'execute de facon independante. Mais que se passe-t-il si le thread principal (main) se termine avant le thread cree ? Le programme s'arrete et le thread est tue brutalement. C'est pourquoi pthread_join est essentiel : il permet au thread appelant d'attendre la fin d'un autre thread et de recuperer sa valeur de retour. Sans join ou detach, on a aussi une fuite de ressources car le systeme garde les informations du thread en memoire.",
+      "steps": [
+        {
+          "id": 1,
+          "title": "Pourquoi pthread_join ?",
+          "content": "Sans `pthread_join`, le main peut se terminer avant les threads. Le programme s'arrete alors brutalement.\n\n`pthread_join` bloque le thread appelant jusqu'a ce que le thread cible ait termine. C'est l'equivalent de `waitpid` pour les processus.",
+          "codeExample": "#include <pthread.h>\n#include <stdio.h>\n#include <unistd.h>\n\nvoid\t*routine(void *arg)\n{\n\t(void)arg;\n\tsleep(1);\n\tprintf(\"Thread termine\\n\");\n\treturn (NULL);\n}\n\nint\tmain(void)\n{\n\tpthread_t\ttid;\n\n\tpthread_create(&tid, NULL, routine, NULL);\n\t// Sans join, main finit avant le thread\n\tpthread_join(tid, NULL);\n\tprintf(\"Main termine\\n\");\n\treturn (0);\n}",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Cree un thread qui dort 1 seconde puis affiche un message. Utilise pthread_join pour attendre sa fin.",
+            "starterCode": "#include <pthread.h>\n#include <stdio.h>\n#include <unistd.h>\n\nvoid\t*routine(void *arg)\n{\n\t(void)arg;\n\tsleep(1);\n\tprintf(\"Fin du thread\\n\");\n\treturn (NULL);\n}\n\nint\tmain(void)\n{\n\tpthread_t\ttid;\n\t/* TON CODE ICI */\n\treturn (0);\n}",
+            "solution": "#include <pthread.h>\n#include <stdio.h>\n#include <unistd.h>\n\nvoid\t*routine(void *arg)\n{\n\t(void)arg;\n\tsleep(1);\n\tprintf(\"Fin du thread\\n\");\n\treturn (NULL);\n}\n\nint\tmain(void)\n{\n\tpthread_t\ttid;\n\n\tpthread_create(&tid, NULL, routine, NULL);\n\tpthread_join(tid, NULL);\n\tprintf(\"Main termine\\n\");\n\treturn (0);\n}"
+          }
+        },
+        {
+          "id": 2,
+          "title": "Recuperer la valeur de retour",
+          "content": "Le deuxieme argument de `pthread_join` est un `void **` qui permet de recuperer la valeur retournee par le thread.\n\n```c\nint pthread_join(pthread_t thread, void **retval);\n```\n\nLa routine retourne un `void *` qu'on peut caster dans le type voulu. Attention : ne jamais retourner l'adresse d'une variable locale du thread !",
+          "codeExample": "#include <pthread.h>\n#include <stdio.h>\n#include <stdlib.h>\n\nvoid\t*routine(void *arg)\n{\n\tint\t*result;\n\n\t(void)arg;\n\tresult = malloc(sizeof(int));\n\t*result = 42;\n\treturn ((void *)result);\n}\n\nint\tmain(void)\n{\n\tpthread_t\ttid;\n\tint\t\t\t*retval;\n\n\tpthread_create(&tid, NULL, routine, NULL);\n\tpthread_join(tid, (void **)&retval);\n\tprintf(\"Resultat: %d\\n\", *retval);\n\tfree(retval);\n\treturn (0);\n}",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Cree un thread qui calcule le carre d'un nombre et retourne le resultat via malloc.",
+            "starterCode": "void\t*routine(void *arg)\n{\n\tint\t*result;\n\tint\tnb;\n\n\tnb = *(int *)arg;\n\t/* TON CODE ICI */\n}",
+            "solution": "void\t*routine(void *arg)\n{\n\tint\t*result;\n\tint\tnb;\n\n\tnb = *(int *)arg;\n\tresult = malloc(sizeof(int));\n\t*result = nb * nb;\n\treturn ((void *)result);\n}"
+          }
+        },
+        {
+          "id": 3,
+          "title": "pthread_detach : alternative a join",
+          "content": "`pthread_detach` marque un thread comme detache : ses ressources seront automatiquement liberees a sa terminaison, sans besoin d'un join.\n\nUtile quand on ne veut pas attendre le thread et qu'on n'a pas besoin de sa valeur de retour.\n\n**Regle** : un thread doit etre soit join, soit detache. Jamais les deux, jamais aucun des deux.",
+          "codeExample": "#include <pthread.h>\n#include <stdio.h>\n#include <unistd.h>\n\nvoid\t*routine(void *arg)\n{\n\t(void)arg;\n\tprintf(\"Thread detache\\n\");\n\treturn (NULL);\n}\n\nint\tmain(void)\n{\n\tpthread_t\ttid;\n\n\tpthread_create(&tid, NULL, routine, NULL);\n\tpthread_detach(tid);\n\tsleep(1);\n\treturn (0);\n}",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Cree un thread detache. Utilise sleep dans le main pour laisser le temps au thread de s'executer.",
+            "starterCode": "int\tmain(void)\n{\n\tpthread_t\ttid;\n\t/* TON CODE ICI */\n\treturn (0);\n}",
+            "solution": "int\tmain(void)\n{\n\tpthread_t\ttid;\n\n\tpthread_create(&tid, NULL, routine, NULL);\n\tpthread_detach(tid);\n\tsleep(1);\n\treturn (0);\n}"
+          }
+        },
+        {
+          "id": 4,
+          "title": "Programme complet : calcul distribue",
+          "content": "Voici un exemple complet ou un thread effectue un calcul et retourne le resultat au thread principal via pthread_join. C'est le pattern classique de delegation de tache a un thread.\n\nLe thread principal cree le worker, attend son resultat puis l'affiche. La memoire allouee dans le thread est liberee dans le main.",
+          "codeExample": "#include <pthread.h>\n#include <stdio.h>\n#include <stdlib.h>\n\nvoid\t*compute(void *arg)\n{\n\tint\t*nums;\n\tint\t*sum;\n\tint\ti;\n\n\tnums = (int *)arg;\n\tsum = malloc(sizeof(int));\n\t*sum = 0;\n\ti = 0;\n\twhile (i < 5)\n\t{\n\t\t*sum += nums[i];\n\t\ti++;\n\t}\n\treturn ((void *)sum);\n}\n\nint\tmain(void)\n{\n\tpthread_t\ttid;\n\tint\t\t\tnums[] = {1, 2, 3, 4, 5};\n\tint\t\t\t*result;\n\n\tpthread_create(&tid, NULL, compute, nums);\n\tpthread_join(tid, (void **)&result);\n\tprintf(\"Somme: %d\\n\", *result);\n\tfree(result);\n\treturn (0);\n}",
+          "language": "c"
+        }
+      ]
+    },
+    "theory": [
+      {
+        "title": "Le mecanisme de pthread_join",
+        "content": "pthread_join suspend l'execution du thread appelant jusqu'a la terminaison du thread cible. C'est une operation bloquante. Si le thread cible est deja termine, pthread_join retourne immediatement. Le second parametre permet de recuperer la valeur retournee par la routine du thread.",
+        "codeExamples": [
+          {
+            "title": "Join avec recuperation de valeur",
+            "code": "void\t*retval;\n\npthread_join(tid, &retval);\nprintf(\"Thread a retourne: %s\\n\", (char *)retval);",
+            "explanation": "retval recoit le pointeur retourne par la routine du thread."
+          }
+        ],
+        "keyPoints": [
+          "pthread_join bloque jusqu'a la fin du thread cible",
+          "Le second argument NULL signifie qu'on ignore la valeur de retour",
+          "Si le thread est deja termine, join retourne immediatement",
+          "On ne peut joindre un thread qu'une seule fois"
+        ],
+        "commonMistakes": [
+          "Appeler pthread_join deux fois sur le meme thread (comportement indefini)",
+          "Joindre un thread deja detache (comportement indefini)",
+          "Oublier de joindre un thread non-detache (fuite de ressources)"
+        ]
+      },
+      {
+        "title": "Valeur de retour d'un thread",
+        "content": "La routine d'un thread retourne un void*. Cette valeur peut etre recuperee par pthread_join. On peut retourner un entier caste en void* pour des valeurs simples, ou allouer de la memoire pour des resultats complexes. Ne jamais retourner l'adresse d'une variable locale du thread car la pile du thread est detruite apres sa terminaison.",
+        "codeExamples": [
+          {
+            "title": "Retourner un entier simple",
+            "code": "void\t*routine(void *arg)\n{\n\t(void)arg;\n\treturn ((void *)42);\n}\n\n// Dans le main:\nvoid\t*retval;\npthread_join(tid, &retval);\nprintf(\"%ld\\n\", (long)retval);",
+            "explanation": "On peut caster un entier en void* pour retourner une valeur simple sans allocation."
+          }
+        ],
+        "keyPoints": [
+          "La routine retourne void* qui peut etre n'importe quel type de pointeur",
+          "On peut caster un entier en void* pour des valeurs simples",
+          "Pour des resultats complexes, utiliser malloc dans le thread",
+          "Le thread appelant doit free la memoire allouee par le thread"
+        ],
+        "commonMistakes": [
+          "Retourner l'adresse d'une variable locale du thread (dangling pointer)",
+          "Oublier de free la memoire allouee par le thread apres le join",
+          "Ignorer la valeur de retour quand elle contient de la memoire allouee"
+        ]
+      },
+      {
+        "title": "pthread_detach vs pthread_join",
+        "content": "Un thread peut etre dans deux etats : joinable (par defaut) ou detache. Un thread joinable garde ses ressources meme apres terminaison, en attendant un join. Un thread detache libere ses ressources automatiquement. Il faut choisir l'un ou l'autre pour chaque thread.",
+        "codeExamples": [
+          {
+            "title": "Thread detache a la creation",
+            "code": "pthread_attr_t\tattr;\n\npthread_attr_init(&attr);\npthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);\npthread_create(&tid, &attr, routine, NULL);\npthread_attr_destroy(&attr);",
+            "explanation": "On peut creer un thread directement detache via les attributs."
+          }
+        ],
+        "keyPoints": [
+          "Par defaut, un thread est joinable et doit etre join",
+          "pthread_detach rend un thread non-joinable",
+          "Un thread detache libere ses ressources automatiquement",
+          "On ne peut pas recuperer la valeur de retour d'un thread detache"
+        ],
+        "commonMistakes": [
+          "Appeler join et detach sur le meme thread",
+          "Ne faire ni join ni detach (fuite de ressources)",
+          "Essayer de recuperer le retour d'un thread detache"
+        ]
+      },
+      {
+        "title": "Bonnes pratiques de synchronisation",
+        "content": "La synchronisation entre threads est cruciale. pthread_join est la forme la plus simple de synchronisation : attendre qu'un thread finisse. Pour des synchronisations plus complexes, on utilisera les mutex, les conditions variables et les semaphores. Toujours planifier la strategie de synchronisation avant d'ecrire le code.",
+        "codeExamples": [
+          {
+            "title": "Pattern producteur-consommateur simple",
+            "code": "// Le main (consommateur) attend le resultat du thread (producteur)\npthread_create(&tid, NULL, produire, &data);\n// ... le thread produit le resultat ...\npthread_join(tid, (void **)&resultat);\n// Le main consomme le resultat",
+            "explanation": "pthread_join agit comme point de synchronisation entre producteur et consommateur."
+          }
+        ],
+        "keyPoints": [
+          "pthread_join est la synchronisation la plus simple entre threads",
+          "Planifier la strategie de synchronisation avant de coder",
+          "Les mutex protegent les ressources partagees (vu dans les exercices suivants)",
+          "Ne jamais supposer un ordre d'execution entre threads sans synchronisation"
+        ],
+        "commonMistakes": [
+          "Supposer que les threads s'executent dans l'ordre de creation",
+          "Acceder a des donnees partagees sans protection (race condition)",
+          "Creer trop de threads sans gestion (saturation des ressources)"
+        ]
+      }
+    ],
+    "prepExercises": [
+      {
+        "id": 1,
+        "title": "Join basique",
+        "instruction": "Cree un thread et attends sa fin avec pthread_join (sans recuperer la valeur de retour).",
+        "starterCode": "int\tmain(void)\n{\n\tpthread_t\ttid;\n\t/* TON CODE ICI */\n\treturn (0);\n}",
+        "solution": "int\tmain(void)\n{\n\tpthread_t\ttid;\n\n\tpthread_create(&tid, NULL, routine, NULL);\n\tpthread_join(tid, NULL);\n\treturn (0);\n}",
+        "hint": "Le deuxieme argument de pthread_join est NULL si tu ne veux pas le retour.",
+        "difficulty": 1
+      },
+      {
+        "id": 2,
+        "title": "Recuperer un entier",
+        "instruction": "Un thread retourne un entier alloue sur le heap. Recupere-le avec pthread_join et affiche-le.",
+        "starterCode": "void\t*routine(void *arg)\n{\n\tint\t*r = malloc(sizeof(int));\n\t*r = 100;\n\treturn ((void *)r);\n}\n\nint\tmain(void)\n{\n\tpthread_t\ttid;\n\t/* TON CODE ICI */\n}",
+        "solution": "void\t*routine(void *arg)\n{\n\tint\t*r = malloc(sizeof(int));\n\t(void)arg;\n\t*r = 100;\n\treturn ((void *)r);\n}\n\nint\tmain(void)\n{\n\tpthread_t\ttid;\n\tint\t\t\t*result;\n\n\tpthread_create(&tid, NULL, routine, NULL);\n\tpthread_join(tid, (void **)&result);\n\tprintf(\"%d\\n\", *result);\n\tfree(result);\n\treturn (0);\n}",
+        "hint": "Utilise (void **)&result comme second argument de pthread_join.",
+        "difficulty": 2
+      },
+      {
+        "id": 3,
+        "title": "Retourner un cast simple",
+        "instruction": "Un thread retourne 42 directement caste en void*. Recupere cette valeur.",
+        "starterCode": "void\t*routine(void *arg)\n{\n\t(void)arg;\n\treturn ((void *)42);\n}\n\nint\tmain(void)\n{\n\t/* TON CODE ICI */\n}",
+        "solution": "void\t*routine(void *arg)\n{\n\t(void)arg;\n\treturn ((void *)42);\n}\n\nint\tmain(void)\n{\n\tpthread_t\ttid;\n\tvoid\t\t*retval;\n\n\tpthread_create(&tid, NULL, routine, NULL);\n\tpthread_join(tid, &retval);\n\tprintf(\"%ld\\n\", (long)retval);\n\treturn (0);\n}",
+        "hint": "Caste retval en (long) pour l'afficher avec printf.",
+        "difficulty": 2
+      },
+      {
+        "id": 4,
+        "title": "Detacher un thread",
+        "instruction": "Cree un thread detache et assure-toi que le main attend assez longtemps pour qu'il s'execute.",
+        "starterCode": "int\tmain(void)\n{\n\tpthread_t\ttid;\n\t/* TON CODE ICI */\n\treturn (0);\n}",
+        "solution": "int\tmain(void)\n{\n\tpthread_t\ttid;\n\n\tpthread_create(&tid, NULL, routine, NULL);\n\tpthread_detach(tid);\n\tsleep(1);\n\treturn (0);\n}",
+        "hint": "Apres detach, utilise sleep(1) pour laisser le temps au thread.",
+        "difficulty": 2
+      },
+      {
+        "id": 5,
+        "title": "Calcul et retour",
+        "instruction": "Un thread recoit un tableau de 3 entiers et retourne leur somme allouee sur le heap.",
+        "starterCode": "void\t*routine(void *arg)\n{\n\tint\t*nums = (int *)arg;\n\t/* TON CODE ICI */\n}",
+        "solution": "void\t*routine(void *arg)\n{\n\tint\t*nums = (int *)arg;\n\tint\t*sum = malloc(sizeof(int));\n\n\t*sum = nums[0] + nums[1] + nums[2];\n\treturn ((void *)sum);\n}",
+        "hint": "Alloue un int avec malloc pour le resultat et retourne-le en void*.",
+        "difficulty": 3
+      }
+    ]
+  },
+  "starterCode": "#include <pthread.h>\n#include <stdio.h>\n#include <stdlib.h>\n\nvoid\t*ft_compute(void *arg)\n{\n\tint\t*nb;\n\tint\t*result;\n\n\tnb = (int *)arg;\n\t// TODO: Allouer result avec malloc\n\t// TODO: Calculer le carre de *nb et le stocker dans *result\n\t// TODO: Retourner result en void*\n\treturn (NULL);\n}\n\nint\tmain(int argc, char **argv)\n{\n\tpthread_t\ttid;\n\tint\t\t\tnb;\n\tint\t\t\t*result;\n\n\tif (argc != 2)\n\t\treturn (1);\n\tnb = atoi(argv[1]);\n\t// TODO: Creer le thread\n\t// TODO: Joindre le thread et recuperer le resultat\n\t// TODO: Afficher \"Carre de X = Y\"\n\t// TODO: Liberer la memoire\n\treturn (0);\n}",
+  "solution": "#include <pthread.h>\n#include <stdio.h>\n#include <stdlib.h>\n\nvoid\t*ft_compute(void *arg)\n{\n\tint\t*nb;\n\tint\t*result;\n\n\tnb = (int *)arg;\n\tresult = malloc(sizeof(int));\n\tif (!result)\n\t\treturn (NULL);\n\t*result = (*nb) * (*nb);\n\treturn ((void *)result);\n}\n\nint\tmain(int argc, char **argv)\n{\n\tpthread_t\ttid;\n\tint\t\t\tnb;\n\tint\t\t\t*result;\n\n\tif (argc != 2)\n\t\treturn (1);\n\tnb = atoi(argv[1]);\n\tif (pthread_create(&tid, NULL, ft_compute, &nb) != 0)\n\t\treturn (1);\n\tpthread_join(tid, (void **)&result);\n\tprintf(\"Carre de %d = %d\\n\", nb, *result);\n\tfree(result);\n\treturn (0);\n}",
+  "hints": [
+    "Alloue le resultat avec malloc dans le thread et retourne-le en (void *)",
+    "Utilise pthread_join(tid, (void **)&result) pour recuperer le pointeur",
+    "N'oublie pas de free(result) apres utilisation dans le main"
+  ],
+  "testCases": [
+    {
+      "id": 1,
+      "description": "Carre de 5 donne 25",
+      "stdin": "",
+      "expectedStdout": "Carre de 5 = 25\n",
+      "expectedExitCode": 0,
+      "visible": true
+    },
+    {
+      "id": 2,
+      "description": "Carre de 0 donne 0",
+      "stdin": "",
+      "expectedStdout": "Carre de 0 = 0\n",
+      "expectedExitCode": 0,
+      "visible": false
+    },
+    {
+      "id": 3,
+      "description": "Carre de -3 donne 9",
+      "stdin": "",
+      "expectedStdout": "Carre de -3 = 9\n",
+      "expectedExitCode": 0,
+      "visible": false
+    }
+  ],
+  "constraints": {
+    "allowedFunctions": ["pthread_create", "pthread_join", "malloc", "free", "printf", "atoi"],
+    "forbiddenFunctions": ["fork", "system"],
+    "maxExecutionTime": 5000,
+    "maxMemory": 128
+  },
+  "relatedExercises": ["c-day71-ex00-ft-thread-create", "c-day71-ex02-ft-thread-multiple"],
+  "resources": [
+    {
+      "title": "Manuel pthread_join",
+      "url": "https://man7.org/linux/man-pages/man3/pthread_join.3.html",
+      "type": "documentation"
+    },
+    {
+      "title": "Thread synchronisation avec join",
+      "url": "https://www.geeksforgeeks.org/pthread_join-in-c/",
+      "type": "article"
+    }
+  ]
+}

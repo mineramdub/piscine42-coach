@@ -1,0 +1,268 @@
+{
+  "id": "c-day76-ex00-ft-valgrind-fix",
+  "category": "c",
+  "day": 76,
+  "order": 0,
+  "title": "Trouver et corriger des fuites memoire",
+  "description": "Apprends a utiliser Valgrind pour detecter et corriger les fuites memoire, les use-after-free et les double free dans du code C.",
+  "difficulty": 4,
+  "points": 40,
+  "estimatedTime": 35,
+  "learningObjectives": [
+    "Utiliser Valgrind pour detecter les fuites memoire",
+    "Identifier et corriger les use-after-free",
+    "Detecter et corriger les double free",
+    "Comprendre les differents types de fuites (definitely, possibly, still reachable)",
+    "Ecrire du code sans fuite memoire"
+  ],
+  "learningContent": {
+    "lesson": {
+      "introduction": "Les fuites memoire sont un probleme majeur en C. Chaque malloc sans free correspondant est une fuite. Valgrind est l'outil de reference pour les detecter. Il intercepte chaque allocation et liberation, et rapporte les blocs non liberes a la fin du programme. Il detecte aussi les acces a de la memoire deja liberee (use-after-free) et les doubles liberations (double free).",
+      "steps": [
+        {
+          "id": 1,
+          "title": "Valgrind : les bases",
+          "content": "Valgrind s'utilise en prefixant la commande :\n\n```bash\nvalgrind --leak-check=full ./programme\n```\n\nIl rapporte :\n- **Definitely lost** : memoire allouee, plus aucun pointeur ne la reference\n- **Indirectly lost** : pointee par un bloc definitely lost\n- **Possibly lost** : un pointeur pointe au milieu du bloc\n- **Still reachable** : des pointeurs referent encore la memoire\n\nL'objectif est **0 fuites** dans toutes les categories.",
+          "codeExample": "// Programme avec fuite :\n#include <stdlib.h>\n\nint\tmain(void)\n{\n\tchar\t*str;\n\n\tstr = malloc(100);\n\t// Oubli de free(str) !\n\treturn (0);\n}\n\n// valgrind --leak-check=full ./a.out\n// LEAK SUMMARY:\n//   definitely lost: 100 bytes in 1 blocks",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Corrige ce programme pour qu'il n'ait aucune fuite memoire.",
+            "starterCode": "int\tmain(void)\n{\n\tchar\t*s1 = malloc(50);\n\tchar\t*s2 = malloc(100);\n\ts1[0] = 'A';\n\ts2[0] = 'B';\n\treturn (0);\n}",
+            "solution": "int\tmain(void)\n{\n\tchar\t*s1 = malloc(50);\n\tchar\t*s2 = malloc(100);\n\ts1[0] = 'A';\n\ts2[0] = 'B';\n\tfree(s1);\n\tfree(s2);\n\treturn (0);\n}"
+          }
+        },
+        {
+          "id": 2,
+          "title": "Use-after-free",
+          "content": "Un **use-after-free** se produit quand on accede a de la memoire deja liberee. C'est un comportement indefini : le programme peut sembler fonctionner, crasher, ou donner des resultats aleatoires.\n\nValgrind detecte ce type d'erreur avec le message :\n`Invalid read of size X`",
+          "codeExample": "// Use-after-free :\nchar\t*str = malloc(10);\nstrcpy(str, \"hello\");\nfree(str);\nprintf(\"%s\\n\", str); // BUG : str est deja free !\n\n// Valgrind :\n// Invalid read of size 1\n//   at 0x...: printf\n//   Address 0x... is 0 bytes inside a block of size 10 free'd",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Identifie et corrige le use-after-free dans ce code.",
+            "starterCode": "int\tmain(void)\n{\n\tint\t*arr = malloc(sizeof(int) * 5);\n\tarr[0] = 42;\n\tfree(arr);\n\tprintf(\"%d\\n\", arr[0]); // BUG\n\treturn (0);\n}",
+            "solution": "int\tmain(void)\n{\n\tint\t*arr = malloc(sizeof(int) * 5);\n\tarr[0] = 42;\n\tprintf(\"%d\\n\", arr[0]);\n\tfree(arr);\n\treturn (0);\n}"
+          }
+        },
+        {
+          "id": 3,
+          "title": "Double free",
+          "content": "Un **double free** se produit quand on libere le meme bloc deux fois. C'est un comportement indefini qui peut corrompre le tas (heap) et causer des crashes aleatoires.\n\nBonne pratique : mettre le pointeur a NULL apres le free.",
+          "codeExample": "// Double free :\nchar\t*str = malloc(10);\nfree(str);\nfree(str); // BUG : deja libere !\n\n// Solution : mettre a NULL\nchar\t*str = malloc(10);\nfree(str);\nstr = NULL;\n// free(NULL) est safe, ne fait rien",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Corrige ce code qui a un double free.",
+            "starterCode": "void\tprocess(char *str)\n{\n\tprintf(\"%s\\n\", str);\n\tfree(str);\n}\n\nint\tmain(void)\n{\n\tchar\t*s = malloc(20);\n\tstrcpy(s, \"hello\");\n\tprocess(s);\n\tfree(s); // Double free !\n\treturn (0);\n}",
+            "solution": "void\tprocess(char *str)\n{\n\tprintf(\"%s\\n\", str);\n}\n\nint\tmain(void)\n{\n\tchar\t*s = malloc(20);\n\tstrcpy(s, \"hello\");\n\tprocess(s);\n\tfree(s);\n\treturn (0);\n}"
+          }
+        },
+        {
+          "id": 4,
+          "title": "Fuites dans les structures complexes",
+          "content": "Les fuites sont plus subtiles dans les structures complexes : listes chainees, tableaux de pointeurs, structures imbriquees. Il faut liberer dans l'ordre inverse de l'allocation : d'abord les elements internes, puis la structure englobante.",
+          "codeExample": "typedef struct s_student\n{\n\tchar\t*name;\n\tint\t\tage;\n}\tt_student;\n\n// Fuite subtile :\nt_student\t*s = malloc(sizeof(t_student));\ns->name = malloc(50);\nstrcpy(s->name, \"Alice\");\nfree(s); // FUITE : s->name pas libere !\n\n// Correct :\nfree(s->name); // D'abord le contenu\nfree(s);       // Puis la structure",
+          "language": "c"
+        }
+      ]
+    },
+    "theory": [
+      {
+        "title": "Fonctionnement de Valgrind",
+        "content": "Valgrind fonctionne en emulant le processeur et en interceptant chaque acces memoire. Il maintient une table de toutes les allocations et liberations. A la fin du programme, il rapporte les blocs non liberes. Son principal inconvenient est qu'il ralentit l'execution de 10 a 50 fois.",
+        "codeExamples": [
+          {
+            "title": "Commande Valgrind",
+            "code": "# Compilation avec symboles de debug :\ngcc -g -Wall -Wextra programme.c\n\n# Execution avec Valgrind :\nvalgrind --leak-check=full --show-leak-kinds=all ./a.out\n\n# Options utiles :\n# --track-origins=yes : montre l'origine des erreurs\n# --verbose : plus de details",
+            "explanation": "Le flag -g ajoute les numeros de ligne pour le diagnostic."
+          }
+        ],
+        "keyPoints": [
+          "Compiler avec -g pour avoir les numeros de ligne dans le rapport",
+          "--leak-check=full montre chaque fuite individuellement",
+          "--show-leak-kinds=all montre toutes les categories de fuites",
+          "Valgrind ralentit le programme de 10-50x"
+        ],
+        "commonMistakes": [
+          "Compiler sans -g (pas de numeros de ligne dans le rapport)",
+          "Ignorer les 'still reachable' (souvent des fuites a corriger)",
+          "Tester seulement un cas d'utilisation (les fuites dependent du chemin d'execution)"
+        ]
+      },
+      {
+        "title": "Patterns de fuites courantes",
+        "content": "Les fuites les plus courantes : oublier le free, reassigner un pointeur sans free, erreur dans le chemin d'erreur (return sans free), et fuites dans les structures imbriquees. Chaque pattern a sa solution specifique.",
+        "codeExamples": [
+          {
+            "title": "Reassignation sans free",
+            "code": "char\t*str = malloc(10); // Bloc 1\nstr = malloc(20);       // Bloc 1 perdu !\n// Correct :\nchar\t*str = malloc(10);\nfree(str);\nstr = malloc(20);",
+            "explanation": "Avant de reassigner un pointeur, liberer l'ancien bloc."
+          }
+        ],
+        "keyPoints": [
+          "Reassignation sans free : l'ancien bloc est perdu",
+          "Return premature sans free : fuite dans le chemin d'erreur",
+          "Structures imbriquees : liberer de l'interieur vers l'exterieur",
+          "Listes chainees : parcourir et free chaque noeud"
+        ],
+        "commonMistakes": [
+          "Reassigner un pointeur malloc sans free l'ancien",
+          "Oublier de free dans un chemin de retour d'erreur",
+          "Free la structure sans free ses champs alloues"
+        ]
+      },
+      {
+        "title": "Bonnes pratiques de gestion memoire",
+        "content": "Pour eviter les fuites : toujours pairer malloc/free, mettre les pointeurs a NULL apres free, utiliser des fonctions de nettoyage dediees, et tester systematiquement avec Valgrind.",
+        "codeExamples": [
+          {
+            "title": "Fonction de nettoyage",
+            "code": "void\tfree_student(t_student *s)\n{\n\tif (s)\n\t{\n\t\tfree(s->name);\n\t\tfree(s);\n\t}\n}\n\n// Utilisation :\nt_student *s = create_student(\"Alice\", 20);\n// ... utilisation ...\nfree_student(s);",
+            "explanation": "Une fonction dediee assure un nettoyage complet et reutilisable."
+          }
+        ],
+        "keyPoints": [
+          "Chaque malloc doit avoir un free correspondant",
+          "Mettre les pointeurs a NULL apres free (evite use-after-free)",
+          "Fonctions de nettoyage dediees pour les structures complexes",
+          "Tester avec Valgrind a chaque modification significative"
+        ],
+        "commonMistakes": [
+          "Ne tester avec Valgrind qu'a la fin du developpement",
+          "Ignorer les fuites 'still reachable' dans les tests",
+          "Ne pas tester tous les chemins d'execution avec Valgrind"
+        ]
+      },
+      {
+        "title": "Autres outils de detection",
+        "content": "En plus de Valgrind, d'autres outils existent : AddressSanitizer (ASan, -fsanitize=address), LeakSanitizer (LSan, -fsanitize=leak), et les outils statiques comme cppcheck. Chacun a ses forces et faiblesses.",
+        "codeExamples": [
+          {
+            "title": "AddressSanitizer",
+            "code": "# Compilation avec ASan :\ngcc -fsanitize=address -g programme.c\n./a.out\n\n# ASan detecte :\n# - Use-after-free\n# - Buffer overflow (heap et stack)\n# - Double free\n# - Memory leaks (avec -fsanitize=leak)",
+            "explanation": "ASan est plus rapide que Valgrind (2-3x au lieu de 10-50x)."
+          }
+        ],
+        "keyPoints": [
+          "ASan est plus rapide que Valgrind mais moins complet",
+          "LSan detecte les fuites a la fin du programme",
+          "cppcheck est un analyseur statique (pas d'execution)",
+          "Combiner plusieurs outils pour une couverture maximale"
+        ],
+        "commonMistakes": [
+          "Utiliser ASan et Valgrind en meme temps (conflit)",
+          "Se fier uniquement a un seul outil (chacun a des angles morts)",
+          "Ignorer les warnings des analyseurs statiques"
+        ]
+      }
+    ],
+    "prepExercises": [
+      {
+        "id": 1,
+        "title": "Corriger une fuite simple",
+        "instruction": "Ajoute les free manquants dans ce programme.",
+        "starterCode": "int\tmain(void)\n{\n\tchar\t*a = malloc(10);\n\tchar\t*b = malloc(20);\n\ta[0] = 'x';\n\tb[0] = 'y';\n\treturn (0);\n}",
+        "solution": "int\tmain(void)\n{\n\tchar\t*a = malloc(10);\n\tchar\t*b = malloc(20);\n\ta[0] = 'x';\n\tb[0] = 'y';\n\tfree(a);\n\tfree(b);\n\treturn (0);\n}",
+        "hint": "Chaque malloc doit avoir un free correspondant.",
+        "difficulty": 1
+      },
+      {
+        "id": 2,
+        "title": "Corriger un use-after-free",
+        "instruction": "Deplace le free apres la derniere utilisation de la variable.",
+        "starterCode": "int\tmain(void)\n{\n\tchar\t*s = malloc(10);\n\tstrcpy(s, \"test\");\n\tfree(s);\n\tprintf(\"%s\\n\", s);\n\treturn (0);\n}",
+        "solution": "int\tmain(void)\n{\n\tchar\t*s = malloc(10);\n\tstrcpy(s, \"test\");\n\tprintf(\"%s\\n\", s);\n\tfree(s);\n\treturn (0);\n}",
+        "hint": "Le printf utilise s apres le free. Inverse les deux lignes.",
+        "difficulty": 1
+      },
+      {
+        "id": 3,
+        "title": "Eviter le double free",
+        "instruction": "Corrige le code pour eviter le double free.",
+        "starterCode": "int\tmain(void)\n{\n\tint\t*p = malloc(sizeof(int));\n\t*p = 42;\n\tfree(p);\n\tfree(p);\n\treturn (0);\n}",
+        "solution": "int\tmain(void)\n{\n\tint\t*p = malloc(sizeof(int));\n\t*p = 42;\n\tfree(p);\n\tp = NULL;\n\treturn (0);\n}",
+        "hint": "Mets p a NULL apres le premier free. free(NULL) est safe.",
+        "difficulty": 1
+      },
+      {
+        "id": 4,
+        "title": "Fuite dans une structure",
+        "instruction": "Ecris une fonction qui libere proprement une structure t_student.",
+        "starterCode": "typedef struct s_student {\n\tchar *name;\n\tint age;\n} t_student;\n\nvoid\tfree_student(t_student *s)\n{\n\t/* TON CODE ICI */\n}",
+        "solution": "typedef struct s_student {\n\tchar *name;\n\tint age;\n} t_student;\n\nvoid\tfree_student(t_student *s)\n{\n\tif (s)\n\t{\n\t\tfree(s->name);\n\t\tfree(s);\n\t}\n}",
+        "hint": "Free s->name d'abord, puis s. Verifie que s n'est pas NULL.",
+        "difficulty": 2
+      },
+      {
+        "id": 5,
+        "title": "Fuite dans un chemin d'erreur",
+        "instruction": "Corrige la fuite memoire dans le chemin d'erreur.",
+        "starterCode": "int\tprocess(void)\n{\n\tchar\t*buf = malloc(100);\n\tchar\t*tmp = malloc(50);\n\tif (!tmp)\n\t\treturn (-1); // FUITE : buf pas libere\n\tfree(buf);\n\tfree(tmp);\n\treturn (0);\n}",
+        "solution": "int\tprocess(void)\n{\n\tchar\t*buf = malloc(100);\n\tchar\t*tmp = malloc(50);\n\tif (!tmp)\n\t{\n\t\tfree(buf);\n\t\treturn (-1);\n\t}\n\tfree(buf);\n\tfree(tmp);\n\treturn (0);\n}",
+        "hint": "Avant le return d'erreur, libere buf qui a deja ete alloue.",
+        "difficulty": 2
+      }
+    ]
+  },
+  "starterCode": "#include <stdio.h>\n#include <stdlib.h>\n#include <string.h>\n\ntypedef struct s_node\n{\n\tchar\t\t\t*data;\n\tstruct s_node\t*next;\n}\tt_node;\n\nt_node\t*ft_create_node(char *str)\n{\n\t// TODO: Allouer le noeud et dupliquer la chaine\n\treturn (NULL);\n}\n\nvoid\tft_add_front(t_node **head, t_node *new)\n{\n\t// TODO: Ajouter en tete de liste\n}\n\nvoid\tft_free_list(t_node *head)\n{\n\t// TODO: Liberer toute la liste (data + noeuds)\n}\n\nint\tmain(void)\n{\n\tt_node\t*list = NULL;\n\n\tft_add_front(&list, ft_create_node(\"Hello\"));\n\tft_add_front(&list, ft_create_node(\"World\"));\n\tft_add_front(&list, ft_create_node(\"42\"));\n\t// TODO: Afficher et liberer la liste\n\treturn (0);\n}",
+  "solution": "#include <stdio.h>\n#include <stdlib.h>\n#include <string.h>\n\ntypedef struct s_node\n{\n\tchar\t\t\t*data;\n\tstruct s_node\t*next;\n}\tt_node;\n\nt_node\t*ft_create_node(char *str)\n{\n\tt_node\t*node;\n\n\tnode = malloc(sizeof(t_node));\n\tif (!node)\n\t\treturn (NULL);\n\tnode->data = malloc(strlen(str) + 1);\n\tif (!node->data)\n\t{\n\t\tfree(node);\n\t\treturn (NULL);\n\t}\n\tstrcpy(node->data, str);\n\tnode->next = NULL;\n\treturn (node);\n}\n\nvoid\tft_add_front(t_node **head, t_node *new)\n{\n\tif (new)\n\t{\n\t\tnew->next = *head;\n\t\t*head = new;\n\t}\n}\n\nvoid\tft_free_list(t_node *head)\n{\n\tt_node\t*tmp;\n\n\twhile (head)\n\t{\n\t\ttmp = head->next;\n\t\tfree(head->data);\n\t\tfree(head);\n\t\thead = tmp;\n\t}\n}\n\nint\tmain(void)\n{\n\tt_node\t*list;\n\tt_node\t*curr;\n\n\tlist = NULL;\n\tft_add_front(&list, ft_create_node(\"Hello\"));\n\tft_add_front(&list, ft_create_node(\"World\"));\n\tft_add_front(&list, ft_create_node(\"42\"));\n\tcurr = list;\n\twhile (curr)\n\t{\n\t\tprintf(\"%s\\n\", curr->data);\n\t\tcurr = curr->next;\n\t}\n\tft_free_list(list);\n\treturn (0);\n}",
+  "hints": [
+    "Chaque noeud contient un pointeur data alloue avec malloc - il faut le free aussi",
+    "Dans ft_free_list, sauvegarde head->next avant de free head",
+    "Dans ft_create_node, si malloc de data echoue, free le noeud deja alloue"
+  ],
+  "testCases": [
+    {
+      "id": 1,
+      "description": "La liste est affichee correctement",
+      "stdin": "",
+      "expectedStdout": "42\nWorld\nHello\n",
+      "expectedExitCode": 0,
+      "visible": true
+    },
+    {
+      "id": 2,
+      "description": "Valgrind ne detecte aucune fuite",
+      "stdin": "",
+      "expectedStdout": "42\nWorld\nHello\n",
+      "expectedExitCode": 0,
+      "visible": false
+    },
+    {
+      "id": 3,
+      "description": "Pas de use-after-free ni double free",
+      "stdin": "",
+      "expectedStdout": "42\nWorld\nHello\n",
+      "expectedExitCode": 0,
+      "visible": false
+    }
+  ],
+  "constraints": {
+    "allowedFunctions": [
+      "malloc",
+      "free",
+      "printf",
+      "strlen",
+      "strcpy"
+    ],
+    "forbiddenFunctions": [
+      "system"
+    ],
+    "maxExecutionTime": 5000,
+    "maxMemory": 128
+  },
+  "relatedExercises": [
+    "c-day76-ex01-ft-segfault-debug",
+    "c-day76-ex02-ft-undefined-behavior"
+  ],
+  "resources": [
+    {
+      "title": "Manuel Valgrind",
+      "url": "https://valgrind.org/docs/manual/quick-start.html",
+      "type": "documentation"
+    },
+    {
+      "title": "Fuites memoire en C",
+      "url": "https://www.geeksforgeeks.org/memory-leak-in-c/",
+      "type": "article"
+    }
+  ]
+}

@@ -1,0 +1,257 @@
+{
+  "id": "c-day63-ex02-ft-btree-free",
+  "category": "c",
+  "day": 63,
+  "order": 2,
+  "title": "Liberer un arbre binaire complet",
+  "description": "Ecris la fonction ft_btree_free qui libere tous les noeuds d'un arbre binaire. La fonction prend la racine et une fonction void (*del)(void *) pour liberer les donnees de chaque noeud. La liberation doit se faire en parcours postfixe : on libere d'abord les sous-arbres gauche et droit, puis la donnee du noeud, puis le noeud lui-meme. Si del est NULL, on ne libere pas item.",
+  "difficulty": 4,
+  "points": 40,
+  "estimatedTime": 35,
+  "learningObjectives": [
+    "Liberer correctement toute la memoire d'un arbre binaire",
+    "Utiliser le parcours postfixe pour la liberation (enfants avant parent)",
+    "Gerer la fonction del pour liberer les donnees generiques",
+    "Eviter les fuites memoire et les use-after-free",
+    "Comprendre la double liberation (donnee + noeud)"
+  ],
+  "learningContent": {
+    "lesson": {
+      "introduction": "La liberation d'un arbre binaire est une operation critique pour eviter les fuites memoire. Chaque noeud a ete alloue avec malloc lors de sa creation, et chaque donnee (item) a potentiellement ete allouee aussi. Il faut liberer les deux. L'ordre est crucial : on doit utiliser un parcours postfixe pour s'assurer que les enfants sont liberes avant le parent.",
+      "steps": [
+        {
+          "id": 1,
+          "title": "Pourquoi le parcours postfixe est obligatoire",
+          "content": "Si on libere un noeud avant ses enfants, on perd les references (left et right) et on ne peut plus acceder aux enfants. C'est un **use-after-free** suivi d'une **fuite memoire**.\n\nLe parcours postfixe (GDR) garantit que les enfants sont traites avant le parent.",
+          "codeExample": "// MAUVAIS : prefixe (libere parent d'abord)\nvoid\tbad_free(t_btree *root)\n{\n\tif (!root) return ;\n\tfree(root);              // root est libere\n\tbad_free(root->left);    // ERREUR : root->left invalide !\n\tbad_free(root->right);   // ERREUR : root->right invalide !\n}\n\n// BON : postfixe (libere enfants d'abord)\nvoid\tgood_free(t_btree *root)\n{\n\tif (!root) return ;\n\tgood_free(root->left);   // Libere sous-arbre gauche\n\tgood_free(root->right);  // Libere sous-arbre droit\n\tfree(root);              // Libere le noeud (enfants deja liberes)\n}",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Quel est le probleme avec ce code de liberation ?",
+            "starterCode": "void\tbuggy_free(t_btree *root)\n{\n\tif (!root) return ;\n\tfree(root->item); // OK\n\tfree(root);       // root libere\n\tbuggy_free(root->left);  // ???\n}",
+            "solution": "// Probleme : root est libere par free(root)\n// Puis on accede a root->left -> use-after-free\n// Il faut liberer les enfants AVANT le noeud :\n// 1. Liberer sous-arbre gauche\n// 2. Liberer sous-arbre droit\n// 3. Liberer item\n// 4. Liberer le noeud"
+          }
+        },
+        {
+          "id": 2,
+          "title": "Double liberation : donnee et noeud",
+          "content": "Chaque noeud necessite potentiellement **deux free** :\n1. **del(root->item)** : libere la donnee stockee (si elle a ete malloc)\n2. **free(root)** : libere le noeud lui-meme\n\nSi la donnee n'a pas ete malloc (chaine statique, variable sur la pile), del doit etre NULL.",
+          "codeExample": "// Cas 1 : donnees allouees dynamiquement\nchar *str = malloc(10);\nstrcpy(str, \"hello\");\nt_btree *node = ft_btree_create(str);\n// del = free -> libere la chaine\n\n// Cas 2 : donnees statiques\nint val = 42;\nt_btree *node2 = ft_btree_create(&val);\n// del = NULL -> ne pas liberer &val !\n\n// Cas 3 : donnees complexes\ntypedef struct { char *name; int *data; } t_obj;\nvoid del_obj(void *item) {\n\tt_obj *obj = (t_obj *)item;\n\tfree(obj->name);\n\tfree(obj->data);\n\tfree(obj);\n}",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Pourquoi faut-il verifier si del est NULL avant de l'appeler ?",
+            "starterCode": "// Si del est NULL et on fait del(root->item) :\n// Resultat = ???",
+            "solution": "// Si del est NULL : del(root->item) = NULL(root->item)\n// C'est un appel a travers un pointeur NULL -> SEGFAULT\n// Il faut toujours verifier : if (del) del(root->item);"
+          }
+        },
+        {
+          "id": 3,
+          "title": "Implementation de ft_btree_free",
+          "content": "La fonction combine le parcours postfixe avec la double liberation. Les etapes sont :\n1. Cas de base : si root est NULL, return\n2. Liberer recursivement le sous-arbre gauche\n3. Liberer recursivement le sous-arbre droit\n4. Liberer la donnee (si del n'est pas NULL)\n5. Liberer le noeud",
+          "codeExample": "void\tft_btree_free(t_btree *root, void (*del)(void *))\n{\n\tif (!root)\n\t\treturn ;\n\tft_btree_free(root->left, del);\n\tft_btree_free(root->right, del);\n\tif (del)\n\t\tdel(root->item);\n\tfree(root);\n}",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Dans quel ordre sont liberes les noeuds de l'arbre 5(3(1,4),8) ?",
+            "starterCode": "// ft_btree_free(root_5, del);\n// Ordre des free(noeud) : ???",
+            "solution": "// 1. free(noeud_1) (feuille gauche de 3)\n// 2. free(noeud_4) (feuille droite de 3)\n// 3. free(noeud_3) (enfants liberes)\n// 4. free(noeud_8) (feuille)\n// 5. free(noeud_5) (racine, en dernier)"
+          }
+        },
+        {
+          "id": 4,
+          "title": "Verification avec Valgrind",
+          "content": "Pour verifier qu'il n'y a pas de fuite memoire, on utilise **Valgrind**. Cet outil detecte les fuites, les use-after-free, et les lectures de memoire non initialisee.\n\nUn bon programme doit afficher '0 bytes in 0 blocks' de fuites.",
+          "codeExample": "// Programme de test :\nint main(void)\n{\n\tt_btree *root = NULL;\n\tint vals[] = {5, 3, 8, 1, 4};\n\tfor (int i = 0; i < 5; i++)\n\t\tft_btree_insert(&root, &vals[i], cmp_int);\n\tft_btree_free(root, NULL); // vals sont sur la pile\n\treturn (0);\n}\n\n// Compilation et test :\n// gcc -g -o test test.c\n// valgrind --leak-check=full ./test\n// == All heap blocks were freed -- no leaks are possible",
+          "language": "c"
+        }
+      ]
+    },
+    "theory": [
+      {
+        "title": "Gestion memoire des arbres",
+        "content": "Un arbre binaire de n noeuds necessite au minimum n appels a malloc (un par noeud). Si les donnees sont aussi allouees dynamiquement, c'est 2n mallocs. La liberation doit correspondre exactement : chaque malloc doit avoir son free.",
+        "codeExamples": [
+          {
+            "title": "Comptabilite des allocations",
+            "code": "// Creation d'un arbre de 5 noeuds avec strings :\n// malloc #1 : noeud 5, malloc #2 : strdup(\"five\")\n// malloc #3 : noeud 3, malloc #4 : strdup(\"three\")\n// ... total : 10 mallocs\n\n// Liberation :\n// free(strdup(\"one\")), free(noeud_1)\n// free(strdup(\"four\")), free(noeud_4)\n// free(strdup(\"three\")), free(noeud_3)\n// free(strdup(\"eight\")), free(noeud_8)\n// free(strdup(\"five\")), free(noeud_5)\n// total : 10 frees -> 0 fuites",
+            "explanation": "Chaque malloc doit avoir exactement un free correspondant."
+          }
+        ],
+        "keyPoints": [
+          "Chaque noeud = 1 malloc (ft_btree_create)",
+          "Chaque donnee allouee = 1 malloc supplementaire",
+          "La liberation doit liberer les donnees ET les noeuds",
+          "Valgrind permet de verifier l'absence de fuites"
+        ],
+        "commonMistakes": [
+          "Oublier de liberer les donnees (item) en plus des noeuds",
+          "Liberer des donnees qui n'ont pas ete malloc (variables sur la pile)",
+          "Double free : liberer un noeud deux fois"
+        ]
+      },
+      {
+        "title": "Use-after-free et dangling pointers",
+        "content": "Un use-after-free se produit quand on accede a de la memoire deja liberee. C'est un comportement indefini qui peut causer des segfaults, des corruptions de donnees, ou passer inapercu. Les dangling pointers sont des pointeurs qui pointent vers de la memoire liberee.",
+        "codeExamples": [
+          {
+            "title": "Exemples de use-after-free",
+            "code": "// Use-after-free classique :\nt_btree *node = ft_btree_create(&val);\nfree(node);\nprintf(\"%p\\n\", node->left); // USE-AFTER-FREE !\n\n// Dangling pointer :\nt_btree *root = build_tree();\nft_btree_free(root, NULL);\n// root est maintenant un dangling pointer\n// root pointe vers de la memoire liberee\nroot = NULL; // Bonne pratique : mettre a NULL apres free",
+            "explanation": "Toujours mettre les pointeurs a NULL apres free pour eviter les dangling pointers."
+          }
+        ],
+        "keyPoints": [
+          "Use-after-free : acceder a la memoire apres free() -> comportement indefini",
+          "Dangling pointer : pointeur vers de la memoire liberee",
+          "Bonne pratique : ptr = NULL apres free(ptr)",
+          "Valgrind detecte les use-after-free et les lectures invalides"
+        ],
+        "commonMistakes": [
+          "Acceder a root->left apres free(root)",
+          "Ne pas mettre le pointeur a NULL apres liberation",
+          "Passer un dangling pointer a une autre fonction"
+        ]
+      },
+      {
+        "title": "Fonctions de liberation personnalisees",
+        "content": "Le parametre del permet d'adapter la liberation au type de donnees stockees. Pour des types simples, free suffit. Pour des structures complexes, une fonction personnalisee est necessaire pour liberer tous les sous-champs.",
+        "codeExamples": [
+          {
+            "title": "Differentes fonctions del",
+            "code": "// Pas de liberation de donnees :\nft_btree_free(root, NULL);\n\n// Donnees simples (malloc) :\nft_btree_free(root, free);\n\n// Donnees complexes :\ntypedef struct s_student {\n\tchar\t*name;\n\tint\t\t*grades;\n} t_student;\n\nvoid\tdel_student(void *item)\n{\n\tt_student *s = (t_student *)item;\n\tfree(s->name);\n\tfree(s->grades);\n\tfree(s);\n}\nft_btree_free(root, del_student);",
+            "explanation": "La fonction del s'adapte au type de donnees pour eviter les fuites."
+          }
+        ],
+        "keyPoints": [
+          "del = NULL : ne pas liberer item (donnees statiques ou sur la pile)",
+          "del = free : liberer un seul bloc malloc",
+          "del personnalise : liberer tous les sous-champs d'une structure",
+          "Le prototype void (*del)(void *) est generique grace au void*"
+        ],
+        "commonMistakes": [
+          "Utiliser free quand del est NULL (double free sur donnees statiques)",
+          "Oublier de liberer les sous-champs d'une structure complexe",
+          "Appeler del sans verifier qu'il n'est pas NULL"
+        ]
+      },
+      {
+        "title": "Alternatives a la liberation recursive",
+        "content": "La liberation recursive peut causer un stack overflow pour les arbres tres profonds. Des alternatives existent : liberation iterative avec pile explicite, ou transformation de l'arbre en liste avant liberation.",
+        "codeExamples": [
+          {
+            "title": "Liberation iterative avec pile",
+            "code": "// Concept de liberation iterative :\nvoid\titerative_free(t_btree *root, void (*del)(void *))\n{\n\tt_btree\t**stack;\n\tint\t\ttop;\n\tt_btree\t*curr;\n\n\tif (!root) return ;\n\tstack = malloc(sizeof(t_btree *) * MAX_SIZE);\n\ttop = 0;\n\tstack[top++] = root;\n\twhile (top > 0)\n\t{\n\t\tcurr = stack[--top];\n\t\tif (curr->right) stack[top++] = curr->right;\n\t\tif (curr->left) stack[top++] = curr->left;\n\t\tif (del) del(curr->item);\n\t\tfree(curr);\n\t}\n\tfree(stack);\n}",
+            "explanation": "La version iterative evite le stack overflow mais est plus complexe."
+          }
+        ],
+        "keyPoints": [
+          "La recursion est limitee par la taille de la pile (stack overflow possible)",
+          "Alternative : pile explicite (malloc) pour la version iterative",
+          "La version iterative est plus complexe mais plus robuste",
+          "Pour les arbres equilibres, la recursion est generalement suffisante"
+        ],
+        "commonMistakes": [
+          "Utiliser la recursion sur des arbres tres profonds sans verifier la taille de pile",
+          "Oublier de free la pile explicite elle-meme",
+          "Ne pas gerer le cas ou malloc echoue pour la pile"
+        ]
+      }
+    ],
+    "prepExercises": [
+      {
+        "id": 1,
+        "title": "Ordre de liberation",
+        "instruction": "Donne l'ordre de liberation (free) des noeuds de l'arbre 4(2(1,3),6).",
+        "starterCode": "//     4\n//    / \\\n//   2   6\n//  / \\\n// 1   3\n// Ordre des free : ???",
+        "solution": "// 1. free(1) - feuille\n// 2. free(3) - feuille\n// 3. free(2) - enfants liberes\n// 4. free(6) - feuille\n// 5. free(4) - racine en dernier",
+        "hint": "Parcours postfixe : enfants avant parents, gauche avant droite.",
+        "difficulty": 1
+      },
+      {
+        "id": 2,
+        "title": "Cas de base",
+        "instruction": "Ecris le cas de base de ft_btree_free.",
+        "starterCode": "void\tft_btree_free(t_btree *root, void (*del)(void *))\n{\n\t// Cas de base ?\n}",
+        "solution": "void\tft_btree_free(t_btree *root, void (*del)(void *))\n{\n\tif (!root)\n\t\treturn ;\n}",
+        "hint": "Si root est NULL, il n'y a rien a liberer.",
+        "difficulty": 1
+      },
+      {
+        "id": 3,
+        "title": "Liberation avec del",
+        "instruction": "Complete la liberation d'un noeud (donnee + noeud).",
+        "starterCode": "// Apres la recursion sur left et right :\nif (???)\n\t???(root->item);\n???(root);",
+        "solution": "if (del)\n\tdel(root->item);\nfree(root);",
+        "hint": "Verifie que del n'est pas NULL avant de l'appeler. Puis free le noeud.",
+        "difficulty": 2
+      },
+      {
+        "id": 4,
+        "title": "Fonction complete",
+        "instruction": "Ecris ft_btree_free au complet.",
+        "starterCode": "void\tft_btree_free(t_btree *root, void (*del)(void *))\n{\n\t// Liberation postfixe complete\n}",
+        "solution": "void\tft_btree_free(t_btree *root, void (*del)(void *))\n{\n\tif (!root)\n\t\treturn ;\n\tft_btree_free(root->left, del);\n\tft_btree_free(root->right, del);\n\tif (del)\n\t\tdel(root->item);\n\tfree(root);\n}",
+        "hint": "Postfixe : recurse gauche, recurse droite, del(item), free(noeud).",
+        "difficulty": 2
+      },
+      {
+        "id": 5,
+        "title": "Ecrire une fonction del personnalisee",
+        "instruction": "Ecris del_pair pour une structure t_pair {int *key; char *value;}.",
+        "starterCode": "typedef struct { int *key; char *value; } t_pair;\n\nvoid\tdel_pair(void *item)\n{\n\t// Libere key, value, et la structure\n}",
+        "solution": "void\tdel_pair(void *item)\n{\n\tt_pair *pair = (t_pair *)item;\n\tfree(pair->key);\n\tfree(pair->value);\n\tfree(pair);\n}",
+        "hint": "Cast en t_pair*, libere chaque champ, puis la structure elle-meme.",
+        "difficulty": 3
+      }
+    ]
+  },
+  "starterCode": "#include <stdlib.h>\n\ntypedef struct s_btree\n{\n\tvoid\t\t\t*item;\n\tstruct s_btree\t*left;\n\tstruct s_btree\t*right;\n}\t\t\t\t\tt_btree;\n\nvoid\tft_btree_free(t_btree *root, void (*del)(void *))\n{\n\t// Libere tout l'arbre en postfixe\n\t// del libere la donnee item (peut etre NULL)\n\t(void)root;\n\t(void)del;\n}",
+  "solution": "#include <stdlib.h>\n\ntypedef struct s_btree\n{\n\tvoid\t\t\t*item;\n\tstruct s_btree\t*left;\n\tstruct s_btree\t*right;\n}\t\t\t\t\tt_btree;\n\nvoid\tft_btree_free(t_btree *root, void (*del)(void *))\n{\n\tif (!root)\n\t\treturn ;\n\tft_btree_free(root->left, del);\n\tft_btree_free(root->right, del);\n\tif (del)\n\t\tdel(root->item);\n\tfree(root);\n}",
+  "hints": [
+    "Utilise un parcours postfixe : libere d'abord les sous-arbres gauche et droit.",
+    "Verifie que del n'est pas NULL avant de l'appeler sur root->item.",
+    "Apres del(root->item), n'oublie pas de free(root) pour liberer le noeud lui-meme."
+  ],
+  "testCases": [
+    {
+      "id": 1,
+      "description": "Liberation d'un arbre sans fuite (valgrind)",
+      "stdin": "",
+      "expectedStdout": "OK\n",
+      "expectedExitCode": 0,
+      "visible": true
+    },
+    {
+      "id": 2,
+      "description": "Liberation d'un arbre vide",
+      "stdin": "",
+      "expectedStdout": "OK\n",
+      "expectedExitCode": 0,
+      "visible": false
+    },
+    {
+      "id": 3,
+      "description": "Liberation avec del personnalise",
+      "stdin": "",
+      "expectedStdout": "OK\n",
+      "expectedExitCode": 0,
+      "visible": false
+    }
+  ],
+  "constraints": {
+    "allowedFunctions": ["malloc", "free"],
+    "forbiddenFunctions": ["printf"],
+    "maxExecutionTime": 5000,
+    "maxMemory": 128
+  },
+  "relatedExercises": ["c-day63-ex00-ft-btree-height", "c-day63-ex01-ft-btree-count"],
+  "resources": [
+    {
+      "title": "Liberation d'un arbre binaire",
+      "url": "https://www.geeksforgeeks.org/write-a-c-program-to-delete-a-tree/",
+      "type": "documentation"
+    },
+    {
+      "title": "Valgrind - Detection de fuites memoire",
+      "url": "https://valgrind.org/docs/manual/quick-start.html",
+      "type": "article"
+    }
+  ]
+}

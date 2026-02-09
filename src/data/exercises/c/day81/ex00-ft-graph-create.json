@@ -1,0 +1,257 @@
+{
+  "id": "c-day81-ex00-ft-graph-create",
+  "category": "c",
+  "day": 81,
+  "order": 0,
+  "title": "Creer un graphe avec liste d'adjacence",
+  "description": "Implemente les structures et fonctions necessaires pour creer un graphe represente par une liste d'adjacence. Tu dois definir les structures t_node et t_graph, allouer dynamiquement le graphe et initialiser ses noeuds. Chaque noeud possede un identifiant et un tableau de voisins. La fonction ft_graph_create prend le nombre de noeuds en parametre et retourne un graphe initialise.",
+  "difficulty": 4,
+  "points": 40,
+  "estimatedTime": 35,
+  "learningObjectives": [
+    "Comprendre la representation d'un graphe par liste d'adjacence",
+    "Definir des structures imbriquees pour modeliser un graphe",
+    "Allouer dynamiquement un tableau de noeuds",
+    "Initialiser correctement chaque noeud du graphe",
+    "Gerer la memoire pour des structures complexes"
+  ],
+  "learningContent": {
+    "lesson": {
+      "introduction": "Les graphes sont l'une des structures de donnees les plus puissantes en informatique. Ils permettent de modeliser des relations entre des elements : un reseau social, une carte routiere, des dependances de paquets. Un graphe est compose de noeuds (ou sommets) relies par des aretes. Il existe plusieurs facons de representer un graphe en memoire : la matrice d'adjacence (un tableau 2D) et la liste d'adjacence (chaque noeud stocke la liste de ses voisins). La liste d'adjacence est generalement preferee car elle utilise moins de memoire pour les graphes peu denses. Dans cet exercice, tu vas creer la structure de base pour manipuler des graphes en C.",
+      "steps": [
+        {
+          "id": 1,
+          "title": "Qu'est-ce qu'un graphe ?",
+          "content": "Un **graphe** G = (V, E) est compose d'un ensemble de **sommets** (vertices) V et d'un ensemble d'**aretes** (edges) E. Chaque arete relie deux sommets.\n\n**Types de graphes :**\n- **Non-oriente** : les aretes n'ont pas de direction (A-B = B-A)\n- **Oriente** : les aretes ont une direction (A->B != B->A)\n- **Pondere** : les aretes ont un poids (distance, cout)\n\n**Representations en memoire :**\n- **Matrice d'adjacence** : tableau 2D de taille V*V, matrix[i][j] = 1 si arete entre i et j\n- **Liste d'adjacence** : chaque sommet stocke la liste de ses voisins",
+          "codeExample": "// Matrice d'adjacence (simple mais gourmand en memoire)\n// Pour 4 sommets : 0-1, 0-2, 1-3\n// int matrix[4][4] = {\n//   {0, 1, 1, 0},  // sommet 0 -> voisins 1 et 2\n//   {1, 0, 0, 1},  // sommet 1 -> voisins 0 et 3\n//   {1, 0, 0, 0},  // sommet 2 -> voisin 0\n//   {0, 1, 0, 0}   // sommet 3 -> voisin 1\n// };\n\n// Liste d'adjacence (plus efficace)\n// sommet 0 : [1, 2]\n// sommet 1 : [0, 3]\n// sommet 2 : [0]\n// sommet 3 : [1]",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Pour un graphe a 5 sommets avec les aretes 0-1, 0-4, 1-2, 2-3, 3-4, ecris la liste d'adjacence de chaque sommet.",
+            "starterCode": "// Aretes : 0-1, 0-4, 1-2, 2-3, 3-4\n// sommet 0 : [?, ?]\n// sommet 1 : [?, ?]\n// sommet 2 : [?, ?]\n// sommet 3 : [?, ?]\n// sommet 4 : [?, ?]",
+            "solution": "// Aretes : 0-1, 0-4, 1-2, 2-3, 3-4\n// sommet 0 : [1, 4]\n// sommet 1 : [0, 2]\n// sommet 2 : [1, 3]\n// sommet 3 : [2, 4]\n// sommet 4 : [0, 3]"
+          }
+        },
+        {
+          "id": 2,
+          "title": "Definir les structures t_node et t_graph",
+          "content": "Pour representer un graphe par liste d'adjacence, on a besoin de deux structures :\n\n**t_node** : represente un sommet du graphe\n- `id` : identifiant unique du sommet\n- `neighbors` : tableau dynamique des indices des voisins\n- `nb_neighbors` : nombre actuel de voisins\n- `capacity` : taille allouee pour le tableau neighbors\n\n**t_graph** : represente le graphe entier\n- `nodes` : tableau de tous les noeuds\n- `nb_nodes` : nombre de noeuds\n- `directed` : 1 si oriente, 0 sinon",
+          "codeExample": "typedef struct s_node\n{\n\tint\t\tid;\n\tint\t\t*neighbors;\n\tint\t\tnb_neighbors;\n\tint\t\tcapacity;\n}\t\t\tt_node;\n\ntypedef struct s_graph\n{\n\tt_node\t*nodes;\n\tint\t\tnb_nodes;\n\tint\t\tdirected;\n}\t\t\tt_graph;",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Pourquoi utilise-t-on un champ 'capacity' separe de 'nb_neighbors' dans t_node ?",
+            "starterCode": "// capacity = taille du tableau alloue\n// nb_neighbors = nombre de voisins reellement stockes\n// Pourquoi les separer ?\n// Reponse : pour eviter de faire un ? a chaque ajout",
+            "solution": "// capacity = taille du tableau alloue\n// nb_neighbors = nombre de voisins reellement stockes\n// On les separe pour eviter de faire un realloc a chaque ajout\n// On pre-alloue de la place (ex: capacity = 4)\n// Quand nb_neighbors atteint capacity, on double la taille\n// C'est le meme principe qu'un tableau dynamique (vector)"
+          }
+        },
+        {
+          "id": 3,
+          "title": "Fonction ft_graph_create",
+          "content": "La fonction `ft_graph_create` alloue et initialise un graphe :\n1. Allouer la structure t_graph avec malloc\n2. Allouer le tableau de noeuds (nb_nodes * sizeof(t_node))\n3. Initialiser chaque noeud : id, neighbors a NULL, nb_neighbors a 0, capacity a 0\n4. Definir nb_nodes et directed\n5. Retourner le graphe (ou NULL en cas d'erreur)",
+          "codeExample": "t_graph\t*ft_graph_create(int nb_nodes, int directed)\n{\n\tt_graph\t*graph;\n\tint\t\ti;\n\n\tgraph = (t_graph *)malloc(sizeof(t_graph));\n\tif (!graph)\n\t\treturn (NULL);\n\tgraph->nodes = (t_node *)malloc(sizeof(t_node) * nb_nodes);\n\tif (!graph->nodes)\n\t{\n\t\tfree(graph);\n\t\treturn (NULL);\n\t}\n\ti = 0;\n\twhile (i < nb_nodes)\n\t{\n\t\tgraph->nodes[i].id = i;\n\t\tgraph->nodes[i].neighbors = NULL;\n\t\tgraph->nodes[i].nb_neighbors = 0;\n\t\tgraph->nodes[i].capacity = 0;\n\t\ti++;\n\t}\n\tgraph->nb_nodes = nb_nodes;\n\tgraph->directed = directed;\n\treturn (graph);\n}",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Que se passe-t-il si on oublie de free(graph) quand l'allocation de nodes echoue ?",
+            "starterCode": "// Si malloc de nodes echoue :\n// Sans free(graph) -> ?\n// Avec free(graph) -> ?",
+            "solution": "// Sans free(graph) -> FUITE MEMOIRE\n// graph a ete alloue mais jamais libere\n// On perd la reference a ce bloc de memoire\n// Avec free(graph) -> pas de fuite\n// On libere proprement avant de retourner NULL"
+          }
+        },
+        {
+          "id": 4,
+          "title": "Liberation du graphe",
+          "content": "Il est essentiel de liberer toute la memoire quand on n'a plus besoin du graphe. La fonction `ft_graph_free` doit :\n1. Parcourir chaque noeud et liberer son tableau de voisins\n2. Liberer le tableau de noeuds\n3. Liberer la structure du graphe elle-meme\n\nL'ordre de liberation est crucial : on libere de l'interieur vers l'exterieur.",
+          "codeExample": "void\tft_graph_free(t_graph *graph)\n{\n\tint\ti;\n\n\tif (!graph)\n\t\treturn ;\n\ti = 0;\n\twhile (i < graph->nb_nodes)\n\t{\n\t\tif (graph->nodes[i].neighbors)\n\t\t\tfree(graph->nodes[i].neighbors);\n\t\ti++;\n\t}\n\tfree(graph->nodes);\n\tfree(graph);\n}",
+          "language": "c"
+        }
+      ]
+    },
+    "theory": [
+      {
+        "title": "Theorie des graphes : concepts fondamentaux",
+        "content": "Un graphe est une structure mathematique composee de sommets et d'aretes. Les graphes sont omnipresents en informatique : reseaux, cartes, arbres de dependances, modelisation de problemes.",
+        "codeExamples": [
+          {
+            "title": "Terminologie des graphes",
+            "code": "// Degre d'un sommet = nombre d'aretes connectees\n// Chemin = suite de sommets relies par des aretes\n// Cycle = chemin qui revient au sommet de depart\n// Graphe connexe = tous les sommets sont accessibles\n// Arbre = graphe connexe sans cycle\n\n// Exemple : graphe a 4 sommets\n// 0 --- 1\n// |     |\n// 2 --- 3\n// Degre de 0 = 2, Degre de 1 = 2\n// Chemin 0->1->3 : longueur 2\n// Cycle : 0->1->3->2->0",
+            "explanation": "Les concepts de base sont essentiels pour comprendre les algorithmes de graphes"
+          }
+        ],
+        "keyPoints": [
+          "Un graphe G = (V, E) est compose de sommets V et d'aretes E",
+          "Le degre d'un sommet est le nombre d'aretes qui lui sont connectees",
+          "Un graphe connexe permet d'atteindre tout sommet depuis n'importe quel autre",
+          "Un arbre est un graphe connexe acyclique avec exactement V-1 aretes"
+        ],
+        "commonMistakes": [
+          "Confondre graphe oriente et non-oriente lors de l'ajout d'aretes",
+          "Oublier que dans un graphe non-oriente, une arete A-B implique aussi B-A",
+          "Ne pas verifier si un sommet existe avant d'y acceder"
+        ]
+      },
+      {
+        "title": "Liste d'adjacence vs matrice d'adjacence",
+        "content": "Le choix de la representation depend de la densite du graphe et des operations frequentes. La liste d'adjacence est ideale pour les graphes peu denses (sparse), la matrice pour les graphes denses.",
+        "codeExamples": [
+          {
+            "title": "Comparaison des complexites",
+            "code": "// Liste d'adjacence :\n// Memoire : O(V + E)\n// Verifier si arete existe : O(degre du sommet)\n// Ajouter une arete : O(1) amorti\n// Parcourir les voisins : O(degre du sommet)\n\n// Matrice d'adjacence :\n// Memoire : O(V^2)\n// Verifier si arete existe : O(1)\n// Ajouter une arete : O(1)\n// Parcourir les voisins : O(V)",
+            "explanation": "La liste d'adjacence est plus efficace en memoire pour les graphes peu denses"
+          }
+        ],
+        "keyPoints": [
+          "La liste d'adjacence utilise O(V + E) memoire vs O(V^2) pour la matrice",
+          "La matrice permet de verifier une arete en O(1) contre O(degre) pour la liste",
+          "Pour les graphes peu denses (E << V^2), la liste est nettement meilleure",
+          "La plupart des graphes reels sont peu denses, donc on prefere la liste"
+        ],
+        "commonMistakes": [
+          "Utiliser une matrice pour un graphe avec des milliers de sommets mais peu d'aretes",
+          "Oublier que la matrice d'adjacence double la memoire pour les graphes non-orientes",
+          "Ne pas considerer la frequence des operations pour choisir la representation"
+        ]
+      },
+      {
+        "title": "Allocation dynamique pour les graphes",
+        "content": "La creation d'un graphe necessite plusieurs niveaux d'allocation : le graphe, les noeuds, et les tableaux de voisins. Chaque niveau doit etre gere avec soin pour eviter les fuites memoire.",
+        "codeExamples": [
+          {
+            "title": "Pattern d'allocation en couches",
+            "code": "// Niveau 1 : la structure graphe\nt_graph *g = malloc(sizeof(t_graph));\n// Niveau 2 : le tableau de noeuds\ng->nodes = malloc(sizeof(t_node) * n);\n// Niveau 3 : les tableaux de voisins (a l'ajout)\ng->nodes[i].neighbors = malloc(sizeof(int) * cap);\n\n// Liberation dans l'ordre inverse :\n// 1. free(neighbors) pour chaque noeud\n// 2. free(nodes)\n// 3. free(graph)",
+            "explanation": "Toujours liberer de l'interieur vers l'exterieur pour eviter les fuites"
+          }
+        ],
+        "keyPoints": [
+          "Chaque malloc doit avoir son free correspondant",
+          "En cas d'echec d'allocation, liberer tout ce qui a deja ete alloue",
+          "L'ordre de liberation est l'inverse de l'ordre d'allocation",
+          "Initialiser les pointeurs a NULL permet de free en securite"
+        ],
+        "commonMistakes": [
+          "Oublier de liberer les tableaux de voisins avant le tableau de noeuds",
+          "Ne pas verifier le retour de malloc a chaque niveau d'allocation",
+          "Acceder a un pointeur apres l'avoir libere (dangling pointer)"
+        ]
+      },
+      {
+        "title": "Tableaux dynamiques pour les voisins",
+        "content": "Chaque noeud a un nombre variable de voisins. On utilise un tableau dynamique qui grandit au besoin, similaire au concept de vector en C++.",
+        "codeExamples": [
+          {
+            "title": "Redimensionnement du tableau de voisins",
+            "code": "void\tadd_neighbor(t_node *node, int neighbor_id)\n{\n\tint\t*new_arr;\n\n\tif (node->nb_neighbors >= node->capacity)\n\t{\n\t\tnode->capacity = (node->capacity == 0) ? 4 : node->capacity * 2;\n\t\tnew_arr = malloc(sizeof(int) * node->capacity);\n\t\tif (node->neighbors)\n\t\t{\n\t\t\tfor (int i = 0; i < node->nb_neighbors; i++)\n\t\t\t\tnew_arr[i] = node->neighbors[i];\n\t\t\tfree(node->neighbors);\n\t\t}\n\t\tnode->neighbors = new_arr;\n\t}\n\tnode->neighbors[node->nb_neighbors] = neighbor_id;\n\tnode->nb_neighbors++;\n}",
+            "explanation": "On double la capacite quand le tableau est plein pour avoir un cout amorti O(1)"
+          }
+        ],
+        "keyPoints": [
+          "Le tableau de voisins commence a NULL et grandit au premier ajout",
+          "Doubler la capacite donne un cout amorti O(1) par insertion",
+          "Il faut copier les anciennes donnees dans le nouveau tableau",
+          "La strategie de doublement evite les realloc trop frequents"
+        ],
+        "commonMistakes": [
+          "Oublier de copier les anciennes donnees lors du redimensionnement",
+          "Ne pas liberer l'ancien tableau apres la copie",
+          "Commencer avec une capacite de 1 (trop de reallocations au debut)"
+        ]
+      }
+    ],
+    "prepExercises": [
+      {
+        "id": 1,
+        "title": "Initialiser un noeud",
+        "instruction": "Ecris une fonction qui initialise un t_node avec un id donne, neighbors a NULL, nb_neighbors et capacity a 0.",
+        "starterCode": "void\tft_init_node(t_node *node, int id)\n{\n\t// A completer\n}",
+        "solution": "void\tft_init_node(t_node *node, int id)\n{\n\tnode->id = id;\n\tnode->neighbors = NULL;\n\tnode->nb_neighbors = 0;\n\tnode->capacity = 0;\n}",
+        "hint": "Assigne chaque champ de la structure un par un",
+        "difficulty": 1
+      },
+      {
+        "id": 2,
+        "title": "Allouer un tableau de noeuds",
+        "instruction": "Ecris une fonction qui alloue un tableau de n t_node et initialise chaque noeud avec son indice comme id.",
+        "starterCode": "t_node\t*ft_alloc_nodes(int n)\n{\n\t// A completer\n}",
+        "solution": "t_node\t*ft_alloc_nodes(int n)\n{\n\tt_node\t*nodes;\n\tint\t\ti;\n\n\tnodes = (t_node *)malloc(sizeof(t_node) * n);\n\tif (!nodes)\n\t\treturn (NULL);\n\ti = 0;\n\twhile (i < n)\n\t{\n\t\tnodes[i].id = i;\n\t\tnodes[i].neighbors = NULL;\n\t\tnodes[i].nb_neighbors = 0;\n\t\tnodes[i].capacity = 0;\n\t\ti++;\n\t}\n\treturn (nodes);\n}",
+        "hint": "Alloue avec malloc puis parcours le tableau pour initialiser chaque element",
+        "difficulty": 2
+      },
+      {
+        "id": 3,
+        "title": "Verifier les allocations",
+        "instruction": "Ecris une fonction ft_safe_malloc qui fait un malloc et affiche un message d'erreur sur stderr si l'allocation echoue.",
+        "starterCode": "void\t*ft_safe_malloc(size_t size)\n{\n\t// A completer\n}",
+        "solution": "void\t*ft_safe_malloc(size_t size)\n{\n\tvoid\t*ptr;\n\n\tptr = malloc(size);\n\tif (!ptr)\n\t\twrite(2, \"Error: malloc failed\\n\", 21);\n\treturn (ptr);\n}",
+        "hint": "Utilise write(2, ...) pour ecrire sur stderr",
+        "difficulty": 1
+      },
+      {
+        "id": 4,
+        "title": "Liberer un noeud",
+        "instruction": "Ecris une fonction qui libere le tableau de voisins d'un noeud et remet ses champs a zero.",
+        "starterCode": "void\tft_free_node(t_node *node)\n{\n\t// A completer\n}",
+        "solution": "void\tft_free_node(t_node *node)\n{\n\tif (node->neighbors)\n\t\tfree(node->neighbors);\n\tnode->neighbors = NULL;\n\tnode->nb_neighbors = 0;\n\tnode->capacity = 0;\n}",
+        "hint": "Verifie que neighbors n'est pas NULL avant de free, puis remets tout a zero",
+        "difficulty": 2
+      },
+      {
+        "id": 5,
+        "title": "Compter la memoire utilisee",
+        "instruction": "Ecris une fonction qui calcule la memoire totale utilisee par un graphe (en octets) : sizeof du graphe + sizeof des noeuds + sizeof de tous les tableaux de voisins.",
+        "starterCode": "int\tft_graph_memory(t_graph *graph)\n{\n\t// A completer\n}",
+        "solution": "int\tft_graph_memory(t_graph *graph)\n{\n\tint\ttotal;\n\tint\ti;\n\n\ttotal = sizeof(t_graph);\n\ttotal += sizeof(t_node) * graph->nb_nodes;\n\ti = 0;\n\twhile (i < graph->nb_nodes)\n\t{\n\t\ttotal += sizeof(int) * graph->nodes[i].capacity;\n\t\ti++;\n\t}\n\treturn (total);\n}",
+        "hint": "Additionne sizeof de chaque structure et tableau alloue",
+        "difficulty": 3
+      }
+    ]
+  },
+  "starterCode": "#include <stdlib.h>\n#include <unistd.h>\n#include <stdio.h>\n\ntypedef struct s_node\n{\n\tint\t\tid;\n\tint\t\t*neighbors;\n\tint\t\tnb_neighbors;\n\tint\t\tcapacity;\n}\t\t\tt_node;\n\ntypedef struct s_graph\n{\n\tt_node\t*nodes;\n\tint\t\tnb_nodes;\n\tint\t\tdirected;\n}\t\t\tt_graph;\n\nt_graph\t*ft_graph_create(int nb_nodes, int directed)\n{\n\t// A completer\n}\n\nvoid\tft_graph_free(t_graph *graph)\n{\n\t// A completer\n}\n\nint\tmain(void)\n{\n\tt_graph\t*g;\n\n\tg = ft_graph_create(5, 0);\n\tif (g)\n\t{\n\t\tprintf(\"Graphe cree : %d noeuds, oriente=%d\\n\", g->nb_nodes, g->directed);\n\t\tft_graph_free(g);\n\t}\n\treturn (0);\n}",
+  "solution": "#include <stdlib.h>\n#include <unistd.h>\n#include <stdio.h>\n\ntypedef struct s_node\n{\n\tint\t\tid;\n\tint\t\t*neighbors;\n\tint\t\tnb_neighbors;\n\tint\t\tcapacity;\n}\t\t\tt_node;\n\ntypedef struct s_graph\n{\n\tt_node\t*nodes;\n\tint\t\tnb_nodes;\n\tint\t\tdirected;\n}\t\t\tt_graph;\n\nt_graph\t*ft_graph_create(int nb_nodes, int directed)\n{\n\tt_graph\t*graph;\n\tint\t\ti;\n\n\tgraph = (t_graph *)malloc(sizeof(t_graph));\n\tif (!graph)\n\t\treturn (NULL);\n\tgraph->nodes = (t_node *)malloc(sizeof(t_node) * nb_nodes);\n\tif (!graph->nodes)\n\t{\n\t\tfree(graph);\n\t\treturn (NULL);\n\t}\n\ti = 0;\n\twhile (i < nb_nodes)\n\t{\n\t\tgraph->nodes[i].id = i;\n\t\tgraph->nodes[i].neighbors = NULL;\n\t\tgraph->nodes[i].nb_neighbors = 0;\n\t\tgraph->nodes[i].capacity = 0;\n\t\ti++;\n\t}\n\tgraph->nb_nodes = nb_nodes;\n\tgraph->directed = directed;\n\treturn (graph);\n}\n\nvoid\tft_graph_free(t_graph *graph)\n{\n\tint\ti;\n\n\tif (!graph)\n\t\treturn ;\n\ti = 0;\n\twhile (i < graph->nb_nodes)\n\t{\n\t\tif (graph->nodes[i].neighbors)\n\t\t\tfree(graph->nodes[i].neighbors);\n\t\ti++;\n\t}\n\tfree(graph->nodes);\n\tfree(graph);\n}\n\nint\tmain(void)\n{\n\tt_graph\t*g;\n\n\tg = ft_graph_create(5, 0);\n\tif (g)\n\t{\n\t\tprintf(\"Graphe cree : %d noeuds, oriente=%d\\n\", g->nb_nodes, g->directed);\n\t\tft_graph_free(g);\n\t}\n\treturn (0);\n}",
+  "hints": [
+    "Commence par allouer la structure t_graph, puis le tableau de noeuds",
+    "N'oublie pas d'initialiser neighbors a NULL pour chaque noeud",
+    "Si une allocation echoue, libere tout ce qui a deja ete alloue avant de retourner NULL"
+  ],
+  "testCases": [
+    {
+      "id": 1,
+      "description": "Creer un graphe non-oriente de 5 noeuds",
+      "stdin": "",
+      "expectedStdout": "Graphe cree : 5 noeuds, oriente=0\n",
+      "expectedExitCode": 0,
+      "visible": true
+    },
+    {
+      "id": 2,
+      "description": "Creer un graphe oriente de 10 noeuds",
+      "stdin": "",
+      "expectedStdout": "Graphe cree : 10 noeuds, oriente=1\n",
+      "expectedExitCode": 0,
+      "visible": false
+    },
+    {
+      "id": 3,
+      "description": "Creer un graphe avec 1 seul noeud",
+      "stdin": "",
+      "expectedStdout": "Graphe cree : 1 noeuds, oriente=0\n",
+      "expectedExitCode": 0,
+      "visible": false
+    }
+  ],
+  "constraints": {
+    "allowedFunctions": ["malloc", "free", "write", "printf"],
+    "forbiddenFunctions": ["calloc", "realloc"],
+    "maxExecutionTime": 5000,
+    "maxMemory": 128
+  },
+  "relatedExercises": ["c-day81-ex01-ft-graph-add-edge", "c-day81-ex02-ft-graph-display"],
+  "resources": [
+    {
+      "title": "Introduction aux graphes - Tutoriel",
+      "url": "https://www.geeksforgeeks.org/graph-data-structure-and-algorithms/",
+      "type": "documentation"
+    },
+    {
+      "title": "Representation des graphes en C",
+      "url": "https://www.programiz.com/dsa/graph-adjacency-list",
+      "type": "article"
+    }
+  ]
+}

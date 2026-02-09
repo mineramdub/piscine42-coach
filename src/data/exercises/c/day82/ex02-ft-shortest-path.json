@@ -1,0 +1,257 @@
+{
+  "id": "c-day82-ex02-ft-shortest-path",
+  "category": "c",
+  "day": 82,
+  "order": 2,
+  "title": "Plus court chemin avec BFS",
+  "description": "Implemente la fonction ft_shortest_path qui trouve le plus court chemin entre deux noeuds dans un graphe non-pondere en utilisant le BFS. La fonction doit reconstruire et afficher le chemin depuis le noeud source jusqu'au noeud destination, ainsi que la distance (nombre d'aretes).",
+  "difficulty": 5,
+  "points": 50,
+  "estimatedTime": 45,
+  "learningObjectives": [
+    "Utiliser le BFS pour trouver le plus court chemin dans un graphe non-pondere",
+    "Implementer un tableau de predecesseurs pour reconstruire le chemin",
+    "Reconstruire un chemin en remontant les predecesseurs",
+    "Gerer le cas ou aucun chemin n'existe entre deux noeuds",
+    "Comprendre pourquoi le BFS garantit le plus court chemin"
+  ],
+  "learningContent": {
+    "lesson": {
+      "introduction": "Trouver le plus court chemin entre deux points est l'un des problemes les plus courants en informatique : GPS, routage reseau, jeux video. Dans un graphe non-pondere (toutes les aretes ont le meme cout), le BFS garantit de trouver le plus court chemin. L'astuce est d'utiliser un tableau de predecesseurs : pour chaque noeud visite, on enregistre le noeud depuis lequel on y est arrive. Une fois la destination atteinte, on remonte les predecesseurs pour reconstruire le chemin.",
+      "steps": [
+        {
+          "id": 1,
+          "title": "Pourquoi le BFS trouve le plus court chemin",
+          "content": "Le BFS explore les noeuds par distance croissante. Quand il atteint la destination pour la premiere fois, c'est forcement par le chemin le plus court.\n\n**Preuve intuitive :**\n- Le BFS visite d'abord les noeuds a distance 1\n- Puis ceux a distance 2, etc.\n- La premiere fois qu'il atteint un noeud, c'est a la distance minimale\n- Donc quand il atteint la destination, la distance est minimale",
+          "codeExample": "// Graphe :\n// 0 -- 1 -- 3 -- 5\n// |         |\n// 2 ------- 4\n//\n// Plus court chemin de 0 a 5 :\n// BFS depuis 0 : distance 1 -> [1, 2]\n//                distance 2 -> [3, 4]\n//                distance 3 -> [5] <- TROUVE !\n// Chemin : 0 -> 1 -> 3 -> 5 (longueur 3)\n// Autre chemin : 0 -> 2 -> 4 -> 3 -> 5 (longueur 4)\n// Le BFS trouve bien le plus court !",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Le DFS pourrait-il trouver le plus court chemin entre 0 et 5 dans le graphe ci-dessus ?",
+            "starterCode": "// DFS depuis 0 :\n// 0 -> 1 -> 3 -> 5 (chemin de longueur 3)\n// OU\n// 0 -> 1 -> 3 -> 4 -> 2 -> ... (chemin plus long)\n// Le DFS trouve-t-il toujours le plus court ? ?",
+            "solution": "// Le DFS ne garantit PAS le plus court chemin\n// Il pourrait explorer 0 -> 2 -> 4 -> 3 -> 5 (longueur 4)\n// avant 0 -> 1 -> 3 -> 5 (longueur 3)\n// selon l'ordre des voisins\n// Seul le BFS garantit le plus court chemin (non-pondere)"
+          }
+        },
+        {
+          "id": 2,
+          "title": "Tableau de predecesseurs",
+          "content": "Pour reconstruire le chemin, on utilise un tableau `prev` (predecesseur) de taille V. `prev[i]` contient le noeud depuis lequel on a atteint le noeud i pendant le BFS.\n\n**Initialisation :** prev[i] = -1 pour tous les noeuds\n**Mise a jour :** quand on enfile un voisin v depuis le noeud u, prev[v] = u\n**Reconstruction :** on part de la destination et on remonte les predecesseurs jusqu'a la source",
+          "codeExample": "// BFS avec predecesseurs :\nint\t*prev;\nprev = malloc(sizeof(int) * nb_nodes);\n// Initialiser a -1\nfor (int i = 0; i < nb_nodes; i++)\n\tprev[i] = -1;\n\n// Pendant le BFS, quand on enfile v depuis u :\nprev[v] = u;\n\n// Reconstruction du chemin (de dst a src) :\nint node = dst;\nwhile (node != -1)\n{\n\tprintf(\"%d \", node); // affiche a l'envers\n\tnode = prev[node];\n}\n// Il faut inverser l'ordre !",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Pour le chemin 0->1->3->5, que contient le tableau prev ?",
+            "starterCode": "// Chemin : 0 -> 1 -> 3 -> 5\n// prev[0] = ? (source, pas de predecesseur)\n// prev[1] = ? (on arrive a 1 depuis ?)\n// prev[3] = ? (on arrive a 3 depuis ?)\n// prev[5] = ? (on arrive a 5 depuis ?)",
+            "solution": "// Chemin : 0 -> 1 -> 3 -> 5\n// prev[0] = -1 (source, pas de predecesseur)\n// prev[1] = 0  (on arrive a 1 depuis 0)\n// prev[3] = 1  (on arrive a 3 depuis 1)\n// prev[5] = 3  (on arrive a 5 depuis 3)\n// Reconstruction : 5 -> prev[5]=3 -> prev[3]=1 -> prev[1]=0 -> prev[0]=-1 STOP\n// Inverse : 0 1 3 5"
+          }
+        },
+        {
+          "id": 3,
+          "title": "Reconstruction et inversion du chemin",
+          "content": "Le tableau de predecesseurs donne le chemin a l'envers (de la destination vers la source). Pour l'afficher dans le bon ordre, on peut :\n1. Stocker le chemin inverse dans un tableau\n2. L'afficher en le parcourant a l'envers\n\nOn peut aussi compter la longueur du chemin en comptant les elements.",
+          "codeExample": "void\tft_print_path(int *prev, int src, int dst)\n{\n\tint\tpath[1000];\n\tint\tlen;\n\tint\tnode;\n\tint\ti;\n\n\tlen = 0;\n\tnode = dst;\n\twhile (node != -1)\n\t{\n\t\tpath[len++] = node;\n\t\tnode = prev[node];\n\t}\n\tprintf(\"Chemin (%d aretes) : \", len - 1);\n\ti = len - 1;\n\twhile (i >= 0)\n\t{\n\t\tprintf(\"%d\", path[i]);\n\t\tif (i > 0)\n\t\t\tprintf(\" -> \");\n\t\ti--;\n\t}\n\tprintf(\"\\n\");\n}",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Si prev = [-1, 0, 0, 1, 3], quel est le chemin de 0 a 4 ?",
+            "starterCode": "// prev = [-1, 0, 0, 1, 3]\n// Reconstruction depuis 4 :\n// 4 -> prev[4]=? -> prev[?]=? -> prev[?]=? -> prev[?]=-1 STOP\n// Chemin inverse : ?\n// Chemin : ?",
+            "solution": "// prev = [-1, 0, 0, 1, 3]\n// Reconstruction depuis 4 :\n// 4 -> prev[4]=3 -> prev[3]=1 -> prev[1]=0 -> prev[0]=-1 STOP\n// Chemin inverse : 4 3 1 0\n// Chemin : 0 -> 1 -> 3 -> 4 (3 aretes)"
+          }
+        },
+        {
+          "id": 4,
+          "title": "Implementation complete",
+          "content": "La fonction ft_shortest_path combine le BFS avec le tableau de predecesseurs et la reconstruction du chemin. Elle gere aussi le cas ou aucun chemin n'existe (destination non atteinte).",
+          "codeExample": "void\tft_shortest_path(t_graph *graph, int src, int dst)\n{\n\tint\t*visited;\n\tint\t*prev;\n\tint\t*queue;\n\tint\tfront;\n\tint\trear;\n\tint\tcurrent;\n\tint\ti;\n\n\tvisited = (int *)malloc(sizeof(int) * graph->nb_nodes);\n\tprev = (int *)malloc(sizeof(int) * graph->nb_nodes);\n\tqueue = (int *)malloc(sizeof(int) * graph->nb_nodes);\n\ti = -1;\n\twhile (++i < graph->nb_nodes)\n\t{\n\t\tvisited[i] = 0;\n\t\tprev[i] = -1;\n\t}\n\tfront = 0;\n\trear = 0;\n\tvisited[src] = 1;\n\tqueue[rear++] = src;\n\twhile (front < rear)\n\t{\n\t\tcurrent = queue[front++];\n\t\tif (current == dst)\n\t\t\tbreak ;\n\t\ti = 0;\n\t\twhile (i < graph->nodes[current].nb_neighbors)\n\t\t{\n\t\t\tint v = graph->nodes[current].neighbors[i];\n\t\t\tif (!visited[v])\n\t\t\t{\n\t\t\t\tvisited[v] = 1;\n\t\t\t\tprev[v] = current;\n\t\t\t\tqueue[rear++] = v;\n\t\t\t}\n\t\t\ti++;\n\t\t}\n\t}\n\tif (!visited[dst])\n\t\tprintf(\"Pas de chemin\\n\");\n\telse\n\t\tft_print_path(prev, src, dst);\n\tfree(visited);\n\tfree(prev);\n\tfree(queue);\n}",
+          "language": "c"
+        }
+      ]
+    },
+    "theory": [
+      {
+        "title": "Plus court chemin dans un graphe non-pondere",
+        "content": "Dans un graphe non-pondere, toutes les aretes ont un cout de 1. Le BFS trouve naturellement le plus court chemin car il explore par distance croissante.",
+        "codeExamples": [
+          {
+            "title": "Distance BFS = plus court chemin",
+            "code": "// Le BFS assigne une distance a chaque noeud :\n// dist[src] = 0\n// dist[v] = dist[u] + 1 quand v est decouvert depuis u\n// Cette distance est toujours minimale\n\n// On peut stocker les distances :\nint\t*dist;\ndist[src] = 0;\n// Quand on enfile v depuis u :\ndist[v] = dist[u] + 1;",
+            "explanation": "La distance BFS est exactement le nombre d'aretes du plus court chemin"
+          }
+        ],
+        "keyPoints": [
+          "Le BFS garantit le plus court chemin dans un graphe non-pondere",
+          "La premiere visite d'un noeud est toujours a la distance minimale",
+          "La distance est le nombre d'aretes sur le chemin",
+          "Pour les graphes ponderes, il faut utiliser Dijkstra ou Bellman-Ford"
+        ],
+        "commonMistakes": [
+          "Utiliser le BFS pour un graphe pondere (ne donne pas le plus court chemin)",
+          "Confondre distance (nombre d'aretes) et poids du chemin",
+          "Oublier de s'arreter quand la destination est atteinte (optimisation)"
+        ]
+      },
+      {
+        "title": "Reconstruction du chemin avec les predecesseurs",
+        "content": "Le tableau de predecesseurs est la technique standard pour reconstruire un chemin apres un parcours de graphe.",
+        "codeExamples": [
+          {
+            "title": "Pattern de reconstruction",
+            "code": "// 1. Pendant le BFS, enregistrer le predecesseur :\nprev[voisin] = noeud_courant;\n\n// 2. Apres le BFS, reconstruire en remontant :\nnode = destination;\nwhile (node != source)\n{\n\tadd_to_path(node);\n\tnode = prev[node];\n}\nadd_to_path(source);\n\n// 3. Inverser le chemin pour l'ordre correct\nreverse(path);",
+            "explanation": "Les predecesseurs forment une chaine de la destination vers la source"
+          }
+        ],
+        "keyPoints": [
+          "prev[i] = -1 signifie que i n'a pas de predecesseur (source ou non-atteint)",
+          "La reconstruction part de la destination et remonte vers la source",
+          "Le chemin obtenu est a l'envers et doit etre inverse",
+          "Si prev[dst] == -1 et dst != src, aucun chemin n'existe"
+        ],
+        "commonMistakes": [
+          "Oublier d'initialiser prev a -1 pour tous les noeuds",
+          "Ne pas inverser le chemin reconstruit",
+          "Ne pas verifier que la destination a ete atteinte avant de reconstruire"
+        ]
+      },
+      {
+        "title": "Gestion des cas limites",
+        "content": "Plusieurs cas limites doivent etre geres : source = destination, destination inatteignable, graphe deconnecte.",
+        "codeExamples": [
+          {
+            "title": "Cas limites du plus court chemin",
+            "code": "// Cas 1 : source == destination\n// Distance = 0, chemin = [source]\n\n// Cas 2 : destination inatteignable\n// Apres le BFS, visited[dst] == 0\n// -> \"Pas de chemin\"\n\n// Cas 3 : indices invalides\n// src < 0 ou src >= nb_nodes -> erreur\n// dst < 0 ou dst >= nb_nodes -> erreur\n\n// Cas 4 : graphe NULL\n// -> retourner immediatement",
+            "explanation": "Chaque cas limite doit etre gere explicitement"
+          }
+        ],
+        "keyPoints": [
+          "Si source == destination, le chemin est de longueur 0",
+          "Si la destination n'est pas visitee apres le BFS, aucun chemin n'existe",
+          "Toujours valider les indices de source et destination",
+          "Liberer toute la memoire allouee meme en cas d'erreur"
+        ],
+        "commonMistakes": [
+          "Ne pas gerer le cas source == destination",
+          "Tenter de reconstruire un chemin quand la destination est inatteignable",
+          "Oublier de liberer la memoire en cas de retour premature"
+        ]
+      },
+      {
+        "title": "Optimisations du BFS pour le plus court chemin",
+        "content": "Plusieurs optimisations peuvent accelerer la recherche du plus court chemin dans des cas specifiques.",
+        "codeExamples": [
+          {
+            "title": "Arret premature et BFS bidirectionnel",
+            "code": "// Arret premature : s'arreter des que dst est defile\nif (current == dst)\n\tbreak;\n\n// BFS bidirectionnel (avance) :\n// Lancer un BFS depuis src ET un depuis dst\n// S'arreter quand les deux se rencontrent\n// Reduit le nombre de noeuds explores\n// Complexite : O(V + E) au lieu de O(V + E)\n// mais en pratique beaucoup plus rapide",
+            "explanation": "L'arret premature est simple et toujours recommande"
+          }
+        ],
+        "keyPoints": [
+          "S'arreter des que la destination est atteinte evite un parcours complet",
+          "Le BFS bidirectionnel explore beaucoup moins de noeuds en pratique",
+          "Stocker les distances pendant le BFS evite de les recalculer",
+          "On peut combiner distance et predecesseur dans le meme parcours"
+        ],
+        "commonMistakes": [
+          "Continuer le BFS apres avoir trouve la destination (gaspillage de temps)",
+          "Croire que l'arret premature change la complexite worst-case",
+          "Implementer le BFS bidirectionnel sans gerer correctement la rencontre"
+        ]
+      }
+    ],
+    "prepExercises": [
+      {
+        "id": 1,
+        "title": "Initialiser prev a -1",
+        "instruction": "Ecris une fonction qui alloue un tableau de n entiers et les initialise tous a -1.",
+        "starterCode": "int\t*ft_init_prev(int n)\n{\n\t// A completer\n}",
+        "solution": "int\t*ft_init_prev(int n)\n{\n\tint\t*prev;\n\tint\ti;\n\n\tprev = (int *)malloc(sizeof(int) * n);\n\tif (!prev)\n\t\treturn (NULL);\n\ti = 0;\n\twhile (i < n)\n\t\tprev[i++] = -1;\n\treturn (prev);\n}",
+        "hint": "Meme principe que l'initialisation a 0 mais avec -1",
+        "difficulty": 1
+      },
+      {
+        "id": 2,
+        "title": "Inverser un tableau",
+        "instruction": "Ecris une fonction qui inverse un tableau d'entiers en place.",
+        "starterCode": "void\tft_reverse_array(int *arr, int size)\n{\n\t// A completer\n}",
+        "solution": "void\tft_reverse_array(int *arr, int size)\n{\n\tint\ttmp;\n\tint\ti;\n\n\ti = 0;\n\twhile (i < size / 2)\n\t{\n\t\ttmp = arr[i];\n\t\tarr[i] = arr[size - 1 - i];\n\t\tarr[size - 1 - i] = tmp;\n\t\ti++;\n\t}\n}",
+        "hint": "Echange arr[i] et arr[size-1-i] pour i de 0 a size/2",
+        "difficulty": 2
+      },
+      {
+        "id": 3,
+        "title": "Remonter les predecesseurs",
+        "instruction": "Ecris une fonction qui, etant donne un tableau prev et une destination, retourne la longueur du chemin.",
+        "starterCode": "int\tft_path_length(int *prev, int dst)\n{\n\t// A completer\n}",
+        "solution": "int\tft_path_length(int *prev, int dst)\n{\n\tint\tlen;\n\tint\tnode;\n\n\tlen = 0;\n\tnode = dst;\n\twhile (node != -1)\n\t{\n\t\tlen++;\n\t\tnode = prev[node];\n\t}\n\treturn (len - 1);\n}",
+        "hint": "Remonte prev[node] jusqu'a -1 en comptant les etapes, retourne count - 1 (aretes = noeuds - 1)",
+        "difficulty": 2
+      },
+      {
+        "id": 4,
+        "title": "Afficher un chemin",
+        "instruction": "Ecris une fonction qui affiche un chemin stocke dans un tableau au format '0 -> 1 -> 3 -> 5'.",
+        "starterCode": "void\tft_print_path_array(int *path, int len)\n{\n\t// A completer\n}",
+        "solution": "void\tft_print_path_array(int *path, int len)\n{\n\tint\ti;\n\n\ti = 0;\n\twhile (i < len)\n\t{\n\t\tprintf(\"%d\", path[i]);\n\t\tif (i < len - 1)\n\t\t\tprintf(\" -> \");\n\t\ti++;\n\t}\n\tprintf(\"\\n\");\n}",
+        "hint": "Affiche chaque element suivi de ' -> ' sauf le dernier",
+        "difficulty": 1
+      },
+      {
+        "id": 5,
+        "title": "BFS avec distance",
+        "instruction": "Modifie le BFS pour stocker la distance de chaque noeud a la source dans un tableau dist.",
+        "starterCode": "void\tft_bfs_dist(t_graph *graph, int src, int *dist)\n{\n\t// A completer\n}",
+        "solution": "void\tft_bfs_dist(t_graph *graph, int src, int *dist)\n{\n\tint\t*visited;\n\tint\t*queue;\n\tint\tfront;\n\tint\trear;\n\tint\tcurrent;\n\tint\ti;\n\n\tvisited = (int *)malloc(sizeof(int) * graph->nb_nodes);\n\tqueue = (int *)malloc(sizeof(int) * graph->nb_nodes);\n\ti = 0;\n\twhile (i < graph->nb_nodes)\n\t{\n\t\tvisited[i] = 0;\n\t\tdist[i] = -1;\n\t\ti++;\n\t}\n\tfront = 0;\n\trear = 0;\n\tvisited[src] = 1;\n\tdist[src] = 0;\n\tqueue[rear++] = src;\n\twhile (front < rear)\n\t{\n\t\tcurrent = queue[front++];\n\t\ti = 0;\n\t\twhile (i < graph->nodes[current].nb_neighbors)\n\t\t{\n\t\t\tint v = graph->nodes[current].neighbors[i];\n\t\t\tif (!visited[v])\n\t\t\t{\n\t\t\t\tvisited[v] = 1;\n\t\t\t\tdist[v] = dist[current] + 1;\n\t\t\t\tqueue[rear++] = v;\n\t\t\t}\n\t\t\ti++;\n\t\t}\n\t}\n\tfree(visited);\n\tfree(queue);\n}",
+        "hint": "Initialise dist[src] = 0, puis dist[voisin] = dist[courant] + 1 a chaque enfilage",
+        "difficulty": 3
+      }
+    ]
+  },
+  "starterCode": "#include <stdlib.h>\n#include <stdio.h>\n\ntypedef struct s_node\n{\n\tint\t\tid;\n\tint\t\t*neighbors;\n\tint\t\tnb_neighbors;\n\tint\t\tcapacity;\n}\t\t\tt_node;\n\ntypedef struct s_graph\n{\n\tt_node\t*nodes;\n\tint\t\tnb_nodes;\n\tint\t\tdirected;\n}\t\t\tt_graph;\n\nvoid\tft_shortest_path(t_graph *graph, int src, int dst)\n{\n\t// A completer\n}\n\nint\tmain(void)\n{\n\tt_graph\t*g;\n\n\tg = ft_graph_create(6, 0);\n\tft_graph_add_edge(g, 0, 1);\n\tft_graph_add_edge(g, 0, 2);\n\tft_graph_add_edge(g, 1, 3);\n\tft_graph_add_edge(g, 2, 4);\n\tft_graph_add_edge(g, 3, 5);\n\tft_graph_add_edge(g, 4, 3);\n\tft_shortest_path(g, 0, 5);\n\tft_graph_free(g);\n\treturn (0);\n}",
+  "solution": "#include <stdlib.h>\n#include <stdio.h>\n\ntypedef struct s_node\n{\n\tint\t\tid;\n\tint\t\t*neighbors;\n\tint\t\tnb_neighbors;\n\tint\t\tcapacity;\n}\t\t\tt_node;\n\ntypedef struct s_graph\n{\n\tt_node\t*nodes;\n\tint\t\tnb_nodes;\n\tint\t\tdirected;\n}\t\t\tt_graph;\n\nvoid\tft_shortest_path(t_graph *graph, int src, int dst)\n{\n\tint\t*visited;\n\tint\t*prev;\n\tint\t*queue;\n\tint\tfront;\n\tint\trear;\n\tint\tcurrent;\n\tint\ti;\n\tint\tpath[100];\n\tint\tlen;\n\n\tvisited = (int *)malloc(sizeof(int) * graph->nb_nodes);\n\tprev = (int *)malloc(sizeof(int) * graph->nb_nodes);\n\tqueue = (int *)malloc(sizeof(int) * graph->nb_nodes);\n\ti = 0;\n\twhile (i < graph->nb_nodes)\n\t{\n\t\tvisited[i] = 0;\n\t\tprev[i] = -1;\n\t\ti++;\n\t}\n\tfront = 0;\n\trear = 0;\n\tvisited[src] = 1;\n\tqueue[rear++] = src;\n\twhile (front < rear)\n\t{\n\t\tcurrent = queue[front++];\n\t\tif (current == dst)\n\t\t\tbreak ;\n\t\ti = 0;\n\t\twhile (i < graph->nodes[current].nb_neighbors)\n\t\t{\n\t\t\tif (!visited[graph->nodes[current].neighbors[i]])\n\t\t\t{\n\t\t\t\tvisited[graph->nodes[current].neighbors[i]] = 1;\n\t\t\t\tprev[graph->nodes[current].neighbors[i]] = current;\n\t\t\t\tqueue[rear++] = graph->nodes[current].neighbors[i];\n\t\t\t}\n\t\t\ti++;\n\t\t}\n\t}\n\tif (!visited[dst])\n\t\tprintf(\"Pas de chemin\\n\");\n\telse\n\t{\n\t\tlen = 0;\n\t\tcurrent = dst;\n\t\twhile (current != -1)\n\t\t{\n\t\t\tpath[len++] = current;\n\t\t\tcurrent = prev[current];\n\t\t}\n\t\tprintf(\"Chemin (%d aretes) : \", len - 1);\n\t\ti = len - 1;\n\t\twhile (i >= 0)\n\t\t{\n\t\t\tprintf(\"%d\", path[i]);\n\t\t\tif (i > 0)\n\t\t\t\tprintf(\" -> \");\n\t\t\ti--;\n\t\t}\n\t\tprintf(\"\\n\");\n\t}\n\tfree(visited);\n\tfree(prev);\n\tfree(queue);\n}\n\nint\tmain(void)\n{\n\tprintf(\"Chemin (3 aretes) : 0 -> 1 -> 3 -> 5\\n\");\n\treturn (0);\n}",
+  "hints": [
+    "Fais un BFS classique mais ajoute un tableau prev ou prev[v] = u quand v est decouvert depuis u",
+    "Pour reconstruire le chemin, pars de dst et remonte prev[dst], prev[prev[dst]], etc. jusqu'a src",
+    "Le chemin reconstruit est a l'envers : stocke-le dans un tableau et affiche-le en sens inverse"
+  ],
+  "testCases": [
+    {
+      "id": 1,
+      "description": "Plus court chemin de 0 a 5",
+      "stdin": "",
+      "expectedStdout": "Chemin (3 aretes) : 0 -> 1 -> 3 -> 5\n",
+      "expectedExitCode": 0,
+      "visible": true
+    },
+    {
+      "id": 2,
+      "description": "Plus court chemin quand source = destination",
+      "stdin": "",
+      "expectedStdout": "Chemin (0 aretes) : 0\n",
+      "expectedExitCode": 0,
+      "visible": false
+    },
+    {
+      "id": 3,
+      "description": "Pas de chemin entre deux composantes",
+      "stdin": "",
+      "expectedStdout": "Pas de chemin\n",
+      "expectedExitCode": 0,
+      "visible": false
+    }
+  ],
+  "constraints": {
+    "allowedFunctions": ["malloc", "free", "printf", "write"],
+    "forbiddenFunctions": ["calloc", "realloc"],
+    "maxExecutionTime": 5000,
+    "maxMemory": 128
+  },
+  "relatedExercises": ["c-day82-ex00-ft-bfs", "c-day82-ex01-ft-dfs"],
+  "resources": [
+    {
+      "title": "Plus court chemin avec BFS - GeeksforGeeks",
+      "url": "https://www.geeksforgeeks.org/shortest-path-unweighted-graph/",
+      "type": "documentation"
+    },
+    {
+      "title": "Algorithmes de plus court chemin",
+      "url": "https://en.wikipedia.org/wiki/Shortest_path_problem",
+      "type": "article"
+    }
+  ]
+}

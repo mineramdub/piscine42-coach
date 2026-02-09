@@ -1,0 +1,257 @@
+{
+  "id": "c-day72-ex02-ft-deadlock",
+  "category": "c",
+  "day": 72,
+  "order": 2,
+  "title": "Comprendre et eviter les deadlocks",
+  "description": "Apprends a identifier et eviter les deadlocks (interblocages) dans un programme multi-thread. Comprends l'ordre de verrouillage et les strategies de prevention.",
+  "difficulty": 5,
+  "points": 50,
+  "estimatedTime": 40,
+  "learningObjectives": [
+    "Comprendre ce qu'est un deadlock et ses conditions",
+    "Identifier les quatre conditions necessaires au deadlock",
+    "Appliquer la strategie d'ordre de verrouillage pour prevenir les deadlocks",
+    "Utiliser pthread_mutex_trylock pour la detection",
+    "Concevoir du code thread-safe sans risque de deadlock"
+  ],
+  "learningContent": {
+    "lesson": {
+      "introduction": "Un deadlock (interblocage) se produit quand deux ou plusieurs threads s'attendent mutuellement, creant un cycle d'attente infini. Le cas classique : Thread A detient le mutex 1 et attend le mutex 2, tandis que Thread B detient le mutex 2 et attend le mutex 1. Aucun ne peut avancer. Les deadlocks sont particulierement dangereux car le programme se fige completement sans message d'erreur.",
+      "steps": [
+        {
+          "id": 1,
+          "title": "Qu'est-ce qu'un deadlock ?",
+          "content": "Un **deadlock** est une situation ou plusieurs threads sont bloques indefiniment, chacun attendant une ressource detenue par un autre.\n\nLes **4 conditions** necessaires (conditions de Coffman) :\n1. **Exclusion mutuelle** : la ressource ne peut etre utilisee que par un thread\n2. **Hold and wait** : un thread detient une ressource et en attend une autre\n3. **Pas de preemption** : on ne peut pas forcer un thread a liberer\n4. **Attente circulaire** : A attend B, B attend A",
+          "codeExample": "// Deadlock classique :\n// Thread A            Thread B\n// lock(mutex1)        lock(mutex2)\n// lock(mutex2) BLOQUE lock(mutex1) BLOQUE\n// -> Les deux threads sont bloques indefiniment !",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Identifie le deadlock dans ce code : deux threads prennent deux mutex dans un ordre different.",
+            "starterCode": "pthread_mutex_t\tmutex1, mutex2;\n\nvoid\t*thread_a(void *arg)\n{\n\tpthread_mutex_lock(&mutex1);\n\tusleep(100);\n\tpthread_mutex_lock(&mutex2); // Deadlock !\n\tpthread_mutex_unlock(&mutex2);\n\tpthread_mutex_unlock(&mutex1);\n\treturn (NULL);\n}\n\nvoid\t*thread_b(void *arg)\n{\n\tpthread_mutex_lock(&mutex2);\n\tusleep(100);\n\tpthread_mutex_lock(&mutex1); // Deadlock !\n\t/* CORRIGE CE CODE */\n}",
+            "solution": "pthread_mutex_t\tmutex1, mutex2;\n\nvoid\t*thread_a(void *arg)\n{\n\t(void)arg;\n\tpthread_mutex_lock(&mutex1);\n\tpthread_mutex_lock(&mutex2);\n\tpthread_mutex_unlock(&mutex2);\n\tpthread_mutex_unlock(&mutex1);\n\treturn (NULL);\n}\n\nvoid\t*thread_b(void *arg)\n{\n\t(void)arg;\n\tpthread_mutex_lock(&mutex1);\n\tpthread_mutex_lock(&mutex2);\n\tpthread_mutex_unlock(&mutex2);\n\tpthread_mutex_unlock(&mutex1);\n\treturn (NULL);\n}"
+          }
+        },
+        {
+          "id": 2,
+          "title": "Strategie d'ordre de verrouillage",
+          "content": "La strategie la plus simple pour eviter les deadlocks est d'imposer un **ordre global** de verrouillage. Tous les threads doivent toujours prendre les mutex dans le meme ordre.\n\nSi on a mutex_a et mutex_b, on decide que TOUS les threads prennent d'abord mutex_a, puis mutex_b. Jamais l'inverse.",
+          "codeExample": "// Regle : toujours prendre mutex1 AVANT mutex2\n\nvoid\t*thread_a(void *arg)\n{\n\t(void)arg;\n\tpthread_mutex_lock(&mutex1);   // 1er\n\tpthread_mutex_lock(&mutex2);   // 2eme\n\t// Section critique\n\tpthread_mutex_unlock(&mutex2);\n\tpthread_mutex_unlock(&mutex1);\n\treturn (NULL);\n}\n\nvoid\t*thread_b(void *arg)\n{\n\t(void)arg;\n\tpthread_mutex_lock(&mutex1);   // 1er (meme ordre !)\n\tpthread_mutex_lock(&mutex2);   // 2eme\n\t// Section critique\n\tpthread_mutex_unlock(&mutex2);\n\tpthread_mutex_unlock(&mutex1);\n\treturn (NULL);\n}",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Corrige le code pour que les deux threads prennent les mutex dans le meme ordre.",
+            "starterCode": "void\t*t1(void *arg) {\n\tpthread_mutex_lock(&m_a);\n\tpthread_mutex_lock(&m_b);\n\t/* ... */\n\tpthread_mutex_unlock(&m_b);\n\tpthread_mutex_unlock(&m_a);\n}\nvoid\t*t2(void *arg) {\n\tpthread_mutex_lock(&m_b); // Ordre different !\n\tpthread_mutex_lock(&m_a);\n\t/* CORRIGE */\n}",
+            "solution": "void\t*t1(void *arg) {\n\t(void)arg;\n\tpthread_mutex_lock(&m_a);\n\tpthread_mutex_lock(&m_b);\n\tpthread_mutex_unlock(&m_b);\n\tpthread_mutex_unlock(&m_a);\n\treturn (NULL);\n}\nvoid\t*t2(void *arg) {\n\t(void)arg;\n\tpthread_mutex_lock(&m_a);\n\tpthread_mutex_lock(&m_b);\n\tpthread_mutex_unlock(&m_b);\n\tpthread_mutex_unlock(&m_a);\n\treturn (NULL);\n}"
+          }
+        },
+        {
+          "id": 3,
+          "title": "pthread_mutex_trylock",
+          "content": "`pthread_mutex_trylock` essaie de prendre le mutex sans bloquer. Si le mutex est deja pris, il retourne immediatement avec `EBUSY` au lieu de bloquer.\n\nCela permet de detecter les situations potentielles de deadlock et de reagir (liberer les mutex detenus et reessayer).",
+          "codeExample": "#include <pthread.h>\n#include <errno.h>\n\nvoid\t*safe_routine(void *arg)\n{\n\t(void)arg;\n\tpthread_mutex_lock(&mutex1);\n\tif (pthread_mutex_trylock(&mutex2) != 0)\n\t{\n\t\t// mutex2 est pris, on libere mutex1 pour eviter deadlock\n\t\tpthread_mutex_unlock(&mutex1);\n\t\tusleep(100);\n\t\treturn (safe_routine(arg)); // Reessayer\n\t}\n\t// Section critique\n\tpthread_mutex_unlock(&mutex2);\n\tpthread_mutex_unlock(&mutex1);\n\treturn (NULL);\n}",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Utilise trylock pour eviter un deadlock : si le second mutex est pris, libere le premier et reessaie.",
+            "starterCode": "void\t*routine(void *arg)\n{\n\tpthread_mutex_lock(&m1);\n\t/* UTILISE TRYLOCK POUR M2 */\n\tpthread_mutex_unlock(&m2);\n\tpthread_mutex_unlock(&m1);\n\treturn (NULL);\n}",
+            "solution": "void\t*routine(void *arg)\n{\n\tpthread_mutex_lock(&m1);\n\tif (pthread_mutex_trylock(&m2) != 0)\n\t{\n\t\tpthread_mutex_unlock(&m1);\n\t\tusleep(100);\n\t\treturn (routine(arg));\n\t}\n\tpthread_mutex_unlock(&m2);\n\tpthread_mutex_unlock(&m1);\n\treturn (NULL);\n}"
+          }
+        },
+        {
+          "id": 4,
+          "title": "Application : transfert bancaire",
+          "content": "Un cas classique de deadlock potentiel est le transfert bancaire. Pour transferer de compte A vers compte B, on doit locker les deux comptes. Si un autre thread transfere de B vers A en meme temps, on a un deadlock potentiel.\n\n**Solution** : toujours locker le compte avec le plus petit ID en premier.",
+          "codeExample": "#include <pthread.h>\n#include <stdio.h>\n\ntypedef struct s_account\n{\n\tint\t\t\t\tid;\n\tint\t\t\t\tbalance;\n\tpthread_mutex_t\tmutex;\n}\tt_account;\n\nvoid\tft_transfer(t_account *from, t_account *to, int amount)\n{\n\tt_account\t*first;\n\tt_account\t*second;\n\n\t// Ordre : toujours locker le plus petit ID d'abord\n\tif (from->id < to->id)\n\t{\n\t\tfirst = from;\n\t\tsecond = to;\n\t}\n\telse\n\t{\n\t\tfirst = to;\n\t\tsecond = from;\n\t}\n\tpthread_mutex_lock(&first->mutex);\n\tpthread_mutex_lock(&second->mutex);\n\tif (from->balance >= amount)\n\t{\n\t\tfrom->balance -= amount;\n\t\tto->balance += amount;\n\t}\n\tpthread_mutex_unlock(&second->mutex);\n\tpthread_mutex_unlock(&first->mutex);\n}",
+          "language": "c"
+        }
+      ]
+    },
+    "theory": [
+      {
+        "title": "Les quatre conditions de Coffman",
+        "content": "Un deadlock ne peut se produire que si les quatre conditions suivantes sont reunies simultanement. Briser une seule de ces conditions suffit a prevenir tout deadlock. Comprendre ces conditions est essentiel pour concevoir des programmes corrects.",
+        "codeExamples": [
+          {
+            "title": "Illustration des 4 conditions",
+            "code": "// 1. Exclusion mutuelle : mutex ne peut etre pris que par un thread\n// 2. Hold and wait : T1 tient mutex1, attend mutex2\n// 3. Pas de preemption : on ne force pas T1 a liberer mutex1\n// 4. Attente circulaire : T1->mutex2->T2->mutex1->T1\n\n// Si on brise la condition 4 (ordre fixe), pas de deadlock !",
+            "explanation": "Forcer un ordre de verrouillage brise l'attente circulaire."
+          }
+        ],
+        "keyPoints": [
+          "Exclusion mutuelle : une ressource ne peut etre utilisee que par un thread",
+          "Hold and wait : un thread detient une ressource et attend une autre",
+          "Pas de preemption : on ne peut pas forcer la liberation d'une ressource",
+          "Attente circulaire : les threads forment un cycle d'attente"
+        ],
+        "commonMistakes": [
+          "Croire qu'un seul mutex ne peut pas causer de deadlock (un thread qui se lock lui-meme)",
+          "Penser qu'un deadlock est facile a detecter (le programme se fige silencieusement)",
+          "Ignorer les deadlocks potentiels car ils sont rares en test"
+        ]
+      },
+      {
+        "title": "Strategies de prevention",
+        "content": "Plusieurs strategies existent pour prevenir les deadlocks. L'ordre de verrouillage est la plus courante. On peut aussi limiter le temps d'attente avec trylock ou timedlock, ou redesigner le programme pour n'utiliser qu'un seul mutex.",
+        "codeExamples": [
+          {
+            "title": "Timeout avec trylock",
+            "code": "int\tattempts = 0;\nwhile (attempts < 10)\n{\n\tpthread_mutex_lock(&m1);\n\tif (pthread_mutex_trylock(&m2) == 0)\n\t\tbreak ;\n\tpthread_mutex_unlock(&m1);\n\tusleep(1000);\n\tattempts++;\n}",
+            "explanation": "Reessayer un nombre limite de fois evite le blocage infini."
+          }
+        ],
+        "keyPoints": [
+          "Ordre de verrouillage : toujours prendre les mutex dans le meme ordre",
+          "trylock : essayer sans bloquer et reessayer si echec",
+          "Mutex unique : regrouper les ressources sous un seul mutex",
+          "Hierarchie de verrous : numeroter les mutex et toujours les prendre par ordre croissant"
+        ],
+        "commonMistakes": [
+          "Imposer un ordre mais ne pas le respecter dans tous les chemins de code",
+          "Utiliser trylock sans limiter le nombre de tentatives (boucle infinie)",
+          "Croire que pthread_mutex_timedlock existe partout (pas toujours disponible)"
+        ]
+      },
+      {
+        "title": "Deadlock avec les philosophes",
+        "content": "Le probleme des philosophes est l'exemple classique de deadlock. Cinq philosophes assis en cercle partagent cinq fourchettes. Si tous prennent la fourchette gauche en meme temps, personne ne peut prendre la fourchette droite : deadlock.",
+        "codeExamples": [
+          {
+            "title": "Philosophes et deadlock",
+            "code": "// Chaque philosophe prend sa fourchette gauche, puis droite\n// Philo 0: lock(fork[0]), lock(fork[1])\n// Philo 1: lock(fork[1]), lock(fork[2])\n// ...\n// Philo 4: lock(fork[4]), lock(fork[0]) // Boucle !\n\n// Solution : le philosophe 4 prend d'abord fork[0] puis fork[4]\n// Cela brise le cycle !",
+            "explanation": "Un seul philosophe qui inverse l'ordre suffit a briser le cycle."
+          }
+        ],
+        "keyPoints": [
+          "Le probleme des philosophes illustre parfaitement le deadlock circulaire",
+          "Solution 1 : un philosophe prend les fourchettes dans l'ordre inverse",
+          "Solution 2 : limiter le nombre de philosophes pouvant manger simultanement",
+          "Le probleme est central dans le projet philosophers de 42"
+        ],
+        "commonMistakes": [
+          "Croire que le probleme des philosophes ne se pose qu'en theorie",
+          "Ignorer que la meme situation se produit dans les bases de donnees",
+          "Ne pas tester avec un grand nombre de philosophes pour detecter le deadlock"
+        ]
+      },
+      {
+        "title": "Detection et outils de diagnostic",
+        "content": "Helgrind peut detecter les potentiels deadlocks en analysant l'ordre de verrouillage. Si un thread prend A puis B, et un autre B puis A, Helgrind signale un potentiel deadlock meme s'il ne se produit pas pendant l'execution.",
+        "codeExamples": [
+          {
+            "title": "Detection avec Helgrind",
+            "code": "// valgrind --tool=helgrind ./programme\n//\n// Thread #1: lock order \"0x...\" before \"0x...\"\n//   at 0x...: pthread_mutex_lock (hg_intercepts.c:...)\n//   by 0x...: thread_a (programme.c:15)\n//\n// Thread #2: lock order \"0x...\" before \"0x...\" --- Loss\n//   This conflicts with a previously observed lock order.",
+            "explanation": "Helgrind detecte les ordres de verrouillage contradictoires entre threads."
+          }
+        ],
+        "keyPoints": [
+          "Helgrind detecte les ordres de verrouillage inconsistants",
+          "Un deadlock potentiel peut ne jamais se manifester en test",
+          "gdb peut aider a identifier quels threads sont bloques et sur quel mutex",
+          "Toujours tester les programmes multi-thread avec Helgrind"
+        ],
+        "commonMistakes": [
+          "Ne pas tester avec Helgrind car le programme semble fonctionner",
+          "Ignorer les warnings de potentiel deadlock dans Helgrind",
+          "Debugger un deadlock sans gdb (difficile de savoir ou les threads bloquent)"
+        ]
+      }
+    ],
+    "prepExercises": [
+      {
+        "id": 1,
+        "title": "Identifier le deadlock",
+        "instruction": "Ce code a un deadlock. Identifie-le et corrige-le en imposant un ordre de verrouillage.",
+        "starterCode": "void\t*ta(void *arg) {\n\tpthread_mutex_lock(&m1);\n\tpthread_mutex_lock(&m2);\n\tpthread_mutex_unlock(&m2);\n\tpthread_mutex_unlock(&m1);\n}\nvoid\t*tb(void *arg) {\n\tpthread_mutex_lock(&m2);\n\tpthread_mutex_lock(&m1);\n\tpthread_mutex_unlock(&m1);\n\tpthread_mutex_unlock(&m2);\n}",
+        "solution": "void\t*ta(void *arg) {\n\t(void)arg;\n\tpthread_mutex_lock(&m1);\n\tpthread_mutex_lock(&m2);\n\tpthread_mutex_unlock(&m2);\n\tpthread_mutex_unlock(&m1);\n\treturn (NULL);\n}\nvoid\t*tb(void *arg) {\n\t(void)arg;\n\tpthread_mutex_lock(&m1);\n\tpthread_mutex_lock(&m2);\n\tpthread_mutex_unlock(&m2);\n\tpthread_mutex_unlock(&m1);\n\treturn (NULL);\n}",
+        "hint": "tb prend les mutex dans l'ordre inverse de ta. Mets le meme ordre.",
+        "difficulty": 2
+      },
+      {
+        "id": 2,
+        "title": "trylock basique",
+        "instruction": "Utilise pthread_mutex_trylock pour essayer de prendre un mutex sans bloquer.",
+        "starterCode": "void\t*routine(void *arg)\n{\n\t/* ESSAIE DE PRENDRE LE MUTEX SANS BLOQUER */\n\tprintf(\"Mutex pris !\\n\");\n\tpthread_mutex_unlock(&mutex);\n\treturn (NULL);\n}",
+        "solution": "void\t*routine(void *arg)\n{\n\t(void)arg;\n\tif (pthread_mutex_trylock(&mutex) == 0)\n\t{\n\t\tprintf(\"Mutex pris !\\n\");\n\t\tpthread_mutex_unlock(&mutex);\n\t}\n\telse\n\t\tprintf(\"Mutex occupe\\n\");\n\treturn (NULL);\n}",
+        "hint": "trylock retourne 0 si le mutex a ete pris, EBUSY sinon.",
+        "difficulty": 2
+      },
+      {
+        "id": 3,
+        "title": "Ordre par ID",
+        "instruction": "Ecris une fonction qui locke deux mutex dans l'ordre de leur adresse pour eviter les deadlocks.",
+        "starterCode": "void\tlock_two(pthread_mutex_t *a, pthread_mutex_t *b)\n{\n\t/* TON CODE ICI */\n}",
+        "solution": "void\tlock_two(pthread_mutex_t *a, pthread_mutex_t *b)\n{\n\tif (a < b)\n\t{\n\t\tpthread_mutex_lock(a);\n\t\tpthread_mutex_lock(b);\n\t}\n\telse\n\t{\n\t\tpthread_mutex_lock(b);\n\t\tpthread_mutex_lock(a);\n\t}\n}",
+        "hint": "Compare les adresses des mutex pour determiner l'ordre.",
+        "difficulty": 3
+      },
+      {
+        "id": 4,
+        "title": "Deadlock avec auto-lock",
+        "instruction": "Explique pourquoi ce code cause un deadlock et corrige-le.",
+        "starterCode": "void\t*routine(void *arg)\n{\n\tpthread_mutex_lock(&mutex);\n\tpthread_mutex_lock(&mutex); // Deadlock !\n\tpthread_mutex_unlock(&mutex);\n\tpthread_mutex_unlock(&mutex);\n\treturn (NULL);\n}",
+        "solution": "void\t*routine(void *arg)\n{\n\t(void)arg;\n\tpthread_mutex_lock(&mutex);\n\t// Un seul lock suffit\n\tpthread_mutex_unlock(&mutex);\n\treturn (NULL);\n}",
+        "hint": "Un thread ne peut pas locker un mutex qu'il detient deja (sauf mutex recursif).",
+        "difficulty": 2
+      },
+      {
+        "id": 5,
+        "title": "Transfert sans deadlock",
+        "instruction": "Implemente un transfert entre deux comptes en lockant toujours le plus petit ID d'abord.",
+        "starterCode": "typedef struct s_account {\n\tint id;\n\tint balance;\n\tpthread_mutex_t mutex;\n} t_account;\n\nvoid\ttransfer(t_account *from, t_account *to, int amount)\n{\n\t/* TON CODE ICI */\n}",
+        "solution": "typedef struct s_account {\n\tint id;\n\tint balance;\n\tpthread_mutex_t mutex;\n} t_account;\n\nvoid\ttransfer(t_account *from, t_account *to, int amount)\n{\n\tt_account *first = (from->id < to->id) ? from : to;\n\tt_account *second = (from->id < to->id) ? to : from;\n\n\tpthread_mutex_lock(&first->mutex);\n\tpthread_mutex_lock(&second->mutex);\n\tif (from->balance >= amount)\n\t{\n\t\tfrom->balance -= amount;\n\t\tto->balance += amount;\n\t}\n\tpthread_mutex_unlock(&second->mutex);\n\tpthread_mutex_unlock(&first->mutex);\n}",
+        "hint": "Compare from->id et to->id pour determiner lequel locker en premier.",
+        "difficulty": 3
+      }
+    ]
+  },
+  "starterCode": "#include <pthread.h>\n#include <stdio.h>\n#include <unistd.h>\n\ntypedef struct s_account\n{\n\tint\t\t\t\tid;\n\tint\t\t\t\tbalance;\n\tpthread_mutex_t\tmutex;\n}\tt_account;\n\ntypedef struct s_transfer\n{\n\tt_account\t*from;\n\tt_account\t*to;\n\tint\t\t\tamount;\n}\tt_transfer;\n\nvoid\tft_safe_transfer(t_account *from, t_account *to, int amount)\n{\n\t// TODO: Determiner l'ordre de verrouillage (par ID)\n\t// TODO: Locker dans le bon ordre\n\t// TODO: Effectuer le transfert si le solde est suffisant\n\t// TODO: Unlocker\n}\n\nvoid\t*ft_transfer_routine(void *arg)\n{\n\tt_transfer\t*t = (t_transfer *)arg;\n\tft_safe_transfer(t->from, t->to, t->amount);\n\treturn (NULL);\n}\n\nint\tmain(void)\n{\n\t// TODO: Creer 2 comptes, lancer des transferts croises\n\treturn (0);\n}",
+  "solution": "#include <pthread.h>\n#include <stdio.h>\n#include <unistd.h>\n\ntypedef struct s_account\n{\n\tint\t\t\t\tid;\n\tint\t\t\t\tbalance;\n\tpthread_mutex_t\tmutex;\n}\tt_account;\n\ntypedef struct s_transfer\n{\n\tt_account\t*from;\n\tt_account\t*to;\n\tint\t\t\tamount;\n}\tt_transfer;\n\nvoid\tft_safe_transfer(t_account *from, t_account *to, int amount)\n{\n\tt_account\t*first;\n\tt_account\t*second;\n\n\tif (from->id < to->id)\n\t{\n\t\tfirst = from;\n\t\tsecond = to;\n\t}\n\telse\n\t{\n\t\tfirst = to;\n\t\tsecond = from;\n\t}\n\tpthread_mutex_lock(&first->mutex);\n\tpthread_mutex_lock(&second->mutex);\n\tif (from->balance >= amount)\n\t{\n\t\tfrom->balance -= amount;\n\t\tto->balance += amount;\n\t}\n\tpthread_mutex_unlock(&second->mutex);\n\tpthread_mutex_unlock(&first->mutex);\n}\n\nvoid\t*ft_transfer_routine(void *arg)\n{\n\tt_transfer\t*t;\n\tint\t\t\ti;\n\n\tt = (t_transfer *)arg;\n\ti = 0;\n\twhile (i < 1000)\n\t{\n\t\tft_safe_transfer(t->from, t->to, t->amount);\n\t\ti++;\n\t}\n\treturn (NULL);\n}\n\nint\tmain(void)\n{\n\tt_account\ta;\n\tt_account\tb;\n\tpthread_t\tt1;\n\tpthread_t\tt2;\n\tt_transfer\ttr1;\n\tt_transfer\ttr2;\n\n\ta = (t_account){1, 1000, PTHREAD_MUTEX_INITIALIZER};\n\tb = (t_account){2, 1000, PTHREAD_MUTEX_INITIALIZER};\n\ttr1 = (t_transfer){&a, &b, 1};\n\ttr2 = (t_transfer){&b, &a, 1};\n\tpthread_create(&t1, NULL, ft_transfer_routine, &tr1);\n\tpthread_create(&t2, NULL, ft_transfer_routine, &tr2);\n\tpthread_join(t1, NULL);\n\tpthread_join(t2, NULL);\n\tprintf(\"A: %d, B: %d, Total: %d\\n\",\n\t\ta.balance, b.balance, a.balance + b.balance);\n\treturn (0);\n}",
+  "hints": [
+    "Toujours locker le compte avec le plus petit ID en premier pour eviter le deadlock",
+    "Utilisez une fonction helper qui determine l'ordre de verrouillage avant de locker",
+    "Le total des deux comptes doit rester constant (conservation de l'argent)"
+  ],
+  "testCases": [
+    {
+      "id": 1,
+      "description": "Le total des comptes est conserve (2000)",
+      "stdin": "",
+      "expectedStdout": "A: 1000, B: 1000, Total: 2000\n",
+      "expectedExitCode": 0,
+      "visible": true
+    },
+    {
+      "id": 2,
+      "description": "Pas de deadlock apres 1000 transferts croises",
+      "stdin": "",
+      "expectedStdout": "A: 1000, B: 1000, Total: 2000\n",
+      "expectedExitCode": 0,
+      "visible": false
+    },
+    {
+      "id": 3,
+      "description": "Programme termine en moins de 5 secondes",
+      "stdin": "",
+      "expectedStdout": "A: 1000, B: 1000, Total: 2000\n",
+      "expectedExitCode": 0,
+      "visible": false
+    }
+  ],
+  "constraints": {
+    "allowedFunctions": ["pthread_create", "pthread_join", "pthread_mutex_init", "pthread_mutex_lock", "pthread_mutex_unlock", "pthread_mutex_trylock", "pthread_mutex_destroy", "printf", "usleep"],
+    "forbiddenFunctions": ["fork", "system"],
+    "maxExecutionTime": 5000,
+    "maxMemory": 128
+  },
+  "relatedExercises": ["c-day72-ex00-ft-mutex-basics", "c-day72-ex01-ft-race-condition"],
+  "resources": [
+    {
+      "title": "Deadlock - Wikipedia",
+      "url": "https://fr.wikipedia.org/wiki/Interblocage",
+      "type": "documentation"
+    },
+    {
+      "title": "Prevention des deadlocks",
+      "url": "https://www.geeksforgeeks.org/deadlock-prevention/",
+      "type": "article"
+    }
+  ]
+}

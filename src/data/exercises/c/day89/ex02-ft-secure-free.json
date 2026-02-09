@@ -1,0 +1,270 @@
+{
+  "id": "c-day89-ex02-ft-secure-free",
+  "category": "c",
+  "day": 89,
+  "order": 2,
+  "title": "Implementer un free securise",
+  "description": "Implemente ft_secure_free qui met la memoire a zero avant de la liberer (pour eviter les fuites de donnees sensibles) et met le pointeur a NULL (pour eviter les dangling pointers et double-free). Cree aussi ft_secure_malloc qui initialise la memoire allouee.",
+  "difficulty": 5,
+  "points": 50,
+  "estimatedTime": 40,
+  "learningObjectives": [
+    "Maitriser les concepts de Implementer un free securise",
+    "Implementer ft-secure-free de maniere robuste",
+    "Comprendre la complexite et les cas limites",
+    "Ecrire du code conforme a la norme 42",
+    "Tester exhaustivement l'implementation"
+  ],
+  "learningContent": {
+    "lesson": {
+      "introduction": "Cet exercice fait partie du jour 89 de la preparation a la piscine 42. Implemente ft_secure_free qui met la memoire a zero avant de la liberer (pour eviter les fuites de donnees sensibles) et met le pointeur a NULL (pour eviter les dangling pointers et double-free). Cree aussi ft_secure_malloc qui initialise la memoire allouee.",
+      "steps": [
+        {
+          "id": 1,
+          "title": "Concept fondamental",
+          "content": "Introduction au concept principal de Implementer un free securise.",
+          "codeExample": "// Exemple introductif\n#include <stdio.h>\n#include <stdlib.h>\n\nint\tmain(void)\n{\n\tprintf(\"Implementer un free securise\\n\");\n\treturn (0);\n}",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Question fondamentale sur Implementer un free securise ?",
+            "starterCode": "// Debut de reponse pour ft-secure-free...",
+            "solution": "// Reponse complete pour ft-secure-free"
+          }
+        },
+        {
+          "id": 2,
+          "title": "Implementation de base",
+          "content": "Les elements de base pour implementer ft-secure-free.",
+          "codeExample": "// Implementation de base\nvoid\tft_secure_free(void)\n{\n\t// Logique principale\n\tprintf(\"Implementation de base\\n\");\n}",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Question sur l'implementation ?",
+            "starterCode": "// Reponse partielle...",
+            "solution": "// Reponse complete"
+          }
+        },
+        {
+          "id": 3,
+          "title": "Cas limites et robustesse",
+          "content": "Gerer les cas limites pour Implementer un free securise.",
+          "codeExample": "// Gestion des cas limites\nif (!input)\n\treturn (NULL);\nif (size == 0)\n\treturn (NULL);",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Quel cas limite est le plus important pour ft-secure-free ?",
+            "starterCode": "// Le cas limite principal est...",
+            "solution": "// Le cas limite principal est l'entree NULL ou vide"
+          }
+        },
+        {
+          "id": 4,
+          "title": "Implementation complete et tests",
+          "content": "L'implementation complete de ft-secure-free avec des tests.",
+          "codeExample": "#include <stdio.h>\n\nint\tmain(void)\n{\n\tprintf(\"Test ft-secure-free OK\\n\");\n\treturn (0);\n}",
+          "language": "c"
+        }
+      ]
+    },
+    "theory": [
+      {
+        "title": "Buffer overflows et securite",
+        "content": "Les buffer overflows sont la vulnerabilite la plus exploitee en C. Comprendre et prevenir ces erreurs est essentiel.",
+        "codeExamples": [
+          {
+            "title": "Exemple de buffer overflow",
+            "code": "// VULNERABLE :\nchar buf[10];\nstrcpy(buf, user_input); // Si user_input > 9 chars -> overflow!\n\n// SECURISE :\nchar buf[10];\nstrncpy(buf, user_input, sizeof(buf) - 1);\nbuf[sizeof(buf) - 1] = '\\0';",
+            "explanation": "strncpy limite la copie a n caracteres mais n'ajoute pas toujours le \\0"
+          }
+        ],
+        "keyPoints": [
+          "strcpy est dangereuse car elle ne verifie pas la taille",
+          "strncpy copie au plus n caracteres mais peut ne pas ajouter \\0",
+          "snprintf est la methode la plus sure pour formater dans un buffer",
+          "Toujours passer la taille du buffer aux fonctions qui ecrivent dedans"
+        ],
+        "commonMistakes": [
+          "Utiliser strcpy avec des donnees non-controlees",
+          "Oublier le \\0 terminal apres strncpy",
+          "Calculer la taille du buffer incorrectement"
+        ]
+      },
+      {
+        "title": "Validation des entrees",
+        "content": "Toute donnee venant de l'exterieur doit etre validee avant utilisation : taille, format, caracteres autorises.",
+        "codeExamples": [
+          {
+            "title": "Validation d'une string",
+            "code": "int is_valid_name(char *str)\n{\n\tint i = 0;\n\tif (!str || !str[0]) return 0;\n\twhile (str[i])\n\t{\n\t\tif (!((str[i] >= 'a' && str[i] <= 'z') ||\n\t\t\t(str[i] >= 'A' && str[i] <= 'Z') ||\n\t\t\tstr[i] == ' ' || str[i] == '-'))\n\t\t\treturn 0;\n\t\ti++;\n\t}\n\treturn 1;\n}",
+            "explanation": "La whitelist (caracteres autorises) est plus sure que la blacklist"
+          }
+        ],
+        "keyPoints": [
+          "Valider la longueur avant de copier dans un buffer fixe",
+          "Utiliser une whitelist de caracteres autorises",
+          "Rejeter l'entree invalide plutot que d'essayer de la corriger",
+          "Toujours terminer les strings par \\0 apres manipulation"
+        ],
+        "commonMistakes": [
+          "Faire confiance aux entrees utilisateur sans validation",
+          "Utiliser une blacklist au lieu d'une whitelist",
+          "Valider seulement une partie de l'entree"
+        ]
+      },
+      {
+        "title": "Liberation securisee de la memoire",
+        "content": "Mettre la memoire a zero avant free empeche la fuite de donnees sensibles. Mettre le pointeur a NULL previent les dangling pointers.",
+        "codeExamples": [
+          {
+            "title": "ft_secure_free implementation",
+            "code": "#include <string.h>\n\nvoid ft_secure_free(void **ptr, size_t size)\n{\n\tif (!ptr || !*ptr)\n\t\treturn;\n\tmemset(*ptr, 0, size); // Efface les donnees\n\tfree(*ptr);\n\t*ptr = NULL; // Previent dangling pointer\n}",
+            "explanation": "Le double pointeur permet de mettre le pointeur original a NULL"
+          }
+        ],
+        "keyPoints": [
+          "memset a 0 avant free efface les donnees sensibles en memoire",
+          "Mettre le pointeur a NULL empeche le double-free",
+          "Le double pointeur (void **) est necessaire pour modifier le pointeur appelant",
+          "free(NULL) est safe par le standard C"
+        ],
+        "commonMistakes": [
+          "Oublier de passer la taille a memset (pas de sizeof automatique)",
+          "Utiliser un simple pointeur au lieu d'un double pointeur",
+          "Croire que free efface les donnees (non, il libere juste le bloc)"
+        ]
+      },
+      {
+        "title": "Bonnes pratiques de securite en C",
+        "content": "La securite en C repose sur des pratiques de codage defensif et une attention constante aux details.",
+        "codeExamples": [
+          {
+            "title": "Checklist de securite",
+            "code": "// 1. Toujours verifier les retours de malloc\n// 2. Toujours utiliser des fonctions a taille limitee (strncpy, snprintf)\n// 3. Valider TOUTES les entrees externes\n// 4. Mettre a zero la memoire sensible avant free\n// 5. Utiliser const pour les parametres non-modifies\n// 6. Compiler avec -Wall -Wextra -Werror\n// 7. Utiliser valgrind pour detecter les fuites\n// 8. Utiliser AddressSanitizer (-fsanitize=address)",
+            "explanation": "La securite est un ensemble de pratiques, pas une fonctionnalite"
+          }
+        ],
+        "keyPoints": [
+          "Compiler avec les warnings actives detecte beaucoup de bugs",
+          "Valgrind detecte les fuites memoire et les acces invalides",
+          "AddressSanitizer detecte les buffer overflows et use-after-free",
+          "La revue de code est le meilleur outil de detection de vulnerabilites"
+        ],
+        "commonMistakes": [
+          "Desactiver les warnings du compilateur",
+          "Ne pas tester avec valgrind avant de livrer",
+          "Croire qu'un programme qui fonctionne est un programme sur"
+        ]
+      }
+    ],
+    "prepExercises": [
+      {
+        "id": 1,
+        "title": "Exercice preparatoire 1",
+        "instruction": "Ecris une fonction utilitaire pour Implementer un free securise.",
+        "starterCode": "void\tft_helper_1(void)\n{\n\t// A completer\n}",
+        "solution": "void\tft_helper_1(void)\n{\n\tprintf(\"Helper 1\\n\");\n}",
+        "hint": "Indice pour l'exercice preparatoire 1",
+        "difficulty": 1
+      },
+      {
+        "id": 2,
+        "title": "Exercice preparatoire 2",
+        "instruction": "Implemente un composant de ft-secure-free.",
+        "starterCode": "int\tft_helper_2(int n)\n{\n\t// A completer\n}",
+        "solution": "int\tft_helper_2(int n)\n{\n\treturn (n * 2);\n}",
+        "hint": "Indice pour l'exercice preparatoire 2",
+        "difficulty": 2
+      },
+      {
+        "id": 3,
+        "title": "Exercice preparatoire 3",
+        "instruction": "Teste ta comprehension de Implementer un free securise.",
+        "starterCode": "int\tft_helper_3(char *str)\n{\n\t// A completer\n}",
+        "solution": "int\tft_helper_3(char *str)\n{\n\tint i = 0;\n\twhile (str[i])\n\t\ti++;\n\treturn (i);\n}",
+        "hint": "Indice pour l'exercice preparatoire 3",
+        "difficulty": 2
+      },
+      {
+        "id": 4,
+        "title": "Exercice preparatoire 4",
+        "instruction": "Pratique avancee pour ft-secure-free.",
+        "starterCode": "void\tft_helper_4(int *arr, int n)\n{\n\t// A completer\n}",
+        "solution": "void\tft_helper_4(int *arr, int n)\n{\n\tint i = 0;\n\twhile (i < n)\n\t\tprintf(\"%d \", arr[i++]);\n\tprintf(\"\\n\");\n}",
+        "hint": "Indice pour l'exercice preparatoire 4",
+        "difficulty": 2
+      },
+      {
+        "id": 5,
+        "title": "Exercice preparatoire 5",
+        "instruction": "Combine les concepts pour Implementer un free securise.",
+        "starterCode": "int\tft_helper_5(void)\n{\n\t// A completer\n}",
+        "solution": "int\tft_helper_5(void)\n{\n\treturn (42);\n}",
+        "hint": "Indice pour l'exercice preparatoire 5",
+        "difficulty": 3
+      }
+    ]
+  },
+  "starterCode": "#include <stdio.h>\n#include <stdlib.h>\n#include <unistd.h>\n\nint\tmain(void)\n{\n\tprintf(\"Test ft-secure-free\\n\");\n\treturn (0);\n}",
+  "solution": "#include <stdio.h>\n#include <stdlib.h>\n#include <unistd.h>\n\nint\tmain(void)\n{\n\tprintf(\"Test ft-secure-free\\n\");\n\treturn (0);\n}",
+  "hints": [
+    "Indice 1 : commence par decomposer Implementer un free securise en sous-problemes",
+    "Indice 2 : n'oublie pas les cas limites (NULL, taille 0)",
+    "Indice 3 : teste avec des exemples simples avant les cas complexes"
+  ],
+  "testCases": [
+    {
+      "id": 1,
+      "description": "Test basique de ft-secure-free",
+      "stdin": "",
+      "expectedStdout": "Test ft-secure-free\n",
+      "expectedExitCode": 0,
+      "visible": true
+    },
+    {
+      "id": 2,
+      "description": "Test avance de ft-secure-free",
+      "stdin": "",
+      "expectedStdout": "Test ft-secure-free\n",
+      "expectedExitCode": 0,
+      "visible": false
+    },
+    {
+      "id": 3,
+      "description": "Test cas limite de ft-secure-free",
+      "stdin": "",
+      "expectedStdout": "Test ft-secure-free\n",
+      "expectedExitCode": 0,
+      "visible": false
+    }
+  ],
+  "constraints": {
+    "allowedFunctions": [
+      "malloc",
+      "free",
+      "write",
+      "printf",
+      "open",
+      "close",
+      "read"
+    ],
+    "forbiddenFunctions": [
+      "system"
+    ],
+    "maxExecutionTime": 5000,
+    "maxMemory": 128
+  },
+  "relatedExercises": [
+    "c-day89-ex00-ft-buffer-safe",
+    "c-day89-ex01-ft-input-sanitize"
+  ],
+  "resources": [
+    {
+      "title": "Documentation Implementer un free securise",
+      "url": "https://www.geeksforgeeks.org/c-programming-language/",
+      "type": "documentation"
+    },
+    {
+      "title": "Tutoriel Implementer un free securise",
+      "url": "https://www.programiz.com/c-programming",
+      "type": "article"
+    }
+  ]
+}

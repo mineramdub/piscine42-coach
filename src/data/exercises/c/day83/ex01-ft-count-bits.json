@@ -1,0 +1,257 @@
+{
+  "id": "c-day83-ex01-ft-count-bits",
+  "category": "c",
+  "day": 83,
+  "order": 1,
+  "title": "Compter le nombre de bits a 1 (popcount)",
+  "description": "Implemente la fonction ft_count_bits qui compte le nombre de bits a 1 dans un entier non-signe. Implemente deux methodes : la methode naive (tester chaque bit) et la methode de Brian Kernighan (n &= n - 1). Compare leur efficacite.",
+  "difficulty": 4,
+  "points": 40,
+  "estimatedTime": 35,
+  "learningObjectives": [
+    "Compter le nombre de bits actifs dans un entier (popcount/hamming weight)",
+    "Implementer l'algorithme naif bit par bit",
+    "Comprendre et implementer l'astuce de Brian Kernighan (n & (n-1))",
+    "Analyser la complexite des deux approches",
+    "Decouvrir des applications du popcount (distance de Hamming, parite)"
+  ],
+  "learningContent": {
+    "lesson": {
+      "introduction": "Le popcount (population count), aussi appele poids de Hamming, est le nombre de bits a 1 dans la representation binaire d'un nombre. C'est une operation fondamentale en informatique : calcul de parite, distance de Hamming (detection d'erreurs), comptage dans des bitmaps, et optimisation. Les processeurs modernes ont meme une instruction dediee (POPCNT). Dans cet exercice, tu vas implementer deux approches : la methode naive et l'elegante methode de Brian Kernighan.",
+      "steps": [
+        {
+          "id": 1,
+          "title": "Methode naive : tester chaque bit",
+          "content": "La methode la plus simple consiste a tester chaque bit individuellement en decalant le nombre vers la droite et en maskant avec & 1.\n\n**Algorithme :**\n1. Initialiser un compteur a 0\n2. Tant que le nombre n'est pas 0 :\n   - Si le bit de poids faible est 1 (n & 1), incrementer le compteur\n   - Decaler n d'un bit vers la droite (n >>= 1)\n3. Retourner le compteur",
+          "codeExample": "int\tft_count_bits_naive(unsigned int n)\n{\n\tint\tcount;\n\n\tcount = 0;\n\twhile (n)\n\t{\n\t\tif (n & 1)\n\t\t\tcount++;\n\t\tn >>= 1;\n\t}\n\treturn (count);\n}\n\n// Exemple avec 42 = 00101010 :\n// Iteration 1 : 00101010 & 1 = 0, n = 00010101\n// Iteration 2 : 00010101 & 1 = 1, count=1, n = 00001010\n// Iteration 3 : 00001010 & 1 = 0, n = 00000101\n// Iteration 4 : 00000101 & 1 = 1, count=2, n = 00000010\n// Iteration 5 : 00000010 & 1 = 0, n = 00000001\n// Iteration 6 : 00000001 & 1 = 1, count=3, n = 00000000\n// Resultat : 3",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Combien d'iterations fait la methode naive pour le nombre 128 (10000000) ?",
+            "starterCode": "// 128 = 10000000\n// Iteration 1 : bit 0 = ?, n = ?\n// ...\n// Combien d'iterations ? ?",
+            "solution": "// 128 = 10000000\n// Iteration 1 : bit 0 = 0, n = 01000000\n// Iteration 2 : bit 0 = 0, n = 00100000\n// ...\n// Iteration 8 : bit 0 = 1, count=1, n = 00000000\n// 8 iterations pour trouver 1 seul bit !\n// La methode naive fait log2(n) iterations au pire"
+          }
+        },
+        {
+          "id": 2,
+          "title": "Methode de Brian Kernighan : n & (n-1)",
+          "content": "L'astuce de Brian Kernighan est brillante : `n & (n - 1)` supprime le bit de poids faible a 1 de n. En repetant cette operation jusqu'a ce que n soit 0, le nombre d'iterations est exactement le nombre de bits a 1.\n\n**Pourquoi ca marche :**\n- n - 1 transforme le bit de poids faible a 1 en 0 et tous les bits en dessous en 1\n- n & (n - 1) annule le bit de poids faible a 1 de n\n\n**Exemple :** 12 = 1100, 11 = 1011, 12 & 11 = 1000",
+          "codeExample": "int\tft_count_bits_kernighan(unsigned int n)\n{\n\tint\tcount;\n\n\tcount = 0;\n\twhile (n)\n\t{\n\t\tn &= (n - 1);\n\t\tcount++;\n\t}\n\treturn (count);\n}\n\n// Exemple avec 42 = 00101010 (3 bits a 1) :\n// Iteration 1 : n = 00101010 & 00101001 = 00101000, count=1\n// Iteration 2 : n = 00101000 & 00100111 = 00100000, count=2\n// Iteration 3 : n = 00100000 & 00011111 = 00000000, count=3\n// 3 iterations seulement ! (contre 6 pour la methode naive)",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Combien d'iterations fait la methode de Kernighan pour le nombre 128 (10000000) ?",
+            "starterCode": "// 128 = 10000000\n// Iteration 1 : n = 10000000 & 01111111 = ?, count=1\n// Combien d'iterations ? ?",
+            "solution": "// 128 = 10000000 (1 seul bit a 1)\n// Iteration 1 : n = 10000000 & 01111111 = 00000000, count=1\n// 1 seule iteration ! (contre 8 pour la methode naive)\n// La methode de Kernighan fait exactement popcount(n) iterations"
+          }
+        },
+        {
+          "id": 3,
+          "title": "Comparaison des complexites",
+          "content": "**Methode naive :** O(log2(n)) iterations dans le pire cas, car on teste chaque bit. Pour un int 32 bits, c'est toujours <= 32 iterations.\n\n**Methode de Kernighan :** O(k) iterations ou k est le nombre de bits a 1. Pour un int avec 3 bits a 1, seulement 3 iterations. Beaucoup plus efficace pour les nombres avec peu de bits actifs.",
+          "codeExample": "// Comparaison sur n = 2^31 = 10000000...0 (1 seul bit) :\n// Naive : 32 iterations (teste chaque bit)\n// Kernighan : 1 iteration (supprime le seul bit)\n\n// Comparaison sur n = 2^32 - 1 = 11111111...1 (32 bits) :\n// Naive : 32 iterations\n// Kernighan : 32 iterations (tous les bits sont a 1)\n\n// En moyenne, Kernighan est 2x plus rapide\n// car un int aleatoire a ~16 bits a 1 sur 32",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Pour quelle valeur de n les deux methodes font le meme nombre d'iterations ?",
+            "starterCode": "// Les deux methodes font le meme nombre d'iterations quand ?\n// Naive : nombre d'iterations = position du bit le plus haut + 1\n// Kernighan : nombre d'iterations = nombre de bits a 1\n// Egalite quand ?",
+            "solution": "// Les deux font le meme nombre d'iterations quand\n// TOUS les bits entre 0 et le bit le plus haut sont a 1\n// C'est le cas pour 1 (1), 3 (11), 7 (111), 15 (1111), ...\n// En general : n = 2^k - 1 (tous les bits consecutifs a 1)\n// Ou quand le nombre n'a qu'un seul bit a 1 : 1, 2, 4, 8, ..."
+          }
+        },
+        {
+          "id": 4,
+          "title": "Applications du popcount",
+          "content": "Le popcount a de nombreuses applications pratiques. La distance de Hamming entre deux nombres est le popcount de leur XOR. La parite d'un nombre est popcount(n) % 2. Les bases de donnees utilisent le popcount sur des bitmaps pour compter les elements.",
+          "codeExample": "// Distance de Hamming : nombre de bits differents\nint\tft_hamming_distance(unsigned int a, unsigned int b)\n{\n\treturn (ft_count_bits(a ^ b));\n}\n// hamming_distance(7, 10) :\n// 7  = 0111, 10 = 1010\n// XOR = 1101 -> popcount = 3\n\n// Parite (pair ou impair nombre de bits) :\nint\tft_parity(unsigned int n)\n{\n\treturn (ft_count_bits(n) & 1);\n}\n\n// Puissance de 2 : n est une puissance de 2 si popcount = 1\nint\tft_is_power_of_2(unsigned int n)\n{\n\treturn (n > 0 && ft_count_bits(n) == 1);\n}",
+          "language": "c"
+        }
+      ]
+    },
+    "theory": [
+      {
+        "title": "Le popcount (population count)",
+        "content": "Le popcount est une operation fondamentale sur les bits. Les processeurs modernes ont une instruction dediee (POPCNT sur x86) tant elle est utilisee.",
+        "codeExamples": [
+          {
+            "title": "Instruction POPCNT du processeur",
+            "code": "// En C avec GCC/Clang :\nint bits = __builtin_popcount(n);  // Pour unsigned int\nint bits = __builtin_popcountl(n); // Pour unsigned long\n\n// Ces fonctions utilisent l'instruction POPCNT si disponible\n// Sinon, elles utilisent une lookup table\n\n// En pure C, on peut aussi utiliser une lookup table :\nstatic int table[256]; // pre-calculee pour chaque octet\nint popcount_table(unsigned int n)\n{\n\treturn table[n & 0xFF] + table[(n >> 8) & 0xFF]\n\t\t+ table[(n >> 16) & 0xFF] + table[(n >> 24) & 0xFF];\n}",
+            "explanation": "La lookup table est O(1) mais necessite 256 octets de memoire"
+          }
+        ],
+        "keyPoints": [
+          "Le popcount compte le nombre de bits a 1 dans un entier",
+          "Les processeurs modernes ont une instruction dediee POPCNT",
+          "__builtin_popcount est disponible avec GCC et Clang",
+          "Il existe des methodes O(1) avec lookup table ou operations paralleles"
+        ],
+        "commonMistakes": [
+          "Utiliser un int signe au lieu d'unsigned pour les operations bit-a-bit",
+          "Oublier le cas n = 0 (popcount = 0)",
+          "Ne pas utiliser __builtin_popcount quand la performance compte"
+        ]
+      },
+      {
+        "title": "L'astuce n & (n-1)",
+        "content": "L'operation n & (n-1) est l'une des astuces les plus elegantes de la manipulation de bits. Elle supprime le bit de poids faible a 1.",
+        "codeExamples": [
+          {
+            "title": "Pourquoi n & (n-1) supprime le dernier bit a 1",
+            "code": "// n     = ...1000 (le dernier 1 et des 0 apres)\n// n-1   = ...0111 (le dernier 1 devient 0, les 0 deviennent 1)\n// n&n-1 = ...0000 (le dernier 1 est supprime)\n\n// Exemple concret : n = 40 = 101000\n// n-1 = 39 = 100111\n// n & (n-1) = 100000 = 32\n// Le bit a la position 3 a ete supprime",
+            "explanation": "Soustraire 1 inverse tous les bits a partir du dernier 1"
+          }
+        ],
+        "keyPoints": [
+          "n & (n-1) supprime le bit de poids faible a 1 de n",
+          "Cette operation est a la base de l'algorithme de Kernighan",
+          "Elle permet aussi de tester si n est une puissance de 2 : n & (n-1) == 0",
+          "Le nombre d'iterations pour atteindre 0 est exactement le popcount"
+        ],
+        "commonMistakes": [
+          "Confondre n & (n-1) avec n - 1 (soustraction simple)",
+          "Appliquer l'astuce sur un nombre signe negatif (comportement indefini)",
+          "Oublier que 0 & (0-1) bouclerait sans la condition while (n)"
+        ]
+      },
+      {
+        "title": "Distance de Hamming",
+        "content": "La distance de Hamming entre deux nombres est le nombre de positions ou leurs bits different. C'est le popcount de leur XOR.",
+        "codeExamples": [
+          {
+            "title": "Calcul de la distance de Hamming",
+            "code": "// Distance de Hamming entre 7 et 10 :\n// 7  = 0111\n// 10 = 1010\n// XOR = 1101 -> popcount = 3\n// Distance = 3 (bits 0, 2 et 3 different)\n\n// Applications :\n// - Detection d'erreurs dans les transmissions\n// - Codes correcteurs d'erreurs\n// - Recherche de similarite (DNA, images)\n// - Cryptographie",
+            "explanation": "Le XOR marque les bits differents, le popcount les compte"
+          }
+        ],
+        "keyPoints": [
+          "Distance de Hamming = popcount(a XOR b)",
+          "Elle mesure le nombre de bits differents entre deux valeurs",
+          "Utilisee en detection et correction d'erreurs",
+          "La distance est toujours >= 0 et <= nombre de bits"
+        ],
+        "commonMistakes": [
+          "Confondre distance de Hamming et distance euclidienne",
+          "Calculer a ^ b sans appliquer popcount ensuite",
+          "Oublier que la distance de Hamming est symetrique : d(a,b) = d(b,a)"
+        ]
+      },
+      {
+        "title": "Techniques avancees de popcount",
+        "content": "Il existe des methodes encore plus rapides que Kernighan pour calculer le popcount, utilisant des operations paralleles sur les bits.",
+        "codeExamples": [
+          {
+            "title": "Popcount en operations paralleles",
+            "code": "// Methode de Wegner (parallel bit counting) :\nunsigned int popcount_parallel(unsigned int n)\n{\n\tn = n - ((n >> 1) & 0x55555555);\n\tn = (n & 0x33333333) + ((n >> 2) & 0x33333333);\n\tn = (n + (n >> 4)) & 0x0F0F0F0F;\n\treturn ((n * 0x01010101) >> 24);\n}\n// Toujours exactement 12 operations, peu importe n\n// O(1) en nombre d'operations !",
+            "explanation": "Cette methode additionne les bits par groupes croissants"
+          }
+        ],
+        "keyPoints": [
+          "La methode parallele est O(1) en nombre d'operations fixes",
+          "Elle additionne les bits par paires, puis par groupes de 4, 8, etc.",
+          "En pratique, __builtin_popcount est la meilleure option",
+          "La methode de Kernighan reste la plus comprehensible pour un humain"
+        ],
+        "commonMistakes": [
+          "Essayer de memoriser la formule parallele au lieu de comprendre le principe",
+          "Croire que la methode naive est toujours suffisante",
+          "Ne pas savoir que __builtin_popcount existe et reimplementer systematiquement"
+        ]
+      }
+    ],
+    "prepExercises": [
+      {
+        "id": 1,
+        "title": "Tester le bit de poids faible",
+        "instruction": "Ecris une fonction qui retourne 1 si le bit de poids faible d'un nombre est 1 (nombre impair).",
+        "starterCode": "int\tft_is_odd(unsigned int n)\n{\n\t// A completer\n}",
+        "solution": "int\tft_is_odd(unsigned int n)\n{\n\treturn (n & 1);\n}",
+        "hint": "Le bit de poids faible est 1 pour les nombres impairs : n & 1",
+        "difficulty": 1
+      },
+      {
+        "id": 2,
+        "title": "Supprimer le dernier bit a 1",
+        "instruction": "Ecris une fonction qui retourne n avec son bit de poids faible a 1 supprime.",
+        "starterCode": "unsigned int\tft_clear_lowest_bit(unsigned int n)\n{\n\t// A completer\n}",
+        "solution": "unsigned int\tft_clear_lowest_bit(unsigned int n)\n{\n\treturn (n & (n - 1));\n}",
+        "hint": "Utilise l'astuce de Brian Kernighan : n & (n - 1)",
+        "difficulty": 2
+      },
+      {
+        "id": 3,
+        "title": "Tester si puissance de 2",
+        "instruction": "Ecris une fonction qui retourne 1 si n est une puissance de 2 (exactement 1 bit a 1).",
+        "starterCode": "int\tft_is_power_of_2(unsigned int n)\n{\n\t// A completer\n}",
+        "solution": "int\tft_is_power_of_2(unsigned int n)\n{\n\treturn (n > 0 && (n & (n - 1)) == 0);\n}",
+        "hint": "Une puissance de 2 a un seul bit a 1, donc n & (n-1) == 0",
+        "difficulty": 2
+      },
+      {
+        "id": 4,
+        "title": "Parite d'un nombre",
+        "instruction": "Ecris une fonction qui retourne 1 si le nombre de bits a 1 est impair (parite impaire).",
+        "starterCode": "int\tft_parity(unsigned int n)\n{\n\t// A completer\n}",
+        "solution": "int\tft_parity(unsigned int n)\n{\n\tint\tcount;\n\n\tcount = 0;\n\twhile (n)\n\t{\n\t\tn &= (n - 1);\n\t\tcount++;\n\t}\n\treturn (count & 1);\n}",
+        "hint": "Compte les bits a 1 avec Kernighan, puis retourne count % 2 (ou count & 1)",
+        "difficulty": 2
+      },
+      {
+        "id": 5,
+        "title": "Distance de Hamming",
+        "instruction": "Ecris une fonction qui retourne la distance de Hamming entre deux entiers (nombre de bits differents).",
+        "starterCode": "int\tft_hamming(unsigned int a, unsigned int b)\n{\n\t// A completer\n}",
+        "solution": "int\tft_hamming(unsigned int a, unsigned int b)\n{\n\tunsigned int\txor;\n\tint\t\t\tcount;\n\n\txor = a ^ b;\n\tcount = 0;\n\twhile (xor)\n\t{\n\t\txor &= (xor - 1);\n\t\tcount++;\n\t}\n\treturn (count);\n}",
+        "hint": "XOR les deux nombres pour obtenir les bits differents, puis compte les bits a 1",
+        "difficulty": 3
+      }
+    ]
+  },
+  "starterCode": "#include <stdio.h>\n\nint\tft_count_bits(unsigned int n)\n{\n\t// A completer - methode de Brian Kernighan\n}\n\nint\tmain(void)\n{\n\tprintf(\"Bits a 1 dans 0 : %d\\n\", ft_count_bits(0));\n\tprintf(\"Bits a 1 dans 42 : %d\\n\", ft_count_bits(42));\n\tprintf(\"Bits a 1 dans 255 : %d\\n\", ft_count_bits(255));\n\tprintf(\"Bits a 1 dans 1024 : %d\\n\", ft_count_bits(1024));\n\treturn (0);\n}",
+  "solution": "#include <stdio.h>\n\nint\tft_count_bits(unsigned int n)\n{\n\tint\tcount;\n\n\tcount = 0;\n\twhile (n)\n\t{\n\t\tn &= (n - 1);\n\t\tcount++;\n\t}\n\treturn (count);\n}\n\nint\tmain(void)\n{\n\tprintf(\"Bits a 1 dans 0 : %d\\n\", ft_count_bits(0));\n\tprintf(\"Bits a 1 dans 42 : %d\\n\", ft_count_bits(42));\n\tprintf(\"Bits a 1 dans 255 : %d\\n\", ft_count_bits(255));\n\tprintf(\"Bits a 1 dans 1024 : %d\\n\", ft_count_bits(1024));\n\treturn (0);\n}",
+  "hints": [
+    "L'astuce de Brian Kernighan : n &= (n - 1) supprime le dernier bit a 1",
+    "Le nombre d'iterations de la boucle est exactement le nombre de bits a 1",
+    "N'oublie pas le cas n = 0 : la boucle ne s'execute pas, retourne 0"
+  ],
+  "testCases": [
+    {
+      "id": 1,
+      "description": "Compter les bits de 0, 42, 255, 1024",
+      "stdin": "",
+      "expectedStdout": "Bits a 1 dans 0 : 0\nBits a 1 dans 42 : 3\nBits a 1 dans 255 : 8\nBits a 1 dans 1024 : 1\n",
+      "expectedExitCode": 0,
+      "visible": true
+    },
+    {
+      "id": 2,
+      "description": "Compter les bits de 1 et UINT_MAX",
+      "stdin": "",
+      "expectedStdout": "Bits a 1 dans 1 : 1\nBits a 1 dans 4294967295 : 32\n",
+      "expectedExitCode": 0,
+      "visible": false
+    },
+    {
+      "id": 3,
+      "description": "Compter les bits de puissances de 2",
+      "stdin": "",
+      "expectedStdout": "Bits a 1 dans 2 : 1\nBits a 1 dans 16 : 1\nBits a 1 dans 128 : 1\n",
+      "expectedExitCode": 0,
+      "visible": false
+    }
+  ],
+  "constraints": {
+    "allowedFunctions": ["printf", "write"],
+    "forbiddenFunctions": ["malloc", "pow", "log"],
+    "maxExecutionTime": 5000,
+    "maxMemory": 128
+  },
+  "relatedExercises": ["c-day83-ex00-ft-set-bit", "c-day83-ex02-ft-swap-bits"],
+  "resources": [
+    {
+      "title": "Popcount - Wikipedia",
+      "url": "https://en.wikipedia.org/wiki/Hamming_weight",
+      "type": "documentation"
+    },
+    {
+      "title": "Brian Kernighan's bit counting",
+      "url": "https://www.geeksforgeeks.org/count-set-bits-in-an-integer/",
+      "type": "article"
+    }
+  ]
+}

@@ -1,0 +1,257 @@
+{
+  "id": "c-day65-ex02-ft-hashtable-free",
+  "category": "c",
+  "day": 65,
+  "order": 2,
+  "title": "Liberer une table de hachage complete",
+  "description": "Ecris la fonction ft_hashtable_free qui libere toute la memoire d'une table de hachage. Pour chaque bucket, on parcourt la liste chainee et on libere chaque entree (valeur avec del, cle avec free, entree avec free). Puis on libere le tableau de buckets et la structure de la table.",
+  "difficulty": 4,
+  "points": 40,
+  "estimatedTime": 35,
+  "learningObjectives": [
+    "Liberer correctement toute la memoire d'une table de hachage",
+    "Parcourir tous les buckets et leurs listes chainees",
+    "Gerer la liberation en cascade (valeur, cle, entree, buckets, table)",
+    "Utiliser del pour liberer les valeurs generiques",
+    "Eviter les fuites memoire et les use-after-free"
+  ],
+  "learningContent": {
+    "lesson": {
+      "introduction": "La liberation d'une table de hachage est plus complexe qu'il n'y parait car il y a plusieurs niveaux d'allocation : la structure t_hashtable, le tableau de buckets, et pour chaque entree la cle (strdup) et potentiellement la valeur. Il faut tout liberer dans le bon ordre, du plus profond au plus haut, pour eviter les use-after-free et les fuites.",
+      "steps": [
+        {
+          "id": 1,
+          "title": "Parcourir tous les buckets",
+          "content": "La premiere etape est de parcourir le tableau de buckets. Chaque bucket est soit NULL (vide), soit pointe vers une liste chainee d'entrees. On doit traiter chaque bucket individuellement.",
+          "codeExample": "unsigned int\ti;\n\ni = 0;\nwhile (i < ht->size)\n{\n\t// Traiter la liste chainee de ht->buckets[i]\n\ti++;\n}",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Combien de buckets faut-il parcourir pour une table de taille 100 ?",
+            "starterCode": "// Table de 100 buckets\n// Buckets remplis : 30\n// Buckets vides : 70\n// Combien de buckets parcourir : ???",
+            "solution": "// On parcourt les 100 buckets\n// Les 70 buckets vides sont NULL -> on passe\n// Les 30 buckets remplis sont traites\n// On ne sait pas lesquels sont vides sans verifier"
+          }
+        },
+        {
+          "id": 2,
+          "title": "Liberer chaque liste chainee",
+          "content": "Pour chaque bucket non vide, on parcourt la liste chainee et on libere chaque entree. Il faut sauvegarder le pointeur next AVANT de liberer l'entree, sinon on perd la reference au suivant.",
+          "codeExample": "t_entry\t*entry;\nt_entry\t*next;\n\nentry = ht->buckets[i];\nwhile (entry)\n{\n\tnext = entry->next;      // Sauvegarder le suivant\n\tif (del)\n\t\tdel(entry->value);   // Liberer la valeur\n\tfree(entry->key);        // Liberer la cle\n\tfree(entry);             // Liberer l'entree\n\tentry = next;            // Passer au suivant\n}",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Pourquoi faut-il sauvegarder next avant free(entry) ?",
+            "starterCode": "// Sans sauvegarde de next :\nfree(entry);\nentry = entry->next; // ???",
+            "solution": "// Apres free(entry), entry->next est invalide\n// entry pointe vers de la memoire liberee\n// entry->next = USE-AFTER-FREE\n// Il faut : next = entry->next AVANT free(entry)"
+          }
+        },
+        {
+          "id": 3,
+          "title": "Liberer le tableau et la structure",
+          "content": "Apres avoir libere toutes les entrees, on libere le tableau de buckets (alloue par calloc), puis la structure t_hashtable (allouee par malloc).\n\nOrdre : entrees -> buckets -> table",
+          "codeExample": "// Apres avoir libere toutes les entrees :\nfree(ht->buckets);   // Libere le tableau de pointeurs\nfree(ht);            // Libere la structure\n\n// Apres cela, ht est un dangling pointer\n// L'appelant devrait faire : ht = NULL;",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Dans quel ordre total sont liberees les allocations ?",
+            "starterCode": "// Ordre de liberation :\n// 1. Pour chaque bucket : ???\n// 2. ???\n// 3. ???",
+            "solution": "// 1. Pour chaque bucket : del(value), free(key), free(entry)\n// 2. free(buckets) - le tableau de pointeurs\n// 3. free(ht) - la structure principale\n// Du plus profond au plus haut"
+          }
+        },
+        {
+          "id": 4,
+          "title": "La fonction complete ft_hashtable_free",
+          "content": "La fonction assemble tous les morceaux : parcours des buckets, liberation des listes, liberation du tableau et de la structure.",
+          "codeExample": "void\tft_hashtable_free(t_hashtable *ht, void (*del)(void *))\n{\n\tunsigned int\ti;\n\tt_entry\t\t\t*entry;\n\tt_entry\t\t\t*next;\n\n\tif (!ht)\n\t\treturn ;\n\ti = 0;\n\twhile (i < ht->size)\n\t{\n\t\tentry = ht->buckets[i];\n\t\twhile (entry)\n\t\t{\n\t\t\tnext = entry->next;\n\t\t\tif (del)\n\t\t\t\tdel(entry->value);\n\t\t\tfree(entry->key);\n\t\t\tfree(entry);\n\t\t\tentry = next;\n\t\t}\n\t\ti++;\n\t}\n\tfree(ht->buckets);\n\tfree(ht);\n}",
+          "language": "c"
+        }
+      ]
+    },
+    "theory": [
+      {
+        "title": "Liberation en cascade",
+        "content": "La liberation en cascade consiste a liberer les structures de donnees de l'interieur vers l'exterieur. Pour une table de hachage, l'ordre est : valeurs -> cles -> entrees -> buckets -> table. Chaque niveau depend du precedent.",
+        "codeExamples": [
+          {
+            "title": "Niveaux de la table de hachage",
+            "code": "// Niveau 4 (le plus profond) : les valeurs\n//   del(entry->value)  // si del != NULL\n\n// Niveau 3 : les cles\n//   free(entry->key)  // strdup lors de l'insertion\n\n// Niveau 2 : les entrees\n//   free(entry)  // malloc lors de l'insertion\n\n// Niveau 1 : le tableau de buckets\n//   free(ht->buckets)  // calloc lors de la creation\n\n// Niveau 0 : la structure\n//   free(ht)  // malloc lors de la creation",
+            "explanation": "Chaque niveau doit etre libere avant le niveau superieur."
+          }
+        ],
+        "keyPoints": [
+          "Liberer du plus profond au plus haut (inside-out)",
+          "Chaque malloc/calloc/strdup a son free correspondant",
+          "Ne jamais acceder a un pointeur apres l'avoir free",
+          "Verifier les pointeurs NULL avant de les liberer"
+        ],
+        "commonMistakes": [
+          "Liberer ht->buckets avant les entrees (perd les references)",
+          "Oublier de liberer les cles (fuite memoire de strdup)",
+          "Appeler del sur des valeurs non-malloc"
+        ]
+      },
+      {
+        "title": "Sauvegarder next avant free",
+        "content": "C'est un pattern essentiel pour la liberation de listes chainees. Apres free(entry), entry->next est invalide. Il faut sauvegarder entry->next dans une variable temporaire AVANT d'appeler free.",
+        "codeExamples": [
+          {
+            "title": "Pattern correct de liberation de liste",
+            "code": "// CORRECT :\nwhile (entry)\n{\n\tt_entry *next = entry->next; // Sauvegarde\n\tfree(entry);                 // Libere\n\tentry = next;                // Avance\n}\n\n// INCORRECT :\nwhile (entry)\n{\n\tfree(entry);           // entry->next invalide !\n\tentry = entry->next;   // USE-AFTER-FREE\n}",
+            "explanation": "Toujours sauvegarder le lien suivant avant de liberer le noeud courant."
+          }
+        ],
+        "keyPoints": [
+          "Sauvegarder next AVANT free (pas apres)",
+          "Utiliser une variable temporaire pour stocker next",
+          "Ce pattern s'applique a toute liberation de liste chainee",
+          "Meme pattern pour les arbres (sauvegarder left/right avant free)"
+        ],
+        "commonMistakes": [
+          "Acceder a entry->next apres free(entry)",
+          "Oublier la variable temporaire et perdre la reference au suivant",
+          "Modifier entry avant d'avoir sauvegarde next"
+        ]
+      },
+      {
+        "title": "Verification avec Valgrind",
+        "content": "Valgrind est l'outil de reference pour detecter les fuites memoire en C. Il trace toutes les allocations et liberations et signale les blocs non liberes a la fin du programme.",
+        "codeExamples": [
+          {
+            "title": "Utilisation de Valgrind",
+            "code": "// Compilation avec debug info :\n// gcc -g -o test test.c\n\n// Execution avec Valgrind :\n// valgrind --leak-check=full ./test\n\n// Sortie ideale :\n// All heap blocks were freed -- no leaks are possible\n\n// Sortie avec fuites :\n// LEAK SUMMARY:\n//   definitely lost: 48 bytes in 3 blocks\n// (3 blocs non liberes = probablement des entrees\n//  ou des cles strdup)",
+            "explanation": "Valgrind detecte les fuites, les use-after-free et les lectures invalides."
+          }
+        ],
+        "keyPoints": [
+          "Compiler avec -g pour avoir les numeros de ligne dans Valgrind",
+          "--leak-check=full donne le detail des fuites",
+          "0 bytes lost = pas de fuite memoire",
+          "Valgrind detecte aussi les use-after-free et les lectures invalides"
+        ],
+        "commonMistakes": [
+          "Ne pas compiler avec -g (pas de numeros de ligne dans les erreurs)",
+          "Ignorer les warnings de Valgrind (certains viennent des bibliotheques systeme)",
+          "Croire que l'absence de segfault signifie l'absence de fuite"
+        ]
+      },
+      {
+        "title": "Robustesse de la fonction de liberation",
+        "content": "Une bonne fonction de liberation doit gerer les cas limites : table NULL, table vide, buckets deja liberes. Elle ne doit jamais crash, meme avec des arguments invalides.",
+        "codeExamples": [
+          {
+            "title": "Gestion des cas limites",
+            "code": "void\tft_hashtable_free(t_hashtable *ht, void (*del)(void *))\n{\n\t// Cas limites :\n\tif (!ht)            // Table NULL\n\t\treturn ;\n\tif (!ht->buckets)   // Buckets non alloues\n\t{\n\t\tfree(ht);\n\t\treturn ;\n\t}\n\t// ... liberation normale\n}\n\n// Bonne pratique apres l'appel :\nft_hashtable_free(ht, free);\nht = NULL; // Evite le dangling pointer",
+            "explanation": "Toujours verifier les pointeurs NULL en entree."
+          }
+        ],
+        "keyPoints": [
+          "Verifier ht != NULL avant toute operation",
+          "Verifier ht->buckets != NULL (corruption possible)",
+          "Mettre ht a NULL apres liberation (responsabilite de l'appelant)",
+          "La fonction ne doit jamais crash, meme avec des arguments invalides"
+        ],
+        "commonMistakes": [
+          "Ne pas verifier ht (segfault si NULL)",
+          "Double free : appeler ft_hashtable_free deux fois sur la meme table",
+          "Utiliser la table apres l'avoir liberee"
+        ]
+      }
+    ],
+    "prepExercises": [
+      {
+        "id": 1,
+        "title": "Liberer une liste chainee",
+        "instruction": "Ecris le code qui libere une liste d'entrees avec sauvegarde de next.",
+        "starterCode": "t_entry *entry = bucket;\nwhile (entry)\n{\n\tt_entry *??? = entry->next;\n\tfree(entry->key);\n\tfree(entry);\n\tentry = ???;\n}",
+        "solution": "t_entry *entry = bucket;\nwhile (entry)\n{\n\tt_entry *next = entry->next;\n\tfree(entry->key);\n\tfree(entry);\n\tentry = next;\n}",
+        "hint": "Sauvegarde entry->next dans une variable avant free(entry).",
+        "difficulty": 2
+      },
+      {
+        "id": 2,
+        "title": "Parcourir tous les buckets",
+        "instruction": "Ecris la boucle qui parcourt tous les buckets de la table.",
+        "starterCode": "unsigned int i = 0;\nwhile (i < ht->???)\n{\n\t// Traiter ht->buckets[i]\n\ti++;\n}",
+        "solution": "unsigned int i = 0;\nwhile (i < ht->size)\n{\n\t// Traiter ht->buckets[i]\n\ti++;\n}",
+        "hint": "ht->size contient le nombre de buckets.",
+        "difficulty": 1
+      },
+      {
+        "id": 3,
+        "title": "Liberer la table apres les entrees",
+        "instruction": "Ecris le code final qui libere buckets et ht.",
+        "starterCode": "// Apres avoir libere toutes les entrees :\nfree(ht->???);\nfree(???);",
+        "solution": "free(ht->buckets);\nfree(ht);",
+        "hint": "D'abord le tableau de buckets, puis la structure.",
+        "difficulty": 1
+      },
+      {
+        "id": 4,
+        "title": "Ajouter del pour les valeurs",
+        "instruction": "Modifie la liberation pour appeler del sur les valeurs.",
+        "starterCode": "while (entry)\n{\n\tnext = entry->next;\n\t// Liberer la valeur si del existe\n\tif (???)\n\t\t???(entry->value);\n\tfree(entry->key);\n\tfree(entry);\n\tentry = next;\n}",
+        "solution": "while (entry)\n{\n\tnext = entry->next;\n\tif (del)\n\t\tdel(entry->value);\n\tfree(entry->key);\n\tfree(entry);\n\tentry = next;\n}",
+        "hint": "Verifie del != NULL puis appelle del(entry->value).",
+        "difficulty": 2
+      },
+      {
+        "id": 5,
+        "title": "Combien de free pour une table ?",
+        "instruction": "Une table de 10 buckets avec 5 entrees (cles strdup, valeurs malloc). Combien de free ?",
+        "starterCode": "// 5 del(value) = 5 free\n// 5 free(key) = 5 free\n// 5 free(entry) = 5 free\n// 1 free(buckets)\n// 1 free(ht)\n// Total : ???",
+        "solution": "// 5 del(value) = 5 free\n// 5 free(key) = 5 free\n// 5 free(entry) = 5 free\n// 1 free(buckets)\n// 1 free(ht)\n// Total : 17 free pour 17 allocations",
+        "hint": "Chaque entree a 3 allocations (value, key, entry) + buckets + ht.",
+        "difficulty": 2
+      }
+    ]
+  },
+  "starterCode": "#include <stdlib.h>\n\ntypedef struct s_entry\n{\n\tchar\t\t\t*key;\n\tvoid\t\t\t*value;\n\tstruct s_entry\t*next;\n}\t\t\t\t\tt_entry;\n\ntypedef struct s_hashtable\n{\n\tt_entry\t\t\t**buckets;\n\tunsigned int\tsize;\n\tunsigned long\t(*hash)(char *, unsigned int);\n}\t\t\t\t\tt_hashtable;\n\nvoid\tft_hashtable_free(t_hashtable *ht, void (*del)(void *))\n{\n\t// Libere toute la table\n\t(void)ht;\n\t(void)del;\n}",
+  "solution": "#include <stdlib.h>\n\ntypedef struct s_entry\n{\n\tchar\t\t\t*key;\n\tvoid\t\t\t*value;\n\tstruct s_entry\t*next;\n}\t\t\t\t\tt_entry;\n\ntypedef struct s_hashtable\n{\n\tt_entry\t\t\t**buckets;\n\tunsigned int\tsize;\n\tunsigned long\t(*hash)(char *, unsigned int);\n}\t\t\t\t\tt_hashtable;\n\nvoid\tft_hashtable_free(t_hashtable *ht, void (*del)(void *))\n{\n\tunsigned int\ti;\n\tt_entry\t\t\t*entry;\n\tt_entry\t\t\t*next;\n\n\tif (!ht)\n\t\treturn ;\n\ti = 0;\n\twhile (i < ht->size)\n\t{\n\t\tentry = ht->buckets[i];\n\t\twhile (entry)\n\t\t{\n\t\t\tnext = entry->next;\n\t\t\tif (del)\n\t\t\t\tdel(entry->value);\n\t\t\tfree(entry->key);\n\t\t\tfree(entry);\n\t\t\tentry = next;\n\t\t}\n\t\ti++;\n\t}\n\tfree(ht->buckets);\n\tfree(ht);\n}",
+  "hints": [
+    "Parcours chaque bucket de 0 a ht->size - 1, et pour chacun, libere toutes les entrees de la liste.",
+    "Sauvegarde entry->next dans une variable temp AVANT de free entry.",
+    "Apres toutes les entrees, n'oublie pas de free(ht->buckets) puis free(ht)."
+  ],
+  "testCases": [
+    {
+      "id": 1,
+      "description": "Liberation complete sans fuite",
+      "stdin": "",
+      "expectedStdout": "OK\n",
+      "expectedExitCode": 0,
+      "visible": true
+    },
+    {
+      "id": 2,
+      "description": "Liberation d'une table vide",
+      "stdin": "",
+      "expectedStdout": "OK\n",
+      "expectedExitCode": 0,
+      "visible": false
+    },
+    {
+      "id": 3,
+      "description": "Liberation avec del personnalise",
+      "stdin": "",
+      "expectedStdout": "OK\n",
+      "expectedExitCode": 0,
+      "visible": false
+    }
+  ],
+  "constraints": {
+    "allowedFunctions": ["malloc", "free", "calloc"],
+    "forbiddenFunctions": ["printf"],
+    "maxExecutionTime": 5000,
+    "maxMemory": 128
+  },
+  "relatedExercises": ["c-day65-ex00-ft-hashtable-search", "c-day65-ex01-ft-hashtable-delete"],
+  "resources": [
+    {
+      "title": "Liberation de structures complexes en C",
+      "url": "https://www.geeksforgeeks.org/write-a-c-program-to-delete-a-tree/",
+      "type": "documentation"
+    },
+    {
+      "title": "Valgrind - Tutoriel",
+      "url": "https://valgrind.org/docs/manual/quick-start.html",
+      "type": "article"
+    }
+  ]
+}

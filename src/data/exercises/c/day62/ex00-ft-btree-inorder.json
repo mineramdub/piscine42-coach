@@ -1,0 +1,257 @@
+{
+  "id": "c-day62-ex00-ft-btree-inorder",
+  "category": "c",
+  "day": 62,
+  "order": 0,
+  "title": "Parcours infixe d'un arbre binaire",
+  "description": "Ecris la fonction ft_btree_inorder qui effectue un parcours infixe (in-order) d'un arbre binaire. La fonction prend la racine et une fonction void (*f)(void *) a appliquer a chaque element. Le parcours infixe visite d'abord le sous-arbre gauche, puis le noeud courant, puis le sous-arbre droit. Dans un BST, ce parcours donne les elements dans l'ordre croissant.",
+  "difficulty": 4,
+  "points": 40,
+  "estimatedTime": 30,
+  "learningObjectives": [
+    "Comprendre le parcours infixe (gauche, racine, droite)",
+    "Implementer un parcours recursif d'arbre binaire",
+    "Utiliser un pointeur de fonction pour appliquer une action a chaque noeud",
+    "Savoir que le parcours infixe d'un BST donne les elements tries",
+    "Maitriser la recursion sur les deux sous-arbres"
+  ],
+  "learningContent": {
+    "lesson": {
+      "introduction": "Le parcours d'un arbre binaire consiste a visiter tous les noeuds dans un ordre defini. Il existe trois parcours en profondeur classiques : infixe, prefixe et postfixe. Le parcours infixe (in-order) visite le sous-arbre gauche, puis le noeud courant, puis le sous-arbre droit. C'est le parcours le plus important pour les BST car il produit les elements dans l'ordre croissant.",
+      "steps": [
+        {
+          "id": 1,
+          "title": "Ordre du parcours infixe",
+          "content": "Le parcours infixe suit l'ordre **Gauche - Racine - Droite** (GRD) :\n1. Descendre recursivement dans le sous-arbre gauche\n2. Traiter le noeud courant\n3. Descendre recursivement dans le sous-arbre droit\n\nLe mot **infixe** signifie que la racine est traitee **entre** les deux sous-arbres.",
+          "codeExample": "//        5\n//       / \\\n//      3   8\n//     / \\   \\\n//    1   4   9\n\n// Parcours infixe : 1, 3, 4, 5, 8, 9\n// (les elements sont tries !)\n\n// Detail :\n// gauche(5) -> gauche(3) -> gauche(1) -> NULL\n// visite 1\n// droite(1) -> NULL\n// visite 3\n// gauche(4) -> NULL, visite 4, droite(4) -> NULL\n// visite 5\n// gauche(8) -> NULL, visite 8\n// gauche(9) -> NULL, visite 9, droite(9) -> NULL",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Quel est le parcours infixe de l'arbre 10(5(2,7),15(12,20)) ?",
+            "starterCode": "//       10\n//      /  \\\n//     5   15\n//    / \\  / \\\n//   2  7 12 20\n// Infixe : ???",
+            "solution": "// Infixe : 2, 5, 7, 10, 12, 15, 20\n// C'est l'ordre croissant car c'est un BST !"
+          }
+        },
+        {
+          "id": 2,
+          "title": "Implementation recursive",
+          "content": "L'implementation recursive est tres simple et elegante. Le cas de base est quand le noeud est NULL. Le cas recursif applique le pattern GRD : appel gauche, action sur le noeud, appel droit.\n\nLa fonction prend un pointeur de fonction **f** qui definit l'action a effectuer sur chaque element.",
+          "codeExample": "void\tft_btree_inorder(t_btree *root, void (*f)(void *))\n{\n\tif (!root)\n\t\treturn ;\n\tft_btree_inorder(root->left, f);   // G : gauche\n\tf(root->item);                      // R : racine\n\tft_btree_inorder(root->right, f);  // D : droite\n}",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Que se passe-t-il si on inverse l'ordre : droite, racine, gauche ?",
+            "starterCode": "void\treverse_inorder(t_btree *root, void (*f)(void *))\n{\n\tif (!root)\n\t\treturn ;\n\treverse_inorder(root->right, f);  // D d'abord\n\tf(root->item);                     // R\n\treverse_inorder(root->left, f);   // G ensuite\n}\n// Resultat pour BST 5(3(1,4),8) : ???",
+            "solution": "// Resultat : 8, 5, 4, 3, 1\n// C'est l'ordre DECROISSANT !\n// DRG = infixe inverse = tri decroissant"
+          }
+        },
+        {
+          "id": 3,
+          "title": "Le pointeur de fonction f",
+          "content": "Le parametre **void (*f)(void *)** est un pointeur vers une fonction qui prend un void* et ne retourne rien. On peut l'utiliser pour afficher, modifier ou compter les elements.\n\nExemple classique : une fonction qui affiche un entier.",
+          "codeExample": "// Fonction qui affiche un entier\nvoid\tprint_int(void *item)\n{\n\tprintf(\"%d \", *(int *)item);\n}\n\n// Utilisation :\nft_btree_inorder(root, print_int);\n// Affiche : 1 3 4 5 8 9\n\n// Autre exemple : doubler chaque valeur\nvoid\tdouble_val(void *item)\n{\n\t*(int *)item *= 2;\n}\nft_btree_inorder(root, double_val);\n// Chaque valeur est doublee",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Ecris une fonction qui compte les noeuds en utilisant une variable globale.",
+            "starterCode": "int\tg_count = 0;\n\nvoid\tcount_node(void *item)\n{\n\t// Incremente g_count\n\t(void)item;\n}\n// ft_btree_inorder(root, count_node);",
+            "solution": "int\tg_count = 0;\n\nvoid\tcount_node(void *item)\n{\n\t(void)item;\n\tg_count++;\n}\n// Apres ft_btree_inorder(root, count_node),\n// g_count contient le nombre de noeuds"
+          }
+        },
+        {
+          "id": 4,
+          "title": "Propriete du BST et parcours infixe",
+          "content": "La propriete la plus importante du parcours infixe est que, pour un BST, il produit les elements dans l'ordre croissant. C'est une consequence directe de la propriete du BST : gauche < racine <= droite.\n\nCette propriete est souvent utilisee pour verifier si un arbre est bien un BST : si le parcours infixe n'est pas trie, ce n'est pas un BST.",
+          "codeExample": "// Verification qu'un arbre est un BST :\n// Parcours infixe et verifie que chaque element\n// est plus grand que le precedent\n\nint\tg_prev = INT_MIN;\nint\tg_is_bst = 1;\n\nvoid\tcheck_bst(void *item)\n{\n\tif (*(int *)item <= g_prev)\n\t\tg_is_bst = 0;\n\tg_prev = *(int *)item;\n}\n\n// ft_btree_inorder(root, check_bst);\n// Si g_is_bst == 1, c'est un BST valide",
+          "language": "c"
+        }
+      ]
+    },
+    "theory": [
+      {
+        "title": "Les trois parcours en profondeur",
+        "content": "Les trois parcours en profondeur (DFS - Depth First Search) different par le moment ou le noeud courant est traite : avant (prefixe), entre (infixe), ou apres (postfixe) les sous-arbres.",
+        "codeExamples": [
+          {
+            "title": "Comparaison des trois parcours",
+            "code": "//        5\n//       / \\\n//      3   8\n//     / \\\n//    1   4\n\n// Infixe  (GRD) : 1, 3, 4, 5, 8  (trie)\n// Prefixe (RGD) : 5, 3, 1, 4, 8  (racine d'abord)\n// Postfixe(GDR) : 1, 4, 3, 8, 5  (racine en dernier)",
+            "explanation": "Chaque parcours a un cas d'utilisation different. L'infixe est ideal pour le tri."
+          }
+        ],
+        "keyPoints": [
+          "Infixe (GRD) : donne les elements tries dans un BST",
+          "Prefixe (RGD) : utile pour copier ou serialiser un arbre",
+          "Postfixe (GDR) : utile pour liberer un arbre (enfants d'abord)",
+          "Les trois parcours visitent tous les noeuds en O(n)"
+        ],
+        "commonMistakes": [
+          "Confondre l'ordre des lettres G, R, D pour chaque parcours",
+          "Croire que le parcours infixe trie toujours (seulement pour les BST)",
+          "Oublier le cas de base (noeud NULL) dans la recursion"
+        ]
+      },
+      {
+        "title": "Recursion sur les arbres binaires",
+        "content": "La recursion est l'approche naturelle pour traiter les arbres. Chaque appel recursif traite un sous-arbre, et la recursion s'arrete quand on atteint un noeud NULL. La pile d'appels suit la structure de l'arbre.",
+        "codeExamples": [
+          {
+            "title": "Pile d'appels pour le parcours infixe",
+            "code": "// Arbre : 5(3(1,NULL),NULL)\n// Appels :\n// inorder(5)\n//   inorder(3)        <- descend a gauche\n//     inorder(1)      <- descend a gauche\n//       inorder(NULL) <- cas de base, retour\n//     f(1)            <- visite 1\n//       inorder(NULL) <- cas de base, retour\n//   f(3)              <- visite 3\n//     inorder(NULL)   <- cas de base, retour\n// f(5)                <- visite 5\n//   inorder(NULL)     <- cas de base, retour",
+            "explanation": "On descend d'abord le plus a gauche possible, puis on remonte en visitant."
+          }
+        ],
+        "keyPoints": [
+          "Le cas de base est toujours le noeud NULL (return sans rien faire)",
+          "Chaque noeud genere deux appels recursifs (gauche et droit)",
+          "La profondeur maximale de recursion = hauteur de l'arbre",
+          "Un arbre de n noeuds genere exactement n + 1 appels au cas de base (n+1 pointeurs NULL)"
+        ],
+        "commonMistakes": [
+          "Ne pas tester root == NULL en premier (segfault en accedant a root->left)",
+          "Confondre l'ordre des appels recursifs et de l'action f()",
+          "Stack overflow sur un arbre tres desequilibre (recursion trop profonde)"
+        ]
+      },
+      {
+        "title": "Pointeurs de fonction void (*f)(void *)",
+        "content": "Le prototype void (*f)(void *) est un pattern classique en C pour passer une action a appliquer a chaque element. On le retrouve dans de nombreuses fonctions de la libc et des projets 42.",
+        "codeExamples": [
+          {
+            "title": "Differentes fonctions d'action",
+            "code": "// Afficher\nvoid\tprint_str(void *item)\n{\n\tprintf(\"%s\\n\", (char *)item);\n}\n\n// Liberer\nvoid\tdel_item(void *item)\n{\n\tfree(item);\n}\n\n// Transformer\nvoid\tto_upper(void *item)\n{\n\tchar *s = (char *)item;\n\twhile (*s)\n\t{\n\t\tif (*s >= 'a' && *s <= 'z')\n\t\t\t*s -= 32;\n\t\ts++;\n\t}\n}",
+            "explanation": "Le void* permet de passer n'importe quel type de donnee a la fonction."
+          }
+        ],
+        "keyPoints": [
+          "void (*f)(void *) : f est un pointeur vers une fonction sans retour",
+          "Le parametre void * permet de passer n'importe quel type",
+          "C'est le pattern callback : on passe une action a executer",
+          "Permet de separer le parcours de l'arbre et le traitement des noeuds"
+        ],
+        "commonMistakes": [
+          "Oublier de caster void* dans la fonction callback (warning du compilateur)",
+          "Passer NULL comme fonction f sans le verifier (segfault a l'appel)",
+          "Confondre void (*f)(void *) avec void *(*f)(void *) (retour different)"
+        ]
+      },
+      {
+        "title": "Applications du parcours infixe",
+        "content": "Le parcours infixe a de nombreuses applications pratiques : afficher les elements tries, verifier qu'un arbre est un BST valide, trouver le k-ieme plus petit element, ou convertir un BST en liste chainee triee.",
+        "codeExamples": [
+          {
+            "title": "Convertir un BST en tableau trie",
+            "code": "// Variable globale pour stocker les elements\nint\tg_array[100];\nint\tg_idx = 0;\n\nvoid\tstore_in_array(void *item)\n{\n\tg_array[g_idx++] = *(int *)item;\n}\n\n// Utilisation :\ng_idx = 0;\nft_btree_inorder(root, store_in_array);\n// g_array contient maintenant les elements tries\n// g_idx contient le nombre d'elements",
+            "explanation": "Le parcours infixe visite les noeuds dans l'ordre, donc le tableau sera trie."
+          }
+        ],
+        "keyPoints": [
+          "Affichage trie : parcours infixe + print",
+          "Verification BST : verifier que chaque element > precedent",
+          "K-ieme element : compter pendant le parcours infixe",
+          "Conversion BST -> tableau trie : stocker pendant le parcours"
+        ],
+        "commonMistakes": [
+          "Utiliser des variables globales sans les reinitialiser entre les appels",
+          "Supposer que le parcours infixe trie pour un arbre non-BST",
+          "Oublier que le parcours modifie les donnees si f modifie item"
+        ]
+      }
+    ],
+    "prepExercises": [
+      {
+        "id": 1,
+        "title": "Parcours infixe simple",
+        "instruction": "Donne l'ordre du parcours infixe pour l'arbre 4(2(1,3),6(5,7)).",
+        "starterCode": "//      4\n//     / \\\n//    2   6\n//   / \\ / \\\n//  1  3 5  7\n// Infixe : ???",
+        "solution": "// Infixe : 1, 2, 3, 4, 5, 6, 7\n// C'est l'ordre croissant (BST)",
+        "hint": "Gauche, Racine, Droite. Applique recursivement a chaque sous-arbre.",
+        "difficulty": 1
+      },
+      {
+        "id": 2,
+        "title": "Cas de base",
+        "instruction": "Ecris le cas de base de ft_btree_inorder.",
+        "starterCode": "void\tft_btree_inorder(t_btree *root, void (*f)(void *))\n{\n\t// Cas de base ?\n}",
+        "solution": "void\tft_btree_inorder(t_btree *root, void (*f)(void *))\n{\n\tif (!root)\n\t\treturn ;\n}",
+        "hint": "Si root est NULL, il n'y a rien a parcourir.",
+        "difficulty": 1
+      },
+      {
+        "id": 3,
+        "title": "Ecrire le parcours complet",
+        "instruction": "Complete ft_btree_inorder avec les trois etapes GRD.",
+        "starterCode": "void\tft_btree_inorder(t_btree *root, void (*f)(void *))\n{\n\tif (!root)\n\t\treturn ;\n\t// G : ???\n\t// R : ???\n\t// D : ???\n}",
+        "solution": "void\tft_btree_inorder(t_btree *root, void (*f)(void *))\n{\n\tif (!root)\n\t\treturn ;\n\tft_btree_inorder(root->left, f);\n\tf(root->item);\n\tft_btree_inorder(root->right, f);\n}",
+        "hint": "G = appel recursif sur root->left, R = f(root->item), D = appel recursif sur root->right.",
+        "difficulty": 2
+      },
+      {
+        "id": 4,
+        "title": "Fonction print_int",
+        "instruction": "Ecris une fonction print_int compatible avec le parcours.",
+        "starterCode": "void\tprint_int(void *item)\n{\n\t// Affiche l'entier pointe par item\n}",
+        "solution": "void\tprint_int(void *item)\n{\n\tprintf(\"%d \", *(int *)item);\n}",
+        "hint": "Cast item en int*, dereference, et affiche avec printf.",
+        "difficulty": 1
+      },
+      {
+        "id": 5,
+        "title": "Parcours d'un arbre asymetrique",
+        "instruction": "Donne le parcours infixe de l'arbre 5(3(1,NULL),8(NULL,9)).",
+        "starterCode": "//      5\n//     / \\\n//    3   8\n//   /     \\\n//  1       9\n// Infixe : ???",
+        "solution": "// Infixe : 1, 3, 5, 8, 9\n// Les sous-arbres NULL ne generent rien",
+        "hint": "Les sous-arbres NULL sont juste ignores (cas de base return).",
+        "difficulty": 2
+      }
+    ]
+  },
+  "starterCode": "#include <stdlib.h>\n\ntypedef struct s_btree\n{\n\tvoid\t\t\t*item;\n\tstruct s_btree\t*left;\n\tstruct s_btree\t*right;\n}\t\t\t\t\tt_btree;\n\nvoid\tft_btree_inorder(t_btree *root, void (*f)(void *))\n{\n\t// Parcours infixe : Gauche, Racine, Droite\n\t(void)root;\n\t(void)f;\n}",
+  "solution": "#include <stdlib.h>\n\ntypedef struct s_btree\n{\n\tvoid\t\t\t*item;\n\tstruct s_btree\t*left;\n\tstruct s_btree\t*right;\n}\t\t\t\t\tt_btree;\n\nvoid\tft_btree_inorder(t_btree *root, void (*f)(void *))\n{\n\tif (!root)\n\t\treturn ;\n\tft_btree_inorder(root->left, f);\n\tf(root->item);\n\tft_btree_inorder(root->right, f);\n}",
+  "hints": [
+    "Le parcours infixe suit l'ordre Gauche, Racine, Droite (GRD).",
+    "Le cas de base est root == NULL : on retourne sans rien faire.",
+    "Appelle f(root->item) ENTRE les deux appels recursifs sur left et right."
+  ],
+  "testCases": [
+    {
+      "id": 1,
+      "description": "Parcours infixe d'un BST donne les elements tries",
+      "stdin": "",
+      "expectedStdout": "1 3 4 5 8 9\n",
+      "expectedExitCode": 0,
+      "visible": true
+    },
+    {
+      "id": 2,
+      "description": "Parcours d'un arbre avec un seul noeud",
+      "stdin": "",
+      "expectedStdout": "42\n",
+      "expectedExitCode": 0,
+      "visible": false
+    },
+    {
+      "id": 3,
+      "description": "Parcours d'un arbre vide",
+      "stdin": "",
+      "expectedStdout": "",
+      "expectedExitCode": 0,
+      "visible": false
+    }
+  ],
+  "constraints": {
+    "allowedFunctions": ["malloc", "free", "write"],
+    "forbiddenFunctions": ["printf"],
+    "maxExecutionTime": 5000,
+    "maxMemory": 128
+  },
+  "relatedExercises": ["c-day62-ex01-ft-btree-preorder", "c-day62-ex02-ft-btree-postorder"],
+  "resources": [
+    {
+      "title": "Parcours d'arbres binaires",
+      "url": "https://www.geeksforgeeks.org/tree-traversals-inorder-preorder-and-postorder/",
+      "type": "documentation"
+    },
+    {
+      "title": "Visualisation des parcours d'arbres",
+      "url": "https://visualgo.net/en/bst",
+      "type": "article"
+    }
+  ]
+}

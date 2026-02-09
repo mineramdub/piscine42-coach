@@ -1,0 +1,257 @@
+{
+  "id": "c-day64-ex01-ft-hashtable-create",
+  "category": "c",
+  "day": 64,
+  "order": 1,
+  "title": "Creer une table de hachage",
+  "description": "Ecris la fonction ft_hashtable_create qui alloue et initialise une table de hachage. La structure t_hashtable contient un tableau de pointeurs t_entry **buckets (chaque bucket est une liste chainee), un unsigned int size (nombre de buckets), et un pointeur de fonction de hachage. Chaque bucket est initialise a NULL. La structure t_entry contient char *key, void *value, et t_entry *next.",
+  "difficulty": 4,
+  "points": 40,
+  "estimatedTime": 35,
+  "learningObjectives": [
+    "Definir les structures necessaires pour une table de hachage",
+    "Allouer un tableau de pointeurs (buckets) avec malloc",
+    "Initialiser tous les buckets a NULL",
+    "Comprendre le chainage pour la gestion des collisions",
+    "Stocker la taille et la fonction de hachage dans la structure"
+  ],
+  "learningContent": {
+    "lesson": {
+      "introduction": "Une table de hachage est une structure de donnees qui associe des cles a des valeurs avec un acces en O(1) en moyenne. Elle utilise un tableau de 'buckets' et une fonction de hachage pour determiner dans quel bucket stocker chaque paire cle/valeur. Quand deux cles ont le meme hash (collision), on utilise une liste chainee dans le bucket pour stocker les deux entrees.",
+      "steps": [
+        {
+          "id": 1,
+          "title": "Structure de la table de hachage",
+          "content": "La table de hachage necessite deux structures :\n- **t_entry** : une entree (paire cle/valeur) dans un bucket, avec un pointeur next pour le chainage\n- **t_hashtable** : la table elle-meme, avec le tableau de buckets, la taille, et la fonction de hash",
+          "codeExample": "typedef struct s_entry\n{\n\tchar\t\t\t*key;\n\tvoid\t\t\t*value;\n\tstruct s_entry\t*next;\n}\t\t\t\t\tt_entry;\n\ntypedef struct s_hashtable\n{\n\tt_entry\t\t\t**buckets;\n\tunsigned int\tsize;\n\tunsigned long\t(*hash)(char *, unsigned int);\n}\t\t\t\t\tt_hashtable;",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Pourquoi buckets est un t_entry ** et pas t_entry * ?",
+            "starterCode": "// t_entry *buckets  -> un seul pointeur\n// t_entry **buckets -> un tableau de pointeurs\n// Chaque bucket[i] est ???",
+            "solution": "// t_entry **buckets est un TABLEAU de pointeurs\n// buckets[0] pointe vers la premiere entree du bucket 0\n// buckets[1] pointe vers la premiere entree du bucket 1\n// Chaque bucket[i] est la tete d'une liste chainee\n// NULL si le bucket est vide"
+          }
+        },
+        {
+          "id": 2,
+          "title": "Allocation du tableau de buckets",
+          "content": "On alloue d'abord la structure t_hashtable, puis le tableau de pointeurs t_entry **buckets. Le tableau a 'size' elements, chacun initialise a NULL.\n\nOn peut utiliser **calloc** qui initialise a 0 (NULL), ou **malloc** suivi d'une boucle d'initialisation.",
+          "codeExample": "// Allocation de la table :\nt_hashtable\t*ht;\n\nht = malloc(sizeof(t_hashtable));\nif (!ht)\n\treturn (NULL);\n\n// Allocation des buckets (calloc = malloc + memset 0) :\nht->buckets = calloc(size, sizeof(t_entry *));\nif (!ht->buckets)\n{\n\tfree(ht);\n\treturn (NULL);\n}\n// Tous les buckets sont NULL (vides)",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Pourquoi faut-il free(ht) si l'allocation des buckets echoue ?",
+            "starterCode": "ht = malloc(sizeof(t_hashtable)); // OK\nht->buckets = calloc(size, sizeof(t_entry *)); // ECHEC\n// Si on ne free pas ht : ???",
+            "solution": "// Si on ne free pas ht, c'est une FUITE MEMOIRE\n// ht a ete malloc mais jamais free\n// Il faut free(ht) avant de return NULL\n// C'est le pattern de cleanup en cas d'erreur"
+          }
+        },
+        {
+          "id": 3,
+          "title": "Initialisation de la structure",
+          "content": "Apres les allocations, on initialise les champs de la table :\n- **size** : le nombre de buckets\n- **hash** : la fonction de hachage a utiliser\n- **buckets** : deja initialise par calloc\n\nLa table est maintenant prete a recevoir des insertions.",
+          "codeExample": "ht->size = size;\nht->hash = hash_func;\n// ht->buckets deja initialise par calloc\n\n// Representation en memoire (size = 4) :\n// ht->buckets:\n// [0] -> NULL\n// [1] -> NULL\n// [2] -> NULL\n// [3] -> NULL\n// Tous les buckets sont vides",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Quelle est la taille memoire totale d'une table vide de 100 buckets (64 bits) ?",
+            "starterCode": "// sizeof(t_hashtable) = ???\n// sizeof(t_entry *) * 100 = ???\n// Total = ???",
+            "solution": "// sizeof(t_hashtable) ~ 24 octets (3 champs de 8)\n// sizeof(t_entry *) * 100 = 8 * 100 = 800 octets\n// Total ~ 824 octets pour une table vide de 100 buckets"
+          }
+        },
+        {
+          "id": 4,
+          "title": "La fonction complete ft_hashtable_create",
+          "content": "La fonction prend la taille et la fonction de hash, alloue tout, et retourne la table prete a l'emploi. En cas d'erreur, elle nettoie les allocations partielles et retourne NULL.",
+          "codeExample": "t_hashtable\t*ft_hashtable_create(unsigned int size,\n\t\tunsigned long (*hash)(char *, unsigned int))\n{\n\tt_hashtable\t*ht;\n\n\tht = malloc(sizeof(t_hashtable));\n\tif (!ht)\n\t\treturn (NULL);\n\tht->buckets = calloc(size, sizeof(t_entry *));\n\tif (!ht->buckets)\n\t{\n\t\tfree(ht);\n\t\treturn (NULL);\n\t}\n\tht->size = size;\n\tht->hash = hash;\n\treturn (ht);\n}",
+          "language": "c"
+        }
+      ]
+    },
+    "theory": [
+      {
+        "title": "Architecture d'une table de hachage",
+        "content": "Une table de hachage est composee d'un tableau de buckets. Chaque bucket peut contenir zero ou plusieurs entrees. Le hash de la cle determine dans quel bucket une entree est stockee. Les collisions (meme bucket) sont gerees par chainage (liste chainee).",
+        "codeExamples": [
+          {
+            "title": "Visualisation d'une table de hachage",
+            "code": "// Table de taille 5 avec 4 entrees :\n// Bucket 0: NULL\n// Bucket 1: [\"age\":25] -> [\"name\":\"Alice\"] -> NULL\n// Bucket 2: NULL\n// Bucket 3: [\"city\":\"Paris\"] -> NULL\n// Bucket 4: [\"job\":\"dev\"] -> NULL\n\n// hash(\"age\") % 5 = 1\n// hash(\"name\") % 5 = 1  -> collision ! chaine apres \"age\"\n// hash(\"city\") % 5 = 3\n// hash(\"job\") % 5 = 4",
+            "explanation": "Les collisions sont gerees par chainage : les entrees du meme bucket forment une liste."
+          }
+        ],
+        "keyPoints": [
+          "Un tableau de buckets, chaque bucket est une liste chainee",
+          "hash(key) % size donne l'index du bucket",
+          "Les collisions sont gerees par chainage dans le meme bucket",
+          "L'acces est O(1) si les collisions sont rares, O(n) dans le pire cas"
+        ],
+        "commonMistakes": [
+          "Oublier d'initialiser les buckets a NULL (valeurs garbage -> segfault)",
+          "Confondre la taille de la table et le nombre d'elements stockes",
+          "Ne pas prevoir la gestion des collisions"
+        ]
+      },
+      {
+        "title": "Gestion des collisions par chainage",
+        "content": "Le chainage (separate chaining) est la methode la plus simple pour gerer les collisions. Chaque bucket contient une liste chainee. En cas de collision, la nouvelle entree est ajoutee en tete de la liste (O(1)).",
+        "codeExamples": [
+          {
+            "title": "Insertion avec collision",
+            "code": "// Bucket 1 avant : [\"name\":\"Alice\"] -> NULL\n// Insertion de \"age\":25 (meme bucket)\n// Bucket 1 apres : [\"age\":25] -> [\"name\":\"Alice\"] -> NULL\n\n// Insertion en tete (O(1)) :\nnew_entry->next = ht->buckets[index];\nht->buckets[index] = new_entry;\n\n// Recherche dans le bucket : parcourir la liste\n// O(k) ou k = nombre d'entrees dans le bucket",
+            "explanation": "L'insertion en tete est O(1). La recherche dans le bucket est O(k)."
+          }
+        ],
+        "keyPoints": [
+          "Chainage : chaque bucket est une liste chainee",
+          "Insertion en tete : O(1) quelle que soit la taille du bucket",
+          "Recherche : O(k) ou k est le nombre d'entrees dans le bucket",
+          "Bonne distribution du hash -> k petit -> O(1) en pratique"
+        ],
+        "commonMistakes": [
+          "Inserer en queue (O(n)) au lieu d'en tete (O(1))",
+          "Ne pas gerer le cas de cle deja existante (doublon ou mise a jour ?)",
+          "Perdre le chainage en ecrasant le bucket sans linker"
+        ]
+      },
+      {
+        "title": "calloc vs malloc + memset",
+        "content": "calloc alloue de la memoire et l'initialise a zero. C'est equivalent a malloc + memset(ptr, 0, size). Pour les tableaux de pointeurs, calloc est ideal car NULL est represente par 0 sur la plupart des systemes.",
+        "codeExamples": [
+          {
+            "title": "calloc vs malloc pour les buckets",
+            "code": "// Avec calloc (recommande) :\nt_entry **buckets = calloc(size, sizeof(t_entry *));\n// Tous les buckets sont NULL automatiquement\n\n// Avec malloc + boucle :\nt_entry **buckets = malloc(sizeof(t_entry *) * size);\nif (buckets)\n{\n\tunsigned int i = 0;\n\twhile (i < size)\n\t\tbuckets[i++] = NULL;\n}\n\n// Avec malloc + memset (attention) :\nt_entry **buckets = malloc(sizeof(t_entry *) * size);\nif (buckets)\n\tmemset(buckets, 0, sizeof(t_entry *) * size);",
+            "explanation": "calloc est le plus simple et le plus sur pour les tableaux de pointeurs."
+          }
+        ],
+        "keyPoints": [
+          "calloc(n, size) alloue n * size octets initialises a 0",
+          "malloc(n * size) alloue sans initialiser (valeurs garbage)",
+          "Pour un tableau de pointeurs, calloc est ideal (NULL = 0)",
+          "calloc detecte aussi les overflows de multiplication (n * size)"
+        ],
+        "commonMistakes": [
+          "Utiliser malloc sans initialiser les buckets (crash lors du parcours)",
+          "Confondre calloc(n, size) et calloc(n * size, 1) (meme resultat mais semantique differente)",
+          "Oublier que calloc peut aussi echouer (verifier le retour)"
+        ]
+      },
+      {
+        "title": "Choix de la taille de la table",
+        "content": "La taille de la table influence directement les performances. Une table trop petite cause beaucoup de collisions. Une table trop grande gaspille de la memoire. Le facteur de charge ideal est entre 0.5 et 0.75.",
+        "codeExamples": [
+          {
+            "title": "Impact du facteur de charge",
+            "code": "// Facteur de charge = nb_elements / size\n\n// Table de 10 buckets, 5 elements : charge = 0.5\n// En moyenne 0.5 element par bucket -> rapide\n\n// Table de 10 buckets, 20 elements : charge = 2.0\n// En moyenne 2 elements par bucket -> lent\n\n// Table de 10 buckets, 100 elements : charge = 10.0\n// En moyenne 10 elements par bucket -> tres lent (O(n))\n\n// Recommandation : redimensionner quand charge > 0.75",
+            "explanation": "Le facteur de charge determine le nombre moyen d'elements par bucket."
+          }
+        ],
+        "keyPoints": [
+          "Facteur de charge = nb_elements / taille_table",
+          "Ideal : entre 0.5 et 0.75",
+          "Taille premiere : meilleure distribution du hash",
+          "Redimensionnement dynamique : doubler la taille quand charge > 0.75"
+        ],
+        "commonMistakes": [
+          "Creer une table de taille 1 (toutes les entrees dans le meme bucket)",
+          "Ne jamais redimensionner (performances degradees avec le temps)",
+          "Choisir une taille trop grande pour un petit nombre d'elements"
+        ]
+      }
+    ],
+    "prepExercises": [
+      {
+        "id": 1,
+        "title": "Definir t_entry",
+        "instruction": "Ecris la definition de la structure t_entry (key, value, next).",
+        "starterCode": "// Definis t_entry avec :\n// char *key, void *value, t_entry *next",
+        "solution": "typedef struct s_entry\n{\n\tchar\t\t\t*key;\n\tvoid\t\t\t*value;\n\tstruct s_entry\t*next;\n}\t\t\t\t\tt_entry;",
+        "hint": "Meme pattern que t_list : un champ next qui pointe vers le meme type.",
+        "difficulty": 1
+      },
+      {
+        "id": 2,
+        "title": "Definir t_hashtable",
+        "instruction": "Ecris la definition de la structure t_hashtable.",
+        "starterCode": "// Definis t_hashtable avec :\n// t_entry **buckets, unsigned int size,\n// pointeur de fonction hash",
+        "solution": "typedef struct s_hashtable\n{\n\tt_entry\t\t\t**buckets;\n\tunsigned int\tsize;\n\tunsigned long\t(*hash)(char *, unsigned int);\n}\t\t\t\t\tt_hashtable;",
+        "hint": "Le pointeur de fonction hash prend (char *, unsigned int) et retourne unsigned long.",
+        "difficulty": 2
+      },
+      {
+        "id": 3,
+        "title": "Allouer la table",
+        "instruction": "Ecris le code qui alloue la structure t_hashtable.",
+        "starterCode": "t_hashtable *ht = ???(sizeof(???));\nif (!ht)\n\treturn (NULL);",
+        "solution": "t_hashtable *ht = malloc(sizeof(t_hashtable));\nif (!ht)\n\treturn (NULL);",
+        "hint": "malloc(sizeof(t_hashtable)) alloue la structure principale.",
+        "difficulty": 1
+      },
+      {
+        "id": 4,
+        "title": "Allouer les buckets",
+        "instruction": "Ecris le code qui alloue et initialise le tableau de buckets.",
+        "starterCode": "ht->buckets = ???(size, sizeof(???));\nif (!ht->buckets)\n{\n\t???(ht);\n\treturn (NULL);\n}",
+        "solution": "ht->buckets = calloc(size, sizeof(t_entry *));\nif (!ht->buckets)\n{\n\tfree(ht);\n\treturn (NULL);\n}",
+        "hint": "calloc initialise a 0 (NULL). N'oublie pas de free(ht) en cas d'echec.",
+        "difficulty": 2
+      },
+      {
+        "id": 5,
+        "title": "Fonction complete",
+        "instruction": "Assemble tous les morceaux pour ft_hashtable_create.",
+        "starterCode": "t_hashtable\t*ft_hashtable_create(unsigned int size,\n\t\tunsigned long (*hash)(char *, unsigned int))\n{\n\t// Alloue table, alloue buckets, initialise\n}",
+        "solution": "t_hashtable\t*ft_hashtable_create(unsigned int size,\n\t\tunsigned long (*hash)(char *, unsigned int))\n{\n\tt_hashtable *ht = malloc(sizeof(t_hashtable));\n\tif (!ht)\n\t\treturn (NULL);\n\tht->buckets = calloc(size, sizeof(t_entry *));\n\tif (!ht->buckets)\n\t{\n\t\tfree(ht);\n\t\treturn (NULL);\n\t}\n\tht->size = size;\n\tht->hash = hash;\n\treturn (ht);\n}",
+        "hint": "Alloue ht, alloue buckets avec calloc, initialise size et hash.",
+        "difficulty": 2
+      }
+    ]
+  },
+  "starterCode": "#include <stdlib.h>\n\ntypedef struct s_entry\n{\n\tchar\t\t\t*key;\n\tvoid\t\t\t*value;\n\tstruct s_entry\t*next;\n}\t\t\t\t\tt_entry;\n\ntypedef struct s_hashtable\n{\n\tt_entry\t\t\t**buckets;\n\tunsigned int\tsize;\n\tunsigned long\t(*hash)(char *, unsigned int);\n}\t\t\t\t\tt_hashtable;\n\nt_hashtable\t*ft_hashtable_create(unsigned int size,\n\t\tunsigned long (*hash)(char *, unsigned int))\n{\n\t// Alloue et initialise la table\n\t(void)size;\n\t(void)hash;\n\treturn (NULL);\n}",
+  "solution": "#include <stdlib.h>\n\ntypedef struct s_entry\n{\n\tchar\t\t\t*key;\n\tvoid\t\t\t*value;\n\tstruct s_entry\t*next;\n}\t\t\t\t\tt_entry;\n\ntypedef struct s_hashtable\n{\n\tt_entry\t\t\t**buckets;\n\tunsigned int\tsize;\n\tunsigned long\t(*hash)(char *, unsigned int);\n}\t\t\t\t\tt_hashtable;\n\nt_hashtable\t*ft_hashtable_create(unsigned int size,\n\t\tunsigned long (*hash)(char *, unsigned int))\n{\n\tt_hashtable\t*ht;\n\n\tht = malloc(sizeof(t_hashtable));\n\tif (!ht)\n\t\treturn (NULL);\n\tht->buckets = calloc(size, sizeof(t_entry *));\n\tif (!ht->buckets)\n\t{\n\t\tfree(ht);\n\t\treturn (NULL);\n\t}\n\tht->size = size;\n\tht->hash = hash;\n\treturn (ht);\n}",
+  "hints": [
+    "Alloue d'abord la structure t_hashtable avec malloc, puis le tableau de buckets avec calloc.",
+    "calloc initialise les buckets a NULL automatiquement. Si tu utilises malloc, initialise manuellement.",
+    "Si l'allocation des buckets echoue, n'oublie pas de free(ht) avant de retourner NULL."
+  ],
+  "testCases": [
+    {
+      "id": 1,
+      "description": "Creation d'une table de 10 buckets",
+      "stdin": "",
+      "expectedStdout": "size=10 buckets_ok=1\n",
+      "expectedExitCode": 0,
+      "visible": true
+    },
+    {
+      "id": 2,
+      "description": "Tous les buckets sont NULL apres creation",
+      "stdin": "",
+      "expectedStdout": "all_null=1\n",
+      "expectedExitCode": 0,
+      "visible": false
+    },
+    {
+      "id": 3,
+      "description": "La fonction hash est correctement stockee",
+      "stdin": "",
+      "expectedStdout": "hash_ok=1\n",
+      "expectedExitCode": 0,
+      "visible": false
+    }
+  ],
+  "constraints": {
+    "allowedFunctions": ["malloc", "free", "calloc"],
+    "forbiddenFunctions": ["printf"],
+    "maxExecutionTime": 5000,
+    "maxMemory": 128
+  },
+  "relatedExercises": ["c-day64-ex00-ft-hash-function", "c-day64-ex02-ft-hashtable-insert"],
+  "resources": [
+    {
+      "title": "Implementation d'une table de hachage en C",
+      "url": "https://www.geeksforgeeks.org/implementing-hash-table-open-addressing-linear-probing-cpp/",
+      "type": "documentation"
+    },
+    {
+      "title": "Chainage pour les collisions",
+      "url": "https://en.wikipedia.org/wiki/Hash_table#Separate_chaining",
+      "type": "article"
+    }
+  ]
+}

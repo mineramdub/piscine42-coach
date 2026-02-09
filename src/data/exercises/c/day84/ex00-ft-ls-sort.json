@@ -1,0 +1,257 @@
+{
+  "id": "c-day84-ex00-ft-ls-sort",
+  "category": "c",
+  "day": 84,
+  "order": 0,
+  "title": "Trier les fichiers par nom, taille ou date",
+  "description": "Implemente un systeme de tri pour les entrees d'un repertoire. Cree des fonctions comparateurs pour trier par nom (ordre alphabetique), par taille (ordre decroissant) et par date de modification (plus recent d'abord). Utilise un algorithme de tri avec pointeur de fonction pour changer de critere dynamiquement.",
+  "difficulty": 4,
+  "points": 40,
+  "estimatedTime": 40,
+  "learningObjectives": [
+    "Utiliser les fonctions systeme opendir/readdir pour lister un repertoire",
+    "Ecrire des fonctions comparateurs pour differents criteres de tri",
+    "Utiliser des pointeurs de fonction pour parametrer un algorithme de tri",
+    "Manipuler les structures dirent et stat pour obtenir les infos des fichiers",
+    "Implementer un tri generique avec un comparateur interchangeable"
+  ],
+  "learningContent": {
+    "lesson": {
+      "introduction": "La commande ls est l'une des plus utilisees sous Unix. Elle liste les fichiers d'un repertoire avec differentes options de tri et d'affichage. Dans cet exercice, tu vas implementer le coeur du tri : des fonctions comparateurs qui comparent deux fichiers selon differents criteres (nom, taille, date). Tu vas aussi decouvrir les fonctions systeme pour lire un repertoire (opendir/readdir) et obtenir les informations d'un fichier (stat). Les pointeurs de fonction te permettront de changer le critere de tri sans modifier l'algorithme.",
+      "steps": [
+        {
+          "id": 1,
+          "title": "Lire un repertoire avec opendir/readdir",
+          "content": "Les fonctions `opendir` et `readdir` permettent de lire le contenu d'un repertoire :\n- `opendir(path)` ouvre un repertoire et retourne un pointeur DIR*\n- `readdir(dir)` retourne la prochaine entree (struct dirent*) ou NULL si fin\n- `closedir(dir)` ferme le repertoire\n\nLa structure `dirent` contient principalement `d_name` (nom du fichier).",
+          "codeExample": "#include <dirent.h>\n#include <stdio.h>\n\nvoid\tft_list_dir(char *path)\n{\n\tDIR\t\t\t\t*dir;\n\tstruct dirent\t*entry;\n\n\tdir = opendir(path);\n\tif (!dir)\n\t\treturn ;\n\tentry = readdir(dir);\n\twhile (entry)\n\t{\n\t\tprintf(\"%s\\n\", entry->d_name);\n\t\tentry = readdir(dir);\n\t}\n\tclosedir(dir);\n}",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Quels fichiers speciaux readdir retourne-t-il toujours en plus des fichiers normaux ?",
+            "starterCode": "// readdir retourne aussi deux entrees speciales :\n// \".\" = le repertoire ?\n// \"..\" = le repertoire ?\n// ls -a les affiche, ls normal les cache",
+            "solution": "// readdir retourne aussi deux entrees speciales :\n// \".\" = le repertoire COURANT (lui-meme)\n// \"..\" = le repertoire PARENT\n// ls -a les affiche, ls normal les cache\n// Pour un mini-ls, on les filtre souvent"
+          }
+        },
+        {
+          "id": 2,
+          "title": "Obtenir les informations d'un fichier avec stat",
+          "content": "La fonction `stat(path, &buf)` remplit une structure `struct stat` avec les informations du fichier : taille, permissions, dates, etc.\n\nChamps utiles :\n- `st_size` : taille en octets\n- `st_mtime` : date de derniere modification\n- `st_mode` : permissions et type de fichier",
+          "codeExample": "#include <sys/stat.h>\n\nvoid\tft_file_info(char *path)\n{\n\tstruct stat\tbuf;\n\n\tif (stat(path, &buf) == -1)\n\t{\n\t\tperror(\"stat\");\n\t\treturn ;\n\t}\n\tprintf(\"Fichier : %s\\n\", path);\n\tprintf(\"Taille  : %ld octets\\n\", buf.st_size);\n\tprintf(\"Modifie : %ld\\n\", buf.st_mtime);\n}",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Quelle est la difference entre stat et lstat ?",
+            "starterCode": "// stat(path, &buf) : suit les liens symboliques\n// lstat(path, &buf) : ne suit ? les liens symboliques\n// Pour un lien symbolique, stat donne les infos de la ?\n// et lstat donne les infos du ? lui-meme",
+            "solution": "// stat(path, &buf) : suit les liens symboliques\n// lstat(path, &buf) : ne suit PAS les liens symboliques\n// Pour un lien symbolique, stat donne les infos de la CIBLE\n// et lstat donne les infos du LIEN lui-meme\n// ls -l utilise lstat pour afficher les liens correctement"
+          }
+        },
+        {
+          "id": 3,
+          "title": "Comparateurs et pointeurs de fonction",
+          "content": "Un comparateur est une fonction qui prend deux elements et retourne :\n- Negatif si le premier est avant le second\n- 0 si egaux\n- Positif si le premier est apres le second\n\nEn utilisant un pointeur de fonction, on peut changer le critere de tri sans modifier l'algorithme de tri lui-meme.",
+          "codeExample": "typedef struct s_file\n{\n\tchar\tname[256];\n\tlong\tsize;\n\tlong\tmtime;\n}\t\tt_file;\n\n// Comparateur par nom (alphabetique)\nint\tcmp_name(t_file *a, t_file *b)\n{\n\treturn (ft_strcmp(a->name, b->name));\n}\n\n// Comparateur par taille (decroissant)\nint\tcmp_size(t_file *a, t_file *b)\n{\n\treturn (b->size - a->size);\n}\n\n// Comparateur par date (plus recent d'abord)\nint\tcmp_mtime(t_file *a, t_file *b)\n{\n\treturn (b->mtime - a->mtime);\n}\n\n// Tri avec pointeur de fonction :\nvoid\tft_sort_files(t_file *files, int n,\n\tint (*cmp)(t_file *, t_file *))\n{\n\t// Bubble sort avec le comparateur cmp\n}",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Comment appelle-t-on ft_sort_files pour trier par taille ?",
+            "starterCode": "// Pour trier par nom :\nft_sort_files(files, n, cmp_name);\n\n// Pour trier par taille :\nft_sort_files(files, n, ?);\n\n// Pour trier par date :\nft_sort_files(files, n, ?);",
+            "solution": "// Pour trier par nom :\nft_sort_files(files, n, cmp_name);\n\n// Pour trier par taille :\nft_sort_files(files, n, cmp_size);\n\n// Pour trier par date :\nft_sort_files(files, n, cmp_mtime);\n\n// Le nom de la fonction sans () est un pointeur de fonction"
+          }
+        },
+        {
+          "id": 4,
+          "title": "Implementation du tri generique",
+          "content": "On implemente un bubble sort (ou insertion sort) qui utilise le pointeur de fonction comparateur. L'algorithme est le meme quel que soit le critere de tri ; seul le comparateur change.",
+          "codeExample": "void\tft_sort_files(t_file *files, int n,\n\tint (*cmp)(t_file *, t_file *))\n{\n\tt_file\ttmp;\n\tint\t\ti;\n\tint\t\tj;\n\n\ti = 0;\n\twhile (i < n - 1)\n\t{\n\t\tj = 0;\n\t\twhile (j < n - 1 - i)\n\t\t{\n\t\t\tif (cmp(&files[j], &files[j + 1]) > 0)\n\t\t\t{\n\t\t\t\ttmp = files[j];\n\t\t\t\tfiles[j] = files[j + 1];\n\t\t\t\tfiles[j + 1] = tmp;\n\t\t\t}\n\t\t\tj++;\n\t\t}\n\t\ti++;\n\t}\n}",
+          "language": "c"
+        }
+      ]
+    },
+    "theory": [
+      {
+        "title": "Fonctions systeme pour les repertoires",
+        "content": "Unix fournit un ensemble de fonctions pour manipuler les repertoires. Ces fonctions sont la base de commandes comme ls, find, du.",
+        "codeExamples": [
+          {
+            "title": "API de manipulation de repertoires",
+            "code": "#include <dirent.h>\n#include <sys/stat.h>\n\n// Ouvrir un repertoire\nDIR *dir = opendir(\"/tmp\");\n\n// Lire les entrees une par une\nstruct dirent *entry;\nwhile ((entry = readdir(dir)) != NULL)\n\tprintf(\"%s\\n\", entry->d_name);\n\n// Fermer le repertoire\nclosedir(dir);\n\n// Obtenir les infos d'un fichier\nstruct stat buf;\nstat(\"fichier.txt\", &buf);\nprintf(\"Taille: %ld\\n\", buf.st_size);",
+            "explanation": "opendir/readdir/closedir sont l'interface standard POSIX"
+          }
+        ],
+        "keyPoints": [
+          "opendir retourne NULL si le repertoire n'existe pas ou pas de permission",
+          "readdir retourne les entrees dans un ordre non garanti (pas alphabetique)",
+          "closedir doit toujours etre appele pour liberer les ressources",
+          "stat remplit une structure avec toutes les metadonnees du fichier"
+        ],
+        "commonMistakes": [
+          "Oublier de fermer le repertoire avec closedir (fuite de descripteur)",
+          "Ne pas verifier le retour de opendir (NULL si erreur)",
+          "Croire que readdir retourne les fichiers dans l'ordre alphabetique"
+        ]
+      },
+      {
+        "title": "Pointeurs de fonction en C",
+        "content": "Les pointeurs de fonction permettent de passer une fonction en parametre, rendant le code generique et reutilisable.",
+        "codeExamples": [
+          {
+            "title": "Syntaxe des pointeurs de fonction",
+            "code": "// Declaration : type_retour (*nom)(types_params)\nint (*cmp)(t_file *, t_file *);\n\n// Assignation : nom_fonction sans ()\ncmp = cmp_name;  // ou &cmp_name\n\n// Appel : comme une fonction normale\nint result = cmp(&a, &b);  // ou (*cmp)(&a, &b)\n\n// Typedef pour simplifier :\ntypedef int (*t_cmp)(t_file *, t_file *);\nvoid ft_sort(t_file *f, int n, t_cmp cmp);",
+            "explanation": "Les pointeurs de fonction sont la base de la programmation generique en C"
+          }
+        ],
+        "keyPoints": [
+          "Un pointeur de fonction stocke l'adresse d'une fonction",
+          "La syntaxe de declaration est : type_retour (*nom)(params)",
+          "L'appel se fait comme une fonction normale : ptr(args)",
+          "typedef simplifie la syntaxe pour les types complexes"
+        ],
+        "commonMistakes": [
+          "Oublier les parentheses autour de (*nom) dans la declaration",
+          "Confondre int *f(int) (fonction retournant int*) et int (*f)(int) (pointeur de fonction)",
+          "Ne pas verifier que le pointeur de fonction n'est pas NULL avant l'appel"
+        ]
+      },
+      {
+        "title": "Algorithmes de tri avec comparateur",
+        "content": "Un algorithme de tri generique utilise un comparateur pour decider de l'ordre. La bibliotheque standard C fournit qsort qui fonctionne sur ce principe.",
+        "codeExamples": [
+          {
+            "title": "qsort de la libc",
+            "code": "#include <stdlib.h>\n\n// Prototype de qsort :\nvoid qsort(void *base, size_t nmemb, size_t size,\n           int (*compar)(const void *, const void *));\n\n// Comparateur pour qsort (doit caster les void*) :\nint cmp_int(const void *a, const void *b)\n{\n\treturn (*(int *)a - *(int *)b);\n}\n\n// Utilisation :\nint arr[] = {5, 3, 1, 4, 2};\nqsort(arr, 5, sizeof(int), cmp_int);",
+            "explanation": "qsort est generique grace aux void* et au comparateur"
+          }
+        ],
+        "keyPoints": [
+          "qsort trie n'importe quel type grace aux pointeurs void*",
+          "Le comparateur retourne negatif, 0 ou positif",
+          "Notre version simplifiee utilise des types concrets au lieu de void*",
+          "Le meme algorithme fonctionne pour n'importe quel critere"
+        ],
+        "commonMistakes": [
+          "Mauvais cast des void* dans le comparateur qsort",
+          "Comparateur qui ne respecte pas la convention de retour (neg/0/pos)",
+          "Oublier que le comparateur doit etre coherent (si a < b, alors b > a)"
+        ]
+      },
+      {
+        "title": "Structure stat et metadonnees",
+        "content": "La structure stat contient toutes les metadonnees d'un fichier : type, permissions, taille, dates, proprietaire.",
+        "codeExamples": [
+          {
+            "title": "Champs principaux de struct stat",
+            "code": "struct stat buf;\nstat(\"fichier.txt\", &buf);\n\n// Type et permissions\nbuf.st_mode   // Permissions (rwx) et type de fichier\nS_ISREG(buf.st_mode)  // Est-ce un fichier regulier ?\nS_ISDIR(buf.st_mode)  // Est-ce un repertoire ?\n\n// Taille\nbuf.st_size   // Taille en octets\n\n// Dates\nbuf.st_atime  // Dernier acces\nbuf.st_mtime  // Derniere modification\nbuf.st_ctime  // Dernier changement de statut\n\n// Proprietaire\nbuf.st_uid    // User ID\nbuf.st_gid    // Group ID",
+            "explanation": "stat fournit toutes les informations affichees par ls -l"
+          }
+        ],
+        "keyPoints": [
+          "st_size donne la taille du fichier en octets",
+          "st_mtime est le timestamp de derniere modification (secondes depuis epoch)",
+          "st_mode contient le type de fichier ET les permissions",
+          "Les macros S_ISREG, S_ISDIR, S_ISLNK testent le type de fichier"
+        ],
+        "commonMistakes": [
+          "Confondre mtime (modification du contenu) et ctime (changement de statut)",
+          "Oublier de verifier le retour de stat (-1 en cas d'erreur)",
+          "Ne pas construire le chemin complet pour stat (repertoire + nom du fichier)"
+        ]
+      }
+    ],
+    "prepExercises": [
+      {
+        "id": 1,
+        "title": "Comparateur de strings",
+        "instruction": "Ecris une fonction ft_strcmp qui compare deux strings et retourne la difference.",
+        "starterCode": "int\tft_strcmp(char *s1, char *s2)\n{\n\t// A completer\n}",
+        "solution": "int\tft_strcmp(char *s1, char *s2)\n{\n\tint\ti;\n\n\ti = 0;\n\twhile (s1[i] && s1[i] == s2[i])\n\t\ti++;\n\treturn ((unsigned char)s1[i] - (unsigned char)s2[i]);\n}",
+        "hint": "Parcours les deux strings tant qu'elles sont egales, retourne la difference au premier caractere different",
+        "difficulty": 1
+      },
+      {
+        "id": 2,
+        "title": "Bubble sort simple",
+        "instruction": "Ecris un bubble sort pour un tableau d'entiers.",
+        "starterCode": "void\tft_bubble_sort(int *arr, int n)\n{\n\t// A completer\n}",
+        "solution": "void\tft_bubble_sort(int *arr, int n)\n{\n\tint\ttmp;\n\tint\ti;\n\tint\tj;\n\n\ti = 0;\n\twhile (i < n - 1)\n\t{\n\t\tj = 0;\n\t\twhile (j < n - 1 - i)\n\t\t{\n\t\t\tif (arr[j] > arr[j + 1])\n\t\t\t{\n\t\t\t\ttmp = arr[j];\n\t\t\t\tarr[j] = arr[j + 1];\n\t\t\t\tarr[j + 1] = tmp;\n\t\t\t}\n\t\t\tj++;\n\t\t}\n\t\ti++;\n\t}\n}",
+        "hint": "Deux boucles imbriquees, echange les elements adjacents si dans le mauvais ordre",
+        "difficulty": 2
+      },
+      {
+        "id": 3,
+        "title": "Utiliser un pointeur de fonction",
+        "instruction": "Ecris une fonction ft_apply qui prend un int et un pointeur de fonction, et retourne le resultat de la fonction appliquee a l'int.",
+        "starterCode": "int\tft_apply(int n, int (*f)(int))\n{\n\t// A completer\n}",
+        "solution": "int\tft_apply(int n, int (*f)(int))\n{\n\tif (!f)\n\t\treturn (n);\n\treturn (f(n));\n}",
+        "hint": "Appelle f(n) et retourne le resultat. Verifie que f n'est pas NULL.",
+        "difficulty": 2
+      },
+      {
+        "id": 4,
+        "title": "Stocker des noms de fichiers",
+        "instruction": "Ecris une fonction qui copie un nom de fichier dans une structure t_file.",
+        "starterCode": "typedef struct s_file\n{\n\tchar\tname[256];\n}\tt_file;\n\nvoid\tft_set_name(t_file *file, char *name)\n{\n\t// A completer\n}",
+        "solution": "void\tft_set_name(t_file *file, char *name)\n{\n\tint\ti;\n\n\ti = 0;\n\twhile (name[i] && i < 255)\n\t{\n\t\tfile->name[i] = name[i];\n\t\ti++;\n\t}\n\tfile->name[i] = '\\0';\n}",
+        "hint": "Copie caractere par caractere en respectant la taille max du buffer (255 + '\\0')",
+        "difficulty": 1
+      },
+      {
+        "id": 5,
+        "title": "Swap de structures",
+        "instruction": "Ecris une fonction qui echange deux structures t_file.",
+        "starterCode": "void\tft_swap_files(t_file *a, t_file *b)\n{\n\t// A completer\n}",
+        "solution": "void\tft_swap_files(t_file *a, t_file *b)\n{\n\tt_file\ttmp;\n\n\ttmp = *a;\n\t*a = *b;\n\t*b = tmp;\n}",
+        "hint": "Utilise une variable temporaire de type t_file pour echanger les deux structures",
+        "difficulty": 1
+      }
+    ]
+  },
+  "starterCode": "#include <stdio.h>\n#include <stdlib.h>\n#include <dirent.h>\n#include <sys/stat.h>\n#include <string.h>\n\ntypedef struct s_file\n{\n\tchar\tname[256];\n\tlong\tsize;\n\tlong\tmtime;\n}\t\tt_file;\n\nint\tcmp_name(t_file *a, t_file *b)\n{\n\t// A completer\n}\n\nint\tcmp_size(t_file *a, t_file *b)\n{\n\t// A completer\n}\n\nvoid\tft_sort_files(t_file *files, int n,\n\tint (*cmp)(t_file *, t_file *))\n{\n\t// A completer\n}\n\nint\tmain(void)\n{\n\tt_file\tfiles[3];\n\n\tstrcpy(files[0].name, \"zebra.txt\");\n\tfiles[0].size = 100;\n\tstrcpy(files[1].name, \"alpha.txt\");\n\tfiles[1].size = 500;\n\tstrcpy(files[2].name, \"middle.txt\");\n\tfiles[2].size = 200;\n\tft_sort_files(files, 3, cmp_name);\n\tprintf(\"%s %s %s\\n\", files[0].name, files[1].name, files[2].name);\n\treturn (0);\n}",
+  "solution": "#include <stdio.h>\n#include <stdlib.h>\n#include <string.h>\n\ntypedef struct s_file\n{\n\tchar\tname[256];\n\tlong\tsize;\n\tlong\tmtime;\n}\t\tt_file;\n\nint\tft_strcmp(char *s1, char *s2)\n{\n\twhile (*s1 && *s1 == *s2)\n\t{\n\t\ts1++;\n\t\ts2++;\n\t}\n\treturn ((unsigned char)*s1 - (unsigned char)*s2);\n}\n\nint\tcmp_name(t_file *a, t_file *b)\n{\n\treturn (ft_strcmp(a->name, b->name));\n}\n\nint\tcmp_size(t_file *a, t_file *b)\n{\n\treturn (b->size - a->size);\n}\n\nvoid\tft_sort_files(t_file *files, int n,\n\tint (*cmp)(t_file *, t_file *))\n{\n\tt_file\ttmp;\n\tint\t\ti;\n\tint\t\tj;\n\n\ti = 0;\n\twhile (i < n - 1)\n\t{\n\t\tj = 0;\n\t\twhile (j < n - 1 - i)\n\t\t{\n\t\t\tif (cmp(&files[j], &files[j + 1]) > 0)\n\t\t\t{\n\t\t\t\ttmp = files[j];\n\t\t\t\tfiles[j] = files[j + 1];\n\t\t\t\tfiles[j + 1] = tmp;\n\t\t\t}\n\t\t\tj++;\n\t\t}\n\t\ti++;\n\t}\n}\n\nint\tmain(void)\n{\n\tt_file\tfiles[3];\n\n\tstrcpy(files[0].name, \"zebra.txt\");\n\tfiles[0].size = 100;\n\tstrcpy(files[1].name, \"alpha.txt\");\n\tfiles[1].size = 500;\n\tstrcpy(files[2].name, \"middle.txt\");\n\tfiles[2].size = 200;\n\tft_sort_files(files, 3, cmp_name);\n\tprintf(\"%s %s %s\\n\", files[0].name, files[1].name, files[2].name);\n\treturn (0);\n}",
+  "hints": [
+    "Le comparateur par nom utilise strcmp (ou ta propre ft_strcmp) sur les champs name",
+    "Pour trier par taille decroissante, le comparateur retourne b->size - a->size",
+    "Le bubble sort appelle cmp(&files[j], &files[j+1]) pour decider s'il faut echanger"
+  ],
+  "testCases": [
+    {
+      "id": 1,
+      "description": "Tri par nom alphabetique",
+      "stdin": "",
+      "expectedStdout": "alpha.txt middle.txt zebra.txt\n",
+      "expectedExitCode": 0,
+      "visible": true
+    },
+    {
+      "id": 2,
+      "description": "Tri par taille decroissante",
+      "stdin": "",
+      "expectedStdout": "alpha.txt middle.txt zebra.txt\n",
+      "expectedExitCode": 0,
+      "visible": false
+    },
+    {
+      "id": 3,
+      "description": "Tri d'un seul fichier",
+      "stdin": "",
+      "expectedStdout": "seul.txt\n",
+      "expectedExitCode": 0,
+      "visible": false
+    }
+  ],
+  "constraints": {
+    "allowedFunctions": ["malloc", "free", "printf", "write", "opendir", "readdir", "closedir", "stat"],
+    "forbiddenFunctions": ["qsort", "system"],
+    "maxExecutionTime": 5000,
+    "maxMemory": 128
+  },
+  "relatedExercises": ["c-day84-ex01-ft-ls-format", "c-day84-ex02-ft-ls-recursive"],
+  "resources": [
+    {
+      "title": "opendir/readdir - Manuel POSIX",
+      "url": "https://man7.org/linux/man-pages/man3/readdir.3.html",
+      "type": "documentation"
+    },
+    {
+      "title": "Pointeurs de fonction en C",
+      "url": "https://www.geeksforgeeks.org/function-pointer-in-c/",
+      "type": "article"
+    }
+  ]
+}

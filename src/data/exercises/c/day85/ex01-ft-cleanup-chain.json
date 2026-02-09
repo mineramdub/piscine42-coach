@@ -1,0 +1,271 @@
+{
+  "id": "c-day85-ex01-ft-cleanup-chain",
+  "category": "c",
+  "day": 85,
+  "order": 1,
+  "title": "Pattern de cleanup en chaine",
+  "description": "Implemente le pattern de cleanup en chaine pour gerer la liberation des ressources en cas d'erreur. Utilise des labels goto pour sauter au point de nettoyage appropriate, ou des fonctions de nettoyage appelees en cascade. Ce pattern evite les fuites de memoire et de descripteurs dans les fonctions complexes.",
+  "difficulty": 5,
+  "points": 50,
+  "estimatedTime": 40,
+  "learningObjectives": [
+    "Comprendre le probleme du cleanup en cas d'erreur en C",
+    "Implementer le pattern goto cleanup pour la liberation de ressources",
+    "Creer des fonctions de nettoyage en cascade",
+    "Eviter les fuites de memoire dans les fonctions avec allocations multiples",
+    "Comparer les differentes approches de cleanup en C"
+  ],
+  "learningContent": {
+    "lesson": {
+      "introduction": "En C, quand une fonction fait plusieurs allocations ou ouvre plusieurs ressources, chaque etape peut echouer. Si la 3eme allocation echoue, il faut liberer les 2 premieres avant de retourner. Sans un pattern structure, le code devient un labyrinthe de if imbrique. Le pattern goto cleanup est la solution standard en C : on place les instructions de liberation a la fin de la fonction avec des labels, et on saute au label appropriate en cas d'erreur. C'est le pattern utilise dans le noyau Linux.",
+      "steps": [
+        {
+          "id": 1,
+          "title": "Le probleme du nettoyage en cas d'erreur",
+          "content": "Quand une fonction alloue plusieurs ressources, chaque echec necessite de liberer les ressources deja acquises. Sans pattern, le code devient profondement imbrique et difficile a maintenir.\n\nExemple : ouvrir un fichier, allouer un buffer, lire les donnees. Si la lecture echoue, il faut liberer le buffer ET fermer le fichier.",
+          "codeExample": "// MAUVAIS : if imbriques (\"pyramide de doom\")\nint\tft_process_bad(char *path)\n{\n\tint\tfd = open(path, O_RDONLY);\n\tif (fd != -1)\n\t{\n\t\tchar *buf = malloc(1024);\n\t\tif (buf)\n\t\t{\n\t\t\tint ret = read(fd, buf, 1024);\n\t\t\tif (ret > 0)\n\t\t\t{\n\t\t\t\t// Traitement...\n\t\t\t\tfree(buf);\n\t\t\t\tclose(fd);\n\t\t\t\treturn (0);\n\t\t\t}\n\t\t\tfree(buf);\n\t\t}\n\t\tclose(fd);\n\t}\n\treturn (-1);\n}",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Combien de fois close(fd) et free(buf) apparaissent dans le code ci-dessus ?",
+            "starterCode": "// close(fd) apparait ? fois\n// free(buf) apparait ? fois\n// Avec N ressources, on aurait ? duplications\n// C'est un probleme de ? du code",
+            "solution": "// close(fd) apparait 2 fois\n// free(buf) apparait 2 fois\n// Avec N ressources, on aurait N! duplications\n// C'est un probleme de MAINTENABILITE du code\n// Si on oublie un free, fuite memoire garantie"
+          }
+        },
+        {
+          "id": 2,
+          "title": "Le pattern goto cleanup",
+          "content": "Le pattern goto cleanup place toutes les instructions de liberation a la fin de la fonction, avec des labels pour chaque niveau de nettoyage. En cas d'erreur, on saute au label appropriate.\n\nContrairement a la croyance populaire, goto est parfaitement acceptable en C pour ce pattern specifique. Le noyau Linux l'utilise massivement.",
+          "codeExample": "int\tft_process_good(char *path)\n{\n\tint\t\tfd;\n\tchar\t*buf;\n\tint\t\tret;\n\n\tfd = open(path, O_RDONLY);\n\tif (fd == -1)\n\t\tgoto err_open;\n\tbuf = malloc(1024);\n\tif (!buf)\n\t\tgoto err_malloc;\n\tret = read(fd, buf, 1024);\n\tif (ret <= 0)\n\t\tgoto err_read;\n\t// Traitement...\n\tfree(buf);\n\tclose(fd);\n\treturn (0);\nerr_read:\n\tfree(buf);\nerr_malloc:\n\tclose(fd);\nerr_open:\n\treturn (-1);\n}",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Si malloc echoue, quelles instructions de cleanup sont executees ?",
+            "starterCode": "// goto err_malloc saute a quel label ?\n// Les instructions executees sont :\n// 1. ?\n// 2. return (-1)\n// Le buf n'est PAS free car il n'a pas ete ?",
+            "solution": "// goto err_malloc saute au label err_malloc\n// Les instructions executees sont :\n// 1. close(fd) - car le fd a ete ouvert avec succes\n// 2. return (-1)\n// Le buf n'est PAS free car il n'a pas ete ALLOUE\n// C'est exactement le bon comportement !"
+          }
+        },
+        {
+          "id": 3,
+          "title": "Alternative : fonctions de nettoyage",
+          "content": "Si goto vous gene (certains coding standards l'interdisent), on peut utiliser des fonctions de nettoyage qui prennent les ressources a liberer. On peut aussi utiliser un struct qui regroupe toutes les ressources.",
+          "codeExample": "typedef struct s_ctx\n{\n\tint\t\tfd;\n\tchar\t*buf;\n\tchar\t*data;\n}\t\tt_ctx;\n\nvoid\tft_cleanup(t_ctx *ctx)\n{\n\tif (ctx->data)\n\t\tfree(ctx->data);\n\tif (ctx->buf)\n\t\tfree(ctx->buf);\n\tif (ctx->fd >= 0)\n\t\tclose(ctx->fd);\n}\n\nint\tft_process_ctx(char *path)\n{\n\tt_ctx\tctx;\n\n\tctx.fd = -1;\n\tctx.buf = NULL;\n\tctx.data = NULL;\n\tctx.fd = open(path, O_RDONLY);\n\tif (ctx.fd == -1)\n\t\treturn (ft_cleanup(&ctx), -1);\n\tctx.buf = malloc(1024);\n\tif (!ctx.buf)\n\t\treturn (ft_cleanup(&ctx), -1);\n\t// ...\n\tft_cleanup(&ctx);\n\treturn (0);\n}",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Pourquoi initialise-t-on fd a -1 et les pointeurs a NULL dans la structure ctx ?",
+            "starterCode": "// ctx.fd = -1 -> car -1 n'est pas un fd ?\n// ctx.buf = NULL -> car free(NULL) est ?\n// Cela permet a ft_cleanup de toujours fonctionner\n// meme si certaines ressources n'ont pas ete ?",
+            "solution": "// ctx.fd = -1 -> car -1 n'est pas un fd VALIDE\n// ctx.buf = NULL -> car free(NULL) est SAFE (ne fait rien)\n// Cela permet a ft_cleanup de toujours fonctionner\n// meme si certaines ressources n'ont pas ete ALLOUEES\n// On peut appeler cleanup a n'importe quel moment"
+          }
+        },
+        {
+          "id": 4,
+          "title": "Bonnes pratiques de cleanup",
+          "content": "Le cleanup est une partie critique du code. Voici les regles a suivre pour eviter les fuites de ressources et les double-free :\n\n1. Initialiser toutes les ressources a leur valeur nulle (NULL, -1)\n2. Toujours liberer dans l'ordre inverse de l'allocation\n3. Mettre les pointeurs a NULL apres free\n4. Verifier avant de free/close\n5. Un seul point de sortie si possible (ou goto cleanup)",
+          "codeExample": "// Regles de cleanup :\n// 1. Initialiser\nint fd = -1;\nchar *buf = NULL;\n\n// 2. Liberer dans l'ordre inverse\nfree(buf);   // Alloue en 2eme, libere en 1er\nclose(fd);   // Ouvert en 1er, ferme en 2eme\n\n// 3. Mettre a NULL apres free\nfree(buf);\nbuf = NULL;\n\n// 4. Verifier avant free/close\nif (buf)\n\tfree(buf);\nif (fd >= 0)\n\tclose(fd);",
+          "language": "c"
+        }
+      ]
+    },
+    "theory": [
+      {
+        "title": "Le pattern goto cleanup en C",
+        "content": "Le goto cleanup est le pattern standard de gestion des ressources en C. Il est largement utilise dans le noyau Linux et les projets systeme.",
+        "codeExamples": [
+          {
+            "title": "goto cleanup dans le noyau Linux",
+            "code": "// Pattern typique du noyau Linux :\nint init_module(void)\n{\n\tint ret;\n\tret = alloc_resource_a();\n\tif (ret)\n\t\tgoto err_a;\n\tret = alloc_resource_b();\n\tif (ret)\n\t\tgoto err_b;\n\tret = alloc_resource_c();\n\tif (ret)\n\t\tgoto err_c;\n\treturn 0;\nerr_c:\n\tfree_resource_b();\nerr_b:\n\tfree_resource_a();\nerr_a:\n\treturn ret;\n}",
+            "explanation": "Le goto cleanup est accepte et encourage dans le noyau Linux"
+          }
+        ],
+        "keyPoints": [
+          "goto est acceptable en C pour le pattern cleanup",
+          "Les labels sont places dans l'ordre inverse de l'allocation",
+          "Chaque label libere la ressource correspondante et tombe dans le label suivant",
+          "Le code est lineaire et facile a auditer"
+        ],
+        "commonMistakes": [
+          "Utiliser goto pour autre chose que le cleanup (rend le code illisible)",
+          "Mettre les labels dans le mauvais ordre (liberation incorrecte)",
+          "Oublier le fall-through entre les labels"
+        ]
+      },
+      {
+        "title": "Fuites de ressources",
+        "content": "Une fuite de ressource se produit quand une ressource allouee n'est jamais liberee. Les fuites de memoire sont les plus courantes.",
+        "codeExamples": [
+          {
+            "title": "Types de fuites",
+            "code": "// Fuite memoire :\nchar *buf = malloc(100);\nreturn (-1);  // buf jamais free !\n\n// Fuite de descripteur :\nint fd = open(\"file\", O_RDONLY);\nreturn (-1);  // fd jamais close !\n\n// Fuite de verrou (mutex) :\npthread_mutex_lock(&mutex);\nreturn (-1);  // mutex jamais unlock !",
+            "explanation": "Toute ressource acquise doit etre liberee sur tous les chemins de sortie"
+          }
+        ],
+        "keyPoints": [
+          "Chaque malloc doit avoir un free correspondant sur TOUS les chemins",
+          "Chaque open doit avoir un close correspondant",
+          "Les fuites s'accumulent au fil du temps (le programme mange la memoire)",
+          "Valgrind detecte les fuites memoire"
+        ],
+        "commonMistakes": [
+          "Retourner prematurement sans liberer les ressources",
+          "Oublier un chemin d'erreur parmi plusieurs",
+          "Croire que le systeme libere tout a la fin du programme (vrai mais mauvaise pratique)"
+        ]
+      },
+      {
+        "title": "Initialisation defensive",
+        "content": "Initialiser les ressources a leurs valeurs nulles permet d'appeler les fonctions de liberation en toute securite.",
+        "codeExamples": [
+          {
+            "title": "Initialisation a zero",
+            "code": "// free(NULL) est safe (ne fait rien)\nchar *ptr = NULL;\nfree(ptr);  // OK, pas de crash\n\n// close(-1) retourne une erreur mais ne crashe pas\nint fd = -1;\nclose(fd);  // Retourne -1, errno = EBADF\n\n// Initialiser une structure a zero :\nt_ctx ctx;\nmemset(&ctx, 0, sizeof(ctx));\nctx.fd = -1;  // 0 est un fd valide !",
+            "explanation": "L'initialisation defensive simplifie le cleanup"
+          }
+        ],
+        "keyPoints": [
+          "free(NULL) est garanti safe par le standard C",
+          "Initialiser les pointeurs a NULL permet un cleanup uniforme",
+          "Initialiser les fd a -1 car 0 est stdin (fd valide)",
+          "memset a 0 initialise les pointeurs a NULL sur la plupart des architectures"
+        ],
+        "commonMistakes": [
+          "Initialiser un fd a 0 (0 = stdin, c'est un fd valide !)",
+          "Croire que close(-1) crashe (non, il retourne juste une erreur)",
+          "Ne pas initialiser les pointeurs et free un pointeur indetermine"
+        ]
+      },
+      {
+        "title": "RAII en C (imitation)",
+        "content": "RAII (Resource Acquisition Is Initialization) est un pattern C++ ou les ressources sont liberees automatiquement. En C, on peut l'imiter avec des structures et des fonctions de cleanup.",
+        "codeExamples": [
+          {
+            "title": "RAII-like en C",
+            "code": "// Creer une structure qui encapsule la ressource\ntypedef struct s_file {\n\tint fd;\n\tchar *buf;\n\tint buf_size;\n} t_file;\n\nt_file\t*ft_file_open(char *path)\n{\n\tt_file *f = malloc(sizeof(t_file));\n\tif (!f) return NULL;\n\tf->fd = open(path, O_RDONLY);\n\tif (f->fd == -1) { free(f); return NULL; }\n\tf->buf = malloc(4096);\n\tif (!f->buf) { close(f->fd); free(f); return NULL; }\n\tf->buf_size = 4096;\n\treturn f;\n}\n\nvoid\tft_file_close(t_file *f)\n{\n\tif (!f) return;\n\tif (f->buf) free(f->buf);\n\tif (f->fd >= 0) close(f->fd);\n\tfree(f);\n}",
+            "explanation": "En regroupant les ressources dans une structure, on simplifie le cleanup"
+          }
+        ],
+        "keyPoints": [
+          "Regrouper les ressources liees dans une structure",
+          "Fournir des fonctions create/destroy pour chaque structure",
+          "La fonction destroy libere toutes les ressources internes",
+          "L'appelant n'a qu'une seule fonction a appeler pour le cleanup"
+        ],
+        "commonMistakes": [
+          "Oublier de liberer les sous-ressources avant la structure principale",
+          "Ne pas verifier NULL dans la fonction destroy",
+          "Acceder a la structure apres l'appel a destroy"
+        ]
+      }
+    ],
+    "prepExercises": [
+      {
+        "id": 1,
+        "title": "Cleanup simple",
+        "instruction": "Ecris une fonction qui alloue deux buffers et les libere correctement, meme si la 2eme allocation echoue.",
+        "starterCode": "int\tft_alloc_two(char **a, char **b, int size)\n{\n\t// A completer\n}",
+        "solution": "int\tft_alloc_two(char **a, char **b, int size)\n{\n\t*a = malloc(size);\n\tif (!*a)\n\t\treturn (-1);\n\t*b = malloc(size);\n\tif (!*b)\n\t{\n\t\tfree(*a);\n\t\t*a = NULL;\n\t\treturn (-1);\n\t}\n\treturn (0);\n}",
+        "hint": "Si la 2eme allocation echoue, libere la 1ere avant de retourner",
+        "difficulty": 2
+      },
+      {
+        "id": 2,
+        "title": "Goto cleanup basique",
+        "instruction": "Reecris ft_alloc_two avec le pattern goto cleanup.",
+        "starterCode": "int\tft_alloc_goto(char **a, char **b, int size)\n{\n\t// A completer avec goto\n}",
+        "solution": "int\tft_alloc_goto(char **a, char **b, int size)\n{\n\t*a = malloc(size);\n\tif (!*a)\n\t\tgoto err;\n\t*b = malloc(size);\n\tif (!*b)\n\t\tgoto err_b;\n\treturn (0);\nerr_b:\n\tfree(*a);\n\t*a = NULL;\nerr:\n\treturn (-1);\n}",
+        "hint": "Place les labels err_b et err a la fin, chaque label libere les ressources appropriees",
+        "difficulty": 3
+      },
+      {
+        "id": 3,
+        "title": "Structure de contexte",
+        "instruction": "Definis une structure t_ctx avec fd et buf, et ecris ft_ctx_cleanup qui libere les deux.",
+        "starterCode": "typedef struct s_ctx {\n\tint fd;\n\tchar *buf;\n} t_ctx;\n\nvoid\tft_ctx_cleanup(t_ctx *ctx)\n{\n\t// A completer\n}",
+        "solution": "void\tft_ctx_cleanup(t_ctx *ctx)\n{\n\tif (!ctx)\n\t\treturn ;\n\tif (ctx->buf)\n\t{\n\t\tfree(ctx->buf);\n\t\tctx->buf = NULL;\n\t}\n\tif (ctx->fd >= 0)\n\t{\n\t\tclose(ctx->fd);\n\t\tctx->fd = -1;\n\t}\n}",
+        "hint": "Verifie chaque ressource avant de la liberer, remets les valeurs a NULL/-1",
+        "difficulty": 2
+      },
+      {
+        "id": 4,
+        "title": "Initialisation de contexte",
+        "instruction": "Ecris ft_ctx_init qui initialise tous les champs de t_ctx a leurs valeurs nulles.",
+        "starterCode": "void\tft_ctx_init(t_ctx *ctx)\n{\n\t// A completer\n}",
+        "solution": "void\tft_ctx_init(t_ctx *ctx)\n{\n\tctx->fd = -1;\n\tctx->buf = NULL;\n}",
+        "hint": "fd a -1 (pas de fichier ouvert), buf a NULL (pas de memoire allouee)",
+        "difficulty": 1
+      },
+      {
+        "id": 5,
+        "title": "Ouvrir et allouer avec cleanup",
+        "instruction": "Ecris une fonction qui ouvre un fichier et alloue un buffer, avec cleanup proper en cas d'erreur.",
+        "starterCode": "int\tft_init_file(t_ctx *ctx, char *path, int buf_size)\n{\n\t// A completer\n}",
+        "solution": "int\tft_init_file(t_ctx *ctx, char *path, int buf_size)\n{\n\tft_ctx_init(ctx);\n\tctx->fd = open(path, O_RDONLY);\n\tif (ctx->fd == -1)\n\t\treturn (-1);\n\tctx->buf = malloc(buf_size);\n\tif (!ctx->buf)\n\t{\n\t\tft_ctx_cleanup(ctx);\n\t\treturn (-1);\n\t}\n\treturn (0);\n}",
+        "hint": "Initialise d'abord, ouvre le fichier, alloue le buffer, cleanup si erreur",
+        "difficulty": 3
+      }
+    ]
+  },
+  "starterCode": "#include <stdlib.h>\n#include <unistd.h>\n#include <fcntl.h>\n#include <stdio.h>\n\ntypedef struct s_ctx\n{\n\tint\t\tfd;\n\tchar\t*buf;\n\tchar\t*data;\n}\t\tt_ctx;\n\nvoid\tft_cleanup(t_ctx *ctx)\n{\n\t// A completer\n}\n\nint\tft_process(char *path)\n{\n\t// A completer avec goto cleanup\n}\n\nint\tmain(void)\n{\n\tprintf(\"Cleanup test\\n\");\n\tft_process(\"test.txt\");\n\treturn (0);\n}",
+  "solution": "#include <stdlib.h>\n#include <unistd.h>\n#include <fcntl.h>\n#include <stdio.h>\n\ntypedef struct s_ctx\n{\n\tint\t\tfd;\n\tchar\t*buf;\n\tchar\t*data;\n}\t\tt_ctx;\n\nvoid\tft_cleanup(t_ctx *ctx)\n{\n\tif (ctx->data)\n\t\tfree(ctx->data);\n\tif (ctx->buf)\n\t\tfree(ctx->buf);\n\tif (ctx->fd >= 0)\n\t\tclose(ctx->fd);\n}\n\nint\tft_process(char *path)\n{\n\tt_ctx\tctx;\n\n\tctx.fd = -1;\n\tctx.buf = NULL;\n\tctx.data = NULL;\n\tctx.fd = open(path, O_RDONLY);\n\tif (ctx.fd == -1)\n\t\treturn (ft_cleanup(&ctx), -1);\n\tctx.buf = malloc(1024);\n\tif (!ctx.buf)\n\t\treturn (ft_cleanup(&ctx), -1);\n\tprintf(\"Ressources allouees avec succes\\n\");\n\tft_cleanup(&ctx);\n\treturn (0);\n}\n\nint\tmain(void)\n{\n\tprintf(\"Cleanup test\\n\");\n\tft_process(\"test.txt\");\n\treturn (0);\n}",
+  "hints": [
+    "Initialise toutes les ressources a NULL/-1 avant de commencer les allocations",
+    "La fonction ft_cleanup verifie chaque ressource avant de la liberer (if != NULL, if >= 0)",
+    "Utilise le pattern (ft_cleanup(&ctx), -1) dans un return pour cleanup et retourner en une ligne"
+  ],
+  "testCases": [
+    {
+      "id": 1,
+      "description": "Test du cleanup avec fichier existant",
+      "stdin": "",
+      "expectedStdout": "Cleanup test\nRessources allouees avec succes\n",
+      "expectedExitCode": 0,
+      "visible": true
+    },
+    {
+      "id": 2,
+      "description": "Cleanup avec fichier inexistant",
+      "stdin": "",
+      "expectedStdout": "Cleanup test\n",
+      "expectedExitCode": 0,
+      "visible": false
+    },
+    {
+      "id": 3,
+      "description": "Pas de fuite memoire",
+      "stdin": "",
+      "expectedStdout": "Cleanup test\n",
+      "expectedExitCode": 0,
+      "visible": false
+    }
+  ],
+  "constraints": {
+    "allowedFunctions": [
+      "malloc",
+      "free",
+      "open",
+      "close",
+      "read",
+      "write",
+      "printf",
+      "perror"
+    ],
+    "forbiddenFunctions": [
+      "system"
+    ],
+    "maxExecutionTime": 5000,
+    "maxMemory": 128
+  },
+  "relatedExercises": [
+    "c-day85-ex00-ft-errno-system",
+    "c-day85-ex02-ft-safe-operations"
+  ],
+  "resources": [
+    {
+      "title": "goto cleanup pattern - Linux kernel style",
+      "url": "https://www.kernel.org/doc/html/latest/process/coding-style.html",
+      "type": "documentation"
+    },
+    {
+      "title": "Resource management in C",
+      "url": "https://www.geeksforgeeks.org/goto-statement-in-c-cpp/",
+      "type": "article"
+    }
+  ]
+}

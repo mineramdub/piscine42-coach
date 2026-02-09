@@ -1,0 +1,257 @@
+{
+  "id": "c-day72-ex01-ft-race-condition",
+  "category": "c",
+  "day": 72,
+  "order": 1,
+  "title": "Comprendre et corriger une race condition",
+  "description": "Apprends a identifier et corriger les race conditions dans un programme multi-thread. Comprends pourquoi un compteur partage sans mutex donne des resultats imprevisibles.",
+  "difficulty": 4,
+  "points": 40,
+  "estimatedTime": 35,
+  "learningObjectives": [
+    "Identifier une race condition dans du code multi-thread",
+    "Comprendre pourquoi les operations non-atomiques posent probleme",
+    "Corriger une race condition avec un mutex",
+    "Utiliser des outils de detection (helgrind, ThreadSanitizer)",
+    "Ecrire du code deterministe avec des threads"
+  ],
+  "learningContent": {
+    "lesson": {
+      "introduction": "Une race condition se produit quand le resultat d'un programme depend de l'ordre dans lequel les threads s'executent. C'est un bug subtil car il ne se manifeste pas toujours : parfois le programme semble fonctionner correctement, et parfois non. Les race conditions sont parmi les bugs les plus difficiles a deboguer car elles ne sont pas reproductibles de maniere fiable.",
+      "steps": [
+        {
+          "id": 1,
+          "title": "Qu'est-ce qu'une race condition ?",
+          "content": "Une **race condition** (condition de course) se produit quand deux threads accedent a la meme ressource et qu'au moins un d'entre eux la modifie. Le resultat depend de l'entrelacement des operations.\n\nL'operation `i++` semble atomique mais ne l'est pas ! Elle se decompose en :\n1. Lire la valeur\n2. Incrementer\n3. Ecrire la nouvelle valeur",
+          "codeExample": "// i++ n'est PAS atomique !\n// C'est equivalent a :\nint\ttemp = g_counter;  // 1. Lire\ntemp = temp + 1;       // 2. Incrementer\ng_counter = temp;      // 3. Ecrire\n\n// Si deux threads font ca en parallele :\n// T1: lire (0), T2: lire (0), T1: ecrire (1), T2: ecrire (1)\n// Resultat: 1 au lieu de 2 !",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Observe le probleme : lance 2 threads incrementant un compteur 1000000 fois sans mutex. Execute plusieurs fois.",
+            "starterCode": "int\tg_counter = 0;\n\nvoid\t*increment(void *arg)\n{\n\tint\ti = 0;\n\t(void)arg;\n\twhile (i++ < 1000000)\n\t\tg_counter++;\n\treturn (NULL);\n}\n\nint\tmain(void)\n{\n\t/* TON CODE ICI : 2 threads */\n\tprintf(\"Expected: 2000000, Got: %d\\n\", g_counter);\n}",
+            "solution": "int\tg_counter = 0;\n\nvoid\t*increment(void *arg)\n{\n\tint\ti = 0;\n\t(void)arg;\n\twhile (i++ < 1000000)\n\t\tg_counter++;\n\treturn (NULL);\n}\n\nint\tmain(void)\n{\n\tpthread_t\tt1, t2;\n\n\tpthread_create(&t1, NULL, increment, NULL);\n\tpthread_create(&t2, NULL, increment, NULL);\n\tpthread_join(t1, NULL);\n\tpthread_join(t2, NULL);\n\tprintf(\"Expected: 2000000, Got: %d\\n\", g_counter);\n\treturn (0);\n}"
+          }
+        },
+        {
+          "id": 2,
+          "title": "Scenarios d'entrelacement",
+          "content": "Pour comprendre les race conditions, il faut imaginer tous les entrelacements possibles entre les threads.\n\n**Scenario correct** : T1 lit, T1 ecrit, T2 lit, T2 ecrit -> resultat OK\n**Scenario problematique** : T1 lit, T2 lit, T1 ecrit, T2 ecrit -> une incrementation perdue\n\nLe scheduler du systeme decide quand chaque thread s'execute. On n'a aucun controle la-dessus.",
+          "codeExample": "// Scenario de race condition sur g_counter = 5\n\n// Thread A                  Thread B\n// ---------                 ---------\n// lire g_counter (5)\n//                           lire g_counter (5)\n// ecrire g_counter = 6\n//                           ecrire g_counter = 6\n// Resultat: 6 au lieu de 7 !",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Ecris un programme ou 3 threads decrementent un compteur partage (initialise a 3000000). Observe le resultat.",
+            "starterCode": "int\tg_counter = 3000000;\n\nvoid\t*decrement(void *arg)\n{\n\tint\ti = 0;\n\t(void)arg;\n\twhile (i++ < 1000000)\n\t\tg_counter--;\n\treturn (NULL);\n}\n/* TON CODE ICI */",
+            "solution": "int\tg_counter = 3000000;\n\nvoid\t*decrement(void *arg)\n{\n\tint\ti = 0;\n\t(void)arg;\n\twhile (i++ < 1000000)\n\t\tg_counter--;\n\treturn (NULL);\n}\n\nint\tmain(void)\n{\n\tpthread_t\tthreads[3];\n\tint\t\t\ti;\n\n\ti = -1;\n\twhile (++i < 3)\n\t\tpthread_create(&threads[i], NULL, decrement, NULL);\n\ti = -1;\n\twhile (++i < 3)\n\t\tpthread_join(threads[i], NULL);\n\tprintf(\"Expected: 0, Got: %d\\n\", g_counter);\n\treturn (0);\n}"
+          }
+        },
+        {
+          "id": 3,
+          "title": "Corriger avec un mutex",
+          "content": "La solution classique est d'utiliser un mutex pour rendre l'operation atomique. Le mutex garantit qu'un seul thread a la fois peut executer la section critique (lecture + modification + ecriture).\n\nApres correction, le resultat est toujours deterministe.",
+          "codeExample": "pthread_mutex_t\tg_mutex = PTHREAD_MUTEX_INITIALIZER;\nint\t\t\t\tg_counter = 0;\n\nvoid\t*increment(void *arg)\n{\n\tint\ti;\n\n\t(void)arg;\n\ti = 0;\n\twhile (i < 1000000)\n\t{\n\t\tpthread_mutex_lock(&g_mutex);\n\t\tg_counter++;\n\t\tpthread_mutex_unlock(&g_mutex);\n\t\ti++;\n\t}\n\treturn (NULL);\n}",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Corrige le programme precedent en ajoutant un mutex. Le resultat doit etre exactement 2000000.",
+            "starterCode": "pthread_mutex_t\tg_mutex;\nint\t\t\t\tg_counter = 0;\n\nvoid\t*increment(void *arg)\n{\n\tint\ti = 0;\n\t(void)arg;\n\twhile (i++ < 1000000)\n\t{\n\t\t/* AJOUTE LE MUTEX ICI */\n\t\tg_counter++;\n\t\t/* ET ICI */\n\t}\n\treturn (NULL);\n}",
+            "solution": "pthread_mutex_t\tg_mutex;\nint\t\t\t\tg_counter = 0;\n\nvoid\t*increment(void *arg)\n{\n\tint\ti = 0;\n\t(void)arg;\n\twhile (i++ < 1000000)\n\t{\n\t\tpthread_mutex_lock(&g_mutex);\n\t\tg_counter++;\n\t\tpthread_mutex_unlock(&g_mutex);\n\t}\n\treturn (NULL);\n}"
+          }
+        },
+        {
+          "id": 4,
+          "title": "Outils de detection",
+          "content": "Des outils comme **Helgrind** (Valgrind) et **ThreadSanitizer** (gcc -fsanitize=thread) detectent automatiquement les race conditions.\n\n```bash\n# Avec Valgrind/Helgrind\nvalgrind --tool=helgrind ./programme\n\n# Avec ThreadSanitizer\ngcc -fsanitize=thread -g programme.c -pthread\n./a.out\n```\n\nCes outils ralentissent l'execution mais detectent les acces concurrents non proteges.",
+          "codeExample": "// Compilation avec ThreadSanitizer\n// gcc -fsanitize=thread -g race.c -pthread -o race\n// ./race\n\n// Sortie typique de ThreadSanitizer:\n// WARNING: ThreadSanitizer: data race (pid=1234)\n//   Write of size 4 at 0x... by thread T2:\n//     #0 increment race.c:12\n//   Previous write of size 4 at 0x... by thread T1:\n//     #0 increment race.c:12",
+          "language": "c"
+        }
+      ]
+    },
+    "theory": [
+      {
+        "title": "Operations atomiques vs non-atomiques",
+        "content": "Une operation atomique s'execute en une seule etape indivisible. Les operations sur les types de base en C (comme i++) ne sont generalement pas atomiques car elles impliquent plusieurs instructions machine. C'est la raison fondamentale des race conditions.",
+        "codeExamples": [
+          {
+            "title": "Decomposition de i++",
+            "code": "// i++ compile en (pseudo-assembleur) :\n// MOV EAX, [g_counter]   ; lire\n// ADD EAX, 1             ; incrementer\n// MOV [g_counter], EAX   ; ecrire\n// Le thread peut etre interrompu entre ces instructions !",
+            "explanation": "Le scheduler peut interrompre le thread entre n'importe quelles instructions."
+          }
+        ],
+        "keyPoints": [
+          "i++ se decompose en lire-modifier-ecrire (3 operations machine)",
+          "Le scheduler peut interrompre un thread entre ces operations",
+          "Meme une simple affectation peut ne pas etre atomique sur certaines architectures",
+          "Les types _Atomic de C11 garantissent l'atomicite"
+        ],
+        "commonMistakes": [
+          "Penser que i++ est atomique parce que c'est une seule ligne de code",
+          "Croire que les variables volatile sont thread-safe (volatile != atomique)",
+          "Ignorer les race conditions sur les lectures simples"
+        ]
+      },
+      {
+        "title": "Types de race conditions",
+        "content": "Il existe differents types de race conditions : check-then-act (verifier puis agir), read-modify-write (lire-modifier-ecrire), et compound actions (actions composees). Chacune necessite une protection differente.",
+        "codeExamples": [
+          {
+            "title": "Check-then-act race condition",
+            "code": "// Thread A et B executent en parallele :\nif (g_counter < MAX)    // Check\n{\n\tg_counter++;        // Act\n}\n// Les deux threads peuvent passer le check simultanement !",
+            "explanation": "La verification et l'action doivent etre dans la meme section critique."
+          }
+        ],
+        "keyPoints": [
+          "Check-then-act : la condition peut changer entre la verification et l'action",
+          "Read-modify-write : la valeur peut changer entre la lecture et l'ecriture",
+          "Compound actions : plusieurs operations liees doivent etre atomiques ensemble",
+          "Toutes les operations liees doivent etre dans la meme section critique"
+        ],
+        "commonMistakes": [
+          "Proteger le check et l'act separement au lieu de les grouper",
+          "Ne proteger que l'ecriture et pas la lecture associee",
+          "Croire qu'un if protege suffit sans mutex"
+        ]
+      },
+      {
+        "title": "Detection et diagnostic",
+        "content": "Les race conditions sont difficiles a deboguer car elles sont non-deterministes. Les outils de detection statique et dynamique sont essentiels. Helgrind detecte les acces non proteges, ThreadSanitizer est plus rapide et integre au compilateur.",
+        "codeExamples": [
+          {
+            "title": "Utilisation de Helgrind",
+            "code": "// Compilation : gcc -g -pthread programme.c\n// Execution : valgrind --tool=helgrind ./a.out\n\n// Helgrind rapporte :\n// Possible data race during write of size 4\n//   at 0x...: increment (programme.c:10)\n// This conflicts with a previous write\n//   at 0x...: increment (programme.c:10)",
+            "explanation": "Helgrind indique la ligne exacte ou la race condition se produit."
+          }
+        ],
+        "keyPoints": [
+          "Helgrind (valgrind --tool=helgrind) detecte les data races",
+          "ThreadSanitizer (gcc -fsanitize=thread) est plus rapide",
+          "Les outils detectent meme les races qui ne causent pas de bug visible",
+          "Toujours tester avec ces outils avant de considerer le code correct"
+        ],
+        "commonMistakes": [
+          "Se fier aux tests manuels pour valider l'absence de race conditions",
+          "Ignorer les warnings de Helgrind ou ThreadSanitizer",
+          "Penser que si le programme donne le bon resultat, il n'y a pas de race"
+        ]
+      },
+      {
+        "title": "Strategies de correction",
+        "content": "La correction d'une race condition passe par l'identification de la section critique et le choix du mecanisme de protection adapte. Les mutex sont la solution la plus courante, mais on peut aussi utiliser des operations atomiques, des variables thread-local, ou redesigner le programme pour eviter le partage.",
+        "codeExamples": [
+          {
+            "title": "Variable locale au thread",
+            "code": "void\t*compute(void *arg)\n{\n\tint\tlocal_sum = 0; // Pas partagee !\n\tint\ti = 0;\n\n\twhile (i++ < 1000000)\n\t\tlocal_sum++;\n\t// Agreger a la fin seulement\n\tpthread_mutex_lock(&g_mutex);\n\tg_total += local_sum;\n\tpthread_mutex_unlock(&g_mutex);\n\treturn (NULL);\n}",
+            "explanation": "Accumuler localement et synchroniser une seule fois est plus performant."
+          }
+        ],
+        "keyPoints": [
+          "Mutex : proteger la section critique (solution classique)",
+          "Variables locales : accumuler localement puis synchroniser a la fin",
+          "Operations atomiques : pour les operations simples (C11 _Atomic)",
+          "Eviter le partage : redesigner pour que les threads soient independants"
+        ],
+        "commonMistakes": [
+          "Utiliser un mutex pour chaque instruction au lieu de grouper les operations",
+          "Ajouter des mutex partout sans analyser les vrais besoins",
+          "Ne pas tester la correction avec des outils de detection apres le fix"
+        ]
+      }
+    ],
+    "prepExercises": [
+      {
+        "id": 1,
+        "title": "Identifier la race",
+        "instruction": "Dans le code donne, identifie la variable partagee non protegee et ajoute un mutex.",
+        "starterCode": "int\tg_total = 0;\n\nvoid\t*add_ten(void *arg)\n{\n\t(void)arg;\n\tg_total += 10;\n\treturn (NULL);\n}",
+        "solution": "pthread_mutex_t\tg_mutex = PTHREAD_MUTEX_INITIALIZER;\nint\tg_total = 0;\n\nvoid\t*add_ten(void *arg)\n{\n\t(void)arg;\n\tpthread_mutex_lock(&g_mutex);\n\tg_total += 10;\n\tpthread_mutex_unlock(&g_mutex);\n\treturn (NULL);\n}",
+        "hint": "g_total est modifie par plusieurs threads sans protection.",
+        "difficulty": 1
+      },
+      {
+        "id": 2,
+        "title": "Check-then-act",
+        "instruction": "Protege le pattern check-then-act suivant pour qu'il soit thread-safe.",
+        "starterCode": "int\tg_slots = 5;\n\nvoid\t*reserve(void *arg)\n{\n\t(void)arg;\n\tif (g_slots > 0)\n\t\tg_slots--;\n\treturn (NULL);\n}",
+        "solution": "pthread_mutex_t\tg_mutex = PTHREAD_MUTEX_INITIALIZER;\nint\tg_slots = 5;\n\nvoid\t*reserve(void *arg)\n{\n\t(void)arg;\n\tpthread_mutex_lock(&g_mutex);\n\tif (g_slots > 0)\n\t\tg_slots--;\n\tpthread_mutex_unlock(&g_mutex);\n\treturn (NULL);\n}",
+        "hint": "Le if et le g_slots-- doivent etre dans la meme section critique.",
+        "difficulty": 2
+      },
+      {
+        "id": 3,
+        "title": "Accumulation locale",
+        "instruction": "Optimise : accumule localement dans chaque thread, puis ajoute au total global une seule fois.",
+        "starterCode": "int\tg_total = 0;\npthread_mutex_t\tg_mutex;\n\nvoid\t*compute(void *arg)\n{\n\tint\ti = 0;\n\t(void)arg;\n\twhile (i++ < 100000)\n\t{\n\t\tpthread_mutex_lock(&g_mutex);\n\t\tg_total++;\n\t\tpthread_mutex_unlock(&g_mutex);\n\t}\n\treturn (NULL);\n}",
+        "solution": "int\tg_total = 0;\npthread_mutex_t\tg_mutex;\n\nvoid\t*compute(void *arg)\n{\n\tint\tlocal = 0;\n\tint\ti = 0;\n\t(void)arg;\n\twhile (i++ < 100000)\n\t\tlocal++;\n\tpthread_mutex_lock(&g_mutex);\n\tg_total += local;\n\tpthread_mutex_unlock(&g_mutex);\n\treturn (NULL);\n}",
+        "hint": "Utilise une variable locale, puis un seul lock pour ajouter au total.",
+        "difficulty": 2
+      },
+      {
+        "id": 4,
+        "title": "Race sur une liste",
+        "instruction": "Protege l'ajout a une liste chainee partagee entre threads.",
+        "starterCode": "typedef struct s_node {\n\tint val;\n\tstruct s_node *next;\n} t_node;\n\nt_node\t*g_head = NULL;\n\nvoid\t*add_node(void *arg)\n{\n\tt_node *new = malloc(sizeof(t_node));\n\tnew->val = *(int *)arg;\n\tnew->next = g_head;\n\tg_head = new;\n\treturn (NULL);\n}",
+        "solution": "typedef struct s_node {\n\tint val;\n\tstruct s_node *next;\n} t_node;\n\nt_node\t*g_head = NULL;\npthread_mutex_t\tg_mutex = PTHREAD_MUTEX_INITIALIZER;\n\nvoid\t*add_node(void *arg)\n{\n\tt_node *new = malloc(sizeof(t_node));\n\tnew->val = *(int *)arg;\n\tpthread_mutex_lock(&g_mutex);\n\tnew->next = g_head;\n\tg_head = new;\n\tpthread_mutex_unlock(&g_mutex);\n\treturn (NULL);\n}",
+        "hint": "La modification de g_head (lecture et ecriture) doit etre protegee.",
+        "difficulty": 3
+      },
+      {
+        "id": 5,
+        "title": "Programme corrige complet",
+        "instruction": "Ecris un programme complet avec 4 threads incrementant un compteur 500000 fois chacun. Resultat attendu : 2000000.",
+        "starterCode": "#include <pthread.h>\n#include <stdio.h>\n\n/* TON CODE ICI */\n\nint\tmain(void)\n{\n\t/* TON CODE ICI */\n\tprintf(\"Total: %d\\n\", g_counter);\n\treturn (0);\n}",
+        "solution": "#include <pthread.h>\n#include <stdio.h>\n\npthread_mutex_t\tg_mutex = PTHREAD_MUTEX_INITIALIZER;\nint\t\t\t\tg_counter = 0;\n\nvoid\t*increment(void *arg)\n{\n\tint\ti = 0;\n\t(void)arg;\n\twhile (i++ < 500000)\n\t{\n\t\tpthread_mutex_lock(&g_mutex);\n\t\tg_counter++;\n\t\tpthread_mutex_unlock(&g_mutex);\n\t}\n\treturn (NULL);\n}\n\nint\tmain(void)\n{\n\tpthread_t\tthreads[4];\n\tint\t\t\ti;\n\n\ti = -1;\n\twhile (++i < 4)\n\t\tpthread_create(&threads[i], NULL, increment, NULL);\n\ti = -1;\n\twhile (++i < 4)\n\t\tpthread_join(threads[i], NULL);\n\tprintf(\"Total: %d\\n\", g_counter);\n\treturn (0);\n}",
+        "hint": "Mutex global, lock/unlock autour de g_counter++, 4 threads crees et joins.",
+        "difficulty": 3
+      }
+    ]
+  },
+  "starterCode": "#include <pthread.h>\n#include <stdio.h>\n#include <stdlib.h>\n\n#define NB_THREADS 4\n#define ITERATIONS 250000\n\ntypedef struct s_data\n{\n\tint\t\t\t\t*counter;\n\tpthread_mutex_t\t*mutex;\n}\tt_data;\n\nvoid\t*ft_increment(void *arg)\n{\n\tt_data\t*data;\n\tint\t\ti;\n\n\tdata = (t_data *)arg;\n\ti = 0;\n\twhile (i < ITERATIONS)\n\t{\n\t\t// TODO: Proteger l'acces au compteur avec le mutex\n\t\t(*data->counter)++;\n\t\ti++;\n\t}\n\treturn (NULL);\n}\n\nint\tmain(void)\n{\n\tpthread_t\t\tthreads[NB_THREADS];\n\tpthread_mutex_t\tmutex;\n\tint\t\t\t\tcounter;\n\tt_data\t\t\tdata;\n\tint\t\t\t\ti;\n\n\tcounter = 0;\n\t// TODO: Initialiser le mutex\n\tdata.counter = &counter;\n\tdata.mutex = &mutex;\n\t// TODO: Creer, joindre les threads, detruire le mutex\n\tprintf(\"Expected: %d, Got: %d\\n\",\n\t\tNB_THREADS * ITERATIONS, counter);\n\treturn (0);\n}",
+  "solution": "#include <pthread.h>\n#include <stdio.h>\n#include <stdlib.h>\n\n#define NB_THREADS 4\n#define ITERATIONS 250000\n\ntypedef struct s_data\n{\n\tint\t\t\t\t*counter;\n\tpthread_mutex_t\t*mutex;\n}\tt_data;\n\nvoid\t*ft_increment(void *arg)\n{\n\tt_data\t*data;\n\tint\t\ti;\n\n\tdata = (t_data *)arg;\n\ti = 0;\n\twhile (i < ITERATIONS)\n\t{\n\t\tpthread_mutex_lock(data->mutex);\n\t\t(*data->counter)++;\n\t\tpthread_mutex_unlock(data->mutex);\n\t\ti++;\n\t}\n\treturn (NULL);\n}\n\nint\tmain(void)\n{\n\tpthread_t\t\tthreads[NB_THREADS];\n\tpthread_mutex_t\tmutex;\n\tint\t\t\t\tcounter;\n\tt_data\t\t\tdata;\n\tint\t\t\t\ti;\n\n\tcounter = 0;\n\tpthread_mutex_init(&mutex, NULL);\n\tdata.counter = &counter;\n\tdata.mutex = &mutex;\n\ti = -1;\n\twhile (++i < NB_THREADS)\n\t\tpthread_create(&threads[i], NULL, ft_increment, &data);\n\ti = -1;\n\twhile (++i < NB_THREADS)\n\t\tpthread_join(threads[i], NULL);\n\tpthread_mutex_destroy(&mutex);\n\tprintf(\"Expected: %d, Got: %d\\n\",\n\t\tNB_THREADS * ITERATIONS, counter);\n\treturn (0);\n}",
+  "hints": [
+    "Encadre (*data->counter)++ avec lock et unlock sur data->mutex",
+    "Le mutex est passe via la structure t_data comme pointeur",
+    "N'oublie pas init avant les threads et destroy apres les joins"
+  ],
+  "testCases": [
+    {
+      "id": 1,
+      "description": "Le compteur atteint exactement 1000000",
+      "stdin": "",
+      "expectedStdout": "Expected: 1000000, Got: 1000000\n",
+      "expectedExitCode": 0,
+      "visible": true
+    },
+    {
+      "id": 2,
+      "description": "Resultat deterministe a chaque execution",
+      "stdin": "",
+      "expectedStdout": "Expected: 1000000, Got: 1000000\n",
+      "expectedExitCode": 0,
+      "visible": false
+    },
+    {
+      "id": 3,
+      "description": "Pas de data race detectee par ThreadSanitizer",
+      "stdin": "",
+      "expectedStdout": "Expected: 1000000, Got: 1000000\n",
+      "expectedExitCode": 0,
+      "visible": false
+    }
+  ],
+  "constraints": {
+    "allowedFunctions": ["pthread_create", "pthread_join", "pthread_mutex_init", "pthread_mutex_lock", "pthread_mutex_unlock", "pthread_mutex_destroy", "printf"],
+    "forbiddenFunctions": ["fork", "system"],
+    "maxExecutionTime": 5000,
+    "maxMemory": 128
+  },
+  "relatedExercises": ["c-day72-ex00-ft-mutex-basics", "c-day72-ex02-ft-deadlock"],
+  "resources": [
+    {
+      "title": "ThreadSanitizer documentation",
+      "url": "https://clang.llvm.org/docs/ThreadSanitizer.html",
+      "type": "documentation"
+    },
+    {
+      "title": "Comprendre les race conditions",
+      "url": "https://www.baeldung.com/cs/race-conditions",
+      "type": "article"
+    }
+  ]
+}

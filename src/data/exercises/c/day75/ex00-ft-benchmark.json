@@ -1,0 +1,257 @@
+{
+  "id": "c-day75-ex00-ft-benchmark",
+  "category": "c",
+  "day": 75,
+  "order": 0,
+  "title": "Mesurer le temps d'execution avec gettimeofday",
+  "description": "Apprends a mesurer precisement le temps d'execution d'un algorithme avec gettimeofday pour comparer les performances de differentes implementations.",
+  "difficulty": 4,
+  "points": 40,
+  "estimatedTime": 30,
+  "learningObjectives": [
+    "Utiliser gettimeofday pour mesurer le temps d'execution",
+    "Calculer la difference entre deux timestamps en microsecondes",
+    "Comparer les performances de deux algorithmes",
+    "Comprendre l'importance de la repetition pour des mesures fiables",
+    "Formater et afficher les resultats de benchmark"
+  ],
+  "learningContent": {
+    "lesson": {
+      "introduction": "Mesurer le temps d'execution est essentiel pour optimiser un programme. La fonction gettimeofday fournit une precision a la microseconde, suffisante pour la plupart des benchmarks. En comparant le temps d'execution de differentes implementations, on peut choisir la plus performante. Attention : une seule mesure n'est pas fiable, il faut repeter plusieurs fois et faire la moyenne.",
+      "steps": [
+        {
+          "id": 1,
+          "title": "gettimeofday et struct timeval",
+          "content": "La fonction `gettimeofday` remplit une structure `timeval` avec le temps courant :\n\n```c\nstruct timeval {\n    time_t      tv_sec;   // secondes\n    suseconds_t tv_usec;  // microsecondes\n};\n```\n\nPour calculer une duree, on prend la difference entre deux appels.",
+          "codeExample": "#include <sys/time.h>\n#include <stdio.h>\n\nint\tmain(void)\n{\n\tstruct timeval\tstart;\n\tstruct timeval\tend;\n\tlong\t\t\telapsed;\n\n\tgettimeofday(&start, NULL);\n\t// Code a mesurer...\n\tgettimeofday(&end, NULL);\n\telapsed = (end.tv_sec - start.tv_sec) * 1000000\n\t\t+ (end.tv_usec - start.tv_usec);\n\tprintf(\"Temps: %ld us\\n\", elapsed);\n\treturn (0);\n}",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Mesure le temps d'execution d'une boucle de 1 million d'iterations.",
+            "starterCode": "#include <sys/time.h>\n#include <stdio.h>\n\nint\tmain(void)\n{\n\tstruct timeval\tstart, end;\n\tlong\t\t\telapsed;\n\tint\t\t\t\ti;\n\n\t/* TON CODE ICI */\n\tprintf(\"Temps: %ld us\\n\", elapsed);\n\treturn (0);\n}",
+            "solution": "#include <sys/time.h>\n#include <stdio.h>\n\nint\tmain(void)\n{\n\tstruct timeval\tstart, end;\n\tlong\t\t\telapsed;\n\tint\t\t\t\ti;\n\n\tgettimeofday(&start, NULL);\n\ti = 0;\n\twhile (i < 1000000)\n\t\ti++;\n\tgettimeofday(&end, NULL);\n\telapsed = (end.tv_sec - start.tv_sec) * 1000000\n\t\t+ (end.tv_usec - start.tv_usec);\n\tprintf(\"Temps: %ld us\\n\", elapsed);\n\treturn (0);\n}"
+          }
+        },
+        {
+          "id": 2,
+          "title": "Fonction de benchmark reutilisable",
+          "content": "On cree une fonction generique qui prend un pointeur de fonction et mesure son temps d'execution. Cela permet de comparer facilement differentes implementations.",
+          "codeExample": "typedef void\t(*t_func)(int *, int);\n\nlong\tbenchmark(t_func func, int *arr, int size)\n{\n\tstruct timeval\tstart;\n\tstruct timeval\tend;\n\n\tgettimeofday(&start, NULL);\n\tfunc(arr, size);\n\tgettimeofday(&end, NULL);\n\treturn ((end.tv_sec - start.tv_sec) * 1000000\n\t\t+ (end.tv_usec - start.tv_usec));\n}",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Ecris une fonction benchmark qui mesure le temps d'execution d'une fonction passee en parametre.",
+            "starterCode": "long\tbenchmark(void (*func)(void), int iterations)\n{\n\t/* TON CODE ICI */\n}",
+            "solution": "long\tbenchmark(void (*func)(void), int iterations)\n{\n\tstruct timeval\tstart, end;\n\tint\t\t\t\ti;\n\n\tgettimeofday(&start, NULL);\n\ti = 0;\n\twhile (i < iterations)\n\t{\n\t\tfunc();\n\t\ti++;\n\t}\n\tgettimeofday(&end, NULL);\n\treturn ((end.tv_sec - start.tv_sec) * 1000000\n\t\t+ (end.tv_usec - start.tv_usec));\n}"
+          }
+        },
+        {
+          "id": 3,
+          "title": "Comparer deux algorithmes de tri",
+          "content": "Comparons le tri a bulles (O(n^2)) et le tri par insertion (O(n^2) mais plus rapide en pratique). On mesure le temps de chacun sur le meme tableau et on affiche la comparaison.",
+          "codeExample": "void\tbubble_sort(int *arr, int n)\n{\n\tint\ti;\n\tint\tj;\n\tint\ttmp;\n\n\ti = 0;\n\twhile (i < n - 1)\n\t{\n\t\tj = 0;\n\t\twhile (j < n - i - 1)\n\t\t{\n\t\t\tif (arr[j] > arr[j + 1])\n\t\t\t{\n\t\t\t\ttmp = arr[j];\n\t\t\t\tarr[j] = arr[j + 1];\n\t\t\t\tarr[j + 1] = tmp;\n\t\t\t}\n\t\t\tj++;\n\t\t}\n\t\ti++;\n\t}\n}",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Mesure et compare le temps du tri a bulles et du tri par insertion sur un tableau de 10000 elements.",
+            "starterCode": "int\tmain(void)\n{\n\tint\tarr1[10000];\n\tint\tarr2[10000];\n\t/* Remplis les tableaux avec des valeurs aleatoires */\n\t/* Mesure bubble_sort et insertion_sort */\n\t/* Affiche la comparaison */\n}",
+            "solution": "int\tmain(void)\n{\n\tint\t\tarr1[10000];\n\tint\t\tarr2[10000];\n\tlong\tt1, t2;\n\tint\t\ti;\n\n\tsrand(42);\n\ti = -1;\n\twhile (++i < 10000)\n\t{\n\t\tarr1[i] = rand() % 10000;\n\t\tarr2[i] = arr1[i];\n\t}\n\tt1 = benchmark_sort(bubble_sort, arr1, 10000);\n\tt2 = benchmark_sort(insertion_sort, arr2, 10000);\n\tprintf(\"Bubble: %ld us\\nInsertion: %ld us\\n\", t1, t2);\n\treturn (0);\n}"
+          }
+        },
+        {
+          "id": 4,
+          "title": "Bonnes pratiques de benchmarking",
+          "content": "Pour des mesures fiables :\n1. **Repeter** plusieurs fois et prendre la moyenne\n2. **Copier** le tableau avant chaque tri (le tri modifie le tableau)\n3. **Desactiver les optimisations** du compilateur (-O0)\n4. **Eviter les I/O** dans la zone mesuree\n5. **Utiliser les memes donnees** pour chaque algorithme",
+          "codeExample": "long\taverage_benchmark(t_func func, int *original, int size, int runs)\n{\n\tlong\ttotal;\n\tint\t\t*copy;\n\tint\t\ti;\n\n\ttotal = 0;\n\ti = 0;\n\twhile (i < runs)\n\t{\n\t\tcopy = malloc(sizeof(int) * size);\n\t\tmemcpy(copy, original, sizeof(int) * size);\n\t\ttotal += benchmark(func, copy, size);\n\t\tfree(copy);\n\t\ti++;\n\t}\n\treturn (total / runs);\n}",
+          "language": "c"
+        }
+      ]
+    },
+    "theory": [
+      {
+        "title": "Precision et sources d'erreur",
+        "content": "gettimeofday a une precision theorique a la microseconde, mais la precision reelle depend du systeme. Le context switching, les interruptions et le cache CPU peuvent fausser les mesures. La repetition et la moyenne reduisent ces erreurs.",
+        "codeExamples": [
+          {
+            "title": "Mesure avec repetitions",
+            "code": "long\tresults[100];\nint\ti = -1;\nwhile (++i < 100)\n\tresults[i] = benchmark(func, data, size);\n// Calculer moyenne et ecart-type",
+            "explanation": "100 repetitions donnent une mesure statistiquement fiable."
+          }
+        ],
+        "keyPoints": [
+          "gettimeofday a une precision en microsecondes",
+          "Le context switching peut fausser les mesures individuelles",
+          "La repetition et la moyenne reduisent le bruit",
+          "Compiler avec -O0 pour mesurer le vrai cout de l'algorithme"
+        ],
+        "commonMistakes": [
+          "Se fier a une seule mesure pour conclure",
+          "Mesurer avec les optimisations du compilateur activees",
+          "Inclure des I/O (printf) dans la zone mesuree"
+        ]
+      },
+      {
+        "title": "Complexite algorithmique et temps reel",
+        "content": "La complexite theorique (Big O) donne une idee de la scalabilite mais pas du temps reel. Un algorithme O(n log n) est toujours meilleur qu'un O(n^2) pour de grands n, mais peut etre plus lent pour de petits n a cause des constantes.",
+        "codeExamples": [
+          {
+            "title": "Comparaison pratique",
+            "code": "// Pour n = 100:\n//   Bubble sort: ~5000 comparaisons (~50us)\n//   Quick sort:  ~665 comparaisons (~30us + overhead)\n// Pour n = 10000:\n//   Bubble sort: ~50000000 comparaisons (~500ms)\n//   Quick sort:  ~133000 comparaisons (~5ms)",
+            "explanation": "La difference de complexite devient ecrasante pour de grands n."
+          }
+        ],
+        "keyPoints": [
+          "Big O decrit le comportement asymptotique (grands n)",
+          "Pour de petits n, les constantes importent plus",
+          "Mesurer pour differentes tailles de donnees revele la scalabilite",
+          "Le temps reel depend aussi du hardware et des caches"
+        ],
+        "commonMistakes": [
+          "Confondre complexite theorique et performance reelle",
+          "Ne tester qu'avec une seule taille de donnees",
+          "Ignorer les constantes multiplicatives pour de petits tableaux"
+        ]
+      },
+      {
+        "title": "Alternatives a gettimeofday",
+        "content": "D'autres fonctions existent pour mesurer le temps : clock_gettime (plus precis, nanoseconde), clock() (temps CPU), et rdtsc (cycles CPU). Chacune a ses avantages selon le contexte.",
+        "codeExamples": [
+          {
+            "title": "clock_gettime",
+            "code": "#include <time.h>\n\nstruct timespec\tstart, end;\nclock_gettime(CLOCK_MONOTONIC, &start);\n// Code a mesurer\nclock_gettime(CLOCK_MONOTONIC, &end);\nlong ns = (end.tv_sec - start.tv_sec) * 1000000000\n\t+ (end.tv_nsec - start.tv_nsec);",
+            "explanation": "clock_gettime avec CLOCK_MONOTONIC est plus precis et monotone."
+          }
+        ],
+        "keyPoints": [
+          "clock_gettime est plus precis que gettimeofday (nanoseconde)",
+          "CLOCK_MONOTONIC ne recule jamais (contrairement a gettimeofday)",
+          "clock() mesure le temps CPU, pas le temps reel",
+          "gettimeofday est suffisant pour la plupart des benchmarks"
+        ],
+        "commonMistakes": [
+          "Utiliser clock() pour mesurer le temps reel (ca mesure le CPU)",
+          "Ne pas utiliser CLOCK_MONOTONIC avec clock_gettime",
+          "Oublier de linker avec -lrt sur certains systemes pour clock_gettime"
+        ]
+      },
+      {
+        "title": "Presentation des resultats",
+        "content": "Un bon benchmark presente les resultats de maniere claire : algorithme teste, taille des donnees, nombre de repetitions, temps moyen, et speedup relatif. Un tableau comparatif permet de voir rapidement quel algorithme est le plus performant.",
+        "codeExamples": [
+          {
+            "title": "Affichage structure",
+            "code": "printf(\"=== Benchmark de tri ===\\n\");\nprintf(\"Taille: %d elements\\n\", size);\nprintf(\"Repetitions: %d\\n\", runs);\nprintf(\"%-20s %10s\\n\", \"Algorithme\", \"Temps (us)\");\nprintf(\"%-20s %10ld\\n\", \"Bubble sort\", t_bubble);\nprintf(\"%-20s %10ld\\n\", \"Insertion sort\", t_insert);\nprintf(\"Speedup: x%.2f\\n\", (float)t_bubble / t_insert);",
+            "explanation": "Un affichage formate facilite la comparaison."
+          }
+        ],
+        "keyPoints": [
+          "Indiquer la taille des donnees et le nombre de repetitions",
+          "Afficher le temps moyen plutot qu'un temps individuel",
+          "Calculer le speedup relatif (temps_lent / temps_rapide)",
+          "Utiliser des unites adaptees (us, ms, s)"
+        ],
+        "commonMistakes": [
+          "Afficher trop de chiffres significatifs (fausse precision)",
+          "Ne pas indiquer les conditions de test",
+          "Comparer des mesures faites dans des conditions differentes"
+        ]
+      }
+    ],
+    "prepExercises": [
+      {
+        "id": 1,
+        "title": "Mesure simple",
+        "instruction": "Mesure le temps d'une boucle de 10 millions d'iterations.",
+        "starterCode": "int\tmain(void)\n{\n\t/* TON CODE ICI */\n}",
+        "solution": "int\tmain(void)\n{\n\tstruct timeval\ts, e;\n\tint\t\t\t\ti = 0;\n\n\tgettimeofday(&s, NULL);\n\twhile (i < 10000000)\n\t\ti++;\n\tgettimeofday(&e, NULL);\n\tprintf(\"%ld us\\n\",\n\t\t(e.tv_sec - s.tv_sec) * 1000000 + e.tv_usec - s.tv_usec);\n\treturn (0);\n}",
+        "hint": "gettimeofday avant et apres, puis calcule la difference.",
+        "difficulty": 1
+      },
+      {
+        "id": 2,
+        "title": "Fonction elapsed_us",
+        "instruction": "Ecris une fonction qui retourne la difference en microsecondes entre deux timeval.",
+        "starterCode": "long\telapsed_us(struct timeval start, struct timeval end)\n{\n\t/* TON CODE ICI */\n}",
+        "solution": "long\telapsed_us(struct timeval start, struct timeval end)\n{\n\treturn ((end.tv_sec - start.tv_sec) * 1000000\n\t\t+ (end.tv_usec - start.tv_usec));\n}",
+        "hint": "Convertis les secondes en us et ajoute les us.",
+        "difficulty": 1
+      },
+      {
+        "id": 3,
+        "title": "Benchmark generique",
+        "instruction": "Ecris une fonction benchmark qui mesure le temps d'une fonction quelconque.",
+        "starterCode": "long\tbenchmark(void (*func)(int *, int), int *arr, int n)\n{\n\t/* TON CODE ICI */\n}",
+        "solution": "long\tbenchmark(void (*func)(int *, int), int *arr, int n)\n{\n\tstruct timeval\ts, e;\n\n\tgettimeofday(&s, NULL);\n\tfunc(arr, n);\n\tgettimeofday(&e, NULL);\n\treturn ((e.tv_sec - s.tv_sec) * 1000000 + e.tv_usec - s.tv_usec);\n}",
+        "hint": "Mesure le temps autour de l'appel a func(arr, n).",
+        "difficulty": 2
+      },
+      {
+        "id": 4,
+        "title": "Moyenne sur N runs",
+        "instruction": "Ecris une fonction qui execute un benchmark N fois et retourne la moyenne.",
+        "starterCode": "long\tavg_bench(void (*func)(int *, int), int *orig, int n, int runs)\n{\n\t/* TON CODE ICI */\n}",
+        "solution": "long\tavg_bench(void (*func)(int *, int), int *orig, int n, int runs)\n{\n\tlong\ttotal = 0;\n\tint\t\t*copy;\n\tint\t\ti;\n\n\ti = -1;\n\twhile (++i < runs)\n\t{\n\t\tcopy = malloc(sizeof(int) * n);\n\t\tmemcpy(copy, orig, sizeof(int) * n);\n\t\ttotal += benchmark(func, copy, n);\n\t\tfree(copy);\n\t}\n\treturn (total / runs);\n}",
+        "hint": "Copie le tableau a chaque run pour avoir les memes donnees.",
+        "difficulty": 3
+      },
+      {
+        "id": 5,
+        "title": "Afficher la comparaison",
+        "instruction": "Affiche les resultats de deux benchmarks avec le speedup.",
+        "starterCode": "void\tprint_results(char *name1, long t1, char *name2, long t2)\n{\n\t/* TON CODE ICI */\n}",
+        "solution": "void\tprint_results(char *name1, long t1, char *name2, long t2)\n{\n\tprintf(\"%-20s: %ld us\\n\", name1, t1);\n\tprintf(\"%-20s: %ld us\\n\", name2, t2);\n\tif (t2 > 0 && t1 > t2)\n\t\tprintf(\"Speedup: x%.2f\\n\", (float)t1 / t2);\n\telse if (t1 > 0)\n\t\tprintf(\"Speedup: x%.2f\\n\", (float)t2 / t1);\n}",
+        "hint": "Calcule le speedup = temps_lent / temps_rapide.",
+        "difficulty": 2
+      }
+    ]
+  },
+  "starterCode": "#include <stdio.h>\n#include <stdlib.h>\n#include <string.h>\n#include <sys/time.h>\n\nlong\tft_elapsed_us(struct timeval start, struct timeval end)\n{\n\t// TODO: Calculer la difference en microsecondes\n\treturn (0);\n}\n\nlong\tft_benchmark(void (*func)(int *, int), int *arr, int size)\n{\n\t// TODO: Mesurer le temps d'execution de func\n\treturn (0);\n}\n\nvoid\tft_bubble_sort(int *arr, int n)\n{\n\t// TODO: Implementer le tri a bulles\n}\n\nvoid\tft_insertion_sort(int *arr, int n)\n{\n\t// TODO: Implementer le tri par insertion\n}\n\nint\tmain(void)\n{\n\t// TODO: Comparer les deux tris sur un tableau aleatoire\n\treturn (0);\n}",
+  "solution": "#include <stdio.h>\n#include <stdlib.h>\n#include <string.h>\n#include <sys/time.h>\n\nlong\tft_elapsed_us(struct timeval start, struct timeval end)\n{\n\treturn ((end.tv_sec - start.tv_sec) * 1000000\n\t\t+ (end.tv_usec - start.tv_usec));\n}\n\nlong\tft_benchmark(void (*func)(int *, int), int *arr, int size)\n{\n\tstruct timeval\tstart;\n\tstruct timeval\tend;\n\n\tgettimeofday(&start, NULL);\n\tfunc(arr, size);\n\tgettimeofday(&end, NULL);\n\treturn (ft_elapsed_us(start, end));\n}\n\nvoid\tft_bubble_sort(int *arr, int n)\n{\n\tint\ti;\n\tint\tj;\n\tint\ttmp;\n\n\ti = -1;\n\twhile (++i < n - 1)\n\t{\n\t\tj = -1;\n\t\twhile (++j < n - i - 1)\n\t\t\tif (arr[j] > arr[j + 1])\n\t\t\t{\n\t\t\t\ttmp = arr[j];\n\t\t\t\tarr[j] = arr[j + 1];\n\t\t\t\tarr[j + 1] = tmp;\n\t\t\t}\n\t}\n}\n\nvoid\tft_insertion_sort(int *arr, int n)\n{\n\tint\ti;\n\tint\tj;\n\tint\tkey;\n\n\ti = 0;\n\twhile (++i < n)\n\t{\n\t\tkey = arr[i];\n\t\tj = i - 1;\n\t\twhile (j >= 0 && arr[j] > key)\n\t\t{\n\t\t\tarr[j + 1] = arr[j];\n\t\t\tj--;\n\t\t}\n\t\tarr[j + 1] = key;\n\t}\n}\n\nint\tmain(void)\n{\n\tint\t\t*arr1;\n\tint\t\t*arr2;\n\tlong\tt1;\n\tlong\tt2;\n\tint\t\tsize;\n\tint\t\ti;\n\n\tsize = 10000;\n\tarr1 = malloc(sizeof(int) * size);\n\tarr2 = malloc(sizeof(int) * size);\n\tsrand(42);\n\ti = -1;\n\twhile (++i < size)\n\t{\n\t\tarr1[i] = rand() % size;\n\t\tarr2[i] = arr1[i];\n\t}\n\tt1 = ft_benchmark(ft_bubble_sort, arr1, size);\n\tt2 = ft_benchmark(ft_insertion_sort, arr2, size);\n\tprintf(\"Bubble sort:    %ld us\\n\", t1);\n\tprintf(\"Insertion sort: %ld us\\n\", t2);\n\tprintf(\"Speedup: x%.2f\\n\", (float)t1 / t2);\n\tfree(arr1);\n\tfree(arr2);\n\treturn (0);\n}",
+  "hints": [
+    "Utilise gettimeofday avant et apres l'appel pour mesurer le temps",
+    "Copie le tableau pour que les deux tris travaillent sur les memes donnees",
+    "Le speedup est le rapport temps_lent / temps_rapide"
+  ],
+  "testCases": [
+    {
+      "id": 1,
+      "description": "Les deux tris produisent un tableau trie",
+      "stdin": "",
+      "expectedStdout": "",
+      "expectedExitCode": 0,
+      "visible": true
+    },
+    {
+      "id": 2,
+      "description": "Le temps est affiche en microsecondes",
+      "stdin": "",
+      "expectedStdout": "",
+      "expectedExitCode": 0,
+      "visible": false
+    },
+    {
+      "id": 3,
+      "description": "Le tri par insertion est plus rapide que le tri a bulles",
+      "stdin": "",
+      "expectedStdout": "",
+      "expectedExitCode": 0,
+      "visible": false
+    }
+  ],
+  "constraints": {
+    "allowedFunctions": ["gettimeofday", "malloc", "free", "memcpy", "printf", "srand", "rand"],
+    "forbiddenFunctions": ["system", "qsort"],
+    "maxExecutionTime": 5000,
+    "maxMemory": 128
+  },
+  "relatedExercises": ["c-day75-ex01-ft-cache-friendly", "c-day75-ex02-ft-optimize-algo"],
+  "resources": [
+    {
+      "title": "Manuel gettimeofday",
+      "url": "https://man7.org/linux/man-pages/man2/gettimeofday.2.html",
+      "type": "documentation"
+    },
+    {
+      "title": "Benchmarking en C",
+      "url": "https://www.geeksforgeeks.org/measure-execution-time-with-high-precision-in-c/",
+      "type": "article"
+    }
+  ]
+}

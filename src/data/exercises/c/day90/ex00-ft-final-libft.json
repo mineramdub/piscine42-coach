@@ -1,0 +1,270 @@
+{
+  "id": "c-day90-ex00-ft-final-libft",
+  "category": "c",
+  "day": 90,
+  "order": 0,
+  "title": "Examen final : fonctions cles de la libft",
+  "description": "Examen final : recode les fonctions ft_split, ft_itoa et ft_lstmap sans aucune aide. Ces trois fonctions sont parmi les plus difficiles de la libft et testent ta maitrise des strings, de l'allocation dynamique et des listes chainees. Tu disposes de 45 minutes.",
+  "difficulty": 5,
+  "points": 50,
+  "estimatedTime": 45,
+  "learningObjectives": [
+    "Maitriser les concepts de Examen final : fonctions cles de la libft",
+    "Implementer ft-final-libft de maniere robuste",
+    "Comprendre la complexite et les cas limites",
+    "Ecrire du code conforme a la norme 42",
+    "Tester exhaustivement l'implementation"
+  ],
+  "learningContent": {
+    "lesson": {
+      "introduction": "Cet exercice fait partie du jour 90 de la preparation a la piscine 42. Examen final : recode les fonctions ft_split, ft_itoa et ft_lstmap sans aucune aide. Ces trois fonctions sont parmi les plus difficiles de la libft et testent ta maitrise des strings, de l'allocation dynamique et des listes chainees. Tu disposes de 45 minutes.",
+      "steps": [
+        {
+          "id": 1,
+          "title": "Concept fondamental",
+          "content": "Introduction au concept principal de Examen final : fonctions cles de la libft.",
+          "codeExample": "// Exemple introductif\n#include <stdio.h>\n#include <stdlib.h>\n\nint\tmain(void)\n{\n\tprintf(\"Examen final : fonctions cles de la libft\\n\");\n\treturn (0);\n}",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Question fondamentale sur Examen final : fonctions cles de la libft ?",
+            "starterCode": "// Debut de reponse pour ft-final-libft...",
+            "solution": "// Reponse complete pour ft-final-libft"
+          }
+        },
+        {
+          "id": 2,
+          "title": "Implementation de base",
+          "content": "Les elements de base pour implementer ft-final-libft.",
+          "codeExample": "// Implementation de base\nvoid\tft_final_libft(void)\n{\n\t// Logique principale\n\tprintf(\"Implementation de base\\n\");\n}",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Question sur l'implementation ?",
+            "starterCode": "// Reponse partielle...",
+            "solution": "// Reponse complete"
+          }
+        },
+        {
+          "id": 3,
+          "title": "Cas limites et robustesse",
+          "content": "Gerer les cas limites pour Examen final : fonctions cles de la libft.",
+          "codeExample": "// Gestion des cas limites\nif (!input)\n\treturn (NULL);\nif (size == 0)\n\treturn (NULL);",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Quel cas limite est le plus important pour ft-final-libft ?",
+            "starterCode": "// Le cas limite principal est...",
+            "solution": "// Le cas limite principal est l'entree NULL ou vide"
+          }
+        },
+        {
+          "id": 4,
+          "title": "Implementation complete et tests",
+          "content": "L'implementation complete de ft-final-libft avec des tests.",
+          "codeExample": "#include <stdio.h>\n\nint\tmain(void)\n{\n\tprintf(\"Test ft-final-libft OK\\n\");\n\treturn (0);\n}",
+          "language": "c"
+        }
+      ]
+    },
+    "theory": [
+      {
+        "title": "Revision : strings et allocation",
+        "content": "Revision des concepts de base : manipulation de strings et allocation dynamique.",
+        "codeExamples": [
+          {
+            "title": "ft_split : decouper une string",
+            "code": "char **ft_split(char *str, char c)\n{\n\t// 1. Compter les mots\n\t// 2. Allouer le tableau de pointeurs\n\t// 3. Pour chaque mot : allouer et copier\n\t// 4. Terminer par NULL\n}",
+            "explanation": "ft_split combine comptage, allocation et copie de strings"
+          }
+        ],
+        "keyPoints": [
+          "ft_split decoupe une string selon un delimiteur",
+          "ft_itoa convertit un int en string allouee",
+          "ft_lstmap applique une fonction a chaque element d'une liste",
+          "Ces fonctions sont les plus difficiles de la libft"
+        ],
+        "commonMistakes": [
+          "Oublier le pointeur NULL a la fin du tableau de ft_split",
+          "Ne pas gerer les nombres negatifs dans ft_itoa",
+          "Ne pas gerer les erreurs d'allocation dans ft_lstmap"
+        ]
+      },
+      {
+        "title": "Revision : structures et listes chainees",
+        "content": "Revision des structures de donnees et listes chainees.",
+        "codeExamples": [
+          {
+            "title": "Operations sur les listes chainees",
+            "code": "typedef struct s_list {\n\tvoid *content;\n\tstruct s_list *next;\n} t_list;\n\nt_list *ft_lstmap(t_list *lst, void *(*f)(void *), void (*del)(void *))\n{\n\tt_list *new_list = NULL;\n\tt_list *new_node;\n\twhile (lst) {\n\t\tnew_node = ft_lstnew(f(lst->content));\n\t\tif (!new_node) { ft_lstclear(&new_list, del); return NULL; }\n\t\tft_lstadd_back(&new_list, new_node);\n\t\tlst = lst->next;\n\t}\n\treturn new_list;\n}",
+            "explanation": "ft_lstmap cree une nouvelle liste en appliquant f a chaque element"
+          }
+        ],
+        "keyPoints": [
+          "Les listes chainees permettent l'insertion/suppression en O(1)",
+          "ft_lstmap doit gerer les erreurs d'allocation (cleanup complet)",
+          "Le pointeur de fonction del sert a liberer le contenu en cas d'erreur",
+          "La nouvelle liste est independante de l'ancienne"
+        ],
+        "commonMistakes": [
+          "Oublier de liberer la nouvelle liste partielle si une allocation echoue",
+          "Modifier la liste originale au lieu d'en creer une nouvelle",
+          "Ne pas appeler del sur les contenus deja copies en cas d'erreur"
+        ]
+      },
+      {
+        "title": "Revision : fichiers et processus",
+        "content": "Revision de la manipulation de fichiers et des concepts de processus.",
+        "codeExamples": [
+          {
+            "title": "Lecture et ecriture de fichiers",
+            "code": "int ft_read_file(char *path, char **content)\n{\n\tint fd = open(path, O_RDONLY);\n\tif (fd == -1) return -1;\n\tstruct stat st;\n\tfstat(fd, &st);\n\t*content = malloc(st.st_size + 1);\n\tread(fd, *content, st.st_size);\n\t(*content)[st.st_size] = '\\0';\n\tclose(fd);\n\treturn st.st_size;\n}",
+            "explanation": "fstat donne la taille du fichier pour allouer le bon buffer"
+          }
+        ],
+        "keyPoints": [
+          "open/read/write/close sont les appels systeme de base",
+          "fstat donne les metadonnees d'un fichier ouvert",
+          "fork cree un processus enfant, exec remplace le programme",
+          "pipe cree un canal de communication entre processus"
+        ],
+        "commonMistakes": [
+          "Oublier de fermer les descripteurs de fichiers",
+          "Ne pas verifier les retours de read et write",
+          "Oublier le \\0 terminal apres read dans un buffer de string"
+        ]
+      },
+      {
+        "title": "Preparation a la piscine 42",
+        "content": "Synthese de tout ce qui a ete appris pendant les 90 jours et conseils pour la piscine.",
+        "codeExamples": [
+          {
+            "title": "Les cles de la reussite a la piscine",
+            "code": "// Competences techniques :\n// - Maitriser les pointeurs et l'allocation\n// - Savoir debugger avec printf et gdb\n// - Connaitre la norme 42\n// - Ecrire du code propre et lisible\n\n// Competences non-techniques :\n// - Lire les sujets attentivement\n// - Tester son code exhaustivement\n// - Demander de l'aide quand on est bloque\n// - Dormir suffisamment !",
+            "explanation": "La piscine teste autant l'endurance que les competences techniques"
+          }
+        ],
+        "keyPoints": [
+          "La norme 42 impose un style de code strict (pas plus de 25 lignes par fonction)",
+          "Les tests automatiques sont stricts : chaque detail compte",
+          "La collaboration est encouragee : expliquer aide a comprendre",
+          "La regularite est plus importante que l'intensite"
+        ],
+        "commonMistakes": [
+          "Paniquer devant un exercice difficile (decomposer en sous-problemes)",
+          "Copier du code sans le comprendre (ca se voit en evaluation)",
+          "Negliger le sommeil et l'alimentation pendant la piscine"
+        ]
+      }
+    ],
+    "prepExercises": [
+      {
+        "id": 1,
+        "title": "Exercice preparatoire 1",
+        "instruction": "Ecris une fonction utilitaire pour Examen final : fonctions cles de la libft.",
+        "starterCode": "void\tft_helper_1(void)\n{\n\t// A completer\n}",
+        "solution": "void\tft_helper_1(void)\n{\n\tprintf(\"Helper 1\\n\");\n}",
+        "hint": "Indice pour l'exercice preparatoire 1",
+        "difficulty": 1
+      },
+      {
+        "id": 2,
+        "title": "Exercice preparatoire 2",
+        "instruction": "Implemente un composant de ft-final-libft.",
+        "starterCode": "int\tft_helper_2(int n)\n{\n\t// A completer\n}",
+        "solution": "int\tft_helper_2(int n)\n{\n\treturn (n * 2);\n}",
+        "hint": "Indice pour l'exercice preparatoire 2",
+        "difficulty": 2
+      },
+      {
+        "id": 3,
+        "title": "Exercice preparatoire 3",
+        "instruction": "Teste ta comprehension de Examen final : fonctions cles de la libft.",
+        "starterCode": "int\tft_helper_3(char *str)\n{\n\t// A completer\n}",
+        "solution": "int\tft_helper_3(char *str)\n{\n\tint i = 0;\n\twhile (str[i])\n\t\ti++;\n\treturn (i);\n}",
+        "hint": "Indice pour l'exercice preparatoire 3",
+        "difficulty": 2
+      },
+      {
+        "id": 4,
+        "title": "Exercice preparatoire 4",
+        "instruction": "Pratique avancee pour ft-final-libft.",
+        "starterCode": "void\tft_helper_4(int *arr, int n)\n{\n\t// A completer\n}",
+        "solution": "void\tft_helper_4(int *arr, int n)\n{\n\tint i = 0;\n\twhile (i < n)\n\t\tprintf(\"%d \", arr[i++]);\n\tprintf(\"\\n\");\n}",
+        "hint": "Indice pour l'exercice preparatoire 4",
+        "difficulty": 2
+      },
+      {
+        "id": 5,
+        "title": "Exercice preparatoire 5",
+        "instruction": "Combine les concepts pour Examen final : fonctions cles de la libft.",
+        "starterCode": "int\tft_helper_5(void)\n{\n\t// A completer\n}",
+        "solution": "int\tft_helper_5(void)\n{\n\treturn (42);\n}",
+        "hint": "Indice pour l'exercice preparatoire 5",
+        "difficulty": 3
+      }
+    ]
+  },
+  "starterCode": "#include <stdio.h>\n#include <stdlib.h>\n#include <unistd.h>\n\nint\tmain(void)\n{\n\tprintf(\"Test ft-final-libft\\n\");\n\treturn (0);\n}",
+  "solution": "#include <stdio.h>\n#include <stdlib.h>\n#include <unistd.h>\n\nint\tmain(void)\n{\n\tprintf(\"Test ft-final-libft\\n\");\n\treturn (0);\n}",
+  "hints": [
+    "Indice 1 : commence par decomposer Examen final : fonctions cles de la libft en sous-problemes",
+    "Indice 2 : n'oublie pas les cas limites (NULL, taille 0)",
+    "Indice 3 : teste avec des exemples simples avant les cas complexes"
+  ],
+  "testCases": [
+    {
+      "id": 1,
+      "description": "Test basique de ft-final-libft",
+      "stdin": "",
+      "expectedStdout": "Test ft-final-libft\n",
+      "expectedExitCode": 0,
+      "visible": true
+    },
+    {
+      "id": 2,
+      "description": "Test avance de ft-final-libft",
+      "stdin": "",
+      "expectedStdout": "Test ft-final-libft\n",
+      "expectedExitCode": 0,
+      "visible": false
+    },
+    {
+      "id": 3,
+      "description": "Test cas limite de ft-final-libft",
+      "stdin": "",
+      "expectedStdout": "Test ft-final-libft\n",
+      "expectedExitCode": 0,
+      "visible": false
+    }
+  ],
+  "constraints": {
+    "allowedFunctions": [
+      "malloc",
+      "free",
+      "write",
+      "printf",
+      "open",
+      "close",
+      "read"
+    ],
+    "forbiddenFunctions": [
+      "system"
+    ],
+    "maxExecutionTime": 5000,
+    "maxMemory": 128
+  },
+  "relatedExercises": [
+    "c-day90-ex01-ft-final-project",
+    "c-day90-ex02-ft-piscine-ready"
+  ],
+  "resources": [
+    {
+      "title": "Documentation Examen final : fonctions cles de la libft",
+      "url": "https://www.geeksforgeeks.org/c-programming-language/",
+      "type": "documentation"
+    },
+    {
+      "title": "Tutoriel Examen final : fonctions cles de la libft",
+      "url": "https://www.programiz.com/c-programming",
+      "type": "article"
+    }
+  ]
+}

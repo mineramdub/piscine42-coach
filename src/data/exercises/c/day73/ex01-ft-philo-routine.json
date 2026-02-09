@@ -1,0 +1,257 @@
+{
+  "id": "c-day73-ex01-ft-philo-routine",
+  "category": "c",
+  "day": 73,
+  "order": 1,
+  "title": "La routine d'un philosophe",
+  "description": "Implemente la routine de vie d'un philosophe : manger, dormir, penser en boucle. Apprends a gerer les actions avec les timestamps et l'affichage protege.",
+  "difficulty": 4,
+  "points": 40,
+  "estimatedTime": 40,
+  "learningObjectives": [
+    "Implementer le cycle de vie d'un philosophe (eat, sleep, think)",
+    "Gerer l'affichage avec timestamps et mutex de protection",
+    "Utiliser usleep pour simuler les durees d'action",
+    "Comprendre la boucle principale d'un thread philosophe",
+    "Verifier les conditions d'arret dans la routine"
+  ],
+  "learningContent": {
+    "lesson": {
+      "introduction": "Chaque philosophe est un thread qui execute une boucle : penser, prendre les fourchettes, manger, poser les fourchettes, dormir, et recommencer. L'affichage de chaque action doit inclure un timestamp en millisecondes et le numero du philosophe. Un mutex d'affichage empeche les messages de se melanger entre les threads.",
+      "steps": [
+        {
+          "id": 1,
+          "title": "Le format d'affichage",
+          "content": "Chaque action d'un philosophe s'affiche avec le format :\n\n`[timestamp_ms] [id] [action]`\n\nExemple :\n```\n0 1 is thinking\n0 1 has taken a fork\n0 1 has taken a fork\n0 1 is eating\n200 1 is sleeping\n400 1 is thinking\n```\n\nLe timestamp est en ms depuis le debut de la simulation.",
+          "codeExample": "#include <sys/time.h>\n\nlong long\tget_time_ms(void)\n{\n\tstruct timeval\ttv;\n\n\tgettimeofday(&tv, NULL);\n\treturn ((long long)tv.tv_sec * 1000\n\t\t+ tv.tv_usec / 1000);\n}\n\nvoid\tprint_action(t_philo *philo, char *action)\n{\n\tlong long\ttime;\n\n\tpthread_mutex_lock(&philo->table->print_mutex);\n\ttime = get_time_ms() - philo->table->start_time;\n\tif (!philo->table->someone_died)\n\t\tprintf(\"%lld %d %s\\n\", time, philo->id, action);\n\tpthread_mutex_unlock(&philo->table->print_mutex);\n}",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Ecris la fonction print_action qui affiche une action avec timestamp et protection mutex.",
+            "starterCode": "void\tprint_action(t_philo *philo, char *action)\n{\n\t/* TON CODE ICI */\n}",
+            "solution": "void\tprint_action(t_philo *philo, char *action)\n{\n\tlong long\ttime;\n\n\tpthread_mutex_lock(&philo->table->print_mutex);\n\ttime = get_time_ms() - philo->table->start_time;\n\tif (!philo->table->someone_died)\n\t\tprintf(\"%lld %d %s\\n\", time, philo->id, action);\n\tpthread_mutex_unlock(&philo->table->print_mutex);\n}"
+          }
+        },
+        {
+          "id": 2,
+          "title": "Manger : prendre les fourchettes",
+          "content": "Pour manger, un philosophe doit :\n1. Prendre sa fourchette gauche (lock)\n2. Prendre sa fourchette droite (lock)\n3. Mettre a jour last_meal_time\n4. Dormir pendant time_to_eat ms (usleep)\n5. Liberer les deux fourchettes (unlock)\n\n**Ordre de prise** : pour eviter les deadlocks, les philosophes pairs prennent d'abord la gauche, les impairs prennent d'abord la droite.",
+          "codeExample": "void\tft_eat(t_philo *philo)\n{\n\tpthread_mutex_lock(philo->left_fork);\n\tprint_action(philo, \"has taken a fork\");\n\tpthread_mutex_lock(philo->right_fork);\n\tprint_action(philo, \"has taken a fork\");\n\tphilo->last_meal_time = get_time_ms();\n\tprint_action(philo, \"is eating\");\n\tusleep(philo->table->time_to_eat * 1000);\n\tphilo->meals_eaten++;\n\tpthread_mutex_unlock(philo->right_fork);\n\tpthread_mutex_unlock(philo->left_fork);\n}",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Ecris la fonction ft_eat qui gere la prise de fourchettes, le repas et la liberation.",
+            "starterCode": "void\tft_eat(t_philo *philo)\n{\n\t// Prendre fourchette gauche\n\t// Prendre fourchette droite\n\t// Manger\n\t// Liberer les fourchettes\n}",
+            "solution": "void\tft_eat(t_philo *philo)\n{\n\tpthread_mutex_lock(philo->left_fork);\n\tprint_action(philo, \"has taken a fork\");\n\tpthread_mutex_lock(philo->right_fork);\n\tprint_action(philo, \"has taken a fork\");\n\tphilo->last_meal_time = get_time_ms();\n\tprint_action(philo, \"is eating\");\n\tusleep(philo->table->time_to_eat * 1000);\n\tphilo->meals_eaten++;\n\tpthread_mutex_unlock(philo->right_fork);\n\tpthread_mutex_unlock(philo->left_fork);\n}"
+          }
+        },
+        {
+          "id": 3,
+          "title": "Dormir et penser",
+          "content": "Apres avoir mange, le philosophe dort pendant `time_to_sleep` ms, puis pense. La phase de pensee n'a pas de duree fixe : le philosophe pense jusqu'a ce qu'il ait faim (et recommence la boucle).\n\nChaque action est affichee avec print_action.",
+          "codeExample": "void\tft_sleep_and_think(t_philo *philo)\n{\n\tprint_action(philo, \"is sleeping\");\n\tusleep(philo->table->time_to_sleep * 1000);\n\tprint_action(philo, \"is thinking\");\n}",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Ecris les fonctions ft_sleep et ft_think pour un philosophe.",
+            "starterCode": "void\tft_sleep_think(t_philo *philo)\n{\n\t/* TON CODE ICI */\n}",
+            "solution": "void\tft_sleep_think(t_philo *philo)\n{\n\tprint_action(philo, \"is sleeping\");\n\tusleep(philo->table->time_to_sleep * 1000);\n\tprint_action(philo, \"is thinking\");\n}"
+          }
+        },
+        {
+          "id": 4,
+          "title": "La boucle principale de la routine",
+          "content": "La routine du philosophe est une boucle infinie qui s'arrete quand someone_died est vrai ou quand le nombre maximum de repas est atteint. Les philosophes pairs attendent un peu au debut pour desynchroniser les prises de fourchettes.",
+          "codeExample": "void\t*philo_routine(void *arg)\n{\n\tt_philo\t*philo;\n\n\tphilo = (t_philo *)arg;\n\tphilo->last_meal_time = get_time_ms();\n\tif (philo->id % 2 == 0)\n\t\tusleep(1000);\n\twhile (!philo->table->someone_died)\n\t{\n\t\tft_eat(philo);\n\t\tif (philo->table->max_meals != -1\n\t\t\t&& philo->meals_eaten >= philo->table->max_meals)\n\t\t\tbreak ;\n\t\tft_sleep_and_think(philo);\n\t}\n\treturn (NULL);\n}",
+          "language": "c"
+        }
+      ]
+    },
+    "theory": [
+      {
+        "title": "Cycle de vie d'un philosophe",
+        "content": "Le cycle de vie est simple : penser, manger, dormir, recommencer. Mais l'implementation est subtile car les fourchettes sont partagees. Si tous les philosophes prennent leur fourchette gauche en meme temps, personne ne peut prendre la droite : deadlock.",
+        "codeExamples": [
+          {
+            "title": "Cycle de vie",
+            "code": "// Boucle de vie :\n// 1. Penser (attendre)\n// 2. Prendre fourchette gauche (lock)\n// 3. Prendre fourchette droite (lock)\n// 4. Manger (usleep time_to_eat * 1000)\n// 5. Poser les fourchettes (unlock)\n// 6. Dormir (usleep time_to_sleep * 1000)\n// 7. Goto 1",
+            "explanation": "Chaque etape doit etre affichee avec un timestamp."
+          }
+        ],
+        "keyPoints": [
+          "Le cycle est : think -> eat -> sleep -> think -> ...",
+          "Pour manger : lock deux fourchettes, usleep, unlock",
+          "Chaque action est affichee avec un timestamp en ms",
+          "La boucle s'arrete si someone_died ou max_meals atteint"
+        ],
+        "commonMistakes": [
+          "Oublier de mettre a jour last_meal_time au debut du repas",
+          "Ne pas liberer les fourchettes en cas d'arret premature",
+          "Confondre time_to_eat en ms avec usleep qui prend des us"
+        ]
+      },
+      {
+        "title": "Affichage protege par mutex",
+        "content": "Sans protection, les printf de differents threads se melangent. Le print_mutex garantit que chaque message s'affiche en entier. On verifie aussi someone_died dans le print pour ne pas afficher apres un deces.",
+        "codeExamples": [
+          {
+            "title": "Affichage atomique",
+            "code": "void\tprint_action(t_philo *p, char *msg)\n{\n\tpthread_mutex_lock(&p->table->print_mutex);\n\tif (!p->table->someone_died)\n\t\tprintf(\"%lld %d %s\\n\",\n\t\t\tget_time_ms() - p->table->start_time,\n\t\t\tp->id, msg);\n\tpthread_mutex_unlock(&p->table->print_mutex);\n}",
+            "explanation": "Le mutex empeche les sorties de se chevaucher entre threads."
+          }
+        ],
+        "keyPoints": [
+          "Un seul mutex d'affichage pour tous les philosophes",
+          "Verifier someone_died dans le print pour eviter les affichages post-mortem",
+          "Le timestamp est calcule au moment de l'affichage, pas de l'action",
+          "Ne pas garder le print_mutex locke trop longtemps"
+        ],
+        "commonMistakes": [
+          "Calculer le timestamp avant le lock (timestamp incorrect)",
+          "Oublier de verifier someone_died avant d'afficher",
+          "Garder le mutex d'affichage pendant le usleep"
+        ]
+      },
+      {
+        "title": "Desynchronisation des philosophes",
+        "content": "Si tous les philosophes commencent en meme temps, les philosophes pairs et impairs entrent en competition pour les memes fourchettes. En faisant attendre les philosophes pairs au debut, on desynchronise les prises de fourchettes et on evite les deadlocks.",
+        "codeExamples": [
+          {
+            "title": "Decalage initial",
+            "code": "// Au debut de la routine :\nif (philo->id % 2 == 0)\n\tusleep(philo->table->time_to_eat * 500);\n// Les pairs mangent en second, les impairs en premier",
+            "explanation": "Ce decalage simple evite que tous les philosophes saisissent les fourchettes simultanement."
+          }
+        ],
+        "keyPoints": [
+          "Les philosophes pairs attendent un peu avant de commencer",
+          "Cela desynchronise les acces aux fourchettes partagees",
+          "Le delai doit etre suffisant pour que les impairs aient le temps de manger",
+          "Alternative : les pairs prennent d'abord la droite, les impairs la gauche"
+        ],
+        "commonMistakes": [
+          "Ne pas desynchroniser et observer des deadlocks aleatoires",
+          "Utiliser un delai trop court qui ne resout pas le probleme",
+          "Desynchroniser avec sleep au lieu de usleep (granularite trop grossiere)"
+        ]
+      },
+      {
+        "title": "Conditions d'arret",
+        "content": "La simulation s'arrete dans deux cas : un philosophe meurt (someone_died = 1) ou tous les philosophes ont mange le nombre maximum de repas. Chaque thread doit verifier ces conditions regulierement dans sa boucle.",
+        "codeExamples": [
+          {
+            "title": "Verification d'arret",
+            "code": "while (!philo->table->someone_died)\n{\n\tft_eat(philo);\n\tif (philo->table->max_meals != -1\n\t\t&& philo->meals_eaten >= philo->table->max_meals)\n\t\tbreak ;\n\tft_sleep_and_think(philo);\n}",
+            "explanation": "La boucle s'interrompt sur mort ou repas maximum atteint."
+          }
+        ],
+        "keyPoints": [
+          "Verifier someone_died a chaque iteration de la boucle",
+          "max_meals == -1 signifie qu'il n'y a pas de limite de repas",
+          "Le thread moniteur (prochain exercice) set someone_died",
+          "Les threads doivent terminer proprement (liberer les mutex)"
+        ],
+        "commonMistakes": [
+          "Ne pas verifier someone_died assez souvent dans la boucle",
+          "Oublier de liberer les fourchettes en sortant de la boucle",
+          "Continuer a afficher apres qu'un philosophe est mort"
+        ]
+      }
+    ],
+    "prepExercises": [
+      {
+        "id": 1,
+        "title": "Fonction get_time_ms",
+        "instruction": "Ecris une fonction qui retourne le temps en millisecondes.",
+        "starterCode": "long long\tget_time_ms(void)\n{\n\t/* TON CODE ICI */\n}",
+        "solution": "long long\tget_time_ms(void)\n{\n\tstruct timeval\ttv;\n\n\tgettimeofday(&tv, NULL);\n\treturn ((long long)tv.tv_sec * 1000 + tv.tv_usec / 1000);\n}",
+        "hint": "gettimeofday(&tv, NULL) puis convertis en ms.",
+        "difficulty": 1
+      },
+      {
+        "id": 2,
+        "title": "Print protege",
+        "instruction": "Ecris print_action avec mutex et verification de someone_died.",
+        "starterCode": "void\tprint_action(t_philo *p, char *msg)\n{\n\t/* TON CODE ICI */\n}",
+        "solution": "void\tprint_action(t_philo *p, char *msg)\n{\n\tpthread_mutex_lock(&p->table->print_mutex);\n\tif (!p->table->someone_died)\n\t\tprintf(\"%lld %d %s\\n\",\n\t\t\tget_time_ms() - p->table->start_time, p->id, msg);\n\tpthread_mutex_unlock(&p->table->print_mutex);\n}",
+        "hint": "Lock le print_mutex, verifie someone_died, affiche, unlock.",
+        "difficulty": 2
+      },
+      {
+        "id": 3,
+        "title": "Action manger",
+        "instruction": "Implemente ft_eat : prendre les fourchettes, manger, les relacher.",
+        "starterCode": "void\tft_eat(t_philo *p)\n{\n\t/* TON CODE ICI */\n}",
+        "solution": "void\tft_eat(t_philo *p)\n{\n\tpthread_mutex_lock(p->left_fork);\n\tprint_action(p, \"has taken a fork\");\n\tpthread_mutex_lock(p->right_fork);\n\tprint_action(p, \"has taken a fork\");\n\tp->last_meal_time = get_time_ms();\n\tprint_action(p, \"is eating\");\n\tusleep(p->table->time_to_eat * 1000);\n\tp->meals_eaten++;\n\tpthread_mutex_unlock(p->right_fork);\n\tpthread_mutex_unlock(p->left_fork);\n}",
+        "hint": "Lock gauche, lock droite, maj last_meal, usleep, unlock droite, unlock gauche.",
+        "difficulty": 3
+      },
+      {
+        "id": 4,
+        "title": "Action dormir et penser",
+        "instruction": "Implemente ft_sleep_think : afficher, dormir, afficher penser.",
+        "starterCode": "void\tft_sleep_think(t_philo *p)\n{\n\t/* TON CODE ICI */\n}",
+        "solution": "void\tft_sleep_think(t_philo *p)\n{\n\tprint_action(p, \"is sleeping\");\n\tusleep(p->table->time_to_sleep * 1000);\n\tprint_action(p, \"is thinking\");\n}",
+        "hint": "Affiche is sleeping, usleep, affiche is thinking.",
+        "difficulty": 1
+      },
+      {
+        "id": 5,
+        "title": "Boucle de routine",
+        "instruction": "Ecris la boucle principale de la routine d'un philosophe avec conditions d'arret.",
+        "starterCode": "void\t*philo_routine(void *arg)\n{\n\tt_philo\t*p = (t_philo *)arg;\n\t/* TON CODE ICI */\n\treturn (NULL);\n}",
+        "solution": "void\t*philo_routine(void *arg)\n{\n\tt_philo\t*p = (t_philo *)arg;\n\n\tp->last_meal_time = get_time_ms();\n\tif (p->id % 2 == 0)\n\t\tusleep(1000);\n\twhile (!p->table->someone_died)\n\t{\n\t\tft_eat(p);\n\t\tif (p->table->max_meals != -1\n\t\t\t&& p->meals_eaten >= p->table->max_meals)\n\t\t\tbreak ;\n\t\tft_sleep_think(p);\n\t}\n\treturn (NULL);\n}",
+        "hint": "Init last_meal, desync les pairs, boucle eat/sleep/think avec verif d'arret.",
+        "difficulty": 3
+      }
+    ]
+  },
+  "starterCode": "#include <pthread.h>\n#include <stdio.h>\n#include <stdlib.h>\n#include <unistd.h>\n#include <sys/time.h>\n\n// Structures definies dans l'exercice precedent\n\nlong long\tget_time_ms(void)\n{\n\tstruct timeval\ttv;\n\n\tgettimeofday(&tv, NULL);\n\treturn ((long long)tv.tv_sec * 1000 + tv.tv_usec / 1000);\n}\n\nvoid\tft_print_action(t_philo *philo, char *action)\n{\n\t// TODO: Afficher avec timestamp, protege par mutex\n}\n\nvoid\tft_eat(t_philo *philo)\n{\n\t// TODO: Prendre fourchettes, manger, relacher\n}\n\nvoid\tft_sleep_think(t_philo *philo)\n{\n\t// TODO: Dormir et penser\n}\n\nvoid\t*ft_philo_routine(void *arg)\n{\n\tt_philo\t*philo;\n\n\tphilo = (t_philo *)arg;\n\t// TODO: Boucle eat -> sleep -> think\n\treturn (NULL);\n}",
+  "solution": "#include <pthread.h>\n#include <stdio.h>\n#include <stdlib.h>\n#include <unistd.h>\n#include <sys/time.h>\n\nlong long\tget_time_ms(void)\n{\n\tstruct timeval\ttv;\n\n\tgettimeofday(&tv, NULL);\n\treturn ((long long)tv.tv_sec * 1000 + tv.tv_usec / 1000);\n}\n\nvoid\tft_print_action(t_philo *philo, char *action)\n{\n\tlong long\ttime;\n\n\tpthread_mutex_lock(&philo->table->print_mutex);\n\ttime = get_time_ms() - philo->table->start_time;\n\tif (!philo->table->someone_died)\n\t\tprintf(\"%lld %d %s\\n\", time, philo->id, action);\n\tpthread_mutex_unlock(&philo->table->print_mutex);\n}\n\nvoid\tft_eat(t_philo *philo)\n{\n\tpthread_mutex_lock(philo->left_fork);\n\tft_print_action(philo, \"has taken a fork\");\n\tpthread_mutex_lock(philo->right_fork);\n\tft_print_action(philo, \"has taken a fork\");\n\tphilo->last_meal_time = get_time_ms();\n\tft_print_action(philo, \"is eating\");\n\tusleep(philo->table->time_to_eat * 1000);\n\tphilo->meals_eaten++;\n\tpthread_mutex_unlock(philo->right_fork);\n\tpthread_mutex_unlock(philo->left_fork);\n}\n\nvoid\tft_sleep_think(t_philo *philo)\n{\n\tft_print_action(philo, \"is sleeping\");\n\tusleep(philo->table->time_to_sleep * 1000);\n\tft_print_action(philo, \"is thinking\");\n}\n\nvoid\t*ft_philo_routine(void *arg)\n{\n\tt_philo\t*philo;\n\n\tphilo = (t_philo *)arg;\n\tphilo->last_meal_time = get_time_ms();\n\tif (philo->id % 2 == 0)\n\t\tusleep(philo->table->time_to_eat * 500);\n\twhile (!philo->table->someone_died)\n\t{\n\t\tft_eat(philo);\n\t\tif (philo->table->max_meals != -1\n\t\t\t&& philo->meals_eaten >= philo->table->max_meals)\n\t\t\tbreak ;\n\t\tft_sleep_think(philo);\n\t}\n\treturn (NULL);\n}",
+  "hints": [
+    "Utilise print_mutex pour proteger les printf et verifier someone_died",
+    "Pour manger : lock gauche, lock droite, maj last_meal_time, usleep, unlock",
+    "Les philosophes pairs attendent un peu au debut pour eviter le deadlock"
+  ],
+  "testCases": [
+    {
+      "id": 1,
+      "description": "Un philosophe affiche ses actions dans l'ordre correct",
+      "stdin": "",
+      "expectedStdout": "0 1 is thinking\n0 1 has taken a fork\n0 1 has taken a fork\n0 1 is eating\n",
+      "expectedExitCode": 0,
+      "visible": true
+    },
+    {
+      "id": 2,
+      "description": "Les timestamps sont croissants",
+      "stdin": "",
+      "expectedStdout": "",
+      "expectedExitCode": 0,
+      "visible": false
+    },
+    {
+      "id": 3,
+      "description": "Les fourchettes sont bien liberees apres le repas",
+      "stdin": "",
+      "expectedStdout": "",
+      "expectedExitCode": 0,
+      "visible": false
+    }
+  ],
+  "constraints": {
+    "allowedFunctions": ["pthread_mutex_lock", "pthread_mutex_unlock", "printf", "usleep", "gettimeofday"],
+    "forbiddenFunctions": ["sleep", "system"],
+    "maxExecutionTime": 5000,
+    "maxMemory": 128
+  },
+  "relatedExercises": ["c-day73-ex00-ft-philo-setup", "c-day73-ex02-ft-philo-monitor"],
+  "resources": [
+    {
+      "title": "gettimeofday manual",
+      "url": "https://man7.org/linux/man-pages/man2/gettimeofday.2.html",
+      "type": "documentation"
+    },
+    {
+      "title": "Philosophers routine implementation",
+      "url": "https://medium.com/@jalal92/the-dining-philosophers-7157cc05315",
+      "type": "article"
+    }
+  ]
+}

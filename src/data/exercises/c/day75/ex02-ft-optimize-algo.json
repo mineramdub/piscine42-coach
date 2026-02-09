@@ -1,0 +1,257 @@
+{
+  "id": "c-day75-ex02-ft-optimize-algo",
+  "category": "c",
+  "day": 75,
+  "order": 2,
+  "title": "Optimiser un algorithme naif",
+  "description": "Apprends a transformer un algorithme naif O(n^2) en un algorithme optimise O(n log n) ou O(n). Comprends les techniques d'optimisation et mesure l'impact reel.",
+  "difficulty": 5,
+  "points": 50,
+  "estimatedTime": 45,
+  "learningObjectives": [
+    "Identifier les algorithmes naifs qui peuvent etre optimises",
+    "Appliquer la technique de tri prealable pour reduire la complexite",
+    "Utiliser des tables de hachage pour des recherches en O(1)",
+    "Mesurer le gain de performance reel apres optimisation",
+    "Choisir l'algorithme optimal selon le contexte"
+  ],
+  "learningContent": {
+    "lesson": {
+      "introduction": "Un algorithme naif est souvent le premier qui vient a l'esprit : simple a implementer mais lent. Par exemple, pour trouver les doublons dans un tableau, l'approche naive compare chaque element avec tous les autres (O(n^2)). En triant d'abord le tableau (O(n log n)), les doublons deviennent adjacents et se trouvent en un seul parcours (O(n)). Le gain est enorme pour de grands tableaux.",
+      "steps": [
+        {
+          "id": 1,
+          "title": "Identifier l'algorithme naif",
+          "content": "Un algorithme naif utilise souvent des boucles imbriquees sur les memes donnees. C'est un signe de complexite O(n^2) ou pire.\n\n**Exemples** :\n- Chercher des doublons avec 2 boucles\n- Trouver deux elements dont la somme vaut une cible\n- Comparer toutes les paires d'un tableau\n\nLa premiere etape est d'identifier la complexite actuelle.",
+          "codeExample": "// Algorithme naif : trouver les doublons O(n^2)\nint\thas_duplicates_naive(int *arr, int n)\n{\n\tint\ti;\n\tint\tj;\n\n\ti = 0;\n\twhile (i < n)\n\t{\n\t\tj = i + 1;\n\t\twhile (j < n)\n\t\t{\n\t\t\tif (arr[i] == arr[j])\n\t\t\t\treturn (1);\n\t\t\tj++;\n\t\t}\n\t\ti++;\n\t}\n\treturn (0);\n}",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Ecris l'algorithme naif O(n^2) pour trouver deux nombres dont la somme vaut une cible.",
+            "starterCode": "int\ttwo_sum_naive(int *arr, int n, int target)\n{\n\t/* TON CODE ICI */\n}",
+            "solution": "int\ttwo_sum_naive(int *arr, int n, int target)\n{\n\tint\ti = -1;\n\twhile (++i < n)\n\t{\n\t\tint j = i;\n\t\twhile (++j < n)\n\t\t\tif (arr[i] + arr[j] == target)\n\t\t\t\treturn (1);\n\t}\n\treturn (0);\n}"
+          }
+        },
+        {
+          "id": 2,
+          "title": "Optimiser avec le tri",
+          "content": "En triant le tableau d'abord (O(n log n)), on peut ensuite resoudre le probleme en O(n) avec deux pointeurs ou un parcours lineaire.\n\n**Doublons** : apres tri, les doublons sont adjacents -> O(n)\n**Two Sum** : deux pointeurs (debut et fin), on ajuste selon la somme -> O(n)",
+          "codeExample": "// Doublons optimise : tri + parcours O(n log n)\nint\thas_duplicates_sort(int *arr, int n)\n{\n\tint\ti;\n\n\t// On suppose le tableau deja trie\n\ti = 0;\n\twhile (i < n - 1)\n\t{\n\t\tif (arr[i] == arr[i + 1])\n\t\t\treturn (1);\n\t\ti++;\n\t}\n\treturn (0);\n}\n\n// Two Sum optimise : tri + deux pointeurs O(n log n)\nint\ttwo_sum_sorted(int *arr, int n, int target)\n{\n\tint\tleft;\n\tint\tright;\n\tint\tsum;\n\n\tleft = 0;\n\tright = n - 1;\n\twhile (left < right)\n\t{\n\t\tsum = arr[left] + arr[right];\n\t\tif (sum == target)\n\t\t\treturn (1);\n\t\telse if (sum < target)\n\t\t\tleft++;\n\t\telse\n\t\t\tright--;\n\t}\n\treturn (0);\n}",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Implemente two_sum avec la technique des deux pointeurs sur un tableau trie.",
+            "starterCode": "int\ttwo_sum_opt(int *sorted, int n, int target)\n{\n\t/* TON CODE ICI */\n}",
+            "solution": "int\ttwo_sum_opt(int *sorted, int n, int target)\n{\n\tint\tl = 0;\n\tint\tr = n - 1;\n\n\twhile (l < r)\n\t{\n\t\tif (sorted[l] + sorted[r] == target)\n\t\t\treturn (1);\n\t\telse if (sorted[l] + sorted[r] < target)\n\t\t\tl++;\n\t\telse\n\t\t\tr--;\n\t}\n\treturn (0);\n}"
+          }
+        },
+        {
+          "id": 3,
+          "title": "Optimiser avec une table de hachage",
+          "content": "Pour certains problemes, une table de hachage permet des recherches en O(1) amortie. Au lieu de comparer avec tous les elements precedents, on verifie si l'element est deja dans la table.\n\n**Doublons** : inserer chaque element, verifier avant l'insertion -> O(n)\n**Two Sum** : pour chaque element, chercher (target - element) dans la table -> O(n)",
+          "codeExample": "#define TABLE_SIZE 100003\n\ntypedef struct s_entry\n{\n\tint\t\t\t\tvalue;\n\tint\t\t\t\tused;\n}\tt_entry;\n\nint\thash(int value)\n{\n\tint\th;\n\n\th = value % TABLE_SIZE;\n\tif (h < 0)\n\t\th += TABLE_SIZE;\n\treturn (h);\n}\n\nint\thas_duplicates_hash(int *arr, int n)\n{\n\tstatic t_entry\ttable[TABLE_SIZE];\n\tint\t\t\t\ti;\n\tint\t\t\t\th;\n\n\ti = 0;\n\twhile (i < n)\n\t{\n\t\th = hash(arr[i]);\n\t\tif (table[h].used && table[h].value == arr[i])\n\t\t\treturn (1);\n\t\ttable[h].value = arr[i];\n\t\ttable[h].used = 1;\n\t\ti++;\n\t}\n\treturn (0);\n}",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Implemente two_sum en O(n) avec une table de hachage simple.",
+            "starterCode": "int\ttwo_sum_hash(int *arr, int n, int target)\n{\n\t/* TON CODE ICI : utilise une table de hachage */\n}",
+            "solution": "int\ttwo_sum_hash(int *arr, int n, int target)\n{\n\tstatic t_entry\ttable[TABLE_SIZE];\n\tint\t\t\t\ti;\n\tint\t\t\t\tcomplement;\n\tint\t\t\t\th;\n\n\ti = 0;\n\twhile (i < n)\n\t{\n\t\tcomplement = target - arr[i];\n\t\th = hash(complement);\n\t\tif (table[h].used && table[h].value == complement)\n\t\t\treturn (1);\n\t\th = hash(arr[i]);\n\t\ttable[h].value = arr[i];\n\t\ttable[h].used = 1;\n\t\ti++;\n\t}\n\treturn (0);\n}"
+          }
+        },
+        {
+          "id": 4,
+          "title": "Mesurer le gain reel",
+          "content": "Comparons les trois approches sur un grand tableau pour voir le gain en pratique.\n\nPour n = 100000 :\n- Naif O(n^2) : ~5 secondes\n- Tri + scan O(n log n) : ~10 ms\n- Table de hachage O(n) : ~2 ms\n\nLe gain est spectaculaire : **500x a 2500x** !",
+          "codeExample": "int\tmain(void)\n{\n\tint\t\t*arr;\n\tint\t\tsize = 100000;\n\tlong\tt_naive, t_sort, t_hash;\n\n\tarr = generate_random_array(size);\n\n\tt_naive = benchmark(has_dup_naive, copy(arr, size), size);\n\tt_sort = benchmark(has_dup_sort, copy(arr, size), size);\n\tt_hash = benchmark(has_dup_hash, copy(arr, size), size);\n\n\tprintf(\"Naive:  %ld us\\n\", t_naive);\n\tprintf(\"Sort:   %ld us (x%.0f)\\n\", t_sort,\n\t\t(float)t_naive / t_sort);\n\tprintf(\"Hash:   %ld us (x%.0f)\\n\", t_hash,\n\t\t(float)t_naive / t_hash);\n}",
+          "language": "c"
+        }
+      ]
+    },
+    "theory": [
+      {
+        "title": "Complexite et scalabilite",
+        "content": "La complexite algorithmique determine comment le temps d'execution croit avec la taille des donnees. Un algorithme O(n^2) devient inutilisable pour de grands n, tandis qu'un O(n log n) reste performant. La connaissance des complexites est essentielle pour choisir le bon algorithme.",
+        "codeExamples": [
+          {
+            "title": "Comparaison des complexites",
+            "code": "// Pour n = 100000 :\n// O(n)       = 100000 operations      (~0.1 ms)\n// O(n log n) = 1700000 operations     (~2 ms)\n// O(n^2)     = 10000000000 operations (~10 s)\n// O(n^3)     = 10^15 operations       (~11 jours)",
+            "explanation": "La difference entre O(n) et O(n^2) est colossale pour de grands n."
+          }
+        ],
+        "keyPoints": [
+          "O(n) et O(n log n) sont utilisables pour n = 10^6 et plus",
+          "O(n^2) devient lent au-dela de n = 10^4",
+          "O(n^3) est limite a n = 10^2 ou 10^3",
+          "Reduire la complexite donne souvent un gain de 100x ou plus"
+        ],
+        "commonMistakes": [
+          "Garder un algorithme O(n^2) par paresse quand O(n log n) est possible",
+          "Optimiser les constantes au lieu de reduire la complexite",
+          "Ne pas mesurer pour verifier que l'optimisation est reelle"
+        ]
+      },
+      {
+        "title": "Technique du tri prealable",
+        "content": "Trier les donnees avant de resoudre le probleme est une technique puissante. Le tri en O(n log n) permet ensuite des recherches binaires O(log n), des scans lineaires O(n), et la technique des deux pointeurs.",
+        "codeExamples": [
+          {
+            "title": "Deux pointeurs sur tableau trie",
+            "code": "// Trouver deux elements sommant a target\nint\tl = 0, r = n - 1;\nwhile (l < r)\n{\n\tint sum = arr[l] + arr[r];\n\tif (sum == target) return (1);\n\tif (sum < target) l++;\n\telse r--;\n}\nreturn (0);",
+            "explanation": "Les deux pointeurs convergent vers la solution en O(n)."
+          }
+        ],
+        "keyPoints": [
+          "Le tri prealable coute O(n log n) mais simplifie le probleme",
+          "Apres tri : doublons adjacents, recherche binaire possible",
+          "La technique deux pointeurs resout beaucoup de problemes en O(n)",
+          "Le cout total est O(n log n) + O(n) = O(n log n)"
+        ],
+        "commonMistakes": [
+          "Oublier que le tri modifie le tableau original",
+          "Ne pas utiliser qsort quand c'est autorise",
+          "Trier pour un probleme ou une table de hachage serait meilleure"
+        ]
+      },
+      {
+        "title": "Tables de hachage",
+        "content": "Une table de hachage offre des insertions et recherches en O(1) amortie. Elle transforme un probleme O(n^2) en O(n) en echangeant du temps contre de la memoire. En C, il faut l'implementer manuellement avec un tableau et une fonction de hachage.",
+        "codeExamples": [
+          {
+            "title": "Table de hachage simple",
+            "code": "int\thash(int val, int size)\n{\n\tint\th = val % size;\n\treturn (h < 0 ? h + size : h);\n}\n\n// Insertion : table[hash(val)] = val\n// Recherche : table[hash(val)] == val ?",
+            "explanation": "La fonction de hachage distribue les valeurs dans le tableau."
+          }
+        ],
+        "keyPoints": [
+          "Insertion et recherche en O(1) amortie",
+          "Necessite de la memoire supplementaire (tableau)",
+          "Les collisions doivent etre gerees (chainage ou probing)",
+          "La taille de la table doit etre un nombre premier pour reduire les collisions"
+        ],
+        "commonMistakes": [
+          "Ne pas gerer les collisions (valeurs differentes, meme hash)",
+          "Table trop petite (trop de collisions)",
+          "Oublier que la fonction de hachage peut retourner un negatif"
+        ]
+      },
+      {
+        "title": "Choisir la bonne optimisation",
+        "content": "Le choix entre tri et hachage depend du contexte. Le tri est simple et ne requiert pas de memoire extra (in-place). Le hachage est plus rapide mais utilise plus de memoire. Pour des donnees deja triees, un scan lineaire suffit.",
+        "codeExamples": [
+          {
+            "title": "Decision tree",
+            "code": "// Le probleme a-t-il une structure d'ordre ?\n//   OUI -> Tri + scan/deux pointeurs (O(n log n))\n//   NON -> Table de hachage (O(n))\n//\n// La memoire est-elle limitee ?\n//   OUI -> Tri in-place\n//   NON -> Table de hachage\n//\n// Les donnees sont-elles deja triees ?\n//   OUI -> Scan lineaire (O(n))\n//   NON -> Trier d'abord",
+            "explanation": "Le contexte determine la meilleure approche d'optimisation."
+          }
+        ],
+        "keyPoints": [
+          "Tri : simple, pas de memoire extra, O(n log n)",
+          "Hachage : O(n) mais memoire supplementaire",
+          "Scan lineaire : O(n) si les donnees sont deja structurees",
+          "Mesurer pour confirmer que l'optimisation est profitable"
+        ],
+        "commonMistakes": [
+          "Toujours utiliser la meme technique sans analyser le probleme",
+          "Sur-optimiser un code qui n'est pas un goulot d'etranglement",
+          "Ne pas considerer les contraintes memoire"
+        ]
+      }
+    ],
+    "prepExercises": [
+      {
+        "id": 1,
+        "title": "Doublons naif",
+        "instruction": "Detecte les doublons avec l'approche naive O(n^2).",
+        "starterCode": "int\thas_dup_naive(int *arr, int n)\n{\n\t/* TON CODE ICI */\n}",
+        "solution": "int\thas_dup_naive(int *arr, int n)\n{\n\tint\ti = -1;\n\twhile (++i < n)\n\t{\n\t\tint j = i;\n\t\twhile (++j < n)\n\t\t\tif (arr[i] == arr[j])\n\t\t\t\treturn (1);\n\t}\n\treturn (0);\n}",
+        "hint": "Deux boucles imbriquees, compare chaque paire.",
+        "difficulty": 1
+      },
+      {
+        "id": 2,
+        "title": "Doublons avec tri",
+        "instruction": "Detecte les doublons en triant d'abord le tableau.",
+        "starterCode": "int\thas_dup_sort(int *arr, int n)\n{\n\t/* TON CODE ICI : trie puis parcours */\n}",
+        "solution": "int\thas_dup_sort(int *arr, int n)\n{\n\tint\ti;\n\t// Supposons que le tableau est deja trie\n\ti = 0;\n\twhile (i < n - 1)\n\t{\n\t\tif (arr[i] == arr[i + 1])\n\t\t\treturn (1);\n\t\ti++;\n\t}\n\treturn (0);\n}",
+        "hint": "Apres tri, les doublons sont adjacents : compare arr[i] et arr[i+1].",
+        "difficulty": 2
+      },
+      {
+        "id": 3,
+        "title": "Two sum naif",
+        "instruction": "Trouve deux elements sommant a target avec l'approche O(n^2).",
+        "starterCode": "int\ttwo_sum(int *arr, int n, int target)\n{\n\t/* TON CODE ICI */\n}",
+        "solution": "int\ttwo_sum(int *arr, int n, int target)\n{\n\tint\ti = -1;\n\twhile (++i < n)\n\t{\n\t\tint j = i;\n\t\twhile (++j < n)\n\t\t\tif (arr[i] + arr[j] == target)\n\t\t\t\treturn (1);\n\t}\n\treturn (0);\n}",
+        "hint": "Deux boucles, verifie si arr[i] + arr[j] == target.",
+        "difficulty": 2
+      },
+      {
+        "id": 4,
+        "title": "Two sum avec deux pointeurs",
+        "instruction": "Resous two sum en O(n) sur un tableau trie avec deux pointeurs.",
+        "starterCode": "int\ttwo_sum_opt(int *sorted, int n, int target)\n{\n\t/* TON CODE ICI */\n}",
+        "solution": "int\ttwo_sum_opt(int *sorted, int n, int target)\n{\n\tint\tl = 0;\n\tint\tr = n - 1;\n\n\twhile (l < r)\n\t{\n\t\tif (sorted[l] + sorted[r] == target)\n\t\t\treturn (1);\n\t\tif (sorted[l] + sorted[r] < target)\n\t\t\tl++;\n\t\telse\n\t\t\tr--;\n\t}\n\treturn (0);\n}",
+        "hint": "Si la somme est trop petite, avance left. Trop grande, recule right.",
+        "difficulty": 3
+      },
+      {
+        "id": 5,
+        "title": "Comparer les approches",
+        "instruction": "Mesure et affiche les temps des approches naive et optimisee.",
+        "starterCode": "void\tcompare(int *arr, int n, int target)\n{\n\t/* TON CODE ICI */\n}",
+        "solution": "void\tcompare(int *arr, int n, int target)\n{\n\tstruct timeval s, e;\n\tlong t1, t2;\n\tint *copy = malloc(sizeof(int) * n);\n\n\tmemcpy(copy, arr, sizeof(int) * n);\n\tgettimeofday(&s, NULL);\n\ttwo_sum(arr, n, target);\n\tgettimeofday(&e, NULL);\n\tt1 = (e.tv_sec-s.tv_sec)*1000000 + e.tv_usec-s.tv_usec;\n\tgettimeofday(&s, NULL);\n\ttwo_sum_opt(copy, n, target);\n\tgettimeofday(&e, NULL);\n\tt2 = (e.tv_sec-s.tv_sec)*1000000 + e.tv_usec-s.tv_usec;\n\tprintf(\"Naive: %ld us, Opt: %ld us, Speedup: x%.0f\\n\", t1, t2, (float)t1/t2);\n\tfree(copy);\n}",
+        "hint": "Mesure chaque approche et calcule le speedup.",
+        "difficulty": 3
+      }
+    ]
+  },
+  "starterCode": "#include <stdio.h>\n#include <stdlib.h>\n#include <string.h>\n#include <sys/time.h>\n\nint\tft_has_dup_naive(int *arr, int n)\n{\n\t// TODO: O(n^2) - deux boucles imbriquees\n\treturn (0);\n}\n\nint\tft_has_dup_sort(int *arr, int n)\n{\n\t// TODO: Trier puis parcours lineaire\n\treturn (0);\n}\n\nint\tft_two_sum_naive(int *arr, int n, int target)\n{\n\t// TODO: O(n^2)\n\treturn (0);\n}\n\nint\tft_two_sum_sorted(int *arr, int n, int target)\n{\n\t// TODO: O(n) avec deux pointeurs sur tableau trie\n\treturn (0);\n}\n\nint\tmain(void)\n{\n\t// TODO: Generer un tableau, mesurer les approches\n\treturn (0);\n}",
+  "solution": "#include <stdio.h>\n#include <stdlib.h>\n#include <string.h>\n#include <sys/time.h>\n\nint\tft_has_dup_naive(int *arr, int n)\n{\n\tint\ti;\n\tint\tj;\n\n\ti = -1;\n\twhile (++i < n)\n\t{\n\t\tj = i;\n\t\twhile (++j < n)\n\t\t\tif (arr[i] == arr[j])\n\t\t\t\treturn (1);\n\t}\n\treturn (0);\n}\n\nint\tcmp(const void *a, const void *b)\n{\n\treturn (*(int *)a - *(int *)b);\n}\n\nint\tft_has_dup_sort(int *arr, int n)\n{\n\tint\ti;\n\n\tqsort(arr, n, sizeof(int), cmp);\n\ti = 0;\n\twhile (i < n - 1)\n\t{\n\t\tif (arr[i] == arr[i + 1])\n\t\t\treturn (1);\n\t\ti++;\n\t}\n\treturn (0);\n}\n\nint\tft_two_sum_naive(int *arr, int n, int target)\n{\n\tint\ti;\n\tint\tj;\n\n\ti = -1;\n\twhile (++i < n)\n\t{\n\t\tj = i;\n\t\twhile (++j < n)\n\t\t\tif (arr[i] + arr[j] == target)\n\t\t\t\treturn (1);\n\t}\n\treturn (0);\n}\n\nint\tft_two_sum_sorted(int *arr, int n, int target)\n{\n\tint\tl;\n\tint\tr;\n\n\tqsort(arr, n, sizeof(int), cmp);\n\tl = 0;\n\tr = n - 1;\n\twhile (l < r)\n\t{\n\t\tif (arr[l] + arr[r] == target)\n\t\t\treturn (1);\n\t\tif (arr[l] + arr[r] < target)\n\t\t\tl++;\n\t\telse\n\t\t\tr--;\n\t}\n\treturn (0);\n}\n\nint\tmain(void)\n{\n\tint\t\t\t\t*arr;\n\tint\t\t\t\t*copy;\n\tstruct timeval\ts;\n\tstruct timeval\te;\n\tlong\t\t\tt1;\n\tlong\t\t\tt2;\n\tint\t\t\t\tn;\n\tint\t\t\t\ti;\n\n\tn = 50000;\n\tarr = malloc(sizeof(int) * n);\n\tcopy = malloc(sizeof(int) * n);\n\tsrand(42);\n\ti = -1;\n\twhile (++i < n)\n\t\tarr[i] = rand() % n;\n\tmemcpy(copy, arr, sizeof(int) * n);\n\tgettimeofday(&s, NULL);\n\tft_has_dup_naive(arr, n);\n\tgettimeofday(&e, NULL);\n\tt1 = (e.tv_sec - s.tv_sec) * 1000000 + e.tv_usec - s.tv_usec;\n\tgettimeofday(&s, NULL);\n\tft_has_dup_sort(copy, n);\n\tgettimeofday(&e, NULL);\n\tt2 = (e.tv_sec - s.tv_sec) * 1000000 + e.tv_usec - s.tv_usec;\n\tprintf(\"Doublons naive: %ld us\\n\", t1);\n\tprintf(\"Doublons sort:  %ld us\\n\", t2);\n\tprintf(\"Speedup: x%.0f\\n\", (float)t1 / t2);\n\tfree(arr);\n\tfree(copy);\n\treturn (0);\n}",
+  "hints": [
+    "L'approche naive utilise deux boucles for imbriquees - O(n^2)",
+    "Apres tri avec qsort, les doublons sont adjacents - un seul parcours suffit",
+    "Pour two_sum : si la somme est trop petite, avance le pointeur gauche"
+  ],
+  "testCases": [
+    {
+      "id": 1,
+      "description": "Les deux approches trouvent les doublons correctement",
+      "stdin": "",
+      "expectedStdout": "",
+      "expectedExitCode": 0,
+      "visible": true
+    },
+    {
+      "id": 2,
+      "description": "L'approche triee est significativement plus rapide",
+      "stdin": "",
+      "expectedStdout": "",
+      "expectedExitCode": 0,
+      "visible": false
+    },
+    {
+      "id": 3,
+      "description": "Le speedup est superieur a 10x pour n=50000",
+      "stdin": "",
+      "expectedStdout": "",
+      "expectedExitCode": 0,
+      "visible": false
+    }
+  ],
+  "constraints": {
+    "allowedFunctions": ["malloc", "free", "memcpy", "printf", "srand", "rand", "qsort", "gettimeofday"],
+    "forbiddenFunctions": ["system"],
+    "maxExecutionTime": 5000,
+    "maxMemory": 128
+  },
+  "relatedExercises": ["c-day75-ex00-ft-benchmark", "c-day75-ex01-ft-cache-friendly"],
+  "resources": [
+    {
+      "title": "Complexite algorithmique",
+      "url": "https://fr.wikipedia.org/wiki/Analyse_de_la_complexit%C3%A9_des_algorithmes",
+      "type": "documentation"
+    },
+    {
+      "title": "Optimisation d'algorithmes en C",
+      "url": "https://www.geeksforgeeks.org/analysis-of-algorithms-set-1-asymptotic-analysis/",
+      "type": "article"
+    }
+  ]
+}

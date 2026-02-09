@@ -1,0 +1,257 @@
+{
+  "id": "c-day74-ex02-ft-philo-complete",
+  "category": "c",
+  "day": 74,
+  "order": 2,
+  "title": "Assembler le programme complet des philosophes",
+  "description": "Assemble toutes les pieces pour creer le programme complet des philosophes : parsing, initialisation, threads, moniteur et cleanup.",
+  "difficulty": 5,
+  "points": 50,
+  "estimatedTime": 45,
+  "learningObjectives": [
+    "Assembler un programme multi-thread complet",
+    "Gerer le cycle de vie complet de la simulation",
+    "Valider les arguments et gerer les erreurs",
+    "Garantir un nettoyage propre des ressources",
+    "Tester avec differentes configurations de parametres"
+  ],
+  "learningContent": {
+    "lesson": {
+      "introduction": "Il est temps d'assembler toutes les pieces du puzzle : le parsing des arguments, l'initialisation des structures et mutex, le lancement des threads philosophes, le thread moniteur, et le nettoyage final. Un programme bien structure separe clairement ces responsabilites dans des fonctions distinctes. L'objectif est un programme qui se comporte correctement pour toutes les combinaisons de parametres valides.",
+      "steps": [
+        {
+          "id": 1,
+          "title": "Validation des arguments",
+          "content": "Avant toute initialisation, il faut valider les arguments :\n- Nombre d'arguments : 5 ou 6\n- Tous les arguments sont des nombres positifs\n- nb_philos >= 1\n- Les temps sont > 0\n- max_meals >= 1 si specifie",
+          "codeExample": "int\tft_is_valid_number(char *str)\n{\n\tint\ti;\n\n\ti = 0;\n\twhile (str[i])\n\t{\n\t\tif (str[i] < '0' || str[i] > '9')\n\t\t\treturn (0);\n\t\ti++;\n\t}\n\treturn (i > 0);\n}\n\nint\tft_validate_args(int argc, char **argv)\n{\n\tint\ti;\n\n\tif (argc < 5 || argc > 6)\n\t\treturn (0);\n\ti = 1;\n\twhile (i < argc)\n\t{\n\t\tif (!ft_is_valid_number(argv[i]) || atoi(argv[i]) <= 0)\n\t\t\treturn (0);\n\t\ti++;\n\t}\n\treturn (1);\n}",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Ecris une fonction de validation des arguments qui verifie que ce sont des nombres positifs.",
+            "starterCode": "int\tvalidate(int argc, char **argv)\n{\n\t/* TON CODE ICI */\n}",
+            "solution": "int\tvalidate(int argc, char **argv)\n{\n\tint\ti;\n\tint\tj;\n\n\tif (argc < 5 || argc > 6)\n\t\treturn (0);\n\ti = 1;\n\twhile (i < argc)\n\t{\n\t\tj = 0;\n\t\twhile (argv[i][j])\n\t\t{\n\t\t\tif (argv[i][j] < '0' || argv[i][j] > '9')\n\t\t\t\treturn (0);\n\t\t\tj++;\n\t\t}\n\t\tif (atoi(argv[i]) <= 0)\n\t\t\treturn (0);\n\t\ti++;\n\t}\n\treturn (1);\n}"
+          }
+        },
+        {
+          "id": 2,
+          "title": "Lancer les threads",
+          "content": "La fonction de lancement cree d'abord les threads philosophes, puis le thread moniteur. Le temps de debut (start_time) est enregistre juste avant la creation des threads. Chaque philosophe recoit un pointeur vers sa structure.",
+          "codeExample": "int\tlaunch_simulation(t_table *table)\n{\n\tpthread_t\tmonitor;\n\tint\t\t\ti;\n\n\ttable->start_time = get_time_ms();\n\ti = -1;\n\twhile (++i < table->nb_philos)\n\t{\n\t\ttable->philos[i].last_meal_time = table->start_time;\n\t\tif (pthread_create(&table->philos[i].thread, NULL,\n\t\t\t\tphilo_routine, &table->philos[i]) != 0)\n\t\t\treturn (1);\n\t}\n\tif (pthread_create(&monitor, NULL, monitor_routine, table) != 0)\n\t\treturn (1);\n\ti = -1;\n\twhile (++i < table->nb_philos)\n\t\tpthread_join(table->philos[i].thread, NULL);\n\tpthread_join(monitor, NULL);\n\treturn (0);\n}",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Ecris la fonction qui lance tous les threads et les rejoint.",
+            "starterCode": "int\tlaunch(t_table *t)\n{\n\t/* TON CODE ICI */\n}",
+            "solution": "int\tlaunch(t_table *t)\n{\n\tpthread_t\tmon;\n\tint\t\t\ti;\n\n\tt->start_time = get_time_ms();\n\ti = -1;\n\twhile (++i < t->nb_philos)\n\t{\n\t\tt->philos[i].last_meal_time = t->start_time;\n\t\tpthread_create(&t->philos[i].thread, NULL,\n\t\t\tphilo_routine, &t->philos[i]);\n\t}\n\tpthread_create(&mon, NULL, monitor_routine, t);\n\ti = -1;\n\twhile (++i < t->nb_philos)\n\t\tpthread_join(t->philos[i].thread, NULL);\n\tpthread_join(mon, NULL);\n\treturn (0);\n}"
+          }
+        },
+        {
+          "id": 3,
+          "title": "Le main complet",
+          "content": "Le main orchestre toutes les etapes :\n1. Valider les arguments\n2. Initialiser la table\n3. Lancer la simulation\n4. Nettoyer les ressources\n\nChaque etape peut echouer et doit etre geree correctement.",
+          "codeExample": "int\tmain(int argc, char **argv)\n{\n\tt_table\ttable;\n\n\tif (!ft_validate_args(argc, argv))\n\t{\n\t\tprintf(\"Error: invalid arguments\\n\");\n\t\treturn (1);\n\t}\n\tif (init_table(&table, argc, argv))\n\t{\n\t\tprintf(\"Error: initialization failed\\n\");\n\t\treturn (1);\n\t}\n\tlaunch_simulation(&table);\n\tcleanup(&table);\n\treturn (0);\n}",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Ecris le main complet avec validation, initialisation, simulation et cleanup.",
+            "starterCode": "int\tmain(int argc, char **argv)\n{\n\tt_table\ttable;\n\t/* TON CODE ICI */\n}",
+            "solution": "int\tmain(int argc, char **argv)\n{\n\tt_table\ttable;\n\n\tif (!validate(argc, argv))\n\t{\n\t\tprintf(\"Error\\n\");\n\t\treturn (1);\n\t}\n\tif (init_table(&table, argc, argv))\n\t\treturn (1);\n\tlaunch(&table);\n\tcleanup(&table);\n\treturn (0);\n}"
+          }
+        },
+        {
+          "id": 4,
+          "title": "Recapitulatif de l'architecture",
+          "content": "L'architecture finale du programme :\n\n- **main.c** : main, validation\n- **init.c** : init_table, init_forks, assign_forks, cleanup\n- **routine.c** : philo_routine, eat, sleep_think\n- **monitor.c** : monitor_routine, check_death, announce_death\n- **utils.c** : get_time_ms, print_action, precise_sleep\n\nLe Makefile compile avec `-pthread`.",
+          "codeExample": "# Makefile\nCC = gcc\nCFLAGS = -Wall -Wextra -Werror -pthread\nSRC = main.c init.c routine.c monitor.c utils.c\nOBJ = $(SRC:.c=.o)\nNAME = philo\n\nall: $(NAME)\n\n$(NAME): $(OBJ)\n\t$(CC) $(CFLAGS) -o $@ $^\n\nclean:\n\trm -f $(OBJ)\n\nfclean: clean\n\trm -f $(NAME)\n\nre: fclean all\n\n.PHONY: all clean fclean re",
+          "language": "c"
+        }
+      ]
+    },
+    "theory": [
+      {
+        "title": "Architecture d'un programme multi-thread",
+        "content": "Un programme multi-thread bien concu separe clairement les responsabilites : initialisation, logique metier (routines), surveillance (moniteur), et nettoyage. Chaque composant est independant et communique via des structures partagees protegees par des mutex.",
+        "codeExamples": [
+          {
+            "title": "Flux d'execution",
+            "code": "// main() {\n//   validate_args()\n//   init_table()        -> alloue, init mutex\n//   launch_simulation() -> cree threads, join\n//   cleanup()           -> destroy mutex, free\n// }",
+            "explanation": "Le flux est lineaire dans le main, la concurrence est dans les threads."
+          }
+        ],
+        "keyPoints": [
+          "Separer init, simulation et cleanup en fonctions distinctes",
+          "Le main est simple et orchestre les etapes",
+          "Les threads communiquent via des structures partagees",
+          "Le nettoyage est garanti meme en cas d'erreur"
+        ],
+        "commonMistakes": [
+          "Mettre toute la logique dans le main (code spaghetti)",
+          "Ne pas gerer les erreurs d'initialisation",
+          "Oublier le nettoyage en cas d'erreur"
+        ]
+      },
+      {
+        "title": "Gestion des erreurs dans un contexte multi-thread",
+        "content": "Les erreurs dans un programme multi-thread sont delicates. Si la creation d'un thread echoue, il faut joindre les threads deja crees et nettoyer. Les erreurs de mutex doivent aussi etre gerees. Un flag d'erreur global peut aider a coordonner l'arret.",
+        "codeExamples": [
+          {
+            "title": "Gestion d'erreur de creation",
+            "code": "i = -1;\nwhile (++i < table->nb_philos)\n{\n\tif (pthread_create(&table->philos[i].thread,\n\t\t\tNULL, routine, &table->philos[i]) != 0)\n\t{\n\t\ttable->someone_died = 1;\n\t\twhile (--i >= 0)\n\t\t\tpthread_join(table->philos[i].thread, NULL);\n\t\treturn (1);\n\t}\n}",
+            "explanation": "En cas d'echec, on arrete les threads deja lances."
+          }
+        ],
+        "keyPoints": [
+          "Verifier chaque pthread_create",
+          "En cas d'echec, mettre someone_died = 1 pour arreter les threads existants",
+          "Joindre tous les threads crees avant de nettoyer",
+          "Ne pas detruire un mutex qui est peut-etre encore utilise"
+        ],
+        "commonMistakes": [
+          "Ignorer les erreurs de pthread_create",
+          "Nettoyer les mutex avant que tous les threads soient termines",
+          "Quitter sans joindre les threads actifs"
+        ]
+      },
+      {
+        "title": "Tests et validation",
+        "content": "Le programme des philosophes doit etre teste avec de nombreuses combinaisons de parametres. Les tests de base verifient que personne ne meurt quand c'est possible, et que la mort est detectee quand c'est inevitable. Les tests de stress utilisent beaucoup de philosophes.",
+        "codeExamples": [
+          {
+            "title": "Cas de test standards",
+            "code": "// Personne ne meurt :\n// ./philo 5 800 200 200\n// ./philo 4 410 200 200\n\n// Quelqu'un meurt :\n// ./philo 1 800 200 200    (1 philo, meurt a ~800ms)\n// ./philo 4 310 200 200    (marge trop faible)\n\n// Test max_meals :\n// ./philo 5 800 200 200 7  (s'arrete apres 7 repas chacun)\n\n// Stress test :\n// ./philo 200 800 200 200  (200 philosophes)",
+            "explanation": "Tester avec differentes configurations pour valider la robustesse."
+          }
+        ],
+        "keyPoints": [
+          "Tester 1 philo (cas special)",
+          "Tester les cas ou personne ne doit mourir",
+          "Tester les cas ou la mort est inevitable",
+          "Tester avec max_meals pour verifier l'arret propre"
+        ],
+        "commonMistakes": [
+          "Ne tester qu'avec 5 philosophes",
+          "Ignorer le cas d'un seul philosophe",
+          "Ne pas verifier avec Helgrind et ThreadSanitizer"
+        ]
+      },
+      {
+        "title": "Memoire et fuites",
+        "content": "Le programme ne doit avoir aucune fuite memoire. Toute allocation (philos, forks) doit avoir un free correspondant. Tous les mutex doivent etre detruits. Valgrind est l'outil de reference pour verifier l'absence de fuites.",
+        "codeExamples": [
+          {
+            "title": "Fonction cleanup complete",
+            "code": "void\tcleanup(t_table *table)\n{\n\tint\ti;\n\n\ti = -1;\n\twhile (++i < table->nb_philos)\n\t\tpthread_mutex_destroy(&table->forks[i]);\n\tpthread_mutex_destroy(&table->print_mutex);\n\tif (table->forks)\n\t\tfree(table->forks);\n\tif (table->philos)\n\t\tfree(table->philos);\n}",
+            "explanation": "Detruire chaque mutex et free chaque allocation."
+          }
+        ],
+        "keyPoints": [
+          "Detruire chaque mutex avant de free le tableau",
+          "Verifier avec valgrind --leak-check=full",
+          "Le cleanup s'execute apres que tous les threads sont joints",
+          "Gerer les cas ou init echoue partiellement"
+        ],
+        "commonMistakes": [
+          "Free le tableau sans detruire les mutex individuels",
+          "Oublier de free les allocations en cas d'erreur d'init",
+          "Ne pas tester avec Valgrind"
+        ]
+      }
+    ],
+    "prepExercises": [
+      {
+        "id": 1,
+        "title": "Valider un nombre",
+        "instruction": "Ecris une fonction qui verifie qu'une chaine est un nombre positif.",
+        "starterCode": "int\tis_positive_number(char *str)\n{\n\t/* TON CODE ICI */\n}",
+        "solution": "int\tis_positive_number(char *str)\n{\n\tint\ti;\n\n\ti = 0;\n\tif (!str[0])\n\t\treturn (0);\n\twhile (str[i])\n\t{\n\t\tif (str[i] < '0' || str[i] > '9')\n\t\t\treturn (0);\n\t\ti++;\n\t}\n\treturn (atoi(str) > 0);\n}",
+        "hint": "Verifie que chaque caractere est un chiffre et que la valeur > 0.",
+        "difficulty": 1
+      },
+      {
+        "id": 2,
+        "title": "Init complet",
+        "instruction": "Ecris la fonction d'initialisation complete de la table.",
+        "starterCode": "int\tinit_table(t_table *t, int argc, char **argv)\n{\n\t/* TON CODE ICI */\n}",
+        "solution": "int\tinit_table(t_table *t, int argc, char **argv)\n{\n\tint\ti;\n\n\tt->nb_philos = atoi(argv[1]);\n\tt->time_to_die = atoi(argv[2]);\n\tt->time_to_eat = atoi(argv[3]);\n\tt->time_to_sleep = atoi(argv[4]);\n\tt->max_meals = (argc == 6) ? atoi(argv[5]) : -1;\n\tt->someone_died = 0;\n\tt->philos = malloc(sizeof(t_philo) * t->nb_philos);\n\tt->forks = malloc(sizeof(pthread_mutex_t) * t->nb_philos);\n\tif (!t->philos || !t->forks)\n\t\treturn (1);\n\ti = -1;\n\twhile (++i < t->nb_philos)\n\t\tpthread_mutex_init(&t->forks[i], NULL);\n\tpthread_mutex_init(&t->print_mutex, NULL);\n\ti = -1;\n\twhile (++i < t->nb_philos)\n\t{\n\t\tt->philos[i].id = i + 1;\n\t\tt->philos[i].meals_eaten = 0;\n\t\tt->philos[i].table = t;\n\t\tt->philos[i].left_fork = &t->forks[i];\n\t\tt->philos[i].right_fork = &t->forks[(i + 1) % t->nb_philos];\n\t}\n\treturn (0);\n}",
+        "hint": "Parse args, malloc, init mutex, assigne fourchettes.",
+        "difficulty": 3
+      },
+      {
+        "id": 3,
+        "title": "Launch simulation",
+        "instruction": "Ecris la fonction qui lance les threads et les rejoint.",
+        "starterCode": "int\tlaunch(t_table *t)\n{\n\t/* TON CODE ICI */\n}",
+        "solution": "int\tlaunch(t_table *t)\n{\n\tpthread_t\tmon;\n\tint\t\t\ti;\n\n\tt->start_time = get_time_ms();\n\ti = -1;\n\twhile (++i < t->nb_philos)\n\t{\n\t\tt->philos[i].last_meal_time = t->start_time;\n\t\tpthread_create(&t->philos[i].thread, NULL,\n\t\t\tphilo_routine, &t->philos[i]);\n\t}\n\tpthread_create(&mon, NULL, monitor_routine, t);\n\ti = -1;\n\twhile (++i < t->nb_philos)\n\t\tpthread_join(t->philos[i].thread, NULL);\n\tpthread_join(mon, NULL);\n\treturn (0);\n}",
+        "hint": "Start_time, create philos, create monitor, join all.",
+        "difficulty": 3
+      },
+      {
+        "id": 4,
+        "title": "Cleanup",
+        "instruction": "Ecris la fonction de nettoyage qui detruit tout proprement.",
+        "starterCode": "void\tcleanup(t_table *t)\n{\n\t/* TON CODE ICI */\n}",
+        "solution": "void\tcleanup(t_table *t)\n{\n\tint\ti;\n\n\ti = -1;\n\twhile (++i < t->nb_philos)\n\t\tpthread_mutex_destroy(&t->forks[i]);\n\tpthread_mutex_destroy(&t->print_mutex);\n\tfree(t->forks);\n\tfree(t->philos);\n}",
+        "hint": "Destroy chaque mutex, puis free les tableaux.",
+        "difficulty": 2
+      },
+      {
+        "id": 5,
+        "title": "Main complet",
+        "instruction": "Assemble le main final : validate, init, launch, cleanup.",
+        "starterCode": "int\tmain(int argc, char **argv)\n{\n\t/* TON CODE ICI */\n}",
+        "solution": "int\tmain(int argc, char **argv)\n{\n\tt_table\ttable;\n\n\tif (!validate(argc, argv))\n\t{\n\t\tprintf(\"Error\\n\");\n\t\treturn (1);\n\t}\n\tif (init_table(&table, argc, argv))\n\t\treturn (1);\n\tlaunch(&table);\n\tcleanup(&table);\n\treturn (0);\n}",
+        "hint": "Validate -> init -> launch -> cleanup, avec gestion d'erreur.",
+        "difficulty": 2
+      }
+    ]
+  },
+  "starterCode": "#include <pthread.h>\n#include <stdio.h>\n#include <stdlib.h>\n#include <unistd.h>\n#include <sys/time.h>\n\n// Toutes les structures et fonctions des exercices precedents\n\nint\tft_validate_args(int argc, char **argv)\n{\n\t// TODO: Valider les arguments\n\treturn (1);\n}\n\nint\tft_init_all(t_table *table, int argc, char **argv)\n{\n\t// TODO: Init complete\n\treturn (0);\n}\n\nint\tft_start(t_table *table)\n{\n\t// TODO: Lancer threads et moniteur\n\treturn (0);\n}\n\nvoid\tft_cleanup_all(t_table *table)\n{\n\t// TODO: Nettoyer toutes les ressources\n}\n\nint\tmain(int argc, char **argv)\n{\n\tt_table\ttable;\n\n\tif (!ft_validate_args(argc, argv))\n\t\treturn (1);\n\tif (ft_init_all(&table, argc, argv))\n\t\treturn (1);\n\tft_start(&table);\n\tft_cleanup_all(&table);\n\treturn (0);\n}",
+  "solution": "#include <pthread.h>\n#include <stdio.h>\n#include <stdlib.h>\n#include <unistd.h>\n#include <sys/time.h>\n\nint\tft_validate_args(int argc, char **argv)\n{\n\tint\ti;\n\tint\tj;\n\n\tif (argc < 5 || argc > 6)\n\t\treturn (0);\n\ti = 0;\n\twhile (++i < argc)\n\t{\n\t\tj = -1;\n\t\twhile (argv[i][++j])\n\t\t\tif (argv[i][j] < '0' || argv[i][j] > '9')\n\t\t\t\treturn (0);\n\t\tif (atoi(argv[i]) <= 0)\n\t\t\treturn (0);\n\t}\n\treturn (1);\n}\n\nint\tft_init_all(t_table *table, int argc, char **argv)\n{\n\tint\ti;\n\n\ttable->nb_philos = atoi(argv[1]);\n\ttable->time_to_die = atoi(argv[2]);\n\ttable->time_to_eat = atoi(argv[3]);\n\ttable->time_to_sleep = atoi(argv[4]);\n\ttable->max_meals = (argc == 6) ? atoi(argv[5]) : -1;\n\ttable->someone_died = 0;\n\ttable->philos = malloc(sizeof(t_philo) * table->nb_philos);\n\ttable->forks = malloc(sizeof(pthread_mutex_t) * table->nb_philos);\n\tif (!table->philos || !table->forks)\n\t\treturn (1);\n\ti = -1;\n\twhile (++i < table->nb_philos)\n\t\tpthread_mutex_init(&table->forks[i], NULL);\n\tpthread_mutex_init(&table->print_mutex, NULL);\n\ti = -1;\n\twhile (++i < table->nb_philos)\n\t{\n\t\ttable->philos[i] = (t_philo){i + 1, 0, 0, 0,\n\t\t\t&table->forks[i],\n\t\t\t&table->forks[(i + 1) % table->nb_philos], table};\n\t}\n\treturn (0);\n}\n\nint\tft_start(t_table *table)\n{\n\tpthread_t\tmonitor;\n\tint\t\t\ti;\n\n\ttable->start_time = get_time_ms();\n\ti = -1;\n\twhile (++i < table->nb_philos)\n\t{\n\t\ttable->philos[i].last_meal_time = table->start_time;\n\t\tpthread_create(&table->philos[i].thread, NULL,\n\t\t\tphilo_routine, &table->philos[i]);\n\t}\n\tpthread_create(&monitor, NULL, monitor_routine, table);\n\ti = -1;\n\twhile (++i < table->nb_philos)\n\t\tpthread_join(table->philos[i].thread, NULL);\n\tpthread_join(monitor, NULL);\n\treturn (0);\n}\n\nvoid\tft_cleanup_all(t_table *table)\n{\n\tint\ti;\n\n\ti = -1;\n\twhile (++i < table->nb_philos)\n\t\tpthread_mutex_destroy(&table->forks[i]);\n\tpthread_mutex_destroy(&table->print_mutex);\n\tfree(table->forks);\n\tfree(table->philos);\n}\n\nint\tmain(int argc, char **argv)\n{\n\tt_table\ttable;\n\n\tif (!ft_validate_args(argc, argv))\n\t{\n\t\tprintf(\"Error\\n\");\n\t\treturn (1);\n\t}\n\tif (ft_init_all(&table, argc, argv))\n\t\treturn (1);\n\tft_start(&table);\n\tft_cleanup_all(&table);\n\treturn (0);\n}",
+  "hints": [
+    "Validez tous les arguments : ils doivent etre des nombres positifs",
+    "Le main suit le pattern : validate -> init -> start -> cleanup",
+    "N'oubliez pas d'initialiser last_meal_time au start_time avant de lancer les threads"
+  ],
+  "testCases": [
+    {
+      "id": 1,
+      "description": "5 philosophes, personne ne meurt (800 200 200)",
+      "stdin": "",
+      "expectedStdout": "",
+      "expectedExitCode": 0,
+      "visible": true
+    },
+    {
+      "id": 2,
+      "description": "Arguments invalides retournent erreur",
+      "stdin": "",
+      "expectedStdout": "Error\n",
+      "expectedExitCode": 1,
+      "visible": false
+    },
+    {
+      "id": 3,
+      "description": "Pas de fuite memoire",
+      "stdin": "",
+      "expectedStdout": "",
+      "expectedExitCode": 0,
+      "visible": false
+    }
+  ],
+  "constraints": {
+    "allowedFunctions": ["malloc", "free", "pthread_create", "pthread_join", "pthread_mutex_init", "pthread_mutex_lock", "pthread_mutex_unlock", "pthread_mutex_destroy", "printf", "atoi", "usleep", "gettimeofday", "write"],
+    "forbiddenFunctions": ["sleep", "system", "exit"],
+    "maxExecutionTime": 5000,
+    "maxMemory": 128
+  },
+  "relatedExercises": ["c-day74-ex00-ft-philo-eat", "c-day74-ex01-ft-philo-death"],
+  "resources": [
+    {
+      "title": "42 Philosophers subject",
+      "url": "https://harm-smits.github.io/42docs/projects/philosophers",
+      "type": "documentation"
+    },
+    {
+      "title": "Complete philosophers implementation guide",
+      "url": "https://medium.com/@ruinadd/philosophers-42-guide-the-dining-philosophers-problem-893a24bc0fe2",
+      "type": "article"
+    }
+  ]
+}

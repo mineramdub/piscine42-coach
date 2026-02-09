@@ -1,0 +1,272 @@
+{
+  "id": "c-day85-ex02-ft-safe-operations",
+  "category": "c",
+  "day": 85,
+  "order": 2,
+  "title": "Wrapper securise pour les operations fichier",
+  "description": "Implemente des wrappers securises pour open, read, write et close. Chaque wrapper verifie les erreurs, affiche un message sur stderr en cas d'echec, et peut retenter l'operation si elle a ete interrompue par un signal (EINTR). Cree aussi un systeme de logging des erreurs dans un fichier de log.",
+  "difficulty": 5,
+  "points": 50,
+  "estimatedTime": 40,
+  "learningObjectives": [
+    "Creer des wrappers securises pour les appels systeme fichier",
+    "Gerer le cas EINTR (interruption par signal) avec retry",
+    "Logger les erreurs dans un fichier de log",
+    "Implementer un pattern de retry avec nombre maximal de tentatives",
+    "Centraliser la gestion des erreurs pour simplifier le code appelant"
+  ],
+  "learningContent": {
+    "lesson": {
+      "introduction": "Les appels systeme peuvent echouer pour de nombreuses raisons : fichier inexistant, permissions insuffisantes, disque plein, interruption par un signal. Un code robuste doit gerer ces cas. Plutot que de dupliquer la gestion d'erreur a chaque appel, on cree des wrappers qui encapsulent la logique de verification et de retry. Le cas EINTR est particulier : quand un appel systeme est interrompu par un signal, il retourne -1 avec errno = EINTR, mais l'operation n'a pas echoue. Il suffit de retenter.",
+      "steps": [
+        {
+          "id": 1,
+          "title": "Le probleme des appels systeme non-securises",
+          "content": "Chaque appel systeme peut echouer. Sans verification, le programme continue avec des donnees invalides ou des descripteurs incorrects.\n\nLes erreurs les plus courantes :\n- open : fichier inexistant, permissions\n- read : interruption, fin de fichier\n- write : disque plein, pipe casse\n- close : mauvais descripteur",
+          "codeExample": "// Code non-securise (dangereux) :\nint fd = open(\"file\", O_RDONLY);\nchar buf[100];\nread(fd, buf, 100);  // Et si fd == -1 ?\nbuf[99] = '\\0';\nprintf(\"%s\\n\", buf);  // Donnees aleatoires !\nclose(fd);",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Que se passe-t-il si on appelle read avec fd = -1 ?",
+            "starterCode": "// read(-1, buf, 100) :\n// Retour : ?\n// errno : ?\n// buf : contenu ?",
+            "solution": "// read(-1, buf, 100) :\n// Retour : -1 (erreur)\n// errno : EBADF (Bad file descriptor)\n// buf : INCHANGE (contenu indetermine)\n// Le programme continue avec des donnees invalides !"
+          }
+        },
+        {
+          "id": 2,
+          "title": "Wrapper ft_safe_open",
+          "content": "Le wrapper pour open verifie le retour et affiche un message d'erreur. Il peut aussi definir des permissions par defaut pour la creation de fichiers.",
+          "codeExample": "int\tft_safe_open(char *path, int flags)\n{\n\tint\tfd;\n\n\tif (!path)\n\t{\n\t\twrite(2, \"Error: NULL path\\n\", 17);\n\t\treturn (-1);\n\t}\n\tfd = open(path, flags);\n\tif (fd == -1)\n\t\tperror(path);\n\treturn (fd);\n}",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Pourquoi ajouter une verification de path != NULL ?",
+            "starterCode": "// open(NULL, O_RDONLY) :\n// Comportement : ? (segfault probable)\n// En ajoutant la verification, on evite le ?",
+            "solution": "// open(NULL, O_RDONLY) :\n// Comportement : UNDEFINED (segfault probable)\n// En ajoutant la verification, on evite le CRASH\n// Et on donne un message d'erreur clair"
+          }
+        },
+        {
+          "id": 3,
+          "title": "Gerer EINTR avec retry",
+          "content": "Quand un signal interrompt un appel systeme lent (read, write), celui-ci retourne -1 avec errno = EINTR. Ce n'est pas une vraie erreur : il suffit de retenter l'operation.\n\nLe pattern de retry boucle tant que le retour est -1 et errno == EINTR.",
+          "codeExample": "ssize_t\tft_safe_read(int fd, void *buf, size_t count)\n{\n\tssize_t\tret;\n\n\twhile (1)\n\t{\n\t\tret = read(fd, buf, count);\n\t\tif (ret == -1 && errno == EINTR)\n\t\t\tcontinue ;\n\t\tif (ret == -1)\n\t\t\tperror(\"read\");\n\t\treturn (ret);\n\t}\n}",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Pourquoi le retry EINTR est-il important pour les programmes interactifs ?",
+            "starterCode": "// Un programme interactif recoit des signaux :\n// SIGWINCH quand le terminal est ?\n// SIGCHLD quand un processus enfant ?\n// Sans retry EINTR, un read bloquant serait ?",
+            "solution": "// SIGWINCH quand le terminal est REDIMENSIONNE\n// SIGCHLD quand un processus enfant TERMINE\n// Sans retry EINTR, un read bloquant serait INTERROMPU\n// et l'utilisateur devrait retaper son input !"
+          }
+        },
+        {
+          "id": 4,
+          "title": "Systeme de logging des erreurs",
+          "content": "Un systeme de logging ecrit les erreurs dans un fichier pour analyse ulterieure. Cela permet de debugger des problemes qui se produisent en production sans afficher les details a l'utilisateur.",
+          "codeExample": "static int\tg_log_fd = -1;\n\nvoid\tft_log_init(char *log_path)\n{\n\tg_log_fd = open(log_path, O_WRONLY | O_CREAT | O_APPEND, 0644);\n}\n\nvoid\tft_log_error(char *context, char *message)\n{\n\tchar\tbuf[256];\n\tint\tlen;\n\n\tif (g_log_fd < 0)\n\t\treturn ;\n\tlen = snprintf(buf, 256, \"[ERROR] %s: %s\\n\", context, message);\n\twrite(g_log_fd, buf, len);\n}\n\nvoid\tft_log_close(void)\n{\n\tif (g_log_fd >= 0)\n\t\tclose(g_log_fd);\n\tg_log_fd = -1;\n}",
+          "language": "c"
+        }
+      ]
+    },
+    "theory": [
+      {
+        "title": "Appels systeme et gestion d'erreur",
+        "content": "Les appels systeme sont l'interface entre le programme et le noyau. Chacun peut echouer pour diverses raisons.",
+        "codeExamples": [
+          {
+            "title": "Retours d'erreur des appels systeme",
+            "code": "// open : retourne -1 si erreur, fd sinon\n// read : retourne -1 si erreur, 0 si EOF, n si succes\n// write : retourne -1 si erreur, n si succes\n// close : retourne -1 si erreur, 0 si succes\n// malloc : retourne NULL si erreur",
+            "explanation": "Chaque appel a sa propre convention de retour d'erreur"
+          }
+        ],
+        "keyPoints": [
+          "open retourne -1 en cas d'erreur et un fd >= 0 en cas de succes",
+          "read retourne 0 pour EOF, -1 pour erreur, n pour succes",
+          "write peut ecrire moins que demande (short write)",
+          "Toujours verifier le retour avant d'utiliser le resultat"
+        ],
+        "commonMistakes": [
+          "Ignorer le retour d'un appel systeme (surtout write et close)",
+          "Confondre le retour 0 de read (EOF) avec une erreur",
+          "Ne pas gerer les short writes dans write"
+        ]
+      },
+      {
+        "title": "Le signal EINTR",
+        "content": "EINTR est le code d'erreur indiquant qu'un appel systeme a ete interrompu par un signal. Ce n'est pas une erreur fatale.",
+        "codeExamples": [
+          {
+            "title": "Pattern de retry EINTR",
+            "code": "// Le pattern standard :\ndo {\n\tret = read(fd, buf, size);\n} while (ret == -1 && errno == EINTR);\n\n// Equivalent avec while :\nwhile ((ret = read(fd, buf, size)) == -1 && errno == EINTR)\n\t;",
+            "explanation": "Le retry EINTR est obligatoire pour les programmes robustes"
+          }
+        ],
+        "keyPoints": [
+          "EINTR signifie que l'appel a ete interrompu par un signal",
+          "Il faut simplement retenter l'operation",
+          "Les appels lents (read, write, select, etc.) sont affectes",
+          "Les appels rapides (stat, open) ne sont generalement pas interrompus"
+        ],
+        "commonMistakes": [
+          "Ne pas retenter apres EINTR (l'operation echoue sans raison)",
+          "Retenter indefiniment sans compter les tentatives",
+          "Confondre EINTR avec une vraie erreur"
+        ]
+      },
+      {
+        "title": "Wrappers et abstraction",
+        "content": "Les wrappers encapsulent la logique de gestion d'erreur et simplifient le code appelant.",
+        "codeExamples": [
+          {
+            "title": "Avantages des wrappers",
+            "code": "// Sans wrapper :\nint fd = open(path, O_RDONLY);\nif (fd == -1) { perror(path); return -1; }\n\n// Avec wrapper :\nint fd = ft_safe_open(path, O_RDONLY);\nif (fd == -1) return -1;  // L'erreur est deja affichee\n\n// Le code est plus lisible et la gestion d'erreur est centralisee",
+            "explanation": "Les wrappers centralisent la gestion d'erreur"
+          }
+        ],
+        "keyPoints": [
+          "Un seul point de gestion d'erreur par type d'appel",
+          "Le code appelant est plus propre et lisible",
+          "Les modifications de la gestion d'erreur sont centralisees",
+          "On peut ajouter du logging sans modifier le code appelant"
+        ],
+        "commonMistakes": [
+          "Creer des wrappers trop generiques qui masquent les erreurs",
+          "Ne pas propager le code d'erreur a l'appelant",
+          "Ajouter trop d'abstraction qui rend le debugging difficile"
+        ]
+      },
+      {
+        "title": "Logging en C",
+        "content": "Le logging est essentiel pour debugger les programmes en production. Un bon systeme de log enregistre le contexte, le timestamp et le niveau de gravite.",
+        "codeExamples": [
+          {
+            "title": "Niveaux de log",
+            "code": "// Niveaux standard :\n// DEBUG   : informations de debugging detaillees\n// INFO    : evenements normaux\n// WARNING : situation anormale mais non-fatale\n// ERROR   : erreur qui empeche une operation\n// FATAL   : erreur qui termine le programme\n\nvoid ft_log(int level, char *fmt, ...)\n{\n\tchar *levels[] = {\"DEBUG\", \"INFO\", \"WARN\", \"ERROR\", \"FATAL\"};\n\tfprintf(g_log_file, \"[%s] %s\\n\", levels[level], fmt);\n}",
+            "explanation": "Les niveaux de log permettent de filtrer les messages"
+          }
+        ],
+        "keyPoints": [
+          "Le logging aide au debugging en production",
+          "Ecrire les logs dans un fichier, pas sur stdout",
+          "Inclure le contexte (fonction, fichier, ligne) dans les messages",
+          "Fermer proprement le fichier de log a la fin du programme"
+        ],
+        "commonMistakes": [
+          "Logger trop d'informations (le fichier de log grossit indefiniment)",
+          "Logger des informations sensibles (mots de passe, tokens)",
+          "Oublier de fermer le fichier de log"
+        ]
+      }
+    ],
+    "prepExercises": [
+      {
+        "id": 1,
+        "title": "Wrapper pour close",
+        "instruction": "Ecris ft_safe_close qui verifie que fd est valide avant de fermer.",
+        "starterCode": "int\tft_safe_close(int fd)\n{\n\t// A completer\n}",
+        "solution": "int\tft_safe_close(int fd)\n{\n\tif (fd < 0)\n\t\treturn (-1);\n\treturn (close(fd));\n}",
+        "hint": "Verifie que fd >= 0 avant d'appeler close",
+        "difficulty": 1
+      },
+      {
+        "id": 2,
+        "title": "Retry simple",
+        "instruction": "Ecris une boucle de retry qui appelle une fonction et retente si elle retourne -1.",
+        "starterCode": "int\tft_retry(int (*f)(void), int max_retries)\n{\n\t// A completer\n}",
+        "solution": "int\tft_retry(int (*f)(void), int max_retries)\n{\n\tint\tret;\n\tint\ti;\n\n\ti = 0;\n\twhile (i < max_retries)\n\t{\n\t\tret = f();\n\t\tif (ret != -1)\n\t\t\treturn (ret);\n\t\ti++;\n\t}\n\treturn (-1);\n}",
+        "hint": "Appelle f() dans une boucle, retourne le resultat des que != -1",
+        "difficulty": 2
+      },
+      {
+        "id": 3,
+        "title": "Ecrire un message de log",
+        "instruction": "Ecris une fonction qui ecrit un message dans un fichier de log avec un prefixe.",
+        "starterCode": "void\tft_log_msg(int log_fd, char *prefix, char *msg)\n{\n\t// A completer\n}",
+        "solution": "void\tft_log_msg(int log_fd, char *prefix, char *msg)\n{\n\tif (log_fd < 0)\n\t\treturn ;\n\tint i = 0;\n\twhile (prefix[i]) i++;\n\twrite(log_fd, prefix, i);\n\twrite(log_fd, \": \", 2);\n\ti = 0;\n\twhile (msg[i]) i++;\n\twrite(log_fd, msg, i);\n\twrite(log_fd, \"\\n\", 1);\n}",
+        "hint": "Ecris le prefixe, puis ': ', puis le message, puis newline avec write",
+        "difficulty": 2
+      },
+      {
+        "id": 4,
+        "title": "Safe write complet",
+        "instruction": "Ecris ft_safe_write qui ecrit tout le buffer meme en cas de short write.",
+        "starterCode": "ssize_t\tft_safe_write(int fd, void *buf, size_t n)\n{\n\t// A completer\n}",
+        "solution": "ssize_t\tft_safe_write(int fd, void *buf, size_t n)\n{\n\tssize_t\twritten;\n\tssize_t\ttotal;\n\n\ttotal = 0;\n\twhile ((size_t)total < n)\n\t{\n\t\twritten = write(fd, (char *)buf + total, n - total);\n\t\tif (written == -1 && errno == EINTR)\n\t\t\tcontinue ;\n\t\tif (written == -1)\n\t\t\treturn (-1);\n\t\ttotal += written;\n\t}\n\treturn (total);\n}",
+        "hint": "Boucle jusqu'a ce que tout soit ecrit, gere EINTR et short write",
+        "difficulty": 3
+      },
+      {
+        "id": 5,
+        "title": "Read complet dans un buffer",
+        "instruction": "Ecris une fonction qui lit exactement n octets ou jusqu'a EOF.",
+        "starterCode": "ssize_t\tft_read_all(int fd, char *buf, size_t n)\n{\n\t// A completer\n}",
+        "solution": "ssize_t\tft_read_all(int fd, char *buf, size_t n)\n{\n\tssize_t\tret;\n\tssize_t\ttotal;\n\n\ttotal = 0;\n\twhile ((size_t)total < n)\n\t{\n\t\tret = read(fd, buf + total, n - total);\n\t\tif (ret == -1 && errno == EINTR)\n\t\t\tcontinue ;\n\t\tif (ret <= 0)\n\t\t\tbreak ;\n\t\ttotal += ret;\n\t}\n\treturn (total);\n}",
+        "hint": "Boucle de read en gerant EINTR et EOF (ret == 0)",
+        "difficulty": 3
+      }
+    ]
+  },
+  "starterCode": "#include <unistd.h>\n#include <fcntl.h>\n#include <stdio.h>\n#include <errno.h>\n\nint\tft_safe_open(char *path, int flags)\n{\n\t// A completer\n}\n\nssize_t\tft_safe_read(int fd, void *buf, size_t count)\n{\n\t// A completer\n}\n\nssize_t\tft_safe_write(int fd, void *buf, size_t count)\n{\n\t// A completer\n}\n\nint\tmain(void)\n{\n\tint\tfd;\n\tchar\tbuf[100];\n\n\tfd = ft_safe_open(\"test.txt\", O_RDONLY);\n\tif (fd >= 0)\n\t{\n\t\tft_safe_read(fd, buf, 99);\n\t\tclose(fd);\n\t}\n\tprintf(\"Safe operations OK\\n\");\n\treturn (0);\n}",
+  "solution": "#include <unistd.h>\n#include <fcntl.h>\n#include <stdio.h>\n#include <errno.h>\n\nint\tft_safe_open(char *path, int flags)\n{\n\tint\tfd;\n\n\tif (!path)\n\t\treturn (-1);\n\tfd = open(path, flags);\n\tif (fd == -1)\n\t\tperror(path);\n\treturn (fd);\n}\n\nssize_t\tft_safe_read(int fd, void *buf, size_t count)\n{\n\tssize_t\tret;\n\n\twhile (1)\n\t{\n\t\tret = read(fd, buf, count);\n\t\tif (ret == -1 && errno == EINTR)\n\t\t\tcontinue ;\n\t\tif (ret == -1)\n\t\t\tperror(\"read\");\n\t\treturn (ret);\n\t}\n}\n\nssize_t\tft_safe_write(int fd, void *buf, size_t count)\n{\n\tssize_t\twritten;\n\tssize_t\ttotal;\n\n\ttotal = 0;\n\twhile ((size_t)total < count)\n\t{\n\t\twritten = write(fd, (char *)buf + total, count - total);\n\t\tif (written == -1 && errno == EINTR)\n\t\t\tcontinue ;\n\t\tif (written == -1)\n\t\t\treturn (-1);\n\t\ttotal += written;\n\t}\n\treturn (total);\n}\n\nint\tmain(void)\n{\n\tprintf(\"Safe operations OK\\n\");\n\treturn (0);\n}",
+  "hints": [
+    "ft_safe_open verifie que path n'est pas NULL et affiche perror si open echoue",
+    "ft_safe_read boucle sur EINTR et affiche perror pour les autres erreurs",
+    "ft_safe_write boucle jusqu'a ce que tout soit ecrit en gerant EINTR et short writes"
+  ],
+  "testCases": [
+    {
+      "id": 1,
+      "description": "Operations securisees fonctionnent",
+      "stdin": "",
+      "expectedStdout": "Safe operations OK\n",
+      "expectedExitCode": 0,
+      "visible": true
+    },
+    {
+      "id": 2,
+      "description": "Ouverture d'un fichier inexistant",
+      "stdin": "",
+      "expectedStdout": "Safe operations OK\n",
+      "expectedExitCode": 0,
+      "visible": false
+    },
+    {
+      "id": 3,
+      "description": "Retry sur EINTR",
+      "stdin": "",
+      "expectedStdout": "Safe operations OK\n",
+      "expectedExitCode": 0,
+      "visible": false
+    }
+  ],
+  "constraints": {
+    "allowedFunctions": [
+      "open",
+      "close",
+      "read",
+      "write",
+      "malloc",
+      "free",
+      "printf",
+      "perror",
+      "strerror"
+    ],
+    "forbiddenFunctions": [
+      "system"
+    ],
+    "maxExecutionTime": 5000,
+    "maxMemory": 128
+  },
+  "relatedExercises": [
+    "c-day85-ex00-ft-errno-system",
+    "c-day85-ex01-ft-cleanup-chain"
+  ],
+  "resources": [
+    {
+      "title": "Appels systeme POSIX",
+      "url": "https://man7.org/linux/man-pages/man2/read.2.html",
+      "type": "documentation"
+    },
+    {
+      "title": "EINTR et signaux",
+      "url": "https://www.geeksforgeeks.org/signals-c-language/",
+      "type": "article"
+    }
+  ]
+}

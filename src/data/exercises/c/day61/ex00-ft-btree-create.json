@@ -1,0 +1,266 @@
+{
+  "id": "c-day61-ex00-ft-btree-create",
+  "category": "c",
+  "day": 61,
+  "order": 0,
+  "title": "Creer un noeud d'arbre binaire",
+  "description": "Ecris la fonction ft_btree_create qui alloue et initialise un nouveau noeud d'arbre binaire. La structure t_btree contient un pointeur void *item pour stocker la donnee, et deux pointeurs t_btree *left et t_btree *right pour les sous-arbres gauche et droit. La fonction prend un void *item en parametre, alloue un nouveau noeud, initialise item avec la valeur passee, et met left et right a NULL. Si malloc echoue, la fonction retourne NULL.",
+  "difficulty": 4,
+  "points": 40,
+  "estimatedTime": 30,
+  "learningObjectives": [
+    "Comprendre la structure d'un arbre binaire et ses composants (item, left, right)",
+    "Savoir definir une structure recursive en C avec typedef",
+    "Maitriser l'allocation dynamique d'un noeud avec malloc",
+    "Utiliser les pointeurs void* pour creer des structures generiques",
+    "Initialiser correctement les pointeurs a NULL pour eviter les comportements indefinis"
+  ],
+  "learningContent": {
+    "lesson": {
+      "introduction": "Les arbres binaires sont des structures de donnees fondamentales en informatique. Contrairement aux listes chainees qui sont lineaires, un arbre binaire permet d'organiser les donnees de maniere hierarchique. Chaque noeud peut avoir au maximum deux enfants : un enfant gauche et un enfant droit. Cette structure est a la base de nombreux algorithmes efficaces comme la recherche en O(log n) dans les arbres binaires de recherche. Dans cet exercice, nous allons creer la brique elementaire : la fonction qui cree un noeud unique.",
+      "steps": [
+        {
+          "id": 1,
+          "title": "La structure t_btree",
+          "content": "Un noeud d'arbre binaire contient trois elements :\n- **item** : un pointeur void* vers la donnee stockee (generique)\n- **left** : un pointeur vers le sous-arbre gauche\n- **right** : un pointeur vers le sous-arbre droit\n\nLa definition utilise typedef pour simplifier l'utilisation. La structure est **recursive** car elle contient des pointeurs vers elle-meme.",
+          "codeExample": "typedef struct s_btree\n{\n\tvoid\t\t\t*item;\n\tstruct s_btree\t*left;\n\tstruct s_btree\t*right;\n}\t\t\t\t\tt_btree;",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Quelle est la taille en memoire d'un noeud t_btree sur un systeme 64 bits ? (3 pointeurs)",
+            "starterCode": "// sizeof(void *) = 8 octets\n// sizeof(t_btree *) = 8 octets\n// Total = ???",
+            "solution": "// sizeof(void *) = 8 octets (item)\n// sizeof(t_btree *) = 8 octets (left)\n// sizeof(t_btree *) = 8 octets (right)\n// Total = 24 octets (sans padding)"
+          }
+        },
+        {
+          "id": 2,
+          "title": "Allocation du noeud avec malloc",
+          "content": "Pour creer un noeud, on utilise malloc pour allouer la memoire necessaire. Il faut toujours verifier que malloc n'a pas echoue avant d'utiliser le pointeur retourne.\n\n**Important** : sizeof(*node) est preferable a sizeof(t_btree) car si le type change, le code reste correct.",
+          "codeExample": "t_btree\t*node;\n\nnode = malloc(sizeof(t_btree));\nif (!node)\n\treturn (NULL);\n// node est maintenant utilisable\n// mais ses champs ne sont pas initialises !",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Que se passe-t-il si on utilise node->left sans l'initialiser apres malloc ?",
+            "starterCode": "// Apres malloc, node->left contient :\n// A) NULL\n// B) 0\n// C) Une valeur indeterminee (garbage)",
+            "solution": "// Reponse : C) Une valeur indeterminee\n// malloc n'initialise PAS la memoire\n// calloc initialise a 0, mais pas malloc\n// Il faut toujours initialiser manuellement"
+          }
+        },
+        {
+          "id": 3,
+          "title": "Initialisation des champs",
+          "content": "Apres l'allocation, il faut initialiser chaque champ du noeud :\n- **item** recoit la valeur passee en parametre\n- **left** et **right** sont mis a NULL car le noeud est une feuille\n\nMettre les pointeurs a NULL est essentiel pour pouvoir tester si un noeud a des enfants.",
+          "codeExample": "node->item = item;\nnode->left = NULL;\nnode->right = NULL;\n\n// Maintenant le noeud est une feuille :\n//     [item]\n//    /      \\\n//  NULL    NULL",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Comment verifier si un noeud est une feuille (pas d'enfants) ?",
+            "starterCode": "int\tis_leaf(t_btree *node)\n{\n\t// Retourne 1 si feuille, 0 sinon\n\treturn (???);\n}",
+            "solution": "int\tis_leaf(t_btree *node)\n{\n\treturn (node->left == NULL && node->right == NULL);\n}"
+          }
+        },
+        {
+          "id": 4,
+          "title": "La fonction complete ft_btree_create",
+          "content": "La fonction complete combine allocation et initialisation. Elle retourne le noeud cree ou NULL en cas d'erreur d'allocation. C'est la brique de base pour construire n'importe quel arbre binaire.\n\nCette fonction sera reutilisee dans tous les exercices suivants sur les arbres.",
+          "codeExample": "t_btree\t*ft_btree_create(void *item)\n{\n\tt_btree\t*node;\n\n\tnode = malloc(sizeof(t_btree));\n\tif (!node)\n\t\treturn (NULL);\n\tnode->item = item;\n\tnode->left = NULL;\n\tnode->right = NULL;\n\treturn (node);\n}",
+          "language": "c"
+        }
+      ]
+    },
+    "theory": [
+      {
+        "title": "Introduction aux arbres binaires",
+        "content": "Un arbre binaire est une structure de donnees hierarchique ou chaque noeud a au maximum deux enfants. Le noeud superieur est appele racine (root). Les noeuds sans enfants sont appeles feuilles (leaves). La profondeur d'un noeud est sa distance a la racine.",
+        "codeExamples": [
+          {
+            "title": "Representation d'un arbre binaire",
+            "code": "//        5          <- racine (profondeur 0)\n//       / \\\n//      3   8        <- profondeur 1\n//     / \\   \\\n//    1   4   9      <- feuilles (profondeur 2)\n\n// Cet arbre a :\n// - 6 noeuds\n// - 3 feuilles (1, 4, 9)\n// - une hauteur de 2\n// - c'est un BST (arbre binaire de recherche)",
+            "explanation": "Chaque noeud a 0, 1 ou 2 enfants. Les valeurs sont organisees pour faciliter la recherche."
+          }
+        ],
+        "keyPoints": [
+          "Un arbre binaire a au maximum 2 enfants par noeud (gauche et droit)",
+          "La racine est le noeud superieur, les feuilles sont les noeuds sans enfants",
+          "La hauteur est la plus longue distance de la racine a une feuille",
+          "Un arbre vide est represente par un pointeur NULL"
+        ],
+        "commonMistakes": [
+          "Confondre arbre binaire (max 2 enfants) et arbre n-aire (n enfants possibles)",
+          "Oublier que la racine est aussi un noeud (compter les noeuds sans la racine)",
+          "Ne pas gerer le cas de l'arbre vide (root == NULL)"
+        ]
+      },
+      {
+        "title": "Structures recursives en C",
+        "content": "Une structure recursive contient un ou plusieurs pointeurs vers des elements du meme type. C'est le cas de t_btree qui contient des pointeurs t_btree *left et *right. Le mot-cle struct est necessaire dans la definition car le typedef n'est pas encore disponible.",
+        "codeExamples": [
+          {
+            "title": "Difference entre struct et typedef",
+            "code": "// Sans typedef : on doit ecrire 'struct s_btree' partout\nstruct s_btree\n{\n\tvoid\t\t\t*item;\n\tstruct s_btree\t*left;\n\tstruct s_btree\t*right;\n};\nstruct s_btree\t*root; // verbose\n\n// Avec typedef : on peut ecrire 't_btree'\ntypedef struct s_btree\n{\n\tvoid\t\t\t*item;\n\tstruct s_btree\t*left;\n\tstruct s_btree\t*right;\n}\t\t\t\t\tt_btree;\nt_btree\t*root; // plus lisible",
+            "explanation": "typedef cree un alias pour eviter de repeter 'struct' a chaque utilisation."
+          }
+        ],
+        "keyPoints": [
+          "Une structure ne peut pas contenir une instance d'elle-meme (taille infinie)",
+          "Elle peut contenir un POINTEUR vers elle-meme (taille fixe : sizeof(void*))",
+          "Le nom struct s_btree est necessaire dans la definition recursive",
+          "typedef permet d'utiliser t_btree au lieu de struct s_btree"
+        ],
+        "commonMistakes": [
+          "Utiliser le typedef avant qu'il soit defini (dans la definition de la struct)",
+          "Mettre une instance au lieu d'un pointeur (t_btree left au lieu de t_btree *left)",
+          "Oublier le point-virgule apres la fermeture de la definition de structure"
+        ]
+      },
+      {
+        "title": "Pointeurs void* et genericite",
+        "content": "Le type void* permet de stocker n'importe quel type de pointeur. C'est le mecanisme de genericite en C. Un void* peut pointer vers un int, un char, une structure, etc. Il faut caster le void* pour acceder a la donnee.",
+        "codeExamples": [
+          {
+            "title": "Utilisation de void* avec differents types",
+            "code": "// Stocker un int\nint\tval = 42;\nt_btree\t*node = ft_btree_create(&val);\nint\t*ptr = (int *)node->item;\nprintf(\"%d\\n\", *ptr); // 42\n\n// Stocker une chaine\nchar\t*str = \"hello\";\nt_btree\t*node2 = ft_btree_create(str);\nchar\t*s = (char *)node2->item;\nprintf(\"%s\\n\", s); // hello",
+            "explanation": "void* stocke l'adresse sans connaitre le type. Le cast est necessaire pour l'utiliser."
+          }
+        ],
+        "keyPoints": [
+          "void* peut stocker n'importe quel type de pointeur sans cast",
+          "Pour lire la valeur, il faut caster : *(int *)ptr",
+          "void* ne peut pas etre dereference directement (le compilateur ne connait pas la taille)",
+          "C'est le mecanisme de base pour les structures generiques en C"
+        ],
+        "commonMistakes": [
+          "Dereferencer un void* sans cast : *item au lieu de *(int *)item",
+          "Stocker une valeur locale qui sera detruite (dangling pointer)",
+          "Oublier que void* stocke une ADRESSE, pas une copie de la donnee"
+        ]
+      },
+      {
+        "title": "Bonnes pratiques d'allocation",
+        "content": "L'allocation dynamique est une source frequente de bugs. Il faut toujours verifier le retour de malloc, initialiser la memoire allouee, et prevoir la liberation. Pour les arbres, la liberation sera vue dans un exercice ulterieur.",
+        "codeExamples": [
+          {
+            "title": "Pattern d'allocation securisee",
+            "code": "t_btree\t*safe_create(void *item)\n{\n\tt_btree\t*node;\n\n\tnode = malloc(sizeof(*node)); // sizeof(*node) = sizeof(t_btree)\n\tif (!node)\n\t\treturn (NULL); // Toujours gerer l'echec\n\tnode->item = item;\n\tnode->left = NULL;  // TOUJOURS initialiser\n\tnode->right = NULL; // les pointeurs\n\treturn (node);\n}",
+            "explanation": "sizeof(*node) est plus sur que sizeof(t_btree) car il suit automatiquement le type."
+          }
+        ],
+        "keyPoints": [
+          "Toujours verifier le retour de malloc (!node => return NULL)",
+          "sizeof(*ptr) est preferable a sizeof(type) pour eviter les erreurs de type",
+          "Initialiser tous les champs apres malloc (malloc ne met pas a 0)",
+          "Chaque malloc doit avoir un free correspondant quelque part"
+        ],
+        "commonMistakes": [
+          "Ne pas verifier le retour de malloc (segfault si malloc echoue)",
+          "Utiliser sizeof(t_btree *) au lieu de sizeof(t_btree) (alloue la taille d'un pointeur)",
+          "Oublier d'initialiser left et right a NULL (valeurs garbage)"
+        ]
+      }
+    ],
+    "prepExercises": [
+      {
+        "id": 1,
+        "title": "Definir la structure t_btree",
+        "instruction": "Ecris la definition typedef de la structure t_btree avec item (void*), left et right.",
+        "starterCode": "// Definis la structure t_btree ici\n// avec typedef",
+        "solution": "typedef struct s_btree\n{\n\tvoid\t\t\t*item;\n\tstruct s_btree\t*left;\n\tstruct s_btree\t*right;\n}\t\t\t\t\tt_btree;",
+        "hint": "La structure doit utiliser struct s_btree pour les pointeurs internes car le typedef n'existe pas encore.",
+        "difficulty": 1
+      },
+      {
+        "id": 2,
+        "title": "Allouer un noeud",
+        "instruction": "Ecris le code qui alloue un t_btree avec malloc et retourne NULL en cas d'echec.",
+        "starterCode": "t_btree\t*create_node(void)\n{\n\t// Alloue et retourne un t_btree\n\t// Retourne NULL si echec\n}",
+        "solution": "t_btree\t*create_node(void)\n{\n\tt_btree\t*node;\n\n\tnode = malloc(sizeof(t_btree));\n\tif (!node)\n\t\treturn (NULL);\n\treturn (node);\n}",
+        "hint": "malloc(sizeof(t_btree)) alloue la bonne taille. Verifie avec if (!node).",
+        "difficulty": 1
+      },
+      {
+        "id": 3,
+        "title": "Initialiser les champs",
+        "instruction": "Complete la fonction pour initialiser les trois champs du noeud.",
+        "starterCode": "void\tinit_node(t_btree *node, void *item)\n{\n\t// Initialise item, left, right\n}",
+        "solution": "void\tinit_node(t_btree *node, void *item)\n{\n\tnode->item = item;\n\tnode->left = NULL;\n\tnode->right = NULL;\n}",
+        "hint": "left et right doivent etre NULL car le noeud n'a pas encore d'enfants.",
+        "difficulty": 1
+      },
+      {
+        "id": 4,
+        "title": "Verifier si un noeud est une feuille",
+        "instruction": "Ecris une fonction qui retourne 1 si le noeud est une feuille, 0 sinon.",
+        "starterCode": "int\tis_leaf(t_btree *node)\n{\n\t// Retourne 1 si feuille\n}",
+        "solution": "int\tis_leaf(t_btree *node)\n{\n\tif (!node)\n\t\treturn (0);\n\treturn (node->left == NULL && node->right == NULL);\n}",
+        "hint": "Une feuille est un noeud dont left ET right sont NULL.",
+        "difficulty": 2
+      },
+      {
+        "id": 5,
+        "title": "Creer et connecter deux noeuds",
+        "instruction": "Cree deux noeuds et connecte le second comme enfant gauche du premier.",
+        "starterCode": "void\ttest_connect(void)\n{\n\tint\ta = 5;\n\tint\tb = 3;\n\t// Cree node_a avec &a\n\t// Cree node_b avec &b\n\t// Connecte node_b comme enfant gauche de node_a\n}",
+        "solution": "void\ttest_connect(void)\n{\n\tint\ta = 5;\n\tint\tb = 3;\n\tt_btree\t*node_a = ft_btree_create(&a);\n\tt_btree\t*node_b = ft_btree_create(&b);\n\tnode_a->left = node_b;\n\t// Arbre : 5 -> gauche -> 3\n}",
+        "hint": "Apres ft_btree_create, il suffit d'assigner node_a->left = node_b.",
+        "difficulty": 2
+      },
+      {
+        "id": 6,
+        "title": "Construire un mini arbre",
+        "instruction": "Construis un arbre avec racine 5, gauche 3, droite 8.",
+        "starterCode": "t_btree\t*build_tree(void)\n{\n\tstatic int vals[] = {5, 3, 8};\n\t// Cree 3 noeuds et connecte-les\n}",
+        "solution": "t_btree\t*build_tree(void)\n{\n\tstatic int vals[] = {5, 3, 8};\n\tt_btree\t*root = ft_btree_create(&vals[0]);\n\troot->left = ft_btree_create(&vals[1]);\n\troot->right = ft_btree_create(&vals[2]);\n\treturn (root);\n}",
+        "hint": "Cree la racine, puis assigne les enfants gauche et droit.",
+        "difficulty": 2
+      }
+    ]
+  },
+  "starterCode": "#include <stdlib.h>\n\ntypedef struct s_btree\n{\n\tvoid\t\t\t*item;\n\tstruct s_btree\t*left;\n\tstruct s_btree\t*right;\n}\t\t\t\t\tt_btree;\n\nt_btree\t*ft_btree_create(void *item)\n{\n\t// Alloue un nouveau noeud\n\t// Initialise item avec le parametre\n\t// Met left et right a NULL\n\t// Retourne le noeud ou NULL si erreur\n\t(void)item;\n\treturn (NULL);\n}",
+  "solution": "#include <stdlib.h>\n\ntypedef struct s_btree\n{\n\tvoid\t\t\t*item;\n\tstruct s_btree\t*left;\n\tstruct s_btree\t*right;\n}\t\t\t\t\tt_btree;\n\nt_btree\t*ft_btree_create(void *item)\n{\n\tt_btree\t*node;\n\n\tnode = malloc(sizeof(t_btree));\n\tif (!node)\n\t\treturn (NULL);\n\tnode->item = item;\n\tnode->left = NULL;\n\tnode->right = NULL;\n\treturn (node);\n}",
+  "hints": [
+    "Utilise malloc(sizeof(t_btree)) pour allouer la memoire du noeud.",
+    "Verifie toujours le retour de malloc avant d'utiliser le pointeur.",
+    "N'oublie pas d'initialiser left et right a NULL pour indiquer que le noeud est une feuille."
+  ],
+  "testCases": [
+    {
+      "id": 1,
+      "description": "Creer un noeud avec un entier",
+      "stdin": "",
+      "expectedStdout": "item=42 left=NULL right=NULL\n",
+      "expectedExitCode": 0,
+      "visible": true
+    },
+    {
+      "id": 2,
+      "description": "Creer un noeud avec une chaine",
+      "stdin": "",
+      "expectedStdout": "item=hello left=NULL right=NULL\n",
+      "expectedExitCode": 0,
+      "visible": false
+    },
+    {
+      "id": 3,
+      "description": "Creer un noeud avec NULL",
+      "stdin": "",
+      "expectedStdout": "item=NULL left=NULL right=NULL\n",
+      "expectedExitCode": 0,
+      "visible": false
+    }
+  ],
+  "constraints": {
+    "allowedFunctions": ["malloc", "free"],
+    "forbiddenFunctions": ["calloc", "realloc", "printf"],
+    "maxExecutionTime": 5000,
+    "maxMemory": 128
+  },
+  "relatedExercises": ["c-day61-ex01-ft-btree-insert", "c-day61-ex02-ft-btree-search"],
+  "resources": [
+    {
+      "title": "Arbres binaires - Cours et exercices",
+      "url": "https://www.geeksforgeeks.org/binary-tree-data-structure/",
+      "type": "documentation"
+    },
+    {
+      "title": "Structures recursives en C",
+      "url": "https://en.wikipedia.org/wiki/Binary_tree",
+      "type": "article"
+    }
+  ]
+}

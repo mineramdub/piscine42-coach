@@ -1,0 +1,257 @@
+{
+  "id": "c-day64-ex02-ft-hashtable-insert",
+  "category": "c",
+  "day": 64,
+  "order": 2,
+  "title": "Inserer dans une table de hachage",
+  "description": "Ecris la fonction ft_hashtable_insert qui insere une paire cle/valeur dans une table de hachage. La fonction calcule le hash de la cle pour trouver le bucket, puis cree une nouvelle entree et l'insere en tete de la liste chainee du bucket. Si la cle existe deja, on met a jour la valeur. La cle est dupliquee avec strdup pour que la table possede sa propre copie.",
+  "difficulty": 5,
+  "points": 50,
+  "estimatedTime": 40,
+  "learningObjectives": [
+    "Inserer une paire cle/valeur dans une table de hachage",
+    "Gerer les collisions par chainage (insertion en tete de liste)",
+    "Dupliquer la cle pour eviter les problemes de propriete memoire",
+    "Gerer la mise a jour quand la cle existe deja",
+    "Combiner hachage, allocation et manipulation de liste chainee"
+  ],
+  "learningContent": {
+    "lesson": {
+      "introduction": "L'insertion dans une table de hachage combine plusieurs competences : calcul du hash, recherche dans une liste chainee, et allocation d'une nouvelle entree. L'etape critique est la gestion des cles existantes : faut-il creer un doublon ou mettre a jour la valeur ? Dans notre implementation, on met a jour la valeur si la cle existe deja, sinon on cree une nouvelle entree en tete du bucket.",
+      "steps": [
+        {
+          "id": 1,
+          "title": "Calculer l'index du bucket",
+          "content": "La premiere etape est de calculer l'index du bucket en utilisant la fonction de hachage stockee dans la table. Le hash de la cle modulo la taille donne l'index.\n\nOn utilise la fonction stockee dans ht->hash pour rester generique.",
+          "codeExample": "unsigned long\tindex;\n\nindex = ht->hash(key, ht->size);\n// index est dans [0, ht->size - 1]\n\n// Exemple : key = \"name\", ht->size = 10\n// hash(\"name\", 10) = 7\n// On va inserer dans ht->buckets[7]",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Si hash(\"age\", 5) = 2 et hash(\"name\", 5) = 2, que se passe-t-il ?",
+            "starterCode": "// hash(\"age\", 5) = 2\n// hash(\"name\", 5) = 2\n// Les deux vont dans le bucket ???\n// C'est une ???",
+            "solution": "// Les deux vont dans le bucket 2\n// C'est une COLLISION\n// On gere par chainage : liste chainee dans le bucket 2\n// buckets[2]: [\"name\":val] -> [\"age\":val] -> NULL"
+          }
+        },
+        {
+          "id": 2,
+          "title": "Verifier si la cle existe deja",
+          "content": "Avant d'inserer, on parcourt la liste chainee du bucket pour verifier si la cle existe deja. Si oui, on met a jour la valeur au lieu de creer une nouvelle entree.\n\nOn utilise **strcmp** pour comparer les cles.",
+          "codeExample": "t_entry\t*entry;\n\nentry = ht->buckets[index];\nwhile (entry)\n{\n\tif (strcmp(entry->key, key) == 0)\n\t{\n\t\t// Cle trouvee : mettre a jour la valeur\n\t\tentry->value = value;\n\t\treturn (1); // Succes (mise a jour)\n\t}\n\tentry = entry->next;\n}\n// Cle non trouvee : creer une nouvelle entree",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Pourquoi utiliser strcmp et pas == pour comparer les cles ?",
+            "starterCode": "char *a = \"hello\";\nchar *b = strdup(\"hello\");\n// a == b : ???\n// strcmp(a, b) : ???",
+            "solution": "// a == b : FAUX (adresses differentes)\n// strcmp(a, b) == 0 : VRAI (contenu identique)\n// == compare les adresses, strcmp compare le contenu\n// Il faut TOUJOURS utiliser strcmp pour les chaines"
+          }
+        },
+        {
+          "id": 3,
+          "title": "Creer et inserer une nouvelle entree",
+          "content": "Si la cle n'existe pas, on cree une nouvelle entree avec malloc, on duplique la cle avec strdup, et on insere en tete de la liste du bucket.\n\n**strdup** est essentiel : la table doit posseder sa propre copie de la cle.",
+          "codeExample": "t_entry\t*new_entry;\n\nnew_entry = malloc(sizeof(t_entry));\nif (!new_entry)\n\treturn (0);\nnew_entry->key = strdup(key);  // Copie de la cle\nif (!new_entry->key)\n{\n\tfree(new_entry);\n\treturn (0);\n}\nnew_entry->value = value;\n\n// Insertion en tete du bucket :\nnew_entry->next = ht->buckets[index];\nht->buckets[index] = new_entry;",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Que se passe-t-il si on fait new_entry->key = key au lieu de strdup ?",
+            "starterCode": "char buf[10] = \"hello\";\nft_hashtable_insert(ht, buf, value);\nstrcpy(buf, \"world\");\n// Maintenant la cle dans la table est ???",
+            "solution": "// Sans strdup : new_entry->key pointe vers buf\n// Apres strcpy(buf, \"world\"), la cle devient \"world\" !\n// La table est corrompue car la cle a change\n// Avec strdup : la table a sa propre copie, buf peut changer"
+          }
+        },
+        {
+          "id": 4,
+          "title": "La fonction complete",
+          "content": "La fonction combine les trois etapes : hash, recherche de doublon, et insertion. Elle retourne 1 en cas de succes, 0 en cas d'echec d'allocation.",
+          "codeExample": "int\tft_hashtable_insert(t_hashtable *ht, char *key, void *value)\n{\n\tunsigned long\tindex;\n\tt_entry\t\t\t*entry;\n\tt_entry\t\t\t*new_entry;\n\n\tindex = ht->hash(key, ht->size);\n\tentry = ht->buckets[index];\n\twhile (entry)\n\t{\n\t\tif (strcmp(entry->key, key) == 0)\n\t\t{\n\t\t\tentry->value = value;\n\t\t\treturn (1);\n\t\t}\n\t\tentry = entry->next;\n\t}\n\tnew_entry = malloc(sizeof(t_entry));\n\tif (!new_entry)\n\t\treturn (0);\n\tnew_entry->key = strdup(key);\n\tif (!new_entry->key)\n\t{\n\t\tfree(new_entry);\n\t\treturn (0);\n\t}\n\tnew_entry->value = value;\n\tnew_entry->next = ht->buckets[index];\n\tht->buckets[index] = new_entry;\n\treturn (1);\n}",
+          "language": "c"
+        }
+      ]
+    },
+    "theory": [
+      {
+        "title": "Insertion en tete de liste chainee",
+        "content": "L'insertion en tete est la methode la plus simple et rapide pour ajouter un element a une liste chainee. L'element est place au debut et pointe vers l'ancien premier element. C'est une operation O(1).",
+        "codeExamples": [
+          {
+            "title": "Insertion en tete dans un bucket",
+            "code": "// Bucket avant : [\"age\":25] -> [\"city\":\"Paris\"] -> NULL\n// Insertion de \"name\":\"Alice\" :\n\nnew->next = buckets[i];  // new -> [\"age\":25] -> ...\nbuckets[i] = new;        // buckets[i] = new\n\n// Bucket apres :\n// [\"name\":\"Alice\"] -> [\"age\":25] -> [\"city\":\"Paris\"] -> NULL",
+            "explanation": "Le nouvel element devient la tete de la liste en 2 operations."
+          }
+        ],
+        "keyPoints": [
+          "Insertion en tete = O(1) quelle que soit la longueur",
+          "new->next = ancien_premier, bucket = new",
+          "Pas besoin de parcourir la liste",
+          "L'ordre des elements dans un bucket n'est pas important"
+        ],
+        "commonMistakes": [
+          "Ecraser bucket AVANT d'avoir sauvegarde l'ancien premier (perd la liste)",
+          "Oublier de mettre new->next a l'ancien premier (perd le reste de la liste)",
+          "Inserer en queue (O(n)) alors qu'en tete suffit (O(1))"
+        ]
+      },
+      {
+        "title": "strdup et propriete de la memoire",
+        "content": "strdup duplique une chaine en allouant de la memoire avec malloc. La table de hachage doit posseder ses propres copies des cles pour eviter que les modifications exterieures ne corrompent la table. Chaque strdup devra etre free lors de la suppression.",
+        "codeExamples": [
+          {
+            "title": "Probleme sans strdup",
+            "code": "// SANS strdup (MAUVAIS) :\nchar *key = \"hello\";\nentry->key = key; // Partage la meme memoire\n// Si key est modifie ou libere, la table est corrompue\n\n// AVEC strdup (BON) :\nchar *key = \"hello\";\nentry->key = strdup(key); // Copie independante\n// key peut etre modifie ou libere sans affecter la table\n\n// Attention : strdup utilise malloc\n// Il faut free(entry->key) lors de la suppression",
+            "explanation": "strdup cree une copie independante de la chaine."
+          }
+        ],
+        "keyPoints": [
+          "strdup = malloc + strcpy (alloue et copie la chaine)",
+          "La table possede sa propre copie de la cle (independante)",
+          "Chaque strdup doit etre matche par un free",
+          "strdup peut echouer (retourne NULL) : toujours verifier"
+        ],
+        "commonMistakes": [
+          "Ne pas strdup la cle (corruption si la source change)",
+          "Oublier de free la cle dupliquee lors de la suppression",
+          "Ne pas verifier le retour de strdup (NULL si malloc echoue)"
+        ]
+      },
+      {
+        "title": "Mise a jour vs doublon",
+        "content": "Quand on insere une cle qui existe deja, deux strategies sont possibles : mettre a jour la valeur existante, ou creer un doublon. La mise a jour est generalement preferee car elle correspond au comportement attendu d'un dictionnaire.",
+        "codeExamples": [
+          {
+            "title": "Mise a jour d'une cle existante",
+            "code": "// Table : {\"name\": \"Alice\", \"age\": 25}\n\n// Insertion de \"name\": \"Bob\"\n// Strategie mise a jour :\n// -> Table : {\"name\": \"Bob\", \"age\": 25}\n// La valeur est remplacee\n\n// Strategie doublon (NON recommandee) :\n// -> Table : {\"name\": \"Bob\", \"name\": \"Alice\", \"age\": 25}\n// Deux entrees pour la meme cle !\n// La recherche trouvera toujours \"Bob\" (en tete)\n// Mais \"Alice\" reste en memoire (fuite logique)",
+            "explanation": "La mise a jour evite les doublons et les fuites memoire."
+          }
+        ],
+        "keyPoints": [
+          "Verifier si la cle existe avant d'inserer (parcourir le bucket)",
+          "Si existe : mettre a jour la valeur (entry->value = value)",
+          "Si n'existe pas : creer une nouvelle entree",
+          "La mise a jour evite les doublons et les inconsistances"
+        ],
+        "commonMistakes": [
+          "Ne pas verifier l'existence de la cle (cree des doublons)",
+          "Oublier de liberer l'ancienne valeur si elle a ete malloc",
+          "Comparer les adresses des cles au lieu du contenu (== au lieu de strcmp)"
+        ]
+      },
+      {
+        "title": "Gestion des erreurs lors de l'insertion",
+        "content": "L'insertion implique deux allocations : malloc pour l'entree et strdup pour la cle. Si l'une echoue, il faut nettoyer les allocations deja faites et retourner une erreur. C'est le pattern de cleanup en cascade.",
+        "codeExamples": [
+          {
+            "title": "Pattern de cleanup en cascade",
+            "code": "int\tinsert(t_hashtable *ht, char *key, void *value)\n{\n\tt_entry *new = malloc(sizeof(t_entry));\n\tif (!new)\n\t\treturn (0); // Rien a nettoyer\n\tnew->key = strdup(key);\n\tif (!new->key)\n\t{\n\t\tfree(new); // Nettoyer l'allocation precedente\n\t\treturn (0);\n\t}\n\t// Insertion reussie\n\tnew->value = value;\n\tnew->next = ht->buckets[index];\n\tht->buckets[index] = new;\n\treturn (1);\n}",
+            "explanation": "Chaque echec d'allocation nettoie les allocations precedentes."
+          }
+        ],
+        "keyPoints": [
+          "Verifier chaque allocation (malloc et strdup)",
+          "En cas d'echec, liberer les allocations deja faites",
+          "Retourner un code d'erreur (0 ou NULL) pour signaler l'echec",
+          "Ne jamais laisser de memoire allouee sans reference"
+        ],
+        "commonMistakes": [
+          "Ne pas verifier le retour de strdup (segfault si NULL)",
+          "Oublier de free(new) quand strdup echoue (fuite memoire)",
+          "Inserer partiellement dans la table en cas d'erreur (table corrompue)"
+        ]
+      }
+    ],
+    "prepExercises": [
+      {
+        "id": 1,
+        "title": "Calculer l'index",
+        "instruction": "Ecris le code qui calcule l'index du bucket pour une cle.",
+        "starterCode": "unsigned long index;\nindex = ht->???(key, ht->???);",
+        "solution": "unsigned long index;\nindex = ht->hash(key, ht->size);",
+        "hint": "Utilise la fonction hash stockee dans la table avec key et size.",
+        "difficulty": 1
+      },
+      {
+        "id": 2,
+        "title": "Chercher une cle dans un bucket",
+        "instruction": "Ecris le code qui cherche si une cle existe dans un bucket.",
+        "starterCode": "t_entry *entry = ht->buckets[index];\nwhile (entry)\n{\n\tif (???(entry->key, key) == 0)\n\t\treturn (entry);\n\tentry = entry->???;\n}",
+        "solution": "t_entry *entry = ht->buckets[index];\nwhile (entry)\n{\n\tif (strcmp(entry->key, key) == 0)\n\t\treturn (entry);\n\tentry = entry->next;\n}",
+        "hint": "strcmp compare les chaines. next avance dans la liste.",
+        "difficulty": 2
+      },
+      {
+        "id": 3,
+        "title": "Creer une nouvelle entree",
+        "instruction": "Ecris le code qui cree une t_entry avec key dupliquee.",
+        "starterCode": "t_entry *new = malloc(sizeof(t_entry));\nif (!new) return (0);\nnew->key = ???(key);\nnew->value = value;\nnew->next = NULL;",
+        "solution": "t_entry *new = malloc(sizeof(t_entry));\nif (!new) return (0);\nnew->key = strdup(key);\nif (!new->key) { free(new); return (0); }\nnew->value = value;\nnew->next = NULL;",
+        "hint": "strdup copie la cle. Verifie le retour et free(new) si echec.",
+        "difficulty": 2
+      },
+      {
+        "id": 4,
+        "title": "Insertion en tete",
+        "instruction": "Ecris le code pour inserer en tete d'un bucket.",
+        "starterCode": "// new_entry est pret\n// L'inserer en tete de buckets[index]\nnew_entry->??? = ht->buckets[???];\nht->buckets[???] = ???;",
+        "solution": "new_entry->next = ht->buckets[index];\nht->buckets[index] = new_entry;",
+        "hint": "new->next pointe vers l'ancien premier, puis bucket pointe vers new.",
+        "difficulty": 1
+      },
+      {
+        "id": 5,
+        "title": "Gestion complete d'une insertion",
+        "instruction": "Trace l'insertion de 'name':'Alice' puis 'age':25 dans une table de 3 buckets.",
+        "starterCode": "// hash(\"name\",3) = 1, hash(\"age\",3) = 1\n// Insert \"name\" : buckets[1] = ???\n// Insert \"age\" : buckets[1] = ???",
+        "solution": "// Insert \"name\" : buckets[1] = [\"name\":\"Alice\"] -> NULL\n// Insert \"age\" (collision) :\n//   buckets[1] = [\"age\":25] -> [\"name\":\"Alice\"] -> NULL\n// Les deux sont dans le meme bucket, chaines",
+        "hint": "Les deux cles ont le meme hash, donc meme bucket. Chainage par liste.",
+        "difficulty": 2
+      }
+    ]
+  },
+  "starterCode": "#include <stdlib.h>\n#include <string.h>\n\ntypedef struct s_entry\n{\n\tchar\t\t\t*key;\n\tvoid\t\t\t*value;\n\tstruct s_entry\t*next;\n}\t\t\t\t\tt_entry;\n\ntypedef struct s_hashtable\n{\n\tt_entry\t\t\t**buckets;\n\tunsigned int\tsize;\n\tunsigned long\t(*hash)(char *, unsigned int);\n}\t\t\t\t\tt_hashtable;\n\nint\tft_hashtable_insert(t_hashtable *ht, char *key, void *value)\n{\n\t// 1. Calcule l'index avec ht->hash\n\t// 2. Cherche si la cle existe deja\n\t// 3. Si oui, met a jour la valeur\n\t// 4. Sinon, cree une nouvelle entree en tete\n\t(void)ht;\n\t(void)key;\n\t(void)value;\n\treturn (0);\n}",
+  "solution": "#include <stdlib.h>\n#include <string.h>\n\ntypedef struct s_entry\n{\n\tchar\t\t\t*key;\n\tvoid\t\t\t*value;\n\tstruct s_entry\t*next;\n}\t\t\t\t\tt_entry;\n\ntypedef struct s_hashtable\n{\n\tt_entry\t\t\t**buckets;\n\tunsigned int\tsize;\n\tunsigned long\t(*hash)(char *, unsigned int);\n}\t\t\t\t\tt_hashtable;\n\nint\tft_hashtable_insert(t_hashtable *ht, char *key, void *value)\n{\n\tunsigned long\tindex;\n\tt_entry\t\t\t*entry;\n\tt_entry\t\t\t*new_entry;\n\n\tindex = ht->hash(key, ht->size);\n\tentry = ht->buckets[index];\n\twhile (entry)\n\t{\n\t\tif (strcmp(entry->key, key) == 0)\n\t\t{\n\t\t\tentry->value = value;\n\t\t\treturn (1);\n\t\t}\n\t\tentry = entry->next;\n\t}\n\tnew_entry = malloc(sizeof(t_entry));\n\tif (!new_entry)\n\t\treturn (0);\n\tnew_entry->key = strdup(key);\n\tif (!new_entry->key)\n\t{\n\t\tfree(new_entry);\n\t\treturn (0);\n\t}\n\tnew_entry->value = value;\n\tnew_entry->next = ht->buckets[index];\n\tht->buckets[index] = new_entry;\n\treturn (1);\n}",
+  "hints": [
+    "Calcule l'index avec ht->hash(key, ht->size), puis parcours le bucket pour chercher la cle.",
+    "Si la cle existe (strcmp == 0), mets a jour la valeur. Sinon, cree une nouvelle entree.",
+    "Utilise strdup pour copier la cle et insere en tete : new->next = bucket, bucket = new."
+  ],
+  "testCases": [
+    {
+      "id": 1,
+      "description": "Insertion et recherche d'une paire",
+      "stdin": "",
+      "expectedStdout": "name=Alice\n",
+      "expectedExitCode": 0,
+      "visible": true
+    },
+    {
+      "id": 2,
+      "description": "Mise a jour d'une cle existante",
+      "stdin": "",
+      "expectedStdout": "name=Bob\n",
+      "expectedExitCode": 0,
+      "visible": false
+    },
+    {
+      "id": 3,
+      "description": "Insertion avec collision",
+      "stdin": "",
+      "expectedStdout": "key1=val1 key2=val2\n",
+      "expectedExitCode": 0,
+      "visible": false
+    }
+  ],
+  "constraints": {
+    "allowedFunctions": ["malloc", "free", "strdup", "strcmp"],
+    "forbiddenFunctions": ["printf", "calloc"],
+    "maxExecutionTime": 5000,
+    "maxMemory": 128
+  },
+  "relatedExercises": ["c-day64-ex00-ft-hash-function", "c-day64-ex01-ft-hashtable-create"],
+  "resources": [
+    {
+      "title": "Insertion dans une table de hachage",
+      "url": "https://www.geeksforgeeks.org/implementing-hash-table-open-addressing-linear-probing-cpp/",
+      "type": "documentation"
+    },
+    {
+      "title": "strdup - Manuel",
+      "url": "https://man7.org/linux/man-pages/man3/strdup.3.html",
+      "type": "article"
+    }
+  ]
+}

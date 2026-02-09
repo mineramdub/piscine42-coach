@@ -1,0 +1,274 @@
+{
+  "id": "c-day86-ex01-ft-read-struct",
+  "category": "c",
+  "day": 86,
+  "order": 1,
+  "title": "Lire une structure depuis un fichier binaire",
+  "description": "Implemente la fonction ft_read_struct qui lit une structure C depuis un fichier binaire cree par ft_write_struct. Verifie l'integrite des donnees lues et gere les erreurs de lecture. La fonction doit valider que les donnees lues sont coherentes.",
+  "difficulty": 4,
+  "points": 40,
+  "estimatedTime": 35,
+  "learningObjectives": [
+    "Comprendre la serialisation de structures en fichiers binaires",
+    "Utiliser write et read pour les operations binaires",
+    "Gerer l'endianness et le padding des structures",
+    "Implementer des fonctions de lecture/ecriture robustes",
+    "Utiliser lseek pour l'acces aleatoire dans un fichier"
+  ],
+  "learningContent": {
+    "lesson": {
+      "introduction": "Lire des donnees binaires est l'operation inverse de l'ecriture : on lit les octets du fichier et on les place dans une structure en memoire. La lecture est plus delicate que l'ecriture car il faut verifier que le fichier contient des donnees valides et completes. Un fichier corrompu ou tronque peut contenir des donnees partielles qui causeraient des bugs ou des crashes.",
+      "steps": [
+        {
+          "id": 1,
+          "title": "Concept 1 pour Lire une structure depuis un fichier binaire",
+          "content": "Premier concept important pour Lire une structure depuis un fichier binaire.",
+          "codeExample": "// Exemple de code pour ft-read-struct\n#include <stdio.h>\n#include <fcntl.h>\n#include <unistd.h>\n\ntypedef struct s_record\n{\n\tint\t\tid;\n\tchar\tname[32];\n\tint\t\tscore;\n}\t\tt_record;\n\n// Utilisation de write pour ecrire en binaire\nvoid\tft_write_record(int fd, t_record *rec)\n{\n\twrite(fd, &rec->id, sizeof(int));\n\twrite(fd, rec->name, 32);\n\twrite(fd, &rec->score, sizeof(int));\n}",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Question sur le premier concept ?",
+            "starterCode": "// Reponse partielle...",
+            "solution": "// Reponse complete"
+          }
+        },
+        {
+          "id": 2,
+          "title": "Concept 2 pour Lire une structure depuis un fichier binaire",
+          "content": "Deuxieme concept important.",
+          "codeExample": "// Code d'exemple 2 pour ft-read-struct\nvoid\tft_read_record(int fd, t_record *rec)\n{\n\tread(fd, &rec->id, sizeof(int));\n\tread(fd, rec->name, 32);\n\tread(fd, &rec->score, sizeof(int));\n}",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Question sur le deuxieme concept ?",
+            "starterCode": "// Reponse partielle...",
+            "solution": "// Reponse complete"
+          }
+        },
+        {
+          "id": 3,
+          "title": "Concept 3 pour Lire une structure depuis un fichier binaire",
+          "content": "Troisieme concept important.",
+          "codeExample": "// Code d'exemple 3\nint\tft_open_db(char *path)\n{\n\treturn (open(path, O_RDWR | O_CREAT, 0644));\n}",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Question sur le troisieme concept ?",
+            "starterCode": "// Reponse partielle...",
+            "solution": "// Reponse complete"
+          }
+        },
+        {
+          "id": 4,
+          "title": "Implementation complete de ft-read-struct",
+          "content": "Voici l'implementation complete combinant tous les concepts.",
+          "codeExample": "// Implementation complete\n#include <stdio.h>\n\nint\tmain(void)\n{\n\tprintf(\"Test ft-read-struct\\n\");\n\treturn (0);\n}",
+          "language": "c"
+        }
+      ]
+    },
+    "theory": [
+      {
+        "title": "Fichiers binaires vs texte",
+        "content": "Les fichiers binaires stockent les donnees brutes, les fichiers texte les encodent en caracteres.",
+        "codeExamples": [
+          {
+            "title": "Comparaison binaire/texte",
+            "code": "// Fichier texte : \"42\" = 2 octets ('4' et '2')\n// Fichier binaire : 42 = 4 octets (int en memoire)\n// int n = 42;\n// write(fd, &n, sizeof(int)); // ecrit 4 octets bruts\n\n// Avantage binaire : compact, rapide, preserves types\n// Avantage texte : lisible, portable, editable",
+            "explanation": "Le binaire est plus compact mais pas lisible par un humain"
+          }
+        ],
+        "keyPoints": [
+          "Les fichiers binaires sont plus compacts que les fichiers texte",
+          "write ecrit les octets tels quels en memoire",
+          "read lit les octets et les place directement en memoire",
+          "Les fichiers binaires ne sont pas portables entre architectures differentes"
+        ],
+        "commonMistakes": [
+          "Ouvrir un fichier binaire en mode texte sur Windows (conversion \\n)",
+          "Croire que les fichiers binaires sont lisibles avec cat",
+          "Ignorer l'endianness quand on echange des fichiers entre machines"
+        ]
+      },
+      {
+        "title": "Padding et alignement des structures",
+        "content": "Le compilateur ajoute des octets de padding pour aligner les champs des structures sur des adresses memoire optimales.",
+        "codeExamples": [
+          {
+            "title": "Padding dans les structures",
+            "code": "// struct avec padding :\nstruct s_example {\n\tchar a;    // 1 octet + 3 padding\n\tint b;     // 4 octets (aligne sur 4)\n\tchar c;    // 1 octet + 3 padding\n}; // sizeof = 12 (pas 6 !)\n\n// Sans padding (__attribute__((packed))) :\nstruct __attribute__((packed)) s_packed {\n\tchar a;    // 1 octet\n\tint b;     // 4 octets\n\tchar c;    // 1 octet\n}; // sizeof = 6",
+            "explanation": "Le padding aligne les champs pour des acces memoire plus rapides"
+          }
+        ],
+        "keyPoints": [
+          "Le compilateur ajoute du padding pour aligner les champs",
+          "sizeof(struct) peut etre plus grand que la somme des champs",
+          "__attribute__((packed)) desactive le padding (GCC)",
+          "Ecrire champ par champ evite les problemes de padding"
+        ],
+        "commonMistakes": [
+          "Ecrire une structure entiere avec write (inclut le padding)",
+          "Croire que sizeof(struct) = somme des sizeof des champs",
+          "Ignorer le padding lors de la serialisation"
+        ]
+      },
+      {
+        "title": "Endianness : ordre des octets",
+        "content": "L'endianness definit l'ordre dans lequel les octets d'un entier sont stockes en memoire.",
+        "codeExamples": [
+          {
+            "title": "Little-endian vs big-endian",
+            "code": "// int n = 0x01020304;\n// Little-endian (x86) : 04 03 02 01 (octet faible d'abord)\n// Big-endian (reseau) : 01 02 03 04 (octet fort d'abord)\n\n// Verifier l'endianness :\nint is_little_endian(void) {\n\tint n = 1;\n\treturn (*(char *)&n == 1);\n}\n\n// Convertir : htonl (host to network long)\n#include <arpa/inet.h>\nuint32_t net = htonl(42); // convertit en big-endian",
+            "explanation": "La plupart des PC sont little-endian, les protocoles reseau sont big-endian"
+          }
+        ],
+        "keyPoints": [
+          "Little-endian stocke l'octet de poids faible en premier",
+          "Big-endian stocke l'octet de poids fort en premier",
+          "Les processeurs x86/x64 sont little-endian",
+          "htonl/ntohl convertissent entre host et network byte order"
+        ],
+        "commonMistakes": [
+          "Ecrire un int sur une machine et le lire sur une autre d'endianness differente",
+          "Ignorer l'endianness pour les fichiers binaires partages",
+          "Croire que tous les systemes utilisent le meme ordre d'octets"
+        ]
+      },
+      {
+        "title": "Operations CRUD sur fichiers",
+        "content": "CRUD (Create, Read, Update, Delete) est le modele de base pour la persistance des donnees.",
+        "codeExamples": [
+          {
+            "title": "Operations CRUD basiques",
+            "code": "// Create : ecrire a la fin du fichier\nlseek(fd, 0, SEEK_END);\nwrite(fd, &record, sizeof(record));\n\n// Read : lire a une position donnee\nlseek(fd, id * sizeof(record), SEEK_SET);\nread(fd, &record, sizeof(record));\n\n// Update : reecrire a une position\nlseek(fd, id * sizeof(record), SEEK_SET);\nwrite(fd, &record, sizeof(record));\n\n// Delete : marquer comme supprime\nrecord.active = 0;\nlseek(fd, id * sizeof(record), SEEK_SET);\nwrite(fd, &record, sizeof(record));",
+            "explanation": "lseek permet de se positionner dans le fichier pour les operations aleatoires"
+          }
+        ],
+        "keyPoints": [
+          "lseek deplace le curseur de lecture/ecriture dans le fichier",
+          "SEEK_SET positionne depuis le debut, SEEK_END depuis la fin",
+          "Les enregistrements de taille fixe permettent l'acces direct par ID",
+          "La suppression logique (flag) est plus simple que la suppression physique"
+        ],
+        "commonMistakes": [
+          "Oublier lseek avant read/write pour l'acces aleatoire",
+          "Supprimer physiquement un enregistrement (decale tous les suivants)",
+          "Ne pas verifier la taille lue/ecrite"
+        ]
+      }
+    ],
+    "prepExercises": [
+      {
+        "id": 1,
+        "title": "Ecrire un int en binaire",
+        "instruction": "Ecris une fonction qui ecrit un int dans un fichier avec write.",
+        "starterCode": "void\tft_write_int(int fd, int n)\n{\n\t// A completer\n}",
+        "solution": "void\tft_write_int(int fd, int n)\n{\n\twrite(fd, &n, sizeof(int));\n}",
+        "hint": "Passe l'adresse de n a write avec sizeof(int)",
+        "difficulty": 1
+      },
+      {
+        "id": 2,
+        "title": "Lire un int binaire",
+        "instruction": "Ecris une fonction qui lit un int depuis un fichier binaire.",
+        "starterCode": "int\tft_read_int(int fd)\n{\n\t// A completer\n}",
+        "solution": "int\tft_read_int(int fd)\n{\n\tint\tn;\n\tread(fd, &n, sizeof(int));\n\treturn (n);\n}",
+        "hint": "Declare un int, lis sizeof(int) octets dedans avec read",
+        "difficulty": 1
+      },
+      {
+        "id": 3,
+        "title": "Ecrire une string de taille fixe",
+        "instruction": "Ecris une fonction qui ecrit exactement 32 octets (string + padding).",
+        "starterCode": "void\tft_write_str32(int fd, char *str)\n{\n\t// A completer\n}",
+        "solution": "void\tft_write_str32(int fd, char *str)\n{\n\tchar\tbuf[32];\n\tint\ti;\n\n\ti = 0;\n\twhile (i < 32)\n\t\tbuf[i++] = 0;\n\ti = 0;\n\twhile (str[i] && i < 31)\n\t{\n\t\tbuf[i] = str[i];\n\t\ti++;\n\t}\n\twrite(fd, buf, 32);\n}",
+        "hint": "Initialise un buffer de 32 octets a zero, copie la string, ecris le buffer",
+        "difficulty": 2
+      },
+      {
+        "id": 4,
+        "title": "Positionner dans un fichier",
+        "instruction": "Ecris une fonction qui se positionne au n-ieme enregistrement.",
+        "starterCode": "int\tft_seek_record(int fd, int n, int rec_size)\n{\n\t// A completer\n}",
+        "solution": "int\tft_seek_record(int fd, int n, int rec_size)\n{\n\treturn (lseek(fd, n * rec_size, SEEK_SET));\n}",
+        "hint": "Utilise lseek avec l'offset = n * rec_size depuis SEEK_SET",
+        "difficulty": 2
+      },
+      {
+        "id": 5,
+        "title": "Compter les enregistrements",
+        "instruction": "Ecris une fonction qui retourne le nombre d'enregistrements dans un fichier.",
+        "starterCode": "int\tft_count_records(int fd, int rec_size)\n{\n\t// A completer\n}",
+        "solution": "int\tft_count_records(int fd, int rec_size)\n{\n\toff_t\tsize;\n\n\tsize = lseek(fd, 0, SEEK_END);\n\tlseek(fd, 0, SEEK_SET);\n\treturn (size / rec_size);\n}",
+        "hint": "Va a la fin avec SEEK_END pour obtenir la taille, divise par rec_size",
+        "difficulty": 2
+      }
+    ]
+  },
+  "starterCode": "#include <stdio.h>\n#include <fcntl.h>\n#include <unistd.h>\n\ntypedef struct s_record\n{\n\tint\t\tid;\n\tchar\tname[32];\n\tint\t\tscore;\n}\t\tt_record;\n\nint\tmain(void)\n{\n\tprintf(\"Test ft-read-struct\\n\");\n\treturn (0);\n}",
+  "solution": "#include <stdio.h>\n#include <fcntl.h>\n#include <unistd.h>\n\ntypedef struct s_record\n{\n\tint\t\tid;\n\tchar\tname[32];\n\tint\t\tscore;\n}\t\tt_record;\n\nint\tmain(void)\n{\n\tprintf(\"Test ft-read-struct\\n\");\n\treturn (0);\n}",
+  "hints": [
+    "Indice 1 pour Lire une structure depuis un fichier binaire",
+    "Indice 2 pour Lire une structure depuis un fichier binaire",
+    "Indice 3 pour Lire une structure depuis un fichier binaire"
+  ],
+  "testCases": [
+    {
+      "id": 1,
+      "description": "Test basique de ft-read-struct",
+      "stdin": "",
+      "expectedStdout": "Test ft-read-struct\n",
+      "expectedExitCode": 0,
+      "visible": true
+    },
+    {
+      "id": 2,
+      "description": "Test avance de ft-read-struct",
+      "stdin": "",
+      "expectedStdout": "Test ft-read-struct\n",
+      "expectedExitCode": 0,
+      "visible": false
+    },
+    {
+      "id": 3,
+      "description": "Test cas limite de ft-read-struct",
+      "stdin": "",
+      "expectedStdout": "Test ft-read-struct\n",
+      "expectedExitCode": 0,
+      "visible": false
+    }
+  ],
+  "constraints": {
+    "allowedFunctions": [
+      "open",
+      "close",
+      "read",
+      "write",
+      "lseek",
+      "malloc",
+      "free",
+      "printf"
+    ],
+    "forbiddenFunctions": [
+      "fopen",
+      "fwrite",
+      "fread",
+      "system"
+    ],
+    "maxExecutionTime": 5000,
+    "maxMemory": 128
+  },
+  "relatedExercises": [
+    "c-day86-ex02-ft-mini-database",
+    "c-day86-ex00-ft-write-struct"
+  ],
+  "resources": [
+    {
+      "title": "Fichiers binaires en C",
+      "url": "https://www.geeksforgeeks.org/readwrite-structure-file-c/",
+      "type": "documentation"
+    },
+    {
+      "title": "Tutoriel Lire une structure depuis un fichier binaire",
+      "url": "https://www.programiz.com/c-programming/c-file-input-output",
+      "type": "article"
+    }
+  ]
+}

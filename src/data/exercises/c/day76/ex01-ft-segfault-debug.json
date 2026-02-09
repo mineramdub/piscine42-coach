@@ -1,0 +1,269 @@
+{
+  "id": "c-day76-ex01-ft-segfault-debug",
+  "category": "c",
+  "day": 76,
+  "order": 1,
+  "title": "Analyser et corriger des segfaults",
+  "description": "Apprends a identifier les causes de segmentation fault : dereferencement NULL, buffer overflow et stack overflow. Utilise gdb pour les diagnostiquer.",
+  "difficulty": 4,
+  "points": 40,
+  "estimatedTime": 35,
+  "learningObjectives": [
+    "Comprendre les causes courantes de segmentation fault",
+    "Utiliser gdb pour localiser un crash",
+    "Corriger les dereferencements de pointeur NULL",
+    "Identifier et corriger les buffer overflows",
+    "Eviter les stack overflows dans les fonctions recursives"
+  ],
+  "learningContent": {
+    "lesson": {
+      "introduction": "Un segmentation fault (segfault) se produit quand un programme accede a de la memoire qu'il n'a pas le droit d'utiliser. Les causes les plus courantes sont : dereferencement d'un pointeur NULL, acces hors limites d'un tableau (buffer overflow), et debordement de la pile (stack overflow). Le debugger gdb est l'outil principal pour localiser l'instruction qui cause le crash.",
+      "steps": [
+        {
+          "id": 1,
+          "title": "Dereferencement NULL",
+          "content": "Un pointeur NULL pointe vers l'adresse 0, qui n'est jamais accessible. Dereferencer un pointeur NULL cause systematiquement un segfault.\n\n**Causes** : malloc qui echoue (retourne NULL), pointeur non initialise, element absent dans une structure.",
+          "codeExample": "// Segfault : dereferencement NULL\nchar\t*str = NULL;\nstr[0] = 'A'; // CRASH !\n\n// Correction : verifier avant d'utiliser\nchar\t*str = malloc(10);\nif (!str)\n\treturn (1);\nstr[0] = 'A';",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Corrige ce code qui segfault a cause d'un pointeur NULL.",
+            "starterCode": "int\tmain(void)\n{\n\tchar\t*s = NULL;\n\tprintf(\"%c\\n\", s[0]);\n\treturn (0);\n}",
+            "solution": "int\tmain(void)\n{\n\tchar\t*s = \"Hello\";\n\tprintf(\"%c\\n\", s[0]);\n\treturn (0);\n}"
+          }
+        },
+        {
+          "id": 2,
+          "title": "Buffer overflow",
+          "content": "Un buffer overflow se produit quand on ecrit au-dela des limites d'un tableau. Cela ecrase la memoire adjacente et peut corrompre des variables, des pointeurs de retour, ou causer un segfault.",
+          "codeExample": "// Buffer overflow :\nchar\tbuf[10];\nstrcpy(buf, \"Chaine beaucoup trop longue\"); // CRASH !\n\n// Correction : verifier la taille\nchar\tbuf[10];\nstrncpy(buf, \"Hello\", sizeof(buf) - 1);\nbuf[sizeof(buf) - 1] = '\\0';",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Corrige ce buffer overflow en utilisant strncpy.",
+            "starterCode": "int\tmain(void)\n{\n\tchar\tbuf[5];\n\tstrcpy(buf, \"Hello World\");\n\tprintf(\"%s\\n\", buf);\n\treturn (0);\n}",
+            "solution": "int\tmain(void)\n{\n\tchar\tbuf[5];\n\tstrncpy(buf, \"Hell\", sizeof(buf) - 1);\n\tbuf[sizeof(buf) - 1] = '\\0';\n\tprintf(\"%s\\n\", buf);\n\treturn (0);\n}"
+          }
+        },
+        {
+          "id": 3,
+          "title": "Stack overflow",
+          "content": "Un stack overflow se produit quand la pile d'appels est epuisee, generalement a cause d'une recursion infinie ou d'allocations locales trop grandes.\n\nLa taille de la pile est limitee (typiquement 8 MB sur Linux).",
+          "codeExample": "// Recursion infinie :\nvoid\tinfinite(int n)\n{\n\tprintf(\"%d\\n\", n);\n\tinfinite(n + 1); // Jamais de condition d'arret !\n}\n\n// Correction : ajouter une condition d'arret\nvoid\tcountdown(int n)\n{\n\tif (n <= 0)\n\t\treturn ;\n\tprintf(\"%d\\n\", n);\n\tcountdown(n - 1);\n}",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Corrige cette fonction recursive qui cause un stack overflow.",
+            "starterCode": "int\tfactorial(int n)\n{\n\treturn (n * factorial(n - 1));\n}",
+            "solution": "int\tfactorial(int n)\n{\n\tif (n <= 1)\n\t\treturn (1);\n\treturn (n * factorial(n - 1));\n}"
+          }
+        },
+        {
+          "id": 4,
+          "title": "Utiliser gdb pour diagnostiquer",
+          "content": "gdb (GNU Debugger) permet de localiser exactement l'instruction qui cause le crash.\n\n```bash\ngcc -g programme.c\ngdb ./a.out\n(gdb) run\n# Le programme crashe\n(gdb) bt          # Backtrace : pile d'appels\n(gdb) frame 0     # Examiner le frame du crash\n(gdb) print var   # Afficher une variable\n```",
+          "codeExample": "// Compilation avec debug :\n// gcc -g programme.c -o programme\n\n// Session gdb :\n// $ gdb ./programme\n// (gdb) run\n// Program received signal SIGSEGV\n// (gdb) bt\n// #0  0x... in main () at programme.c:10\n// (gdb) print str\n// $1 = 0x0    <- NULL !",
+          "language": "c"
+        }
+      ]
+    },
+    "theory": [
+      {
+        "title": "Causes de segmentation fault",
+        "content": "Le segfault est un signal SIGSEGV envoye par le systeme d'exploitation quand un programme tente d'acceder a de la memoire non mappee ou protegee. Les causes principales sont le dereferencement NULL, le depassement de tableau, l'acces a de la memoire liberee, et le stack overflow.",
+        "codeExamples": [
+          {
+            "title": "Les 4 causes principales",
+            "code": "// 1. NULL dereference\nint *p = NULL; *p = 42;\n// 2. Buffer overflow\nint arr[5]; arr[100] = 42;\n// 3. Use-after-free\nint *p = malloc(4); free(p); *p = 42;\n// 4. Stack overflow\nvoid f(void) { f(); }",
+            "explanation": "Chaque cas accede a de la memoire non autorisee."
+          }
+        ],
+        "keyPoints": [
+          "NULL dereference : le pointeur vaut 0 ou n'est pas initialise",
+          "Buffer overflow : acces au-dela des limites du tableau",
+          "Use-after-free : acces a de la memoire liberee",
+          "Stack overflow : pile d'appels epuisee par la recursion"
+        ],
+        "commonMistakes": [
+          "Ne pas verifier le retour de malloc (peut etre NULL)",
+          "Acceder a un index negatif ou >= taille du tableau",
+          "Oublier la condition d'arret dans une fonction recursive"
+        ]
+      },
+      {
+        "title": "gdb : les commandes essentielles",
+        "content": "gdb est le debugger standard sous Linux. Les commandes essentielles sont : run (lancer), bt (backtrace), print (afficher une variable), break (point d'arret), next/step (avancer pas a pas), et continue.",
+        "codeExamples": [
+          {
+            "title": "Session gdb typique",
+            "code": "$ gdb ./programme\n(gdb) break main       # Point d'arret au main\n(gdb) run              # Lancer le programme\n(gdb) next             # Avancer d'une ligne\n(gdb) print variable   # Afficher une variable\n(gdb) bt               # Pile d'appels\n(gdb) quit             # Quitter",
+            "explanation": "gdb permet d'executer pas a pas et d'inspecter l'etat du programme."
+          }
+        ],
+        "keyPoints": [
+          "bt (backtrace) montre la pile d'appels au moment du crash",
+          "print affiche la valeur d'une variable",
+          "break permet de s'arreter a un point precis",
+          "next avance d'une ligne, step entre dans les fonctions"
+        ],
+        "commonMistakes": [
+          "Oublier de compiler avec -g (pas de symboles de debug)",
+          "Utiliser next au lieu de step quand il faut entrer dans une fonction",
+          "Ne pas examiner les variables locales avec print"
+        ]
+      },
+      {
+        "title": "Prevention des segfaults",
+        "content": "Les meilleures pratiques pour eviter les segfaults : toujours verifier les pointeurs avant dereferencement, verifier les bornes des tableaux, limiter la profondeur de recursion, et utiliser les outils de detection (ASan, Valgrind).",
+        "codeExamples": [
+          {
+            "title": "Verification defensive",
+            "code": "void\tprocess(char *str)\n{\n\tif (!str)\n\t\treturn ;\n\tprintf(\"%s\\n\", str);\n}",
+            "explanation": "Toujours verifier qu'un pointeur n'est pas NULL avant de l'utiliser."
+          }
+        ],
+        "keyPoints": [
+          "Verifier chaque pointeur avant dereferencement",
+          "Verifier les indices de tableau avant acces",
+          "Ajouter des conditions d'arret aux fonctions recursives",
+          "Utiliser ASan (-fsanitize=address) en developpement"
+        ],
+        "commonMistakes": [
+          "Faire confiance a un pointeur sans le verifier",
+          "Utiliser strlen sur un pointeur potentiellement NULL",
+          "Passer un index utilisateur sans verification de bornes"
+        ]
+      },
+      {
+        "title": "AddressSanitizer pour la detection",
+        "content": "ASan est un outil integre au compilateur qui detecte les erreurs memoire au runtime. Plus rapide que Valgrind, il detecte les buffer overflows (stack et heap), les use-after-free, et les doubles free avec des messages detailles.",
+        "codeExamples": [
+          {
+            "title": "Compilation avec ASan",
+            "code": "# Activer ASan :\ngcc -fsanitize=address -g programme.c\n./a.out\n\n# Sortie typique :\n# ==ERROR: AddressSanitizer: heap-buffer-overflow\n#   WRITE of size 1 at 0x...\n#   #0 main programme.c:10",
+            "explanation": "ASan indique le type d'erreur, la ligne et l'operation fautive."
+          }
+        ],
+        "keyPoints": [
+          "ASan est 2-3x plus lent (vs 10-50x pour Valgrind)",
+          "Detecte les overflows heap ET stack",
+          "Indique la taille de l'acces fautif et sa localisation",
+          "Incompatible avec Valgrind (ne pas les utiliser ensemble)"
+        ],
+        "commonMistakes": [
+          "Oublier -g pour avoir les numeros de ligne",
+          "Utiliser ASan en production (overhead de performance)",
+          "Ignorer les messages ASan car le programme semble fonctionner"
+        ]
+      }
+    ],
+    "prepExercises": [
+      {
+        "id": 1,
+        "title": "Corriger un NULL deref",
+        "instruction": "Ajoute une verification de pointeur NULL.",
+        "starterCode": "void\tprint_str(char *s)\n{\n\tprintf(\"%s\\n\", s);\n}",
+        "solution": "void\tprint_str(char *s)\n{\n\tif (s)\n\t\tprintf(\"%s\\n\", s);\n}",
+        "hint": "Verifie que s n'est pas NULL avant printf.",
+        "difficulty": 1
+      },
+      {
+        "id": 2,
+        "title": "Buffer overflow",
+        "instruction": "Corrige le depassement de tableau.",
+        "starterCode": "int\tmain(void)\n{\n\tint\tarr[3] = {1, 2, 3};\n\tprintf(\"%d\\n\", arr[5]);\n\treturn (0);\n}",
+        "solution": "int\tmain(void)\n{\n\tint\tarr[3] = {1, 2, 3};\n\tprintf(\"%d\\n\", arr[2]);\n\treturn (0);\n}",
+        "hint": "L'index maximum pour un tableau de 3 elements est 2.",
+        "difficulty": 1
+      },
+      {
+        "id": 3,
+        "title": "Condition d'arret",
+        "instruction": "Ajoute la condition d'arret manquante.",
+        "starterCode": "void\trecurse(int n)\n{\n\tprintf(\"%d\\n\", n);\n\trecurse(n + 1);\n}",
+        "solution": "void\trecurse(int n)\n{\n\tif (n > 10)\n\t\treturn ;\n\tprintf(\"%d\\n\", n);\n\trecurse(n + 1);\n}",
+        "hint": "Ajoute un if (n > limite) return; au debut.",
+        "difficulty": 1
+      },
+      {
+        "id": 4,
+        "title": "Verifier malloc",
+        "instruction": "Verifie le retour de malloc avant utilisation.",
+        "starterCode": "char\t*create(int size)\n{\n\tchar\t*s = malloc(size);\n\ts[0] = '\\0';\n\treturn (s);\n}",
+        "solution": "char\t*create(int size)\n{\n\tchar\t*s = malloc(size);\n\tif (!s)\n\t\treturn (NULL);\n\ts[0] = '\\0';\n\treturn (s);\n}",
+        "hint": "Si malloc retourne NULL, ne pas acceder a s[0].",
+        "difficulty": 2
+      },
+      {
+        "id": 5,
+        "title": "Acces securise au tableau",
+        "instruction": "Ecris une fonction d'acces securise a un tableau.",
+        "starterCode": "int\tsafe_get(int *arr, int size, int index)\n{\n\t/* TON CODE ICI */\n}",
+        "solution": "int\tsafe_get(int *arr, int size, int index)\n{\n\tif (!arr || index < 0 || index >= size)\n\t\treturn (-1);\n\treturn (arr[index]);\n}",
+        "hint": "Verifie arr != NULL, index >= 0, et index < size.",
+        "difficulty": 2
+      }
+    ]
+  },
+  "starterCode": "#include <stdio.h>\n#include <stdlib.h>\n#include <string.h>\n\n// Ce programme contient 3 bugs qui causent des segfaults\n// Trouve-les et corrige-les !\n\nchar\t*ft_safe_strdup(char *src)\n{\n\tchar\t*dup;\n\tint\t\tlen;\n\n\t// BUG 1: pas de verification NULL\n\tlen = strlen(src);\n\tdup = malloc(len + 1);\n\tstrcpy(dup, src);\n\treturn (dup);\n}\n\nvoid\tft_fill_array(int *arr, int size)\n{\n\tint\ti;\n\n\ti = 0;\n\t// BUG 2: condition <= au lieu de <\n\twhile (i <= size)\n\t{\n\t\tarr[i] = i * 2;\n\t\ti++;\n\t}\n}\n\nint\tft_recursive_sum(int n)\n{\n\t// BUG 3: pas de condition d'arret pour n negatif\n\tif (n == 0)\n\t\treturn (0);\n\treturn (n + ft_recursive_sum(n - 1));\n}\n\nint\tmain(void)\n{\n\t// TODO: Corriger les 3 fonctions\n\treturn (0);\n}",
+  "solution": "#include <stdio.h>\n#include <stdlib.h>\n#include <string.h>\n\nchar\t*ft_safe_strdup(char *src)\n{\n\tchar\t*dup;\n\tint\t\tlen;\n\n\tif (!src)\n\t\treturn (NULL);\n\tlen = strlen(src);\n\tdup = malloc(len + 1);\n\tif (!dup)\n\t\treturn (NULL);\n\tstrcpy(dup, src);\n\treturn (dup);\n}\n\nvoid\tft_fill_array(int *arr, int size)\n{\n\tint\ti;\n\n\tif (!arr)\n\t\treturn ;\n\ti = 0;\n\twhile (i < size)\n\t{\n\t\tarr[i] = i * 2;\n\t\ti++;\n\t}\n}\n\nint\tft_recursive_sum(int n)\n{\n\tif (n <= 0)\n\t\treturn (0);\n\treturn (n + ft_recursive_sum(n - 1));\n}\n\nint\tmain(void)\n{\n\tchar\t*s = ft_safe_strdup(\"Hello\");\n\tint\t\tarr[5];\n\n\tif (s)\n\t{\n\t\tprintf(\"%s\\n\", s);\n\t\tfree(s);\n\t}\n\tft_fill_array(arr, 5);\n\tprintf(\"Sum: %d\\n\", ft_recursive_sum(10));\n\treturn (0);\n}",
+  "hints": [
+    "BUG 1: Verifiez que src n'est pas NULL avant strlen",
+    "BUG 2: La condition i <= size ecrit un element de trop (off-by-one)",
+    "BUG 3: Si n est negatif, la recursion ne s'arrete jamais"
+  ],
+  "testCases": [
+    {
+      "id": 1,
+      "description": "Programme s'execute sans segfault",
+      "stdin": "",
+      "expectedStdout": "Hello\nSum: 55\n",
+      "expectedExitCode": 0,
+      "visible": true
+    },
+    {
+      "id": 2,
+      "description": "safe_strdup(NULL) retourne NULL sans crash",
+      "stdin": "",
+      "expectedStdout": "",
+      "expectedExitCode": 0,
+      "visible": false
+    },
+    {
+      "id": 3,
+      "description": "recursive_sum avec n negatif retourne 0",
+      "stdin": "",
+      "expectedStdout": "",
+      "expectedExitCode": 0,
+      "visible": false
+    }
+  ],
+  "constraints": {
+    "allowedFunctions": [
+      "malloc",
+      "free",
+      "printf",
+      "strlen",
+      "strcpy",
+      "strncpy"
+    ],
+    "forbiddenFunctions": [
+      "system"
+    ],
+    "maxExecutionTime": 5000,
+    "maxMemory": 128
+  },
+  "relatedExercises": [
+    "c-day76-ex00-ft-valgrind-fix",
+    "c-day76-ex02-ft-undefined-behavior"
+  ],
+  "resources": [
+    {
+      "title": "Manuel GDB",
+      "url": "https://www.sourceware.org/gdb/documentation/",
+      "type": "documentation"
+    },
+    {
+      "title": "Segmentation fault causes",
+      "url": "https://www.geeksforgeeks.org/segmentation-fault-c-cpp/",
+      "type": "article"
+    }
+  ]
+}

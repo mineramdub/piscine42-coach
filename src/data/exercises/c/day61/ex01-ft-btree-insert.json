@@ -1,0 +1,266 @@
+{
+  "id": "c-day61-ex01-ft-btree-insert",
+  "category": "c",
+  "day": 61,
+  "order": 1,
+  "title": "Inserer un element dans un BST",
+  "description": "Ecris la fonction ft_btree_insert qui insere un nouvel element dans un arbre binaire de recherche (BST). La fonction prend un pointeur vers la racine (t_btree **root), un void *item a inserer, et une fonction de comparaison int (*cmp)(void *, void *). Si l'arbre est vide, on cree la racine. Sinon, on compare l'element avec le noeud courant : si cmp retourne negatif, on va a gauche ; si positif ou egal, on va a droite. L'insertion est recursive.",
+  "difficulty": 4,
+  "points": 40,
+  "estimatedTime": 35,
+  "learningObjectives": [
+    "Comprendre les proprietes d'un arbre binaire de recherche (BST)",
+    "Implementer une insertion recursive dans un BST",
+    "Utiliser des pointeurs de fonction pour la comparaison generique",
+    "Maitriser les doubles pointeurs pour modifier la racine",
+    "Gerer les cas limites (arbre vide, doublons)"
+  ],
+  "learningContent": {
+    "lesson": {
+      "introduction": "Un arbre binaire de recherche (BST - Binary Search Tree) est un arbre binaire ou chaque noeud respecte la propriete suivante : tous les elements du sous-arbre gauche sont inferieurs au noeud, et tous les elements du sous-arbre droit sont superieurs ou egaux. Cette propriete permet une recherche efficace en O(log n) dans le cas moyen. L'insertion doit maintenir cette propriete en placant chaque nouvel element au bon endroit.",
+      "steps": [
+        {
+          "id": 1,
+          "title": "Propriete du BST",
+          "content": "Dans un BST, pour chaque noeud :\n- Tous les noeuds du sous-arbre **gauche** ont une valeur **inferieure**\n- Tous les noeuds du sous-arbre **droit** ont une valeur **superieure ou egale**\n\nCette propriete doit etre vraie pour **tous** les noeuds, pas seulement la racine.",
+          "codeExample": "//        5          <- racine\n//       / \\\n//      3   8        <- 3 < 5, 8 >= 5\n//     / \\   \\\n//    1   4   9      <- 1 < 3, 4 >= 3, 9 >= 8\n\n// Insertion de 6 :\n//        5\n//       / \\\n//      3   8\n//     / \\  / \\\n//    1  4 6   9     <- 6 < 8, va a gauche de 8",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Ou serait insere la valeur 2 dans l'arbre ci-dessus ?",
+            "starterCode": "// Arbre : 5(3(1,4),8(6,9))\n// Insertion de 2 :\n// 2 < 5 -> gauche\n// 2 < 3 -> gauche\n// 2 > 1 -> ???",
+            "solution": "// 2 < 5 -> gauche\n// 2 < 3 -> gauche\n// 2 > 1 -> droite (enfant droit de 1)\n// Resultat : 5(3(1(NULL,2),4),8(6,9))"
+          }
+        },
+        {
+          "id": 2,
+          "title": "Le double pointeur pour la racine",
+          "content": "On utilise un double pointeur **t_btree \\*\\*root** pour pouvoir modifier la racine elle-meme. Si l'arbre est vide (*root == NULL), on cree directement la racine. Sans double pointeur, la modification ne serait pas visible a l'appelant.\n\nC'est le meme principe que pour modifier un pointeur en C : il faut passer son adresse.",
+          "codeExample": "// Sans double pointeur : NE MARCHE PAS\nvoid\tinsert_bad(t_btree *root, void *item)\n{\n\tif (!root)\n\t\troot = ft_btree_create(item); // Modifie la copie locale !\n}\n\n// Avec double pointeur : MARCHE\nvoid\tinsert_good(t_btree **root, void *item)\n{\n\tif (!*root)\n\t\t*root = ft_btree_create(item); // Modifie le vrai pointeur\n}",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Pourquoi faut-il un double pointeur pour inserer dans un arbre vide ?",
+            "starterCode": "t_btree *root = NULL;\n// insert_bad(root, item); -> root est toujours ???\n// insert_good(&root, item); -> root est ???",
+            "solution": "// insert_bad(root, item); -> root est toujours NULL\n// (la copie locale est modifiee, pas root)\n// insert_good(&root, item); -> root pointe vers le nouveau noeud\n// (on passe l'adresse de root, donc *root modifie root)"
+          }
+        },
+        {
+          "id": 3,
+          "title": "Fonction de comparaison generique",
+          "content": "Pour rendre l'insertion generique, on utilise une **fonction de comparaison** passee en parametre. Elle prend deux void* et retourne :\n- Negatif si a < b\n- Zero si a == b\n- Positif si a > b\n\nComme strcmp, mais pour n'importe quel type.",
+          "codeExample": "// Comparaison d'entiers\nint\tcmp_int(void *a, void *b)\n{\n\treturn (*(int *)a - *(int *)b);\n}\n\n// Comparaison de chaines\nint\tcmp_str(void *a, void *b)\n{\n\treturn (strcmp((char *)a, (char *)b));\n}\n\n// Utilisation :\nft_btree_insert(&root, &val, cmp_int);",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Ecris une fonction de comparaison pour des entiers.",
+            "starterCode": "int\tcmp_int(void *a, void *b)\n{\n\t// Cast et compare\n\treturn (???);\n}",
+            "solution": "int\tcmp_int(void *a, void *b)\n{\n\treturn (*(int *)a - *(int *)b);\n}"
+          }
+        },
+        {
+          "id": 4,
+          "title": "L'insertion recursive complete",
+          "content": "L'algorithme recursif est elegant :\n1. Si le noeud courant est NULL, creer un nouveau noeud\n2. Si item < noeud courant, inserer a gauche\n3. Sinon, inserer a droite\n\nChaque appel recursif descend d'un niveau dans l'arbre.",
+          "codeExample": "void\tft_btree_insert(t_btree **root, void *item,\n\t\tint (*cmp)(void *, void *))\n{\n\tif (!*root)\n\t{\n\t\t*root = ft_btree_create(item);\n\t\treturn ;\n\t}\n\tif (cmp(item, (*root)->item) < 0)\n\t\tft_btree_insert(&(*root)->left, item, cmp);\n\telse\n\t\tft_btree_insert(&(*root)->right, item, cmp);\n}",
+          "language": "c"
+        }
+      ]
+    },
+    "theory": [
+      {
+        "title": "Arbre binaire de recherche (BST)",
+        "content": "Un BST est un arbre binaire avec une propriete d'ordre : pour tout noeud, les valeurs a gauche sont inferieures et celles a droite sont superieures. Cela permet une recherche en O(log n) dans le cas equilibre, mais O(n) dans le pire cas (arbre degenere en liste).",
+        "codeExamples": [
+          {
+            "title": "BST equilibre vs degenere",
+            "code": "// BST equilibre (hauteur log n) :\n//        5\n//       / \\\n//      3   8\n//     / \\   \\\n//    1   4   9\n// Recherche de 4 : 3 comparaisons\n\n// BST degenere (hauteur n) :\n// 1\n//  \\\n//   3\n//    \\\n//     4\n//      \\\n//       5\n// Recherche de 5 : 4 comparaisons (comme une liste)",
+            "explanation": "L'ordre d'insertion determine la forme de l'arbre. Inserer des elements tries donne un arbre degenere."
+          }
+        ],
+        "keyPoints": [
+          "Propriete BST : gauche < noeud <= droite (pour tout noeud)",
+          "Recherche en O(log n) si equilibre, O(n) si degenere",
+          "L'ordre d'insertion influence la forme de l'arbre",
+          "Un parcours infixe d'un BST donne les elements tries"
+        ],
+        "commonMistakes": [
+          "Inserer des elements deja tries (cree un arbre degenere, perd l'avantage du BST)",
+          "Confondre la propriete locale (enfants directs) et globale (tous les descendants)",
+          "Oublier de gerer les doublons (convention : a droite ou a gauche)"
+        ]
+      },
+      {
+        "title": "Pointeurs de fonction en C",
+        "content": "Un pointeur de fonction stocke l'adresse d'une fonction. La syntaxe est : type_retour (*nom)(params). On peut passer un pointeur de fonction en parametre pour rendre une fonction generique, comme qsort de la stdlib.",
+        "codeExamples": [
+          {
+            "title": "Declaration et utilisation de pointeurs de fonction",
+            "code": "// Declaration d'un pointeur de fonction\nint\t(*cmp)(void *, void *);\n\n// Assignation\ncmp = cmp_int;\n\n// Appel\nint result = cmp(&a, &b);\n\n// En parametre de fonction\nvoid\tinsert(t_btree **root, void *item,\n\t\tint (*cmp)(void *, void *))\n{\n\tif (cmp(item, (*root)->item) < 0)\n\t\t// va a gauche\n}",
+            "explanation": "Le nom de la fonction sans parentheses donne son adresse. On l'appelle comme une fonction normale."
+          }
+        ],
+        "keyPoints": [
+          "Syntaxe : type_retour (*nom)(params) pour declarer un pointeur de fonction",
+          "Le nom d'une fonction sans () est un pointeur vers cette fonction",
+          "On appelle un pointeur de fonction comme une fonction normale : cmp(a, b)",
+          "Permet de creer des fonctions generiques (tri, recherche, insertion)"
+        ],
+        "commonMistakes": [
+          "Oublier les parentheses autour de *nom : int *cmp() declare une fonction, pas un pointeur",
+          "Passer des arguments du mauvais type a la fonction pointee",
+          "Ne pas verifier que le pointeur de fonction n'est pas NULL avant l'appel"
+        ]
+      },
+      {
+        "title": "Double pointeur et modification de pointeur",
+        "content": "En C, les parametres sont passes par copie. Pour modifier un pointeur dans une fonction, il faut passer un pointeur vers ce pointeur (double pointeur). C'est essentiel pour les fonctions qui modifient la tete d'une liste ou la racine d'un arbre.",
+        "codeExamples": [
+          {
+            "title": "Pourquoi le double pointeur est necessaire",
+            "code": "void\tmodif_simple(int *p)\n{\n\tp = malloc(sizeof(int)); // Modifie la copie locale\n}\n\nvoid\tmodif_double(int **p)\n{\n\t*p = malloc(sizeof(int)); // Modifie le vrai pointeur\n}\n\nint\tmain(void)\n{\n\tint\t*ptr = NULL;\n\tmodif_simple(ptr);  // ptr est toujours NULL\n\tmodif_double(&ptr); // ptr pointe vers la memoire allouee\n}",
+            "explanation": "modif_simple recoit une copie du pointeur. modif_double recoit l'adresse du pointeur."
+          }
+        ],
+        "keyPoints": [
+          "Pour modifier un pointeur, il faut passer son adresse (&ptr -> int **)",
+          "Dans la fonction, *ptr accede au pointeur original",
+          "Pattern courant pour les listes/arbres : void insert(t_node **head, ...)",
+          "L'alternative est de retourner le nouveau pointeur (t_node *insert(t_node *head, ...))"
+        ],
+        "commonMistakes": [
+          "Utiliser un simple pointeur et se demander pourquoi la racine reste NULL",
+          "Confondre *root (le pointeur racine) et **root (l'adresse du pointeur racine)",
+          "Oublier & lors de l'appel : insert(root) au lieu de insert(&root)"
+        ]
+      },
+      {
+        "title": "Complexite de l'insertion dans un BST",
+        "content": "L'insertion dans un BST a une complexite qui depend de la hauteur de l'arbre. Dans le meilleur cas (arbre equilibre), c'est O(log n). Dans le pire cas (arbre degenere), c'est O(n). Pour garantir O(log n), on utilise des arbres equilibres (AVL, rouge-noir).",
+        "codeExamples": [
+          {
+            "title": "Impact de l'ordre d'insertion",
+            "code": "// Insertion dans l'ordre : 1, 2, 3, 4, 5\n// Resultat : arbre degenere (liste)\n// 1 -> 2 -> 3 -> 4 -> 5\n// Hauteur = 4, insertion = O(n)\n\n// Insertion : 3, 1, 5, 2, 4\n// Resultat : arbre equilibre\n//       3\n//      / \\\n//     1   5\n//      \\ /\n//      2 4\n// Hauteur = 2, insertion = O(log n)",
+            "explanation": "Inserer des elements dans un ordre aleatoire tend a produire un arbre plus equilibre."
+          }
+        ],
+        "keyPoints": [
+          "Insertion BST : O(h) ou h est la hauteur de l'arbre",
+          "Meilleur cas (equilibre) : h = log2(n), donc O(log n)",
+          "Pire cas (degenere) : h = n - 1, donc O(n)",
+          "Les arbres AVL et rouge-noir garantissent h = O(log n)"
+        ],
+        "commonMistakes": [
+          "Croire que l'insertion BST est toujours O(log n) (faux si degenere)",
+          "Inserer des elements tries sans shuffler (donne le pire cas)",
+          "Ne pas considerer la hauteur de l'arbre dans l'analyse de complexite"
+        ]
+      }
+    ],
+    "prepExercises": [
+      {
+        "id": 1,
+        "title": "Comparaison d'entiers",
+        "instruction": "Ecris une fonction de comparaison pour des entiers (style qsort).",
+        "starterCode": "int\tcmp_int(void *a, void *b)\n{\n\t// Compare deux entiers via void*\n}",
+        "solution": "int\tcmp_int(void *a, void *b)\n{\n\treturn (*(int *)a - *(int *)b);\n}",
+        "hint": "Cast en int*, dereference, et soustrait : *(int *)a - *(int *)b.",
+        "difficulty": 1
+      },
+      {
+        "id": 2,
+        "title": "Insertion dans un arbre vide",
+        "instruction": "Ecris le code pour inserer un element dans un arbre vide (cas de base).",
+        "starterCode": "void\tinsert_empty(t_btree **root, void *item)\n{\n\t// Si *root est NULL, cree le noeud\n}",
+        "solution": "void\tinsert_empty(t_btree **root, void *item)\n{\n\tif (!*root)\n\t\t*root = ft_btree_create(item);\n}",
+        "hint": "Teste *root (pas root). Si NULL, cree avec ft_btree_create.",
+        "difficulty": 1
+      },
+      {
+        "id": 3,
+        "title": "Choisir gauche ou droite",
+        "instruction": "Ecris le code qui decide si on va a gauche ou a droite selon cmp.",
+        "starterCode": "// root n'est pas NULL\nif (cmp(item, (*root)->item) < 0)\n\t// aller a ???\nelse\n\t// aller a ???",
+        "solution": "if (cmp(item, (*root)->item) < 0)\n\tft_btree_insert(&(*root)->left, item, cmp);\nelse\n\tft_btree_insert(&(*root)->right, item, cmp);",
+        "hint": "Si cmp < 0, l'element est plus petit : on va a gauche. Sinon a droite.",
+        "difficulty": 2
+      },
+      {
+        "id": 4,
+        "title": "Inserer dans un BST existant",
+        "instruction": "Trace l'insertion de 6 dans l'arbre BST : 5(3(1,4),8(NULL,9)).",
+        "starterCode": "// Arbre initial : 5(3(1,4),8(NULL,9))\n// Insertion de 6 :\n// 6 > 5 -> droite (8)\n// 6 < 8 -> gauche (???)\n// Resultat : ???",
+        "solution": "// 6 > 5 -> droite (8)\n// 6 < 8 -> gauche (NULL)\n// *root est NULL -> cree le noeud 6\n// Resultat : 5(3(1,4),8(6,9))",
+        "hint": "Descends dans l'arbre en comparant : droite si plus grand, gauche si plus petit.",
+        "difficulty": 2
+      },
+      {
+        "id": 5,
+        "title": "Gerer les doublons",
+        "instruction": "Que se passe-t-il quand on insere une valeur deja presente dans le BST ?",
+        "starterCode": "// BST : 5(3,8)\n// Insertion de 5 :\n// cmp(5, 5) = 0\n// 0 < 0 ? Non -> ???",
+        "solution": "// cmp(5, 5) = 0, ce n'est pas < 0\n// Donc on va a DROITE (else)\n// Le doublon est insere comme enfant droit\n// BST : 5(3,8(5,NULL)) ou selon l'implementation\n// Convention : doublons a droite",
+        "hint": "Quand cmp retourne 0, la condition < 0 est fausse, on va dans le else (droite).",
+        "difficulty": 2
+      },
+      {
+        "id": 6,
+        "title": "Construire un BST par insertions",
+        "instruction": "Dessine le BST obtenu en inserant : 5, 3, 8, 1, 4.",
+        "starterCode": "// Insertion 5 : racine = 5\n// Insertion 3 : 3 < 5 -> gauche\n// Insertion 8 : 8 > 5 -> droite\n// Insertion 1 : ???\n// Insertion 4 : ???",
+        "solution": "// 5 : racine\n// 3 < 5 : gauche de 5\n// 8 > 5 : droite de 5\n// 1 < 5, 1 < 3 : gauche de 3\n// 4 < 5, 4 > 3 : droite de 3\n// Resultat : 5(3(1,4),8)",
+        "hint": "Pour chaque element, descends depuis la racine en comparant.",
+        "difficulty": 2
+      }
+    ]
+  },
+  "starterCode": "#include <stdlib.h>\n\ntypedef struct s_btree\n{\n\tvoid\t\t\t*item;\n\tstruct s_btree\t*left;\n\tstruct s_btree\t*right;\n}\t\t\t\t\tt_btree;\n\nt_btree\t*ft_btree_create(void *item);\n\nvoid\tft_btree_insert(t_btree **root, void *item,\n\t\tint (*cmp)(void *, void *))\n{\n\t// Si arbre vide, cree la racine\n\t// Sinon compare et insere a gauche ou droite\n\t(void)root;\n\t(void)item;\n\t(void)cmp;\n}",
+  "solution": "#include <stdlib.h>\n\ntypedef struct s_btree\n{\n\tvoid\t\t\t*item;\n\tstruct s_btree\t*left;\n\tstruct s_btree\t*right;\n}\t\t\t\t\tt_btree;\n\nt_btree\t*ft_btree_create(void *item)\n{\n\tt_btree\t*node;\n\n\tnode = malloc(sizeof(t_btree));\n\tif (!node)\n\t\treturn (NULL);\n\tnode->item = item;\n\tnode->left = NULL;\n\tnode->right = NULL;\n\treturn (node);\n}\n\nvoid\tft_btree_insert(t_btree **root, void *item,\n\t\tint (*cmp)(void *, void *))\n{\n\tif (!*root)\n\t{\n\t\t*root = ft_btree_create(item);\n\t\treturn ;\n\t}\n\tif (cmp(item, (*root)->item) < 0)\n\t\tft_btree_insert(&(*root)->left, item, cmp);\n\telse\n\t\tft_btree_insert(&(*root)->right, item, cmp);\n}",
+  "hints": [
+    "Utilise un double pointeur (t_btree **root) pour pouvoir modifier la racine quand l'arbre est vide.",
+    "Le cas de base est *root == NULL : cree un nouveau noeud avec ft_btree_create.",
+    "Si cmp(item, (*root)->item) < 0, insere recursivement a gauche, sinon a droite."
+  ],
+  "testCases": [
+    {
+      "id": 1,
+      "description": "Insertion dans un arbre vide puis parcours",
+      "stdin": "",
+      "expectedStdout": "1 3 4 5 8\n",
+      "expectedExitCode": 0,
+      "visible": true
+    },
+    {
+      "id": 2,
+      "description": "Insertion de doublons",
+      "stdin": "",
+      "expectedStdout": "3 5 5 8\n",
+      "expectedExitCode": 0,
+      "visible": false
+    },
+    {
+      "id": 3,
+      "description": "Insertion dans l'ordre (arbre degenere)",
+      "stdin": "",
+      "expectedStdout": "1 2 3 4 5\n",
+      "expectedExitCode": 0,
+      "visible": false
+    }
+  ],
+  "constraints": {
+    "allowedFunctions": ["malloc", "free"],
+    "forbiddenFunctions": ["calloc", "realloc", "printf"],
+    "maxExecutionTime": 5000,
+    "maxMemory": 128
+  },
+  "relatedExercises": ["c-day61-ex00-ft-btree-create", "c-day61-ex02-ft-btree-search"],
+  "resources": [
+    {
+      "title": "Arbre binaire de recherche - Insertion",
+      "url": "https://www.geeksforgeeks.org/binary-search-tree-set-1-search-and-insertion/",
+      "type": "documentation"
+    },
+    {
+      "title": "Pointeurs de fonction en C",
+      "url": "https://www.learn-c.org/en/Function_Pointers",
+      "type": "article"
+    }
+  ]
+}

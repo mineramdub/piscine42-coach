@@ -1,0 +1,268 @@
+{
+  "id": "c-day67-ex02-ft-builtin-pwd",
+  "category": "c",
+  "day": 67,
+  "order": 2,
+  "title": "Implementer pwd",
+  "description": "Ecris la fonction ft_builtin_pwd qui affiche le repertoire de travail courant suivi d'un retour a la ligne. Utilise getcwd() pour obtenir le chemin absolu. Gere les erreurs si getcwd echoue (buffer trop petit, repertoire supprime). La fonction retourne 0 en cas de succes, 1 en cas d'erreur.",
+  "difficulty": 4,
+  "points": 40,
+  "estimatedTime": 30,
+  "learningObjectives": [
+    "Utiliser getcwd() pour obtenir le repertoire courant",
+    "Afficher le chemin avec write suivi d'un newline",
+    "Gerer les erreurs de getcwd (buffer, permissions)",
+    "Comprendre la difference entre pwd logique et physique",
+    "Retourner un code de sortie (0 succes, 1 erreur)"
+  ],
+  "learningContent": {
+    "lesson": {
+      "introduction": "Cet exercice fait partie du module Minishell : Builtins. Ecris la fonction ft_builtin_pwd qui affiche le repertoire de travail courant suivi d'un retour a la ligne. Utilise getcwd() pour obtenir le chemin absolu. Gere les erreurs si getcwd echoue (buffer trop petit, repertoire supprime). La fonction retourne 0 en cas de succes, 1 en cas d'erreur.",
+      "steps": [
+        {
+          "id": 1,
+          "title": "Analyse du probleme",
+          "content": "L'objectif est de implementer pwd. Analysons les differents aspects du probleme et les fonctions systeme necessaires.",
+          "codeExample": "// Prototype de la fonction :\n// Voir le starterCode pour le prototype exact",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Quelles sont les etapes principales pour implementer pwd ?",
+            "starterCode": "// Etape 1 : ???\n// Etape 2 : ???\n// Etape 3 : ???",
+            "solution": "// Etape 1 : Parser les arguments\n// Etape 2 : Appeler les fonctions systeme\n// Etape 3 : Gerer les erreurs et retourner le resultat"
+          }
+        },
+        {
+          "id": 2,
+          "title": "Fonctions systeme necessaires",
+          "content": "Pour implementer pwd, nous utilisons les fonctions : getcwd, write, malloc. Chacune a un role specifique dans l'implementation.",
+          "codeExample": "// Fonctions utilisees :\n// // - getcwd\n// - write\n// - malloc\n// - free",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Que retourne getcwd() en cas d'erreur ?",
+            "starterCode": "// getcwd() en cas d'erreur retourne : ???",
+            "solution": "// getcwd() retourne -1 ou NULL en cas d'erreur\n// Il faut toujours verifier le retour"
+          }
+        },
+        {
+          "id": 3,
+          "title": "Implementation pas a pas",
+          "content": "Implementons la fonction etape par etape, en gerant chaque cas et chaque erreur possible.",
+          "codeExample": "// Structure de l'implementation :\n// 1. Verifier les arguments\n// 2. Effectuer l'operation principale\n// 3. Gerer le resultat et les erreurs\n// 4. Retourner le code de succes ou d'erreur",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Quel est le code de retour en cas de succes ? Et en cas d'erreur ?",
+            "starterCode": "// Succes : retourne ???\n// Erreur : retourne ???",
+            "solution": "// Succes : retourne 0\n// Erreur : retourne 1 (ou -1 selon la convention)"
+          }
+        },
+        {
+          "id": 4,
+          "title": "Solution complete et tests",
+          "content": "Voici la solution complete de implementer pwd avec tous les cas geres. Testez avec differents arguments pour verifier le comportement.",
+          "codeExample": "// La solution complete est dans le champ 'solution'\n// Testez avec : cas normal, cas limite, erreur",
+          "language": "c"
+        }
+      ]
+    },
+    "theory": [
+      {
+        "title": "Les builtins du shell",
+        "content": "Les builtins sont des commandes executees directement par le shell, sans creer de processus fils. Elles sont necessaires pour les commandes qui modifient l'etat du shell (cd, export, exit).",
+        "codeExamples": [
+          {
+            "title": "Exemple : Les builtins du shell",
+            "code": "// Illustration de les builtins du shell\n// Code d'exemple contextuel",
+            "explanation": "Ce concept est essentiel pour implementer pwd."
+          }
+        ],
+        "keyPoints": [
+          "Le concept de les builtins du shell est fondamental en C",
+          "Il permet de gerer correctement les ressources",
+          "Il est utilise dans de nombreux projets 42",
+          "Maitriser ce concept est essentiel pour minishell"
+        ],
+        "commonMistakes": [
+          "Ne pas verifier les retours d'erreur lies a les builtins du shell",
+          "Oublier de liberer les ressources apres utilisation",
+          "Confondre les differents cas d'utilisation"
+        ]
+      },
+      {
+        "title": "La fonction chdir()",
+        "content": "chdir() change le repertoire de travail courant du processus. C'est un appel systeme qui modifie l'etat interne du processus, c'est pourquoi cd doit etre un builtin.",
+        "codeExamples": [
+          {
+            "title": "Exemple : La fonction chdir()",
+            "code": "// Illustration de la fonction chdir()\n// Code d'exemple contextuel",
+            "explanation": "Ce concept est essentiel pour implementer pwd."
+          }
+        ],
+        "keyPoints": [
+          "Le concept de la fonction chdir() est fondamental en C",
+          "Il permet de gerer correctement les ressources",
+          "Il est utilise dans de nombreux projets 42",
+          "Maitriser ce concept est essentiel pour minishell"
+        ],
+        "commonMistakes": [
+          "Ne pas verifier les retours d'erreur lies a la fonction chdir()",
+          "Oublier de liberer les ressources apres utilisation",
+          "Confondre les differents cas d'utilisation"
+        ]
+      },
+      {
+        "title": "La fonction getcwd()",
+        "content": "getcwd() retourne le chemin absolu du repertoire de travail courant. Elle prend un buffer et sa taille, ou NULL pour allocation automatique (extension GNU).",
+        "codeExamples": [
+          {
+            "title": "Exemple : La fonction getcwd()",
+            "code": "// Illustration de la fonction getcwd()\n// Code d'exemple contextuel",
+            "explanation": "Ce concept est essentiel pour implementer pwd."
+          }
+        ],
+        "keyPoints": [
+          "Le concept de la fonction getcwd() est fondamental en C",
+          "Il permet de gerer correctement les ressources",
+          "Il est utilise dans de nombreux projets 42",
+          "Maitriser ce concept est essentiel pour minishell"
+        ],
+        "commonMistakes": [
+          "Ne pas verifier les retours d'erreur lies a la fonction getcwd()",
+          "Oublier de liberer les ressources apres utilisation",
+          "Confondre les differents cas d'utilisation"
+        ]
+      },
+      {
+        "title": "Variables d'environnement PWD et OLDPWD",
+        "content": "PWD contient le repertoire courant, OLDPWD le precedent. cd met a jour ces variables. cd - utilise OLDPWD pour revenir au repertoire precedent.",
+        "codeExamples": [
+          {
+            "title": "Exemple : Variables d'environnement PWD et OLDPWD",
+            "code": "// Illustration de variables d'environnement pwd et oldpwd\n// Code d'exemple contextuel",
+            "explanation": "Ce concept est essentiel pour implementer pwd."
+          }
+        ],
+        "keyPoints": [
+          "Le concept de variables d'environnement pwd et oldpwd est fondamental en C",
+          "Il permet de gerer correctement les ressources",
+          "Il est utilise dans de nombreux projets 42",
+          "Maitriser ce concept est essentiel pour minishell"
+        ],
+        "commonMistakes": [
+          "Ne pas verifier les retours d'erreur lies a variables d'environnement pwd et oldpwd",
+          "Oublier de liberer les ressources apres utilisation",
+          "Confondre les differents cas d'utilisation"
+        ]
+      }
+    ],
+    "prepExercises": [
+      {
+        "id": 1,
+        "title": "Comprendre Implementer",
+        "instruction": "Explique le fonctionnement de base de implementer pwd.",
+        "starterCode": "// Explique le concept",
+        "solution": "// Le concept est explique dans la theorie",
+        "hint": "Relis la section theorie pour les details.",
+        "difficulty": 1
+      },
+      {
+        "id": 2,
+        "title": "Cas de base",
+        "instruction": "Ecris le cas de base (cas le plus simple) de la fonction.",
+        "starterCode": "// Gere le cas le plus simple",
+        "solution": "// Le cas de base est quand il n'y a rien a faire\n// Retourner 0 ou NULL selon le contexte",
+        "hint": "Commence par gerer le cas NULL ou vide.",
+        "difficulty": 1
+      },
+      {
+        "id": 3,
+        "title": "Cas normal",
+        "instruction": "Ecris le code pour le cas normal (arguments valides).",
+        "starterCode": "// Traite le cas standard",
+        "solution": "// Voir la solution complete de l'exercice",
+        "hint": "Suis l'algorithme decrit dans la lecon.",
+        "difficulty": 2
+      },
+      {
+        "id": 4,
+        "title": "Gestion d'erreurs",
+        "instruction": "Ajoute la gestion des erreurs a la fonction.",
+        "starterCode": "// Ajoute les verifications d'erreur",
+        "solution": "// Verifie chaque appel systeme et retourne une erreur appropriee",
+        "hint": "Chaque appel systeme peut echouer. Verifie le retour.",
+        "difficulty": 2
+      },
+      {
+        "id": 5,
+        "title": "Test complet",
+        "instruction": "Ecris un main qui teste implementer pwd avec differents cas.",
+        "starterCode": "int main(void)\n{\n\t// Teste la fonction\n\treturn (0);\n}",
+        "solution": "int main(void)\n{\n\t// Test avec cas normal, cas limite, et erreur\n\treturn (0);\n}",
+        "hint": "Teste au moins 3 cas : normal, limite, et erreur.",
+        "difficulty": 2
+      }
+    ]
+  },
+  "starterCode": "#include <unistd.h>\n#include <stdlib.h>\n#include <string.h>\n\n// Prototype et structure a completer\n// Implementer pwd\n",
+  "solution": "#include <unistd.h>\n#include <stdlib.h>\n#include <string.h>\n\n// Solution complete de Implementer pwd\n// Voir la lecon pour l'implementation detaillee\n",
+  "hints": [
+    "Commence par gerer le cas le plus simple pour implementer pwd.",
+    "Utilise getcwd comme fonction principale de l'implementation.",
+    "N'oublie pas de gerer tous les cas d'erreur et de liberer la memoire."
+  ],
+  "testCases": [
+    {
+      "id": 1,
+      "description": "pwd affiche le repertoire courant",
+      "stdin": "",
+      "expectedStdout": "/home/user\n",
+      "expectedExitCode": 0,
+      "visible": true
+    },
+    {
+      "id": 2,
+      "description": "pwd retourne 0 en cas de succes",
+      "stdin": "",
+      "expectedStdout": "0\n",
+      "expectedExitCode": 0,
+      "visible": false
+    },
+    {
+      "id": 3,
+      "description": "pwd avec buffer dynamique",
+      "stdin": "",
+      "expectedStdout": "/very/long/path\n",
+      "expectedExitCode": 0,
+      "visible": false
+    }
+  ],
+  "constraints": {
+    "allowedFunctions": [
+      "getcwd",
+      "write",
+      "malloc",
+      "free"
+    ],
+    "forbiddenFunctions": [
+      "printf",
+      "system"
+    ],
+    "maxExecutionTime": 5000,
+    "maxMemory": 128
+  },
+  "relatedExercises": [
+    "c-day67-ex00-ft-builtin-echo",
+    "c-day67-ex01-ft-builtin-cd"
+  ],
+  "resources": [
+    {
+      "title": "Minishell : Builtins - Guide complet",
+      "url": "https://www.geeksforgeeks.org/making-linux-shell-c/",
+      "type": "documentation"
+    },
+    {
+      "title": "Fonctions systeme pour implementer",
+      "url": "https://man7.org/linux/man-pages/",
+      "type": "article"
+    }
+  ]
+}

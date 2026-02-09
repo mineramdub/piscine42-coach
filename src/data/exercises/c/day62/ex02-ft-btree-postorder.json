@@ -1,0 +1,257 @@
+{
+  "id": "c-day62-ex02-ft-btree-postorder",
+  "category": "c",
+  "day": 62,
+  "order": 2,
+  "title": "Parcours postfixe d'un arbre binaire",
+  "description": "Ecris la fonction ft_btree_postorder qui effectue un parcours postfixe (post-order) d'un arbre binaire. La fonction prend la racine et une fonction void (*f)(void *) a appliquer a chaque element. Le parcours postfixe visite d'abord le sous-arbre gauche, puis le sous-arbre droit, puis le noeud courant. Ce parcours est essentiel pour liberer la memoire d'un arbre car les enfants sont traites avant le parent.",
+  "difficulty": 4,
+  "points": 40,
+  "estimatedTime": 30,
+  "learningObjectives": [
+    "Comprendre le parcours postfixe (gauche, droite, racine)",
+    "Savoir pourquoi le postfixe est necessaire pour la liberation memoire",
+    "Differencier les trois parcours en profondeur (in/pre/post)",
+    "Implementer le pattern GDR (Gauche, Droite, Racine)",
+    "Comprendre l'evaluation d'expressions en notation postfixe"
+  ],
+  "learningContent": {
+    "lesson": {
+      "introduction": "Le parcours postfixe (post-order) est le dernier des trois parcours en profondeur. Il traite le noeud courant APRES ses enfants, suivant l'ordre Gauche, Droite, Racine (GDR). C'est le parcours le plus important pour les operations de nettoyage : quand on libere un arbre, il faut d'abord liberer les enfants avant le parent, sinon on perd les references aux enfants et on cree des fuites memoire.",
+      "steps": [
+        {
+          "id": 1,
+          "title": "Ordre du parcours postfixe",
+          "content": "Le parcours postfixe suit l'ordre **Gauche - Droite - Racine** (GDR) :\n1. Descendre recursivement dans le sous-arbre gauche\n2. Descendre recursivement dans le sous-arbre droit\n3. Traiter le noeud courant EN DERNIER\n\nLe mot **postfixe** signifie que la racine est traitee **apres** les sous-arbres.",
+          "codeExample": "//        5\n//       / \\\n//      3   8\n//     / \\   \\\n//    1   4   9\n\n// Parcours postfixe : 1, 4, 3, 9, 8, 5\n// (la racine est toujours en dernier)\n\n// Detail :\n// gauche(5) -> gauche(3) -> gauche(1) -> NULL\n//   droite(1) -> NULL\n//   visite 1\n//   droite(3) -> gauche(4)->NULL, droite(4)->NULL\n//   visite 4\n//   visite 3\n// droite(5) -> gauche(8)->NULL\n//   droite(8) -> visite 9\n//   visite 8\n// visite 5 (en dernier)",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Quel est le parcours postfixe de l'arbre 10(5(2,7),15(12,20)) ?",
+            "starterCode": "//       10\n//      /  \\\n//     5   15\n//    / \\  / \\\n//   2  7 12 20\n// Postfixe : ???",
+            "solution": "// Postfixe : 2, 7, 5, 12, 20, 15, 10\n// Les feuilles d'abord, la racine en dernier"
+          }
+        },
+        {
+          "id": 2,
+          "title": "Pourquoi le postfixe pour la liberation",
+          "content": "Quand on libere un arbre, il faut liberer les enfants AVANT le parent. Si on libere le parent d'abord, on perd les pointeurs vers les enfants et on ne peut plus les liberer (fuite memoire).\n\nLe parcours postfixe garantit cet ordre naturellement.",
+          "codeExample": "// MAUVAIS : liberer le parent d'abord\nvoid\tbad_free(t_btree *root)\n{\n\tfree(root);          // On perd root->left et root->right !\n\tbad_free(root->left);  // SEGFAULT : root est libere\n}\n\n// BON : parcours postfixe\nvoid\tgood_free(t_btree *root)\n{\n\tif (!root) return ;\n\tgood_free(root->left);  // Libere le sous-arbre gauche\n\tgood_free(root->right); // Libere le sous-arbre droit\n\tfree(root);              // Libere le noeud (enfants deja liberes)\n}",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Dans quel ordre sont liberes les noeuds de l'arbre 5(3,8) avec le postfixe ?",
+            "starterCode": "//   5\n//  / \\\n// 3   8\n// Ordre de liberation : ???",
+            "solution": "// 1. free(3) - feuille gauche\n// 2. free(8) - feuille droite\n// 3. free(5) - racine (ses enfants sont deja liberes)\n// Pas de fuite memoire !"
+          }
+        },
+        {
+          "id": 3,
+          "title": "Implementation du parcours postfixe",
+          "content": "L'implementation suit le meme pattern que les autres parcours, avec f(root->item) en derniere position. Les trois parcours ne different que par la position de cette ligne.",
+          "codeExample": "// Les trois parcours cote a cote :\n\n// PREFIXE (RGD)\nf(root->item);              // R\npreorder(root->left, f);    // G\npreorder(root->right, f);   // D\n\n// INFIXE (GRD)\ninorder(root->left, f);     // G\nf(root->item);              // R\ninorder(root->right, f);    // D\n\n// POSTFIXE (GDR)\npostorder(root->left, f);   // G\npostorder(root->right, f);  // D\nf(root->item);              // R",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Complete le postfixe en placant f() au bon endroit.",
+            "starterCode": "void\tpostorder(t_btree *root, void (*f)(void *))\n{\n\tif (!root) return ;\n\t// Ou placer f(root->item) ?\n\tpostorder(root->left, f);\n\tpostorder(root->right, f);\n}",
+            "solution": "void\tpostorder(t_btree *root, void (*f)(void *))\n{\n\tif (!root) return ;\n\tpostorder(root->left, f);\n\tpostorder(root->right, f);\n\tf(root->item);  // En DERNIER !\n}"
+          }
+        },
+        {
+          "id": 4,
+          "title": "La fonction complete ft_btree_postorder",
+          "content": "Voici la fonction complete. Notez que f(root->item) est la derniere instruction du cas recursif. C'est ce qui garantit que les enfants sont traites avant le parent.\n\nAvec cette fonction et une fonction de liberation, on peut nettoyer un arbre entier sans fuite.",
+          "codeExample": "void\tft_btree_postorder(t_btree *root, void (*f)(void *))\n{\n\tif (!root)\n\t\treturn ;\n\tft_btree_postorder(root->left, f);\n\tft_btree_postorder(root->right, f);\n\tf(root->item);\n}\n\n// Utilisation pour liberer :\nvoid\tdel(void *item) { free(item); }\nft_btree_postorder(root, del);\n// Attention : il faut aussi free les noeuds eux-memes !",
+          "language": "c"
+        }
+      ]
+    },
+    "theory": [
+      {
+        "title": "Le parcours postfixe et la liberation memoire",
+        "content": "La liberation d'un arbre est l'application la plus courante du parcours postfixe. On doit liberer les enfants avant le parent car free() rend la memoire inaccessible. Si on libere le parent d'abord, on ne peut plus acceder a ses enfants.",
+        "codeExamples": [
+          {
+            "title": "Liberation complete d'un arbre",
+            "code": "void\tft_btree_free(t_btree *root, void (*del)(void *))\n{\n\tif (!root)\n\t\treturn ;\n\tft_btree_free(root->left, del);   // Libere sous-arbre gauche\n\tft_btree_free(root->right, del);  // Libere sous-arbre droit\n\tif (del)\n\t\tdel(root->item);               // Libere la donnee\n\tfree(root);                        // Libere le noeud\n}\n\n// Appel :\nft_btree_free(root, free); // Si item a ete malloc\nft_btree_free(root, NULL); // Si item n'a pas ete malloc",
+            "explanation": "del libere la donnee item, free libere le noeud lui-meme."
+          }
+        ],
+        "keyPoints": [
+          "Toujours liberer les enfants AVANT le parent (postfixe)",
+          "del(root->item) libere la donnee, free(root) libere le noeud",
+          "Si del est NULL, on ne libere pas item (donnees statiques)",
+          "Apres ft_btree_free, le pointeur root n'est plus valide"
+        ],
+        "commonMistakes": [
+          "Liberer le parent avant les enfants (perd les references -> leak)",
+          "Oublier de liberer item en plus du noeud (double allocation)",
+          "Utiliser root apres l'avoir libere (use-after-free)"
+        ]
+      },
+      {
+        "title": "Comparaison des trois parcours DFS",
+        "content": "Les trois parcours en profondeur visitent les memes noeuds mais dans un ordre different. Le choix du parcours depend de l'operation a effectuer. Chaque parcours a ses cas d'utilisation specifiques.",
+        "codeExamples": [
+          {
+            "title": "Resume des trois parcours et leurs usages",
+            "code": "// INFIXE (GRD) - visite triee\n// Usage : afficher les elements tries, verifier BST\n// Exemple : 1, 3, 4, 5, 8, 9\n\n// PREFIXE (RGD) - racine d'abord\n// Usage : copier un arbre, serialiser\n// Exemple : 5, 3, 1, 4, 8, 9\n\n// POSTFIXE (GDR) - racine en dernier\n// Usage : liberer un arbre, evaluer des expressions\n// Exemple : 1, 4, 3, 9, 8, 5",
+            "explanation": "Mnemonique : Infixe=Trie, Prefixe=Copie, Postfixe=Liberation."
+          }
+        ],
+        "keyPoints": [
+          "Les trois parcours ont la meme complexite O(n)",
+          "Infixe -> elements tries (BST), Prefixe -> copie, Postfixe -> liberation",
+          "Seule la position de f() change entre les trois implementations",
+          "Un seul parcours suffit rarement pour reconstruire un arbre unique"
+        ],
+        "commonMistakes": [
+          "Utiliser le mauvais parcours pour l'operation (ex: prefixe pour liberer)",
+          "Croire que l'infixe suffit pour reconstruire un arbre (il faut 2 parcours)",
+          "Confondre l'ordre GRD/RGD/GDR"
+        ]
+      },
+      {
+        "title": "Evaluation d'expressions postfixees",
+        "content": "Le parcours postfixe est lie a la notation postfixe (RPN - Reverse Polish Notation). Dans cette notation, les operandes precedent l'operateur. Un arbre d'expression evalue en postfixe donne le resultat correct sans parentheses.",
+        "codeExamples": [
+          {
+            "title": "Evaluation postfixe d'un arbre d'expression",
+            "code": "// Expression : (3 + 4) * 5\n// Arbre :\n//        *\n//       / \\\n//      +   5\n//     / \\\n//    3   4\n\n// Postfixe : 3 4 + 5 *\n// Evaluation avec une pile :\n// Lire 3 -> empiler [3]\n// Lire 4 -> empiler [3, 4]\n// Lire + -> depiler 4 et 3, empiler 3+4=7 [7]\n// Lire 5 -> empiler [7, 5]\n// Lire * -> depiler 5 et 7, empiler 7*5=35 [35]\n// Resultat : 35",
+            "explanation": "L'evaluation postfixe utilise une pile et ne necessite pas de parentheses."
+          }
+        ],
+        "keyPoints": [
+          "Le postfixe correspond a la notation polonaise inversee (RPN)",
+          "L'evaluation utilise une pile : empiler les operandes, depiler pour les operateurs",
+          "Pas besoin de parentheses ni de priorite d'operateurs",
+          "Les calculatrices HP utilisent cette notation"
+        ],
+        "commonMistakes": [
+          "Confondre l'ordre des operandes lors du depilage (a - b != b - a)",
+          "Oublier qu'un operateur binaire depile DEUX elements",
+          "Ne pas verifier que la pile a assez d'elements avant de depiler"
+        ]
+      },
+      {
+        "title": "Complexite spatiale des parcours recursifs",
+        "content": "Les parcours recursifs utilisent la pile d'appels, qui a une taille limitee. La profondeur maximale de recursion est egale a la hauteur de l'arbre. Pour un arbre tres desequilibre, cela peut causer un stack overflow.",
+        "codeExamples": [
+          {
+            "title": "Memoire utilisee par la recursion",
+            "code": "// Arbre equilibre de n noeuds :\n// Hauteur = log2(n)\n// Pile d'appels = O(log n)\n// Pour n = 1 000 000 : ~20 frames sur la pile\n\n// Arbre degenere de n noeuds :\n// Hauteur = n - 1\n// Pile d'appels = O(n)\n// Pour n = 1 000 000 : 1 000 000 frames !\n// => STACK OVERFLOW\n\n// Solution : version iterative avec pile explicite\n// ou equilibrer l'arbre (AVL, rouge-noir)",
+            "explanation": "La recursion est dangereuse sur les arbres desequilibres."
+          }
+        ],
+        "keyPoints": [
+          "La pile d'appels est limitee (typiquement 1-8 Mo)",
+          "Chaque appel recursif utilise une frame sur la pile (~quelques dizaines d'octets)",
+          "Arbre equilibre : O(log n) frames, arbre degenere : O(n) frames",
+          "Alternative : parcours iteratif avec une pile explicite (malloc)"
+        ],
+        "commonMistakes": [
+          "Ne pas considerer le risque de stack overflow pour les grands arbres",
+          "Croire que la recursion est toujours la meilleure approche",
+          "Oublier que la taille de la pile est limitee par le systeme"
+        ]
+      }
+    ],
+    "prepExercises": [
+      {
+        "id": 1,
+        "title": "Parcours postfixe a la main",
+        "instruction": "Donne le parcours postfixe de l'arbre 6(3(1,5),9(7,11)).",
+        "starterCode": "//      6\n//     / \\\n//    3   9\n//   / \\ / \\\n//  1  5 7  11\n// Postfixe : ???",
+        "solution": "// Postfixe : 1, 5, 3, 7, 11, 9, 6\n// Feuilles d'abord, racine en dernier",
+        "hint": "Gauche, Droite, Racine. Les feuilles sont toujours visitees avant leur parent.",
+        "difficulty": 1
+      },
+      {
+        "id": 2,
+        "title": "Ecrire ft_btree_postorder",
+        "instruction": "Complete la fonction ft_btree_postorder.",
+        "starterCode": "void\tft_btree_postorder(t_btree *root, void (*f)(void *))\n{\n\tif (!root)\n\t\treturn ;\n\t// Ordre GDR ?\n}",
+        "solution": "void\tft_btree_postorder(t_btree *root, void (*f)(void *))\n{\n\tif (!root)\n\t\treturn ;\n\tft_btree_postorder(root->left, f);\n\tft_btree_postorder(root->right, f);\n\tf(root->item);\n}",
+        "hint": "f(root->item) en DERNIER, apres les deux appels recursifs.",
+        "difficulty": 2
+      },
+      {
+        "id": 3,
+        "title": "Ordre de liberation",
+        "instruction": "Dans quel ordre les noeuds de l'arbre 5(3(1,4),8) sont-ils liberes en postfixe ?",
+        "starterCode": "//      5\n//     / \\\n//    3   8\n//   / \\\n//  1   4\n// Ordre de free : ???",
+        "solution": "// 1. free(1)\n// 2. free(4)\n// 3. free(3) (ses enfants 1 et 4 sont deja liberes)\n// 4. free(8)\n// 5. free(5) (ses enfants 3 et 8 sont deja liberes)",
+        "hint": "Postfixe : enfants d'abord, parent ensuite. Feuilles en premier.",
+        "difficulty": 2
+      },
+      {
+        "id": 4,
+        "title": "Les trois parcours",
+        "instruction": "Donne les trois parcours de l'arbre 5(2(1,3),7(6,8)).",
+        "starterCode": "//      5\n//     / \\\n//    2   7\n//   / \\ / \\\n//  1  3 6  8\n// Infixe   : ???\n// Prefixe  : ???\n// Postfixe : ???",
+        "solution": "// Infixe   : 1, 2, 3, 5, 6, 7, 8\n// Prefixe  : 5, 2, 1, 3, 7, 6, 8\n// Postfixe : 1, 3, 2, 6, 8, 7, 5",
+        "hint": "Infixe=GRD, Prefixe=RGD, Postfixe=GDR.",
+        "difficulty": 2
+      },
+      {
+        "id": 5,
+        "title": "Evaluer une expression postfixe",
+        "instruction": "Evalue l'expression postfixe : 3 4 + 2 *",
+        "starterCode": "// 3 4 + 2 *\n// Pile : []\n// Lire 3 -> pile = [3]\n// Lire 4 -> pile = [3, 4]\n// Lire + -> ???\n// Lire 2 -> ???\n// Lire * -> ???",
+        "solution": "// Lire 3 -> [3]\n// Lire 4 -> [3, 4]\n// Lire + -> depile 4 et 3, 3+4=7 -> [7]\n// Lire 2 -> [7, 2]\n// Lire * -> depile 2 et 7, 7*2=14 -> [14]\n// Resultat : 14",
+        "hint": "Operande -> empile. Operateur -> depile 2 valeurs, calcule, empile le resultat.",
+        "difficulty": 3
+      }
+    ]
+  },
+  "starterCode": "#include <stdlib.h>\n\ntypedef struct s_btree\n{\n\tvoid\t\t\t*item;\n\tstruct s_btree\t*left;\n\tstruct s_btree\t*right;\n}\t\t\t\t\tt_btree;\n\nvoid\tft_btree_postorder(t_btree *root, void (*f)(void *))\n{\n\t// Parcours postfixe : Gauche, Droite, Racine\n\t(void)root;\n\t(void)f;\n}",
+  "solution": "#include <stdlib.h>\n\ntypedef struct s_btree\n{\n\tvoid\t\t\t*item;\n\tstruct s_btree\t*left;\n\tstruct s_btree\t*right;\n}\t\t\t\t\tt_btree;\n\nvoid\tft_btree_postorder(t_btree *root, void (*f)(void *))\n{\n\tif (!root)\n\t\treturn ;\n\tft_btree_postorder(root->left, f);\n\tft_btree_postorder(root->right, f);\n\tf(root->item);\n}",
+  "hints": [
+    "Le parcours postfixe suit l'ordre Gauche, Droite, Racine (GDR).",
+    "Appelle f(root->item) APRES les deux appels recursifs.",
+    "Ce parcours est essentiel pour liberer un arbre : les enfants sont traites avant le parent."
+  ],
+  "testCases": [
+    {
+      "id": 1,
+      "description": "Parcours postfixe d'un BST",
+      "stdin": "",
+      "expectedStdout": "1 4 3 9 8 5\n",
+      "expectedExitCode": 0,
+      "visible": true
+    },
+    {
+      "id": 2,
+      "description": "Parcours postfixe d'un seul noeud",
+      "stdin": "",
+      "expectedStdout": "42\n",
+      "expectedExitCode": 0,
+      "visible": false
+    },
+    {
+      "id": 3,
+      "description": "Parcours postfixe d'un arbre vide",
+      "stdin": "",
+      "expectedStdout": "",
+      "expectedExitCode": 0,
+      "visible": false
+    }
+  ],
+  "constraints": {
+    "allowedFunctions": ["malloc", "free", "write"],
+    "forbiddenFunctions": ["printf"],
+    "maxExecutionTime": 5000,
+    "maxMemory": 128
+  },
+  "relatedExercises": ["c-day62-ex00-ft-btree-inorder", "c-day62-ex01-ft-btree-preorder"],
+  "resources": [
+    {
+      "title": "Parcours postfixe - Applications",
+      "url": "https://www.geeksforgeeks.org/tree-traversals-inorder-preorder-and-postorder/",
+      "type": "documentation"
+    },
+    {
+      "title": "Notation polonaise inversee (RPN)",
+      "url": "https://en.wikipedia.org/wiki/Reverse_Polish_notation",
+      "type": "article"
+    }
+  ]
+}

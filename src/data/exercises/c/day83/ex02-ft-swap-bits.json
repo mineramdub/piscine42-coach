@@ -1,0 +1,257 @@
+{
+  "id": "c-day83-ex02-ft-swap-bits",
+  "category": "c",
+  "day": 83,
+  "order": 2,
+  "title": "Echanger les demi-octets (nibbles)",
+  "description": "Implemente la fonction ft_swap_bits qui echange les 4 bits de poids fort et les 4 bits de poids faible d'un octet (unsigned char). Par exemple, 0b01000010 (0x42) devient 0b00100100 (0x24). Utilise les operateurs de decalage et les masques de bits.",
+  "difficulty": 4,
+  "points": 40,
+  "estimatedTime": 30,
+  "learningObjectives": [
+    "Comprendre la notion de nibble (demi-octet = 4 bits)",
+    "Isoler les parties haute et basse d'un octet avec des masques",
+    "Utiliser les decalages pour deplacer des groupes de bits",
+    "Combiner des operations bit-a-bit pour une transformation complexe",
+    "Comprendre la representation hexadecimale et sa relation avec les nibbles"
+  ],
+  "learningContent": {
+    "lesson": {
+      "introduction": "Un octet (8 bits) est divise en deux nibbles (demi-octets de 4 bits chacun). Le nibble de poids fort correspond aux bits 4-7, le nibble de poids faible aux bits 0-3. Echanger ces deux nibbles est une operation courante en cryptographie, dans les protocoles reseau (endianness au niveau du nibble), et dans la conversion hexadecimale. Chaque nibble correspond a un chiffre hexadecimal : 0x42 signifie nibble haut = 4 (0100), nibble bas = 2 (0010).",
+      "steps": [
+        {
+          "id": 1,
+          "title": "Nibbles et hexadecimal",
+          "content": "Un nibble est un groupe de 4 bits. Il peut prendre 16 valeurs (0-15), ce qui correspond exactement a un chiffre hexadecimal (0-F).\n\n**Un octet = 2 nibbles :**\n- Nibble haut (high nibble) : bits 7-4\n- Nibble bas (low nibble) : bits 3-0\n\n**Exemple :** 0x42 = 0100 0010\n- Nibble haut : 0100 = 4\n- Nibble bas : 0010 = 2",
+          "codeExample": "// Octet : 0x42 = 01000010\n// Nibble haut : 0100 = 4 (hex)\n// Nibble bas  : 0010 = 2 (hex)\n\n// Apres echange : 00100100 = 0x24\n// Nibble haut : 0010 = 2 (hex)\n// Nibble bas  : 0100 = 4 (hex)\n\n// La valeur hexadecimale est inversee : 0x42 -> 0x24\n// C'est un moyen simple de comprendre l'operation",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Quel est le resultat du swap de nibbles pour 0xAB ?",
+            "starterCode": "// 0xAB = 10101011\n// Nibble haut : 1010 = A\n// Nibble bas  : 1011 = B\n// Apres echange :\n// Nibble haut : ? = ?\n// Nibble bas  : ? = ?\n// Resultat : 0x??",
+            "solution": "// 0xAB = 10101011\n// Nibble haut : 1010 = A\n// Nibble bas  : 1011 = B\n// Apres echange :\n// Nibble haut : 1011 = B\n// Nibble bas  : 1010 = A\n// Resultat : 0xBA = 10111010"
+          }
+        },
+        {
+          "id": 2,
+          "title": "Isoler les nibbles avec des masques",
+          "content": "Pour echanger les nibbles, il faut d'abord les isoler :\n- **Masque pour nibble haut :** 0xF0 = 11110000\n- **Masque pour nibble bas :** 0x0F = 00001111\n\n`octet & 0xF0` garde uniquement les 4 bits de poids fort.\n`octet & 0x0F` garde uniquement les 4 bits de poids faible.",
+          "codeExample": "unsigned char\toctet = 0x42; // 01000010\n\n// Isoler le nibble haut :\nunsigned char high = octet & 0xF0; // 01000000\n// Isoler le nibble bas :\nunsigned char low = octet & 0x0F;  // 00000010\n\n// Decaler pour echanger :\n// high >> 4 : 01000000 >> 4 = 00000100\n// low << 4  : 00000010 << 4 = 00100000\n\n// Combiner :\n// (high >> 4) | (low << 4) = 00000100 | 00100000 = 00100100\n// = 0x24",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Pour l'octet 0xFF, que donnent high et low apres le masquage et le decalage ?",
+            "starterCode": "// 0xFF = 11111111\n// high = 0xFF & 0xF0 = ?\n// low  = 0xFF & 0x0F = ?\n// high >> 4 = ?\n// low << 4  = ?\n// Resultat  = ?",
+            "solution": "// 0xFF = 11111111\n// high = 0xFF & 0xF0 = 11110000\n// low  = 0xFF & 0x0F = 00001111\n// high >> 4 = 00001111\n// low << 4  = 11110000\n// Resultat  = 00001111 | 11110000 = 11111111 = 0xFF\n// Echanger 0xFF donne 0xFF (symetrique)"
+          }
+        },
+        {
+          "id": 3,
+          "title": "Implementation de ft_swap_bits",
+          "content": "L'implementation est elegante en une seule ligne : decaler le nibble haut vers le bas et le nibble bas vers le haut, puis combiner avec OR.\n\nOn peut aussi le faire sans masque explicite en utilisant juste les decalages, car les bits qui depassent sont perdus (pour un unsigned char).",
+          "codeExample": "// Methode 1 : avec masques explicites\nunsigned char\tft_swap_bits(unsigned char octet)\n{\n\treturn ((octet >> 4) | (octet << 4));\n}\n\n// Pourquoi pas besoin de masques ?\n// octet >> 4 : les 4 bits du haut vont en bas,\n//              les 4 bits du haut deviennent 0\n// octet << 4 : les 4 bits du bas vont en haut,\n//              les 4 bits du bas deviennent 0\n// Le OR combine les deux sans conflit !\n\n// Methode 2 : avec masques explicites (plus lisible)\nunsigned char\tft_swap_bits_v2(unsigned char octet)\n{\n\tunsigned char high;\n\tunsigned char low;\n\n\thigh = (octet & 0xF0) >> 4;\n\tlow = (octet & 0x0F) << 4;\n\treturn (high | low);\n}",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Pourquoi (octet >> 4) | (octet << 4) fonctionne sans masque pour un unsigned char ?",
+            "starterCode": "// octet = ABCDEFGH (8 bits)\n// octet >> 4 = 0000ABCD (les bits hauts sont devenus 0)\n// octet << 4 = EFGH0000 (les bits bas sont devenus 0)\n// Pas de ? car les zones sont ?\n// OR combine : EFGHABCD",
+            "solution": "// octet = ABCDEFGH (8 bits)\n// octet >> 4 = 0000ABCD (les bits hauts sont devenus 0)\n// octet << 4 = EFGH0000 (les bits bas sont devenus 0)\n// Pas de CONFLIT car les zones sont COMPLEMENTAIRES\n// OR combine : EFGHABCD\n// Ca marche car unsigned char fait exactement 8 bits\n// Et les bits decales hors de l'octet sont perdus"
+          }
+        },
+        {
+          "id": 4,
+          "title": "Generalisations et applications",
+          "content": "Le swap de nibbles est un cas particulier de rotation de bits. On peut generaliser a des echanges de groupes de bits de tailles differentes. Cette technique est utilisee dans les algorithmes de chiffrement (DES, AES), les checksums reseau, et l'encodage de donnees.",
+          "codeExample": "// Rotation de bits (rotation circulaire) :\nunsigned char\tft_rotate_left(unsigned char n, int shift)\n{\n\treturn ((n << shift) | (n >> (8 - shift)));\n}\n\n// Swap de nibbles = rotation de 4\n// ft_rotate_left(0x42, 4) = 0x24\n\n// Application : conversion BCD (Binary Coded Decimal)\n// Chaque nibble represente un chiffre decimal (0-9)\n// 0x42 = 42 en BCD\n// Utile pour les horloges, afficheurs 7 segments",
+          "language": "c"
+        }
+      ]
+    },
+    "theory": [
+      {
+        "title": "Les nibbles et la representation hexadecimale",
+        "content": "Un nibble est un groupe de 4 bits. La representation hexadecimale est naturellement alignee sur les nibbles : chaque chiffre hex represente exactement un nibble.",
+        "codeExamples": [
+          {
+            "title": "Correspondance nibble-hex",
+            "code": "// Nibble -> Hex :\n// 0000 = 0    0100 = 4    1000 = 8    1100 = C\n// 0001 = 1    0101 = 5    1001 = 9    1101 = D\n// 0010 = 2    0110 = 6    1010 = A    1110 = E\n// 0011 = 3    0111 = 7    1011 = B    1111 = F\n\n// Un octet = 2 chiffres hex\n// 0x42 = 0100 0010\n// 0xFF = 1111 1111\n// 0xA5 = 1010 0101",
+            "explanation": "L'hexadecimal est plus lisible que le binaire car il regroupe les bits par 4"
+          }
+        ],
+        "keyPoints": [
+          "Un nibble = 4 bits = 1 chiffre hexadecimal",
+          "Un octet = 2 nibbles = 2 chiffres hexadecimaux",
+          "Le nibble haut d'un octet x est (x >> 4) & 0x0F",
+          "Le nibble bas d'un octet x est x & 0x0F"
+        ],
+        "commonMistakes": [
+          "Confondre l'ordre des nibbles dans la notation hexadecimale",
+          "Oublier que 0x0F et 0xF0 sont les masques standard pour les nibbles",
+          "Ne pas utiliser la notation 0x pour les constantes hexadecimales"
+        ]
+      },
+      {
+        "title": "Decalages et perte de bits",
+        "content": "Les operateurs de decalage deplacent les bits et remplissent les positions vides avec des zeros. Les bits qui sortent de la taille du type sont perdus.",
+        "codeExamples": [
+          {
+            "title": "Comportement des decalages",
+            "code": "// Decalage a gauche (unsigned char) :\n// 10110011 << 1 = 01100110 (bit 7 perdu)\n// 10110011 << 4 = 00110000 (4 bits perdus)\n\n// Decalage a droite (unsigned char) :\n// 10110011 >> 1 = 01011001 (bit 0 perdu)\n// 10110011 >> 4 = 00001011 (4 bits perdus)\n\n// Les positions vides sont remplies par des 0\n// Pour les unsigned, c'est toujours 0\n// Pour les signed, c'est implementation-defined",
+            "explanation": "Les bits decales hors de la taille sont irremediablement perdus"
+          }
+        ],
+        "keyPoints": [
+          "Le decalage a gauche perd les bits de poids fort",
+          "Le decalage a droite perd les bits de poids faible",
+          "Les positions vides sont remplies par 0 (unsigned)",
+          "La perte de bits est ce qui rend le swap de nibbles sans masque possible"
+        ],
+        "commonMistakes": [
+          "Croire que les bits decales sont recuperables",
+          "Oublier que le decalage d'un signed peut propager le bit de signe",
+          "Decaler de 8 bits ou plus sur un unsigned char (comportement indefini)"
+        ]
+      },
+      {
+        "title": "Rotations de bits",
+        "content": "Contrairement aux decalages, les rotations circulaires ne perdent pas de bits : les bits qui sortent d'un cote rentrent de l'autre.",
+        "codeExamples": [
+          {
+            "title": "Rotation vs decalage",
+            "code": "// Decalage a gauche de 3 :\n// 10110011 << 3 = 10011000 (3 bits perdus)\n\n// Rotation a gauche de 3 :\n// 10110011 rotl 3 = 10011101 (les 3 bits sortis rentrent a droite)\n\n// Implementation en C :\nunsigned char rotl(unsigned char n, int s)\n{\n\treturn ((n << s) | (n >> (8 - s)));\n}\n// Le swap de nibbles est une rotation de 4",
+            "explanation": "Le C n'a pas d'operateur de rotation, il faut la construire avec << et >> et |"
+          }
+        ],
+        "keyPoints": [
+          "La rotation circulaire ne perd aucun bit",
+          "En C, on la construit avec deux decalages et un OR",
+          "Le swap de nibbles est equivalent a une rotation de 4 positions",
+          "Les processeurs ont souvent une instruction de rotation native (ROL/ROR)"
+        ],
+        "commonMistakes": [
+          "Confondre rotation et decalage (la rotation ne perd pas de bits)",
+          "Oublier de masquer si le type est plus grand que prevu (promotion d'entier)",
+          "Ne pas gerer le cas shift = 0 (rotation de 0 = identite)"
+        ]
+      },
+      {
+        "title": "Applications en cryptographie et reseau",
+        "content": "Les operations sur les nibbles et les rotations sont au coeur de nombreux algorithmes de chiffrement et de protocoles reseau.",
+        "codeExamples": [
+          {
+            "title": "S-Box et substitution",
+            "code": "// Dans AES, la S-Box utilise les nibbles :\n// L'octet d'entree est divise en nibble haut (ligne)\n// et nibble bas (colonne) pour indexer une table\n\n// Exemple simplifie :\nunsigned char sbox[16][16]; // Table de substitution\nunsigned char substituer(unsigned char byte)\n{\n\tint row = (byte >> 4) & 0x0F;\n\tint col = byte & 0x0F;\n\treturn sbox[row][col];\n}",
+            "explanation": "Les nibbles servent d'indices pour les tables de substitution en crypto"
+          }
+        ],
+        "keyPoints": [
+          "Les S-Box de chiffrement utilisent les nibbles comme indices",
+          "Le BCD (Binary Coded Decimal) encode chaque chiffre dans un nibble",
+          "Les checksums reseau manipulent souvent les nibbles separement",
+          "L'encodage hexadecimal est base sur les nibbles"
+        ],
+        "commonMistakes": [
+          "Croire que les operations bit-a-bit sont seulement pour l'optimisation",
+          "Ne pas connaitre la notation hexadecimale couramment utilisee en systeme",
+          "Ignorer l'importance des nibbles dans les protocoles de communication"
+        ]
+      }
+    ],
+    "prepExercises": [
+      {
+        "id": 1,
+        "title": "Extraire le nibble haut",
+        "instruction": "Ecris une fonction qui retourne le nibble haut (4 bits de poids fort) d'un octet.",
+        "starterCode": "unsigned char\tft_high_nibble(unsigned char octet)\n{\n\t// A completer\n}",
+        "solution": "unsigned char\tft_high_nibble(unsigned char octet)\n{\n\treturn ((octet >> 4) & 0x0F);\n}",
+        "hint": "Decale de 4 vers la droite, puis masque avec 0x0F",
+        "difficulty": 1
+      },
+      {
+        "id": 2,
+        "title": "Extraire le nibble bas",
+        "instruction": "Ecris une fonction qui retourne le nibble bas (4 bits de poids faible) d'un octet.",
+        "starterCode": "unsigned char\tft_low_nibble(unsigned char octet)\n{\n\t// A completer\n}",
+        "solution": "unsigned char\tft_low_nibble(unsigned char octet)\n{\n\treturn (octet & 0x0F);\n}",
+        "hint": "Masque directement avec 0x0F pour garder les 4 bits de poids faible",
+        "difficulty": 1
+      },
+      {
+        "id": 3,
+        "title": "Construire un octet a partir de deux nibbles",
+        "instruction": "Ecris une fonction qui combine un nibble haut et un nibble bas pour former un octet.",
+        "starterCode": "unsigned char\tft_make_byte(unsigned char high, unsigned char low)\n{\n\t// A completer\n}",
+        "solution": "unsigned char\tft_make_byte(unsigned char high, unsigned char low)\n{\n\treturn ((high << 4) | (low & 0x0F));\n}",
+        "hint": "Decale le nibble haut de 4 vers la gauche, puis combine avec OR",
+        "difficulty": 2
+      },
+      {
+        "id": 4,
+        "title": "Rotation a gauche de 1 bit",
+        "instruction": "Ecris une fonction qui effectue une rotation a gauche de 1 bit sur un octet.",
+        "starterCode": "unsigned char\tft_rotate_left_1(unsigned char octet)\n{\n\t// A completer\n}",
+        "solution": "unsigned char\tft_rotate_left_1(unsigned char octet)\n{\n\treturn ((octet << 1) | (octet >> 7));\n}",
+        "hint": "Le bit de poids fort (bit 7) sort a gauche et rentre a droite (position 0)",
+        "difficulty": 2
+      },
+      {
+        "id": 5,
+        "title": "Convertir un nibble en hexadecimal",
+        "instruction": "Ecris une fonction qui convertit un nibble (0-15) en caractere hexadecimal ('0'-'F').",
+        "starterCode": "char\tft_nibble_to_hex(unsigned char nibble)\n{\n\t// A completer\n}",
+        "solution": "char\tft_nibble_to_hex(unsigned char nibble)\n{\n\tif (nibble < 10)\n\t\treturn ('0' + nibble);\n\treturn ('A' + nibble - 10);\n}",
+        "hint": "Si nibble < 10, ajoute '0'. Sinon, ajoute 'A' - 10.",
+        "difficulty": 2
+      }
+    ]
+  },
+  "starterCode": "#include <stdio.h>\n\nunsigned char\tft_swap_bits(unsigned char octet)\n{\n\t// A completer\n}\n\nint\tmain(void)\n{\n\tprintf(\"0x42 -> 0x%02X\\n\", ft_swap_bits(0x42));\n\tprintf(\"0xAB -> 0x%02X\\n\", ft_swap_bits(0xAB));\n\tprintf(\"0xFF -> 0x%02X\\n\", ft_swap_bits(0xFF));\n\tprintf(\"0x00 -> 0x%02X\\n\", ft_swap_bits(0x00));\n\treturn (0);\n}",
+  "solution": "#include <stdio.h>\n\nunsigned char\tft_swap_bits(unsigned char octet)\n{\n\treturn ((octet >> 4) | (octet << 4));\n}\n\nint\tmain(void)\n{\n\tprintf(\"0x42 -> 0x%02X\\n\", ft_swap_bits(0x42));\n\tprintf(\"0xAB -> 0x%02X\\n\", ft_swap_bits(0xAB));\n\tprintf(\"0xFF -> 0x%02X\\n\", ft_swap_bits(0xFF));\n\tprintf(\"0x00 -> 0x%02X\\n\", ft_swap_bits(0x00));\n\treturn (0);\n}",
+  "hints": [
+    "Decale l'octet de 4 bits a droite pour amener le nibble haut en position basse",
+    "Decale l'octet de 4 bits a gauche pour amener le nibble bas en position haute",
+    "Combine les deux resultats avec OR (|) car les zones ne se chevauchent pas"
+  ],
+  "testCases": [
+    {
+      "id": 1,
+      "description": "Swap de nibbles pour differents octets",
+      "stdin": "",
+      "expectedStdout": "0x42 -> 0x24\n0xAB -> 0xBA\n0xFF -> 0xFF\n0x00 -> 0x00\n",
+      "expectedExitCode": 0,
+      "visible": true
+    },
+    {
+      "id": 2,
+      "description": "Swap de 0x10 et 0x01",
+      "stdin": "",
+      "expectedStdout": "0x10 -> 0x01\n0x01 -> 0x10\n",
+      "expectedExitCode": 0,
+      "visible": false
+    },
+    {
+      "id": 3,
+      "description": "Double swap = identite",
+      "stdin": "",
+      "expectedStdout": "Double swap de 0x42 : 0x42\n",
+      "expectedExitCode": 0,
+      "visible": false
+    }
+  ],
+  "constraints": {
+    "allowedFunctions": ["printf", "write"],
+    "forbiddenFunctions": ["malloc", "pow"],
+    "maxExecutionTime": 5000,
+    "maxMemory": 128
+  },
+  "relatedExercises": ["c-day83-ex00-ft-set-bit", "c-day83-ex01-ft-count-bits"],
+  "resources": [
+    {
+      "title": "Swap nibbles en C - GeeksforGeeks",
+      "url": "https://www.geeksforgeeks.org/swap-two-nibbles-byte/",
+      "type": "documentation"
+    },
+    {
+      "title": "Bit manipulation - Stanford",
+      "url": "https://graphics.stanford.edu/~seander/bithacks.html",
+      "type": "article"
+    }
+  ]
+}

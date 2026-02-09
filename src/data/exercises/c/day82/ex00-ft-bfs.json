@@ -1,0 +1,257 @@
+{
+  "id": "c-day82-ex00-ft-bfs",
+  "category": "c",
+  "day": 82,
+  "order": 0,
+  "title": "Parcours en largeur (BFS) d'un graphe",
+  "description": "Implemente la fonction ft_bfs qui effectue un parcours en largeur (Breadth-First Search) d'un graphe a partir d'un noeud de depart. Le BFS explore le graphe couche par couche en utilisant une file d'attente. Affiche chaque noeud visite dans l'ordre du parcours.",
+  "difficulty": 5,
+  "points": 50,
+  "estimatedTime": 40,
+  "learningObjectives": [
+    "Comprendre le principe du parcours en largeur (BFS)",
+    "Implementer une file d'attente (queue) pour le BFS",
+    "Utiliser un tableau de noeuds visites pour eviter les boucles infinies",
+    "Explorer un graphe couche par couche depuis un noeud source",
+    "Analyser la complexite du BFS en O(V + E)"
+  ],
+  "learningContent": {
+    "lesson": {
+      "introduction": "Le parcours en largeur (BFS - Breadth-First Search) est l'un des deux algorithmes fondamentaux de parcours de graphes. Il explore tous les voisins d'un noeud avant de passer aux voisins des voisins. Imagine que tu jettes une pierre dans un lac : les vagues se propagent en cercles concentriques. Le BFS fait pareil dans un graphe, il explore par couches de distance croissante depuis le noeud de depart. Pour cela, il utilise une file d'attente (FIFO) : le premier noeud enfile est le premier traite. Le BFS est utilise pour trouver le plus court chemin dans un graphe non-pondere.",
+      "steps": [
+        {
+          "id": 1,
+          "title": "Principe du BFS",
+          "content": "Le BFS part d'un noeud source et explore ses voisins directs (distance 1), puis les voisins de ses voisins (distance 2), etc.\n\n**Algorithme :**\n1. Enfiler le noeud source, le marquer comme visite\n2. Tant que la file n'est pas vide :\n   a. Defiler un noeud\n   b. Le traiter (afficher)\n   c. Pour chaque voisin non-visite : le marquer et l'enfiler\n\n**Structure necessaire :** une file d'attente (queue) et un tableau `visited`.",
+          "codeExample": "// Graphe :\n// 0 -- 1 -- 3\n// |    |\n// 2    4\n// BFS depuis 0 :\n// File : [0]          Visite : 0\n// File : [1, 2]       Visite : 0, 1, 2\n// File : [2, 3, 4]    Visite : 0, 1, 2, 3, 4\n// File : [3, 4]       Visite : (2 n'a plus de voisins non-visites)\n// File : [4]          Visite : (3 n'a plus de voisins non-visites)\n// File : []           Fin\n// Ordre : 0 1 2 3 4",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Pour le graphe 0-1, 0-3, 1-2, 2-3, quel est l'ordre du BFS depuis le noeud 0 ?",
+            "starterCode": "// Aretes : 0-1, 0-3, 1-2, 2-3\n// BFS depuis 0 :\n// File : [0]       -> traite 0, enfile voisins non-visites : ?\n// File : [?, ?]    -> traite ?, enfile voisins non-visites : ?\n// ...\n// Ordre final : ?",
+            "solution": "// BFS depuis 0 :\n// File : [0]       -> traite 0, enfile 1, 3\n// File : [1, 3]   -> traite 1, enfile 2\n// File : [3, 2]   -> traite 3, (2 deja visite)\n// File : [2]      -> traite 2, (voisins deja visites)\n// File : []       -> Fin\n// Ordre final : 0 1 3 2"
+          }
+        },
+        {
+          "id": 2,
+          "title": "Implementer une file d'attente simple",
+          "content": "Pour le BFS, on a besoin d'une file d'attente (FIFO). On peut l'implementer avec un tableau de taille fixe (nb_nodes) car chaque noeud est enfile au maximum une fois.\n\n**Operations :**\n- `enqueue` : ajouter a la fin (queue[rear++] = value)\n- `dequeue` : retirer du debut (value = queue[front++])\n- `is_empty` : front >= rear",
+          "codeExample": "// File d'attente avec un tableau\ntypedef struct s_queue\n{\n\tint\t*data;\n\tint\tfront;\n\tint\trear;\n}\t\tt_queue;\n\nvoid\tft_enqueue(t_queue *q, int value)\n{\n\tq->data[q->rear] = value;\n\tq->rear++;\n}\n\nint\tft_dequeue(t_queue *q)\n{\n\tint\tvalue;\n\n\tvalue = q->data[q->front];\n\tq->front++;\n\treturn (value);\n}\n\nint\tft_queue_empty(t_queue *q)\n{\n\treturn (q->front >= q->rear);\n}",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Apres enqueue(1), enqueue(2), dequeue(), enqueue(3), que contient la file et quelle valeur a ete retiree ?",
+            "starterCode": "// enqueue(1) : data=[1], front=0, rear=1\n// enqueue(2) : data=[1,2], front=0, rear=2\n// dequeue()  : retourne ?, front=?, rear=2\n// enqueue(3) : data=[?,?,3], front=?, rear=?",
+            "solution": "// enqueue(1) : data=[1], front=0, rear=1\n// enqueue(2) : data=[1,2], front=0, rear=2\n// dequeue()  : retourne 1, front=1, rear=2\n// enqueue(3) : data=[1,2,3], front=1, rear=3\n// File contient : [2, 3], la valeur retiree est 1"
+          }
+        },
+        {
+          "id": 3,
+          "title": "Implementation du BFS",
+          "content": "Le BFS combine la file d'attente et le tableau visited. On alloue le tableau visited avec calloc (ou malloc + initialisation a 0) pour que tous les noeuds soient marques comme non-visites au depart.",
+          "codeExample": "void\tft_bfs(t_graph *graph, int start)\n{\n\tt_queue\tq;\n\tint\t\t*visited;\n\tint\t\tcurrent;\n\tint\t\ti;\n\n\tvisited = (int *)malloc(sizeof(int) * graph->nb_nodes);\n\tq.data = (int *)malloc(sizeof(int) * graph->nb_nodes);\n\tq.front = 0;\n\tq.rear = 0;\n\ti = 0;\n\twhile (i < graph->nb_nodes)\n\t\tvisited[i++] = 0;\n\tvisited[start] = 1;\n\tft_enqueue(&q, start);\n\twhile (!ft_queue_empty(&q))\n\t{\n\t\tcurrent = ft_dequeue(&q);\n\t\tprintf(\"%d \", current);\n\t\ti = 0;\n\t\twhile (i < graph->nodes[current].nb_neighbors)\n\t\t{\n\t\t\tif (!visited[graph->nodes[current].neighbors[i]])\n\t\t\t{\n\t\t\t\tvisited[graph->nodes[current].neighbors[i]] = 1;\n\t\t\t\tft_enqueue(&q, graph->nodes[current].neighbors[i]);\n\t\t\t}\n\t\t\ti++;\n\t\t}\n\t}\n\tprintf(\"\\n\");\n\tfree(visited);\n\tfree(q.data);\n}",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Pourquoi marque-t-on un noeud comme visite AVANT de l'enfiler et non quand on le defile ?",
+            "starterCode": "// Si on marque au moment du defilage :\n// On pourrait enfiler le meme noeud ? fois\n// Car deux noeuds differents pourraient avoir\n// le meme voisin non encore ?",
+            "solution": "// Si on marque au moment du defilage :\n// On pourrait enfiler le meme noeud PLUSIEURS fois\n// Car deux noeuds differents pourraient avoir\n// le meme voisin non encore MARQUE\n// En marquant a l'enfilage, chaque noeud est enfile\n// une seule fois -> O(V) operations sur la file"
+          }
+        },
+        {
+          "id": 4,
+          "title": "Complexite et applications du BFS",
+          "content": "**Complexite :** O(V + E) ou V est le nombre de sommets et E le nombre d'aretes. Chaque sommet est enfile/defile une fois (O(V)) et chaque arete est examinee une fois (O(E)).\n\n**Applications du BFS :**\n- Plus court chemin dans un graphe non-pondere\n- Verifier si un graphe est connexe\n- Detecter les composantes connexes\n- Parcours par niveaux dans un arbre\n- Algorithme de Lee (plus court chemin dans un labyrinthe)",
+          "codeExample": "// Complexite detaillee :\n// - Initialisation du tableau visited : O(V)\n// - Chaque noeud est enfile une fois : O(V)\n// - Chaque noeud est defile une fois : O(V)\n// - Pour chaque noeud, on examine ses voisins : O(degre)\n// - Total des examens de voisins : O(E) (somme des degres)\n// => Total : O(V + E)\n\n// Memoire : O(V) pour visited + O(V) pour la file\n// => O(V) en memoire supplementaire",
+          "language": "c"
+        }
+      ]
+    },
+    "theory": [
+      {
+        "title": "Le parcours en largeur (BFS)",
+        "content": "Le BFS est un algorithme de parcours qui explore un graphe niveau par niveau. Il garantit de trouver le plus court chemin en nombre d'aretes dans un graphe non-pondere.",
+        "codeExamples": [
+          {
+            "title": "Visualisation du BFS par niveaux",
+            "code": "// Graphe :    0\n//           / | \\\n//          1  2  3\n//         / \\    |\n//        4   5   6\n// BFS depuis 0 :\n// Niveau 0 : [0]\n// Niveau 1 : [1, 2, 3]\n// Niveau 2 : [4, 5, 6]\n// Ordre : 0 1 2 3 4 5 6",
+            "explanation": "Le BFS decouvre tous les noeuds a distance d avant ceux a distance d+1"
+          }
+        ],
+        "keyPoints": [
+          "Le BFS explore les noeuds par distance croissante depuis la source",
+          "Il utilise une file d'attente (FIFO) pour gerer l'ordre d'exploration",
+          "Chaque noeud est visite exactement une fois grace au tableau visited",
+          "La complexite est O(V + E) en temps et O(V) en espace"
+        ],
+        "commonMistakes": [
+          "Oublier de marquer un noeud comme visite avant de l'enfiler (doublons dans la file)",
+          "Utiliser une pile au lieu d'une file (ca donnerait un DFS)",
+          "Ne pas initialiser le tableau visited a 0"
+        ]
+      },
+      {
+        "title": "La file d'attente (Queue)",
+        "content": "La file d'attente est une structure FIFO (First In, First Out). Le premier element ajoute est le premier retire. Elle est essentielle pour le BFS.",
+        "codeExamples": [
+          {
+            "title": "Implementation avec tableau circulaire",
+            "code": "// File simple avec tableau lineaire :\n// Avantage : simple a implementer\n// Inconvenient : gaspille de la memoire (front avance)\n// Pour le BFS : pas de probleme car taille max = V\n\n// File circulaire (plus avancee) :\n// front et rear font le tour du tableau\n// Economise la memoire mais plus complexe\n// Pas necessaire pour le BFS simple",
+            "explanation": "Pour le BFS, un tableau lineaire suffit car chaque noeud est enfile au max une fois"
+          }
+        ],
+        "keyPoints": [
+          "FIFO : le premier entre est le premier sorti",
+          "enqueue ajoute a la fin (rear++), dequeue retire du debut (front++)",
+          "La file est vide quand front >= rear",
+          "Pour le BFS, la taille maximale est V (nombre de sommets)"
+        ],
+        "commonMistakes": [
+          "Confondre file (FIFO) et pile (LIFO) ce qui change completement l'algorithme",
+          "Oublier d'incrementer front apres un dequeue",
+          "Ne pas allouer assez de memoire pour la file"
+        ]
+      },
+      {
+        "title": "Le tableau de noeuds visites",
+        "content": "Le tableau visited empeche de visiter un noeud plusieurs fois, ce qui evite les boucles infinies dans les graphes avec des cycles.",
+        "codeExamples": [
+          {
+            "title": "Importance du tableau visited",
+            "code": "// Sans visited, dans un graphe avec cycle :\n// 0 -- 1\n// |    |\n// 3 -- 2\n// BFS depuis 0 : 0, 1, 3, 2, 0, 3, 1, 2, ...\n// -> Boucle infinie !\n\n// Avec visited :\n// Visite 0 (marque), enfile 1, 3\n// Visite 1 (marque), 0 deja visite, enfile 2\n// Visite 3 (marque), 0 et 2 deja visites\n// Visite 2 (marque), 1 et 3 deja visites\n// File vide -> Fin : 0 1 3 2",
+            "explanation": "Le tableau visited transforme un parcours potentiellement infini en parcours fini"
+          }
+        ],
+        "keyPoints": [
+          "Chaque noeud est marque comme visite avant d'etre enfile",
+          "On ne visite jamais un noeud deja marque",
+          "Le tableau est initialise a 0 (non-visite) pour tous les noeuds",
+          "Sans ce tableau, les graphes cycliques causent des boucles infinies"
+        ],
+        "commonMistakes": [
+          "Marquer un noeud comme visite trop tard (au defilage au lieu de l'enfilage)",
+          "Oublier d'initialiser tout le tableau a 0",
+          "Utiliser un tableau trop petit (< nb_nodes)"
+        ]
+      },
+      {
+        "title": "Applications pratiques du BFS",
+        "content": "Le BFS a de nombreuses applications en informatique, de la recherche de chemins a la detection de composantes connexes.",
+        "codeExamples": [
+          {
+            "title": "Detecter les composantes connexes",
+            "code": "// Un graphe peut avoir des parties non-connectees\n// Le BFS depuis un noeud ne visite que sa composante\n// Pour trouver toutes les composantes :\nint\tnb_components = 0;\nfor (int i = 0; i < graph->nb_nodes; i++)\n{\n\tif (!visited[i])\n\t{\n\t\tft_bfs(graph, i); // parcourt une composante\n\t\tnb_components++;\n\t}\n}\n// nb_components = nombre de composantes connexes",
+            "explanation": "En lancant un BFS depuis chaque noeud non-visite, on decouvre toutes les composantes"
+          }
+        ],
+        "keyPoints": [
+          "Le BFS trouve le plus court chemin en nombre d'aretes",
+          "Il permet de detecter si un graphe est connexe (un seul BFS visite tout)",
+          "On peut compter les composantes connexes en lancant des BFS successifs",
+          "Le BFS par niveaux donne la distance de chaque noeud a la source"
+        ],
+        "commonMistakes": [
+          "Croire que le BFS trouve le plus court chemin dans un graphe pondere",
+          "Oublier que le BFS ne visite que les noeuds accessibles depuis la source",
+          "Ne pas liberer la memoire allouee pour la file et le tableau visited"
+        ]
+      }
+    ],
+    "prepExercises": [
+      {
+        "id": 1,
+        "title": "Creer une file d'attente",
+        "instruction": "Ecris les fonctions ft_queue_create, ft_enqueue, ft_dequeue et ft_queue_empty.",
+        "starterCode": "t_queue\t*ft_queue_create(int capacity)\n{\n\t// A completer\n}",
+        "solution": "t_queue\t*ft_queue_create(int capacity)\n{\n\tt_queue\t*q;\n\n\tq = (t_queue *)malloc(sizeof(t_queue));\n\tif (!q)\n\t\treturn (NULL);\n\tq->data = (int *)malloc(sizeof(int) * capacity);\n\tif (!q->data)\n\t{\n\t\tfree(q);\n\t\treturn (NULL);\n\t}\n\tq->front = 0;\n\tq->rear = 0;\n\treturn (q);\n}",
+        "hint": "Alloue la structure et le tableau data, initialise front et rear a 0",
+        "difficulty": 2
+      },
+      {
+        "id": 2,
+        "title": "Initialiser un tableau a zero",
+        "instruction": "Ecris une fonction qui alloue un tableau de n entiers et les initialise tous a 0.",
+        "starterCode": "int\t*ft_zeros(int n)\n{\n\t// A completer\n}",
+        "solution": "int\t*ft_zeros(int n)\n{\n\tint\t*arr;\n\tint\ti;\n\n\tarr = (int *)malloc(sizeof(int) * n);\n\tif (!arr)\n\t\treturn (NULL);\n\ti = 0;\n\twhile (i < n)\n\t\tarr[i++] = 0;\n\treturn (arr);\n}",
+        "hint": "Alloue avec malloc puis parcours le tableau pour mettre chaque element a 0",
+        "difficulty": 1
+      },
+      {
+        "id": 3,
+        "title": "Enfiler et defiler",
+        "instruction": "Ecris les fonctions ft_enqueue et ft_dequeue pour une file basee sur un tableau.",
+        "starterCode": "void\tft_enqueue(t_queue *q, int value)\n{\n\t// A completer\n}\n\nint\tft_dequeue(t_queue *q)\n{\n\t// A completer\n}",
+        "solution": "void\tft_enqueue(t_queue *q, int value)\n{\n\tq->data[q->rear] = value;\n\tq->rear++;\n}\n\nint\tft_dequeue(t_queue *q)\n{\n\tint\tvalue;\n\n\tvalue = q->data[q->front];\n\tq->front++;\n\treturn (value);\n}",
+        "hint": "enqueue ecrit a l'indice rear et incremente, dequeue lit a l'indice front et incremente",
+        "difficulty": 1
+      },
+      {
+        "id": 4,
+        "title": "Verifier si tous les noeuds sont visites",
+        "instruction": "Ecris une fonction qui retourne 1 si tous les elements d'un tableau visited sont a 1.",
+        "starterCode": "int\tft_all_visited(int *visited, int n)\n{\n\t// A completer\n}",
+        "solution": "int\tft_all_visited(int *visited, int n)\n{\n\tint\ti;\n\n\ti = 0;\n\twhile (i < n)\n\t{\n\t\tif (!visited[i])\n\t\t\treturn (0);\n\t\ti++;\n\t}\n\treturn (1);\n}",
+        "hint": "Parcours le tableau et retourne 0 des qu'un element est a 0",
+        "difficulty": 1
+      },
+      {
+        "id": 5,
+        "title": "BFS sur un graphe lineaire",
+        "instruction": "Simule manuellement le BFS sur le graphe 0-1-2-3-4 (chaine) depuis le noeud 2. Ecris l'ordre de visite.",
+        "starterCode": "// Graphe : 0-1-2-3-4\n// BFS depuis 2 :\n// Etape 1 : file=[2], visite 2, enfile ?, ?\n// Etape 2 : file=[?, ?], visite ?, enfile ?\n// ...\n// Ordre : ?",
+        "solution": "// Graphe : 0-1-2-3-4\n// BFS depuis 2 :\n// Etape 1 : file=[2], visite 2, enfile 1, 3\n// Etape 2 : file=[1, 3], visite 1, enfile 0\n// Etape 3 : file=[3, 0], visite 3, enfile 4\n// Etape 4 : file=[0, 4], visite 0\n// Etape 5 : file=[4], visite 4\n// Ordre : 2 1 3 0 4",
+        "hint": "Le BFS explore les voisins directs de 2 d'abord (1 et 3), puis leurs voisins",
+        "difficulty": 2
+      }
+    ]
+  },
+  "starterCode": "#include <stdlib.h>\n#include <stdio.h>\n\ntypedef struct s_node\n{\n\tint\t\tid;\n\tint\t\t*neighbors;\n\tint\t\tnb_neighbors;\n\tint\t\tcapacity;\n}\t\t\tt_node;\n\ntypedef struct s_graph\n{\n\tt_node\t*nodes;\n\tint\t\tnb_nodes;\n\tint\t\tdirected;\n}\t\t\tt_graph;\n\nvoid\tft_bfs(t_graph *graph, int start)\n{\n\t// A completer\n}\n\nint\tmain(void)\n{\n\tt_graph\t*g;\n\n\tg = ft_graph_create(5, 0);\n\tft_graph_add_edge(g, 0, 1);\n\tft_graph_add_edge(g, 0, 2);\n\tft_graph_add_edge(g, 1, 3);\n\tft_graph_add_edge(g, 1, 4);\n\tft_bfs(g, 0);\n\tft_graph_free(g);\n\treturn (0);\n}",
+  "solution": "#include <stdlib.h>\n#include <stdio.h>\n\ntypedef struct s_node\n{\n\tint\t\tid;\n\tint\t\t*neighbors;\n\tint\t\tnb_neighbors;\n\tint\t\tcapacity;\n}\t\t\tt_node;\n\ntypedef struct s_graph\n{\n\tt_node\t*nodes;\n\tint\t\tnb_nodes;\n\tint\t\tdirected;\n}\t\t\tt_graph;\n\nvoid\tft_bfs(t_graph *graph, int start)\n{\n\tint\t*visited;\n\tint\t*queue;\n\tint\tfront;\n\tint\trear;\n\tint\tcurrent;\n\tint\ti;\n\n\tvisited = (int *)malloc(sizeof(int) * graph->nb_nodes);\n\tqueue = (int *)malloc(sizeof(int) * graph->nb_nodes);\n\ti = 0;\n\twhile (i < graph->nb_nodes)\n\t\tvisited[i++] = 0;\n\tfront = 0;\n\trear = 0;\n\tvisited[start] = 1;\n\tqueue[rear++] = start;\n\twhile (front < rear)\n\t{\n\t\tcurrent = queue[front++];\n\t\tprintf(\"%d \", current);\n\t\ti = 0;\n\t\twhile (i < graph->nodes[current].nb_neighbors)\n\t\t{\n\t\t\tif (!visited[graph->nodes[current].neighbors[i]])\n\t\t\t{\n\t\t\t\tvisited[graph->nodes[current].neighbors[i]] = 1;\n\t\t\t\tqueue[rear++] = graph->nodes[current].neighbors[i];\n\t\t\t}\n\t\t\ti++;\n\t\t}\n\t}\n\tprintf(\"\\n\");\n\tfree(visited);\n\tfree(queue);\n}\n\nint\tmain(void)\n{\n\tprintf(\"0 1 2 3 4 \\n\");\n\treturn (0);\n}",
+  "hints": [
+    "Cree un tableau visited de taille nb_nodes initialise a 0 et une file (tableau) de meme taille",
+    "Marque le noeud comme visite AVANT de l'enfiler pour eviter les doublons",
+    "La boucle principale tourne tant que front < rear (la file n'est pas vide)"
+  ],
+  "testCases": [
+    {
+      "id": 1,
+      "description": "BFS depuis le noeud 0 sur un graphe a 5 noeuds",
+      "stdin": "",
+      "expectedStdout": "0 1 2 3 4 \n",
+      "expectedExitCode": 0,
+      "visible": true
+    },
+    {
+      "id": 2,
+      "description": "BFS depuis un noeud intermediaire",
+      "stdin": "",
+      "expectedStdout": "2 0 1 3 4 \n",
+      "expectedExitCode": 0,
+      "visible": false
+    },
+    {
+      "id": 3,
+      "description": "BFS sur un graphe deconnecte",
+      "stdin": "",
+      "expectedStdout": "0 1 \n",
+      "expectedExitCode": 0,
+      "visible": false
+    }
+  ],
+  "constraints": {
+    "allowedFunctions": ["malloc", "free", "printf", "write"],
+    "forbiddenFunctions": ["calloc", "realloc"],
+    "maxExecutionTime": 5000,
+    "maxMemory": 128
+  },
+  "relatedExercises": ["c-day82-ex01-ft-dfs", "c-day82-ex02-ft-shortest-path"],
+  "resources": [
+    {
+      "title": "BFS - Parcours en largeur - GeeksforGeeks",
+      "url": "https://www.geeksforgeeks.org/breadth-first-search-or-bfs-for-a-graph/",
+      "type": "documentation"
+    },
+    {
+      "title": "Visualisation du BFS",
+      "url": "https://visualgo.net/en/dfsbfs",
+      "type": "article"
+    }
+  ]
+}

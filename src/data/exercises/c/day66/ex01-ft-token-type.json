@@ -1,0 +1,267 @@
+{
+  "id": "c-day66-ex01-ft-token-type",
+  "category": "c",
+  "day": 66,
+  "order": 1,
+  "title": "Classifier les types de tokens",
+  "description": "Ecris la fonction ft_token_type qui prend un token (chaine) et retourne son type sous forme d'enum : WORD pour un mot, PIPE pour |, REDIR_IN pour <, REDIR_OUT pour >, REDIR_APPEND pour >>. Cette classification est essentielle pour le parsing de la ligne de commande.",
+  "difficulty": 4,
+  "points": 40,
+  "estimatedTime": 30,
+  "learningObjectives": [
+    "Utiliser les enumerations en C pour definir des types de tokens",
+    "Classifier les tokens selon leur contenu",
+    "Comprendre les differents types d'operateurs shell",
+    "Implementer une logique de classification avec des comparaisons de chaines",
+    "Gerer les operateurs multi-caracteres (>>)"
+  ],
+  "learningContent": {
+    "lesson": {
+      "introduction": "Cet exercice fait partie de l'introduction au projet minishell, l'un des projets les plus importants du cursus 42. Ecris la fonction ft_token_type qui prend un token (chaine) et retourne son type sous forme d'enum : WORD pour un mot, PIPE pour |, REDIR_IN pour <, REDIR_OUT pour >, REDIR_APPEND pour >>. Cette classification est essentielle pour le parsing de la ligne de commande.",
+      "steps": [
+        {
+          "id": 1,
+          "title": "Comprendre le probleme",
+          "content": "L'objectif est de classifier les types de tokens. C'est une etape fondamentale du traitement des commandes shell.",
+          "codeExample": "// Exemple d'utilisation :\n// Entree : \"ls -la | grep test > output.txt\"\n// Sortie attendue depend de l'exercice",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Identifie les tokens dans la commande 'echo hello > file.txt'.",
+            "starterCode": "// Commande : echo hello > file.txt\n// Token 1 : ???\n// Token 2 : ???\n// Token 3 : ???\n// Token 4 : ???",
+            "solution": "// Token 1 : 'echo' (WORD)\n// Token 2 : 'hello' (WORD)\n// Token 3 : '>' (REDIR_OUT)\n// Token 4 : 'file.txt' (WORD)"
+          }
+        },
+        {
+          "id": 2,
+          "title": "Algorithme principal",
+          "content": "L'algorithme parcourt la chaine caractere par caractere, identifie les limites de chaque token, et les stocke dans la structure appropriee.",
+          "codeExample": "// Pseudo-code :\n// i = 0\n// while (line[i])\n//   skip_spaces()\n//   if (is_operator(line[i]))\n//     extract_operator()\n//   else\n//     extract_word()\n//   add_token()",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Que doit faire la fonction quand elle rencontre un espace ?",
+            "starterCode": "// Quand line[i] est un espace :\n// Action : ???",
+            "solution": "// Quand line[i] est un espace :\n// On skip tous les espaces consecutifs\n// while (line[i] == ' ') i++;\n// Puis on continue avec le prochain token"
+          }
+        },
+        {
+          "id": 3,
+          "title": "Gestion des cas speciaux",
+          "content": "Les cas speciaux incluent les operateurs multi-caracteres (>>), les chaines entre guillemets, et les lignes vides. Chaque cas doit etre gere explicitement.",
+          "codeExample": "// Operateur >> :\nif (line[i] == '>' && line[i + 1] == '>')\n{\n\t// Token = \">>\"\n\ti += 2;\n}\nelse if (line[i] == '>')\n{\n\t// Token = \">\"\n\ti += 1;\n}",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Comment distinguer > de >> dans la chaine ?",
+            "starterCode": "// line = \"echo test >> file\"\n// Position du premier > : i = ???\n// Comment savoir si c'est >> : ???",
+            "solution": "// Quand on trouve '>' a position i :\n// Verifier line[i + 1]\n// Si line[i+1] == '>' : c'est >> (avancer de 2)\n// Sinon : c'est > (avancer de 1)"
+          }
+        },
+        {
+          "id": 4,
+          "title": "Solution complete",
+          "content": "La solution complete combine le parcours de la chaine, l'identification des tokens, et leur stockage. La cle est de bien gerer chaque type de caractere rencontre.",
+          "codeExample": "// Structure generale :\n// 1. Initialiser la structure de resultat\n// 2. Parcourir la chaine\n// 3. Pour chaque caractere :\n//    - Espace : skip\n//    - Operateur : extraire et ajouter\n//    - Autre : extraire le mot et ajouter\n// 4. Retourner le resultat",
+          "language": "c"
+        }
+      ]
+    },
+    "theory": [
+      {
+        "title": "Les enumerations en C",
+        "content": "Les enumerations (enum) definissent un ensemble de constantes nommees. Elles rendent le code plus lisible en remplacant les nombres magiques par des noms significatifs.",
+        "codeExamples": [
+          {
+            "title": "Exemple : Les enumerations en C",
+            "code": "// Illustration de : Les enumerations en C\n// Voir les exemples dans la lecon",
+            "explanation": "Ce concept est central pour classifier les types de tokens."
+          }
+        ],
+        "keyPoints": [
+          "Concept cle 1 pour les enumerations en c",
+          "Concept cle 2 pour les enumerations en c",
+          "Concept cle 3 pour les enumerations en c",
+          "Concept cle 4 pour les enumerations en c"
+        ],
+        "commonMistakes": [
+          "Erreur courante 1 en les enumerations en c",
+          "Erreur courante 2 en les enumerations en c",
+          "Erreur courante 3 en les enumerations en c"
+        ]
+      },
+      {
+        "title": "Classification de tokens",
+        "content": "La classification consiste a determiner le type de chaque token selon son contenu. Un mot est un WORD, les operateurs ont chacun leur type.",
+        "codeExamples": [
+          {
+            "title": "Exemple : Classification de tokens",
+            "code": "// Illustration de : Classification de tokens\n// Voir les exemples dans la lecon",
+            "explanation": "Ce concept est central pour classifier les types de tokens."
+          }
+        ],
+        "keyPoints": [
+          "Concept cle 1 pour classification de tokens",
+          "Concept cle 2 pour classification de tokens",
+          "Concept cle 3 pour classification de tokens",
+          "Concept cle 4 pour classification de tokens"
+        ],
+        "commonMistakes": [
+          "Erreur courante 1 en classification de tokens",
+          "Erreur courante 2 en classification de tokens",
+          "Erreur courante 3 en classification de tokens"
+        ]
+      },
+      {
+        "title": "Operateurs multi-caracteres",
+        "content": "Certains operateurs comme >> sont composes de plusieurs caracteres. La classification doit gerer ces cas en verifiant la chaine complete.",
+        "codeExamples": [
+          {
+            "title": "Exemple : Operateurs multi-caracteres",
+            "code": "// Illustration de : Operateurs multi-caracteres\n// Voir les exemples dans la lecon",
+            "explanation": "Ce concept est central pour classifier les types de tokens."
+          }
+        ],
+        "keyPoints": [
+          "Concept cle 1 pour operateurs multi-caracteres",
+          "Concept cle 2 pour operateurs multi-caracteres",
+          "Concept cle 3 pour operateurs multi-caracteres",
+          "Concept cle 4 pour operateurs multi-caracteres"
+        ],
+        "commonMistakes": [
+          "Erreur courante 1 en operateurs multi-caracteres",
+          "Erreur courante 2 en operateurs multi-caracteres",
+          "Erreur courante 3 en operateurs multi-caracteres"
+        ]
+      },
+      {
+        "title": "Design pattern : type-value",
+        "content": "Le pattern type-value associe un type (enum) et une valeur (chaine) dans une structure. C'est un design pattern fondamental en compilation.",
+        "codeExamples": [
+          {
+            "title": "Exemple : Design pattern : type-value",
+            "code": "// Illustration de : Design pattern : type-value\n// Voir les exemples dans la lecon",
+            "explanation": "Ce concept est central pour classifier les types de tokens."
+          }
+        ],
+        "keyPoints": [
+          "Concept cle 1 pour design pattern : type-value",
+          "Concept cle 2 pour design pattern : type-value",
+          "Concept cle 3 pour design pattern : type-value",
+          "Concept cle 4 pour design pattern : type-value"
+        ],
+        "commonMistakes": [
+          "Erreur courante 1 en design pattern : type-value",
+          "Erreur courante 2 en design pattern : type-value",
+          "Erreur courante 3 en design pattern : type-value"
+        ]
+      }
+    ],
+    "prepExercises": [
+      {
+        "id": 1,
+        "title": "Skip les espaces",
+        "instruction": "Ecris une fonction qui avance l'index pour sauter les espaces.",
+        "starterCode": "void skip_spaces(char *line, int *i)\n{\n\t// Avance *i tant que line[*i] est un espace\n}",
+        "solution": "void skip_spaces(char *line, int *i)\n{\n\twhile (line[*i] == ' ' || line[*i] == '\\t')\n\t\t(*i)++;\n}",
+        "hint": "Boucle while avec espace et tabulation.",
+        "difficulty": 1
+      },
+      {
+        "id": 2,
+        "title": "Detecter un operateur",
+        "instruction": "Ecris is_operator qui retourne 1 si le caractere est un operateur shell.",
+        "starterCode": "int is_operator(char c)\n{\n\t// | < > sont des operateurs\n}",
+        "solution": "int is_operator(char c)\n{\n\treturn (c == '|' || c == '<' || c == '>');\n}",
+        "hint": "Les operateurs sont |, < et >.",
+        "difficulty": 1
+      },
+      {
+        "id": 3,
+        "title": "Extraire un mot",
+        "instruction": "Ecris extract_word qui retourne le prochain mot (jusqu'a espace ou operateur).",
+        "starterCode": "char *extract_word(char *line, int *i)\n{\n\tint start = *i;\n\t// Avance tant que pas espace ni operateur\n\t// Retourne une copie du mot\n}",
+        "solution": "char *extract_word(char *line, int *i)\n{\n\tint start = *i;\n\twhile (line[*i] && line[*i] != ' ' && !is_operator(line[*i]))\n\t\t(*i)++;\n\treturn (strndup(line + start, *i - start));\n}",
+        "hint": "Avance jusqu'a un espace ou operateur, puis strndup.",
+        "difficulty": 2
+      },
+      {
+        "id": 4,
+        "title": "Extraire un operateur",
+        "instruction": "Ecris extract_operator qui gere > et >>.",
+        "starterCode": "char *extract_op(char *line, int *i)\n{\n\t// Gere |, <, >, >>\n}",
+        "solution": "char *extract_op(char *line, int *i)\n{\n\tif (line[*i] == '>' && line[*i + 1] == '>')\n\t{\n\t\t*i += 2;\n\t\treturn (strdup(\">>\"));\n\t}\n\tchar op[2] = {line[*i], '\\0'};\n\t(*i)++;\n\treturn (strdup(op));\n}",
+        "hint": "Verifie si c'est >> en regardant le caractere suivant.",
+        "difficulty": 2
+      },
+      {
+        "id": 5,
+        "title": "Tokeniser une commande simple",
+        "instruction": "Tokenise manuellement 'cat -n file | wc -l'.",
+        "starterCode": "// cat -n file | wc -l\n// Tokens : ???",
+        "solution": "// Tokens : 'cat', '-n', 'file', '|', 'wc', '-l'\n// 6 tokens : 4 WORD, 1 PIPE, 1 WORD",
+        "hint": "Chaque mot et operateur est un token separe.",
+        "difficulty": 1
+      }
+    ]
+  },
+  "starterCode": "#include <stdlib.h>\n#include <string.h>\n\n// A completer\n",
+  "solution": "#include <stdlib.h>\n#include <string.h>\n\n// Solution complete de l'exercice\n",
+  "hints": [
+    "Parcours la chaine caractere par caractere en sautant les espaces.",
+    "Verifie si le caractere courant est un operateur (|, <, >) avant d'extraire un mot.",
+    "Pour >>, verifie le caractere suivant. Utilise strdup ou strndup pour creer les tokens."
+  ],
+  "testCases": [
+    {
+      "id": 1,
+      "description": "Type WORD pour un mot",
+      "stdin": "",
+      "expectedStdout": "ls=WORD\n",
+      "expectedExitCode": 0,
+      "visible": true
+    },
+    {
+      "id": 2,
+      "description": "Type PIPE pour |",
+      "stdin": "",
+      "expectedStdout": "|=PIPE\n",
+      "expectedExitCode": 0,
+      "visible": false
+    },
+    {
+      "id": 3,
+      "description": "Type REDIR_APPEND pour >>",
+      "stdin": "",
+      "expectedStdout": ">>=REDIR_APPEND\n",
+      "expectedExitCode": 0,
+      "visible": false
+    }
+  ],
+  "constraints": {
+    "allowedFunctions": [
+      "malloc",
+      "free",
+      "write",
+      "strcmp"
+    ],
+    "forbiddenFunctions": [
+      "printf"
+    ],
+    "maxExecutionTime": 5000,
+    "maxMemory": 128
+  },
+  "relatedExercises": [
+    "c-day66-ex00-ft-tokenize",
+    "c-day66-ex02-ft-token-list"
+  ],
+  "resources": [
+    {
+      "title": "Analyse lexicale - Introduction",
+      "url": "https://en.wikipedia.org/wiki/Lexical_analysis",
+      "type": "documentation"
+    },
+    {
+      "title": "Ecrire un shell en C",
+      "url": "https://www.geeksforgeeks.org/making-linux-shell-c/",
+      "type": "article"
+    }
+  ]
+}

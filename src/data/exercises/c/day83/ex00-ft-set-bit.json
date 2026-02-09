@@ -1,0 +1,257 @@
+{
+  "id": "c-day83-ex00-ft-set-bit",
+  "category": "c",
+  "day": 83,
+  "order": 0,
+  "title": "Activer ou desactiver un bit specifique",
+  "description": "Implemente la fonction ft_set_bit qui active (met a 1) ou desactive (met a 0) un bit a une position donnee dans un entier. La position 0 correspond au bit de poids faible (le plus a droite). Utilise des masques de bits et les operateurs de decalage pour manipuler un seul bit sans modifier les autres.",
+  "difficulty": 4,
+  "points": 40,
+  "estimatedTime": 30,
+  "learningObjectives": [
+    "Comprendre la representation binaire des entiers en memoire",
+    "Utiliser les operateurs de decalage (<<) pour creer des masques de bits",
+    "Activer un bit avec l'operateur OR (|) et un masque",
+    "Desactiver un bit avec l'operateur AND (&) et un masque inverse",
+    "Manipuler des bits individuels sans affecter les autres"
+  ],
+  "learningContent": {
+    "lesson": {
+      "introduction": "La manipulation de bits est au coeur de la programmation systeme et embarquee. En C, chaque entier est stocke en memoire comme une suite de bits (0 et 1). Les operateurs bit-a-bit permettent de manipuler ces bits individuellement. Activer ou desactiver un bit specifique est l'operation la plus fondamentale. On utilise des masques de bits crees avec l'operateur de decalage << pour cibler un bit precis. Ces techniques sont utilisees dans les registres hardware, les flags, les permissions, et l'optimisation memoire.",
+      "steps": [
+        {
+          "id": 1,
+          "title": "Representation binaire et positions de bits",
+          "content": "Un entier de 32 bits est stocke comme 32 positions, numerotees de 0 (bit de poids faible, a droite) a 31 (bit de poids fort, a gauche).\n\n**Exemple :** Le nombre 42 en binaire :\n```\nPosition : 7 6 5 4 3 2 1 0\nBits     : 0 0 1 0 1 0 1 0\n```\n42 = 32 + 8 + 2 = 2^5 + 2^3 + 2^1",
+          "codeExample": "// Representation binaire de quelques nombres :\n// 0  = 00000000\n// 1  = 00000001\n// 5  = 00000101\n// 42 = 00101010\n// 255= 11111111\n\n// Position des bits (de droite a gauche) :\n// Position 0 : bit de poids faible (1)\n// Position 7 : bit de poids fort (128) pour un octet\n\n// Afficher un nombre en binaire :\nvoid\tft_print_bits(unsigned char octet)\n{\n\tint\ti;\n\n\ti = 7;\n\twhile (i >= 0)\n\t{\n\t\tif (octet & (1 << i))\n\t\t\twrite(1, \"1\", 1);\n\t\telse\n\t\t\twrite(1, \"0\", 1);\n\t\ti--;\n\t}\n}",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Quel est le nombre 13 en binaire ? Quels bits sont a 1 ?",
+            "starterCode": "// 13 en binaire :\n// 13 = 8 + 4 + 1 = 2^? + 2^? + 2^?\n// Binaire : ????????\n// Bits a 1 aux positions : ?, ?, ?",
+            "solution": "// 13 en binaire :\n// 13 = 8 + 4 + 1 = 2^3 + 2^2 + 2^0\n// Binaire : 00001101\n// Bits a 1 aux positions : 0, 2, 3"
+          }
+        },
+        {
+          "id": 2,
+          "title": "Creer un masque de bits avec <<",
+          "content": "L'operateur `<<` (shift left) decale les bits vers la gauche. `1 << n` cree un masque avec un seul bit a 1 a la position n.\n\n**Exemples :**\n- `1 << 0` = 00000001 (position 0)\n- `1 << 3` = 00001000 (position 3)\n- `1 << 7` = 10000000 (position 7)\n\nCe masque est la cle pour manipuler un bit specifique.",
+          "codeExample": "// Creer un masque pour la position n :\nunsigned int\tmask = 1 << n;\n\n// Exemples :\n// 1 << 0 = 00000001 = 1\n// 1 << 1 = 00000010 = 2\n// 1 << 2 = 00000100 = 4\n// 1 << 3 = 00001000 = 8\n// 1 << 4 = 00010000 = 16\n// 1 << 5 = 00100000 = 32\n\n// Pattern : 1 << n = 2^n\n// Le masque a un seul bit a 1 a la position n",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Que vaut 1 << 5 en decimal et en binaire ?",
+            "starterCode": "// 1 << 5 :\n// On prend 00000001\n// On decale de 5 positions vers la gauche\n// Resultat binaire : ????????\n// Resultat decimal : ?",
+            "solution": "// 1 << 5 :\n// On prend 00000001\n// On decale de 5 positions vers la gauche\n// Resultat binaire : 00100000\n// Resultat decimal : 32 (= 2^5)"
+          }
+        },
+        {
+          "id": 3,
+          "title": "Activer et desactiver un bit",
+          "content": "**Activer un bit (set to 1) :** On utilise `OR |` avec le masque.\n`number | (1 << pos)` met le bit a la position pos a 1 sans modifier les autres.\n\n**Desactiver un bit (set to 0) :** On utilise `AND &` avec le masque inverse.\n`number & ~(1 << pos)` met le bit a la position pos a 0 sans modifier les autres.\n\nL'operateur `~` inverse tous les bits du masque.",
+          "codeExample": "// Activer le bit 3 de 42 :\n// 42       = 00101010\n// 1 << 3   = 00001000\n// 42 | 8   = 00101010\n//           | 00001000\n//           = 00101010 (bit 3 deja a 1)\n\n// Activer le bit 0 de 42 :\n// 42       = 00101010\n// 1 << 0   = 00000001\n// 42 | 1   = 00101011 = 43\n\n// Desactiver le bit 1 de 42 :\n// 42       = 00101010\n// ~(1<<1)  = 11111101\n// 42 & ~2  = 00101000 = 40",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Ecris l'operation pour activer le bit 4 du nombre 5 (00000101). Quel est le resultat ?",
+            "starterCode": "// 5      = 00000101\n// Masque = 1 << ? = ????????\n// 5 | ?  = ???????? = ?",
+            "solution": "// 5      = 00000101\n// Masque = 1 << 4 = 00010000 = 16\n// 5 | 16 = 00010101 = 21"
+          }
+        },
+        {
+          "id": 4,
+          "title": "Implementation de ft_set_bit",
+          "content": "La fonction ft_set_bit prend un nombre, une position et une valeur (0 ou 1). Si la valeur est 1, elle active le bit. Si la valeur est 0, elle le desactive. Elle retourne le nombre modifie.\n\nOn peut aussi verifier si un bit est deja dans l'etat voulu avec `(number >> pos) & 1`.",
+          "codeExample": "int\tft_set_bit(int number, int pos, int value)\n{\n\tif (pos < 0 || pos > 31)\n\t\treturn (number);\n\tif (value)\n\t\treturn (number | (1 << pos));\n\telse\n\t\treturn (number & ~(1 << pos));\n}\n\n// Lire un bit :\nint\tft_get_bit(int number, int pos)\n{\n\treturn ((number >> pos) & 1);\n}\n\n// Toggle un bit (inverser) :\nint\tft_toggle_bit(int number, int pos)\n{\n\treturn (number ^ (1 << pos));\n}",
+          "language": "c"
+        }
+      ]
+    },
+    "theory": [
+      {
+        "title": "Les operateurs bit-a-bit en C",
+        "content": "Le C fournit 6 operateurs bit-a-bit qui travaillent sur chaque bit individuellement. Ils sont essentiels pour la programmation bas niveau.",
+        "codeExamples": [
+          {
+            "title": "Les 6 operateurs",
+            "code": "// & (AND) : 1 si les deux bits sont 1\n// 1010 & 1100 = 1000\n\n// | (OR) : 1 si au moins un bit est 1\n// 1010 | 1100 = 1110\n\n// ^ (XOR) : 1 si les bits sont differents\n// 1010 ^ 1100 = 0110\n\n// ~ (NOT) : inverse chaque bit\n// ~1010 = 0101\n\n// << (shift left) : decale vers la gauche\n// 0001 << 2 = 0100\n\n// >> (shift right) : decale vers la droite\n// 1000 >> 2 = 0010",
+            "explanation": "Ces operateurs travaillent bit par bit, independamment pour chaque position"
+          }
+        ],
+        "keyPoints": [
+          "AND (&) est utilise pour desactiver des bits ou tester un bit",
+          "OR (|) est utilise pour activer des bits",
+          "XOR (^) est utilise pour inverser des bits ou echanger des valeurs",
+          "Les decalages << et >> multiplient/divisent par des puissances de 2"
+        ],
+        "commonMistakes": [
+          "Confondre & (bit-a-bit) avec && (logique)",
+          "Confondre | (bit-a-bit) avec || (logique)",
+          "Oublier que ~ inverse TOUS les bits, pas seulement un"
+        ]
+      },
+      {
+        "title": "Masques de bits",
+        "content": "Un masque de bits est un nombre utilise avec un operateur bit-a-bit pour selectionner ou modifier des bits specifiques.",
+        "codeExamples": [
+          {
+            "title": "Patterns courants de masques",
+            "code": "// Masque pour un seul bit a la position n :\nunsigned int mask = 1 << n;\n\n// Masque pour les n bits de poids faible :\nunsigned int mask = (1 << n) - 1;\n// Exemple : (1 << 4) - 1 = 00001111\n\n// Masque pour un intervalle [lo, hi] :\nunsigned int mask = ((1 << (hi - lo + 1)) - 1) << lo;",
+            "explanation": "Les masques permettent d'isoler ou modifier un groupe de bits specifique"
+          }
+        ],
+        "keyPoints": [
+          "1 << n cree un masque avec un seul bit a 1 a la position n",
+          "(1 << n) - 1 cree un masque avec les n premiers bits a 1",
+          "Le masque inverse ~mask a tous les bits opposes",
+          "Les masques sont la base de toutes les operations bit-a-bit"
+        ],
+        "commonMistakes": [
+          "Decaler de plus de 31 bits pour un int 32 bits (comportement indefini)",
+          "Oublier que (1 << n) - 1 donne n bits a 1, pas n+1",
+          "Utiliser des entiers signes pour les masques (problemes avec le bit de signe)"
+        ]
+      },
+      {
+        "title": "Applications des operations bit-a-bit",
+        "content": "Les operations sur les bits ont de nombreuses applications pratiques : flags, permissions, optimisation, protocoles reseau.",
+        "codeExamples": [
+          {
+            "title": "Flags et permissions",
+            "code": "// Permissions type Unix :\n#define READ    (1 << 2)  // 100 = 4\n#define WRITE   (1 << 1)  // 010 = 2\n#define EXEC    (1 << 0)  // 001 = 1\n\nint perms = 0;\nperms |= READ;          // Ajouter lecture\nperms |= WRITE;         // Ajouter ecriture\nperms &= ~WRITE;        // Retirer ecriture\nif (perms & READ)       // Tester lecture\n\tprintf(\"Peut lire\\n\");",
+            "explanation": "Chaque bit represente un flag independant, manipulable separement"
+          }
+        ],
+        "keyPoints": [
+          "Les flags bit-a-bit permettent de stocker plusieurs booleens dans un seul int",
+          "Les permissions Unix utilisent 3 groupes de 3 bits (rwx pour user, group, other)",
+          "Les protocoles reseau manipulent les bits pour les headers de paquets",
+          "Le XOR est utilise pour le chiffrement simple et les checksums"
+        ],
+        "commonMistakes": [
+          "Utiliser == au lieu de & pour tester un flag (0b110 == READ est faux, 0b110 & READ est vrai)",
+          "Melanger les niveaux d'abstraction entre bits et valeurs entieres",
+          "Oublier que les operations bit-a-bit ne font pas de court-circuit"
+        ]
+      },
+      {
+        "title": "Decalages et multiplication/division",
+        "content": "Les operateurs de decalage sont equivalents a multiplier ou diviser par des puissances de 2, mais beaucoup plus rapides.",
+        "codeExamples": [
+          {
+            "title": "Equivalences decalage/arithmetique",
+            "code": "// Decalage a gauche = multiplication par 2^n\nx << 1  // x * 2\nx << 3  // x * 8\nx << n  // x * 2^n\n\n// Decalage a droite = division par 2^n\nx >> 1  // x / 2\nx >> 3  // x / 8\nx >> n  // x / 2^n\n\n// Attention avec les nombres negatifs !\n// Le decalage a droite d'un nombre signe est\n// implementation-defined (arithmetique ou logique)",
+            "explanation": "Les decalages sont l'operation la plus rapide du processeur"
+          }
+        ],
+        "keyPoints": [
+          "x << n equivaut a x * 2^n pour les entiers non-signes",
+          "x >> n equivaut a x / 2^n pour les entiers non-signes",
+          "Les decalages sont beaucoup plus rapides que la multiplication/division",
+          "Le comportement est indefini si n est negatif ou >= la taille du type"
+        ],
+        "commonMistakes": [
+          "Decaler un int signe a droite (resultat implementation-defined)",
+          "Decaler de 32 bits ou plus pour un int 32 bits (undefined behavior)",
+          "Croire que les decalages arrondissent comme la division entiere pour les negatifs"
+        ]
+      }
+    ],
+    "prepExercises": [
+      {
+        "id": 1,
+        "title": "Afficher en binaire",
+        "instruction": "Ecris une fonction qui affiche un octet (unsigned char) en binaire, 8 bits.",
+        "starterCode": "void\tft_print_bits(unsigned char octet)\n{\n\t// A completer\n}",
+        "solution": "void\tft_print_bits(unsigned char octet)\n{\n\tint\ti;\n\tchar\tc;\n\n\ti = 7;\n\twhile (i >= 0)\n\t{\n\t\tc = ((octet >> i) & 1) + '0';\n\t\twrite(1, &c, 1);\n\t\ti--;\n\t}\n}",
+        "hint": "Pour chaque position de 7 a 0, decale l'octet vers la droite et masque avec & 1",
+        "difficulty": 2
+      },
+      {
+        "id": 2,
+        "title": "Lire un bit",
+        "instruction": "Ecris une fonction qui retourne la valeur (0 ou 1) du bit a la position pos dans un entier.",
+        "starterCode": "int\tft_get_bit(int number, int pos)\n{\n\t// A completer\n}",
+        "solution": "int\tft_get_bit(int number, int pos)\n{\n\treturn ((number >> pos) & 1);\n}",
+        "hint": "Decale le nombre de pos positions vers la droite, puis masque avec & 1",
+        "difficulty": 1
+      },
+      {
+        "id": 3,
+        "title": "Creer un masque",
+        "instruction": "Ecris une fonction qui retourne un masque avec un seul bit a 1 a la position donnee.",
+        "starterCode": "unsigned int\tft_make_mask(int pos)\n{\n\t// A completer\n}",
+        "solution": "unsigned int\tft_make_mask(int pos)\n{\n\treturn (1U << pos);\n}",
+        "hint": "Utilise 1 decale a gauche de pos positions",
+        "difficulty": 1
+      },
+      {
+        "id": 4,
+        "title": "Inverser un bit",
+        "instruction": "Ecris une fonction ft_toggle_bit qui inverse le bit a la position pos (0 devient 1, 1 devient 0).",
+        "starterCode": "int\tft_toggle_bit(int number, int pos)\n{\n\t// A completer\n}",
+        "solution": "int\tft_toggle_bit(int number, int pos)\n{\n\treturn (number ^ (1 << pos));\n}",
+        "hint": "Le XOR (^) avec 1 inverse un bit : 0^1=1, 1^1=0",
+        "difficulty": 2
+      },
+      {
+        "id": 5,
+        "title": "Compter les bits actifs (simple)",
+        "instruction": "Ecris une fonction qui compte le nombre de bits a 1 dans un octet en testant chaque position.",
+        "starterCode": "int\tft_count_ones(unsigned char octet)\n{\n\t// A completer\n}",
+        "solution": "int\tft_count_ones(unsigned char octet)\n{\n\tint\tcount;\n\tint\ti;\n\n\tcount = 0;\n\ti = 0;\n\twhile (i < 8)\n\t{\n\t\tif (octet & (1 << i))\n\t\t\tcount++;\n\t\ti++;\n\t}\n\treturn (count);\n}",
+        "hint": "Teste chaque position de 0 a 7 avec un masque (1 << i)",
+        "difficulty": 2
+      }
+    ]
+  },
+  "starterCode": "#include <unistd.h>\n#include <stdio.h>\n\nint\tft_set_bit(int number, int pos, int value)\n{\n\t// A completer\n}\n\nint\tmain(void)\n{\n\tint\tn;\n\n\tn = 42;\n\tprintf(\"%d avec bit 0 a 1 = %d\\n\", n, ft_set_bit(n, 0, 1));\n\tprintf(\"%d avec bit 1 a 0 = %d\\n\", n, ft_set_bit(n, 1, 0));\n\tprintf(\"%d avec bit 5 a 0 = %d\\n\", n, ft_set_bit(n, 5, 0));\n\treturn (0);\n}",
+  "solution": "#include <unistd.h>\n#include <stdio.h>\n\nint\tft_set_bit(int number, int pos, int value)\n{\n\tif (pos < 0 || pos > 31)\n\t\treturn (number);\n\tif (value)\n\t\treturn (number | (1 << pos));\n\telse\n\t\treturn (number & ~(1 << pos));\n}\n\nint\tmain(void)\n{\n\tint\tn;\n\n\tn = 42;\n\tprintf(\"%d avec bit 0 a 1 = %d\\n\", n, ft_set_bit(n, 0, 1));\n\tprintf(\"%d avec bit 1 a 0 = %d\\n\", n, ft_set_bit(n, 1, 0));\n\tprintf(\"%d avec bit 5 a 0 = %d\\n\", n, ft_set_bit(n, 5, 0));\n\treturn (0);\n}",
+  "hints": [
+    "Pour activer un bit, utilise OR (|) avec un masque : number | (1 << pos)",
+    "Pour desactiver un bit, utilise AND (&) avec le masque inverse : number & ~(1 << pos)",
+    "Verifie que la position est valide (entre 0 et 31 pour un int 32 bits)"
+  ],
+  "testCases": [
+    {
+      "id": 1,
+      "description": "Activer et desactiver des bits de 42",
+      "stdin": "",
+      "expectedStdout": "42 avec bit 0 a 1 = 43\n42 avec bit 1 a 0 = 40\n42 avec bit 5 a 0 = 10\n",
+      "expectedExitCode": 0,
+      "visible": true
+    },
+    {
+      "id": 2,
+      "description": "Activer un bit deja a 1",
+      "stdin": "",
+      "expectedStdout": "42 avec bit 3 a 1 = 42\n",
+      "expectedExitCode": 0,
+      "visible": false
+    },
+    {
+      "id": 3,
+      "description": "Position invalide retourne le nombre inchange",
+      "stdin": "",
+      "expectedStdout": "42 avec bit 32 = 42\n",
+      "expectedExitCode": 0,
+      "visible": false
+    }
+  ],
+  "constraints": {
+    "allowedFunctions": ["write", "printf"],
+    "forbiddenFunctions": ["malloc", "pow"],
+    "maxExecutionTime": 5000,
+    "maxMemory": 128
+  },
+  "relatedExercises": ["c-day83-ex01-ft-count-bits", "c-day83-ex02-ft-swap-bits"],
+  "resources": [
+    {
+      "title": "Operateurs bit-a-bit en C",
+      "url": "https://www.geeksforgeeks.org/bitwise-operators-in-c-cpp/",
+      "type": "documentation"
+    },
+    {
+      "title": "Bit manipulation tricks",
+      "url": "https://graphics.stanford.edu/~seander/bithacks.html",
+      "type": "article"
+    }
+  ]
+}

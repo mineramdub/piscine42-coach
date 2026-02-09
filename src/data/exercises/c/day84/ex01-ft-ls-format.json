@@ -1,0 +1,257 @@
+{
+  "id": "c-day84-ex01-ft-ls-format",
+  "category": "c",
+  "day": 84,
+  "order": 1,
+  "title": "Formater l'affichage long (-l)",
+  "description": "Implemente la fonction ft_ls_format qui affiche les informations detaillees d'un fichier au format ls -l : permissions, nombre de liens, proprietaire, groupe, taille, date de modification et nom. Decode les permissions depuis st_mode et formate la date depuis st_mtime.",
+  "difficulty": 5,
+  "points": 50,
+  "estimatedTime": 45,
+  "learningObjectives": [
+    "Decoder les permissions d'un fichier depuis le champ st_mode",
+    "Formater la date de modification depuis un timestamp Unix",
+    "Utiliser les macros S_ISREG, S_ISDIR, S_ISLNK pour identifier le type de fichier",
+    "Convertir un UID/GID en nom d'utilisateur/groupe avec getpwuid/getgrgid",
+    "Reproduire le format d'affichage de ls -l"
+  ],
+  "learningContent": {
+    "lesson": {
+      "introduction": "L'option -l de ls affiche les fichiers en format long avec toutes les metadonnees : type et permissions, nombre de liens physiques, proprietaire, groupe, taille, date de modification et nom. Chaque information provient de la structure stat. Le decodage des permissions necessite des operations bit-a-bit sur st_mode. La date est formatee a partir du timestamp Unix (secondes depuis le 1er janvier 1970). Cet exercice combine les connaissances en manipulation de bits, formatage de sortie et appels systeme.",
+      "steps": [
+        {
+          "id": 1,
+          "title": "Decoder le type de fichier",
+          "content": "Le champ `st_mode` de struct stat contient a la fois le type de fichier et les permissions. Les 4 bits de poids fort definissent le type.\n\nLes macros POSIX testent le type :\n- `S_ISREG(mode)` : fichier regulier\n- `S_ISDIR(mode)` : repertoire\n- `S_ISLNK(mode)` : lien symbolique\n- `S_ISCHR(mode)` : peripherique caractere\n- `S_ISBLK(mode)` : peripherique bloc\n- `S_ISFIFO(mode)` : pipe (FIFO)\n- `S_ISSOCK(mode)` : socket",
+          "codeExample": "char\tft_file_type(mode_t mode)\n{\n\tif (S_ISDIR(mode))\n\t\treturn ('d');\n\tif (S_ISLNK(mode))\n\t\treturn ('l');\n\tif (S_ISCHR(mode))\n\t\treturn ('c');\n\tif (S_ISBLK(mode))\n\t\treturn ('b');\n\tif (S_ISFIFO(mode))\n\t\treturn ('p');\n\tif (S_ISSOCK(mode))\n\t\treturn ('s');\n\treturn ('-');\n}\n// Resultat : d pour dossier, - pour fichier, l pour lien...",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Quel caractere represente un repertoire dans ls -l ? Et un fichier regulier ?",
+            "starterCode": "// drwxr-xr-x  2 user group  4096 Jan  1 00:00 dossier\n// -rw-r--r--  1 user group   100 Jan  1 00:00 fichier.txt\n// Le premier caractere est :\n// 'd' pour un ?\n// '-' pour un ?",
+            "solution": "// drwxr-xr-x  2 user group  4096 Jan  1 00:00 dossier\n// -rw-r--r--  1 user group   100 Jan  1 00:00 fichier.txt\n// Le premier caractere est :\n// 'd' pour un REPERTOIRE\n// '-' pour un FICHIER REGULIER\n// 'l' pour un lien symbolique, 'c' pour char device, etc."
+          }
+        },
+        {
+          "id": 2,
+          "title": "Decoder les permissions (rwx)",
+          "content": "Les 9 bits de poids faible de st_mode representent les permissions pour le proprietaire (user), le groupe (group) et les autres (other). Chaque groupe a 3 bits : read (r), write (w), execute (x).\n\nConstantes POSIX : S_IRUSR, S_IWUSR, S_IXUSR, S_IRGRP, S_IWGRP, etc.",
+          "codeExample": "void\tft_permissions(mode_t mode, char *str)\n{\n\tstr[0] = (mode & S_IRUSR) ? 'r' : '-';\n\tstr[1] = (mode & S_IWUSR) ? 'w' : '-';\n\tstr[2] = (mode & S_IXUSR) ? 'x' : '-';\n\tstr[3] = (mode & S_IRGRP) ? 'r' : '-';\n\tstr[4] = (mode & S_IWGRP) ? 'w' : '-';\n\tstr[5] = (mode & S_IXGRP) ? 'x' : '-';\n\tstr[6] = (mode & S_IROTH) ? 'r' : '-';\n\tstr[7] = (mode & S_IWOTH) ? 'w' : '-';\n\tstr[8] = (mode & S_IXOTH) ? 'x' : '-';\n\tstr[9] = '\\0';\n}\n// Resultat : \"rwxr-xr-x\" ou \"rw-r--r--\" etc.",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Que signifie le mode 0644 en permissions rwx ?",
+            "starterCode": "// 0644 en octal :\n// 6 = 110 en binaire = ?w?\n// 4 = 100 en binaire = r??\n// 4 = 100 en binaire = r??\n// Permissions : ?????????",
+            "solution": "// 0644 en octal :\n// 6 = 110 en binaire = rw-\n// 4 = 100 en binaire = r--\n// 4 = 100 en binaire = r--\n// Permissions : rw-r--r--\n// Proprietaire peut lire/ecrire, les autres ne peuvent que lire"
+          }
+        },
+        {
+          "id": 3,
+          "title": "Formater la date de modification",
+          "content": "Le champ st_mtime contient un timestamp Unix (secondes depuis le 01/01/1970). La fonction `localtime` convertit ce timestamp en structure `tm` avec annee, mois, jour, heure, minute.\n\nls affiche la date au format 'Mois Jour Heure:Min' pour les fichiers recents (moins de 6 mois) et 'Mois Jour Annee' pour les anciens.",
+          "codeExample": "#include <time.h>\n\nvoid\tft_format_time(time_t mtime, char *buf)\n{\n\tstruct tm\t*tm;\n\tchar\t\t*months[];\n\n\ttm = localtime(&mtime);\n\tmonths = (char *[]){\"Jan\", \"Fev\", \"Mar\", \"Avr\",\n\t\t\"Mai\", \"Jun\", \"Jul\", \"Aou\", \"Sep\", \"Oct\", \"Nov\", \"Dec\"};\n\tsprintf(buf, \"%s %2d %02d:%02d\",\n\t\tmonths[tm->tm_mon], tm->tm_mday,\n\t\ttm->tm_hour, tm->tm_min);\n}",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Que retourne localtime pour le timestamp 0 (epoch Unix) ?",
+            "starterCode": "// timestamp 0 = 1er janvier 1970 a 00:00:00 UTC\n// localtime(0) donnerait :\n// tm_year = ? (annees depuis 1900)\n// tm_mon = ? (0-11)\n// tm_mday = ?\n// tm_hour = ? (en heure locale)",
+            "solution": "// timestamp 0 = 1er janvier 1970 a 00:00:00 UTC\n// localtime(0) donnerait :\n// tm_year = 70 (1970 - 1900)\n// tm_mon = 0 (janvier)\n// tm_mday = 1\n// tm_hour = 0 ou 1 selon le fuseau horaire"
+          }
+        },
+        {
+          "id": 4,
+          "title": "Assembler le format complet ls -l",
+          "content": "Le format complet combine toutes les informations : type + permissions, nombre de liens, proprietaire, groupe, taille, date, nom.\n\nOn peut utiliser getpwuid pour convertir l'UID en nom d'utilisateur et getgrgid pour le GID en nom de groupe.",
+          "codeExample": "void\tft_ls_long(char *path, char *name)\n{\n\tstruct stat\tbuf;\n\tchar\t\tperms[10];\n\tchar\t\tdate[20];\n\n\tif (lstat(path, &buf) == -1)\n\t\treturn ;\n\tprintf(\"%c\", ft_file_type(buf.st_mode));\n\tft_permissions(buf.st_mode, perms);\n\tprintf(\"%s \", perms);\n\tprintf(\"%2ld \", (long)buf.st_nlink);\n\tprintf(\"%-8s \", getpwuid(buf.st_uid)->pw_name);\n\tprintf(\"%-8s \", getgrgid(buf.st_gid)->gr_name);\n\tprintf(\"%8ld \", (long)buf.st_size);\n\tft_format_time(buf.st_mtime, date);\n\tprintf(\"%s \", date);\n\tprintf(\"%s\\n\", name);\n}",
+          "language": "c"
+        }
+      ]
+    },
+    "theory": [
+      {
+        "title": "Le champ st_mode et les permissions Unix",
+        "content": "Le champ st_mode est un entier de 16 bits qui encode le type de fichier et les permissions. Comprendre sa structure est essentiel pour le projet ft_ls.",
+        "codeExamples": [
+          {
+            "title": "Structure de st_mode",
+            "code": "// Bits 15-12 : type de fichier\n// Bits 11-9  : bits speciaux (setuid, setgid, sticky)\n// Bits 8-6   : permissions user (rwx)\n// Bits 5-3   : permissions group (rwx)\n// Bits 2-0   : permissions other (rwx)\n\n// Constantes de test :\n// S_IRUSR = 0400 (user read)\n// S_IWUSR = 0200 (user write)\n// S_IXUSR = 0100 (user execute)\n// S_IRGRP = 0040 (group read)\n// etc.",
+            "explanation": "Chaque permission est un bit independant testable avec AND (&)"
+          }
+        ],
+        "keyPoints": [
+          "st_mode encode le type (4 bits), les bits speciaux (3 bits) et les permissions (9 bits)",
+          "Les constantes S_IRUSR, S_IWUSR etc. sont des masques pour chaque permission",
+          "Les macros S_ISREG, S_ISDIR etc. testent les 4 bits de type",
+          "Le mode 0755 en octal = rwxr-xr-x en permissions"
+        ],
+        "commonMistakes": [
+          "Confondre les constantes de type (S_IFREG) avec les macros de test (S_ISREG)",
+          "Oublier les bits speciaux (setuid, setgid, sticky) dans l'affichage des permissions",
+          "Ne pas utiliser lstat pour les liens symboliques (stat suit le lien)"
+        ]
+      },
+      {
+        "title": "Formatage de la date et localtime",
+        "content": "Les timestamps Unix sont des entiers representant les secondes depuis le 1er janvier 1970. localtime les convertit en structure lisible.",
+        "codeExamples": [
+          {
+            "title": "Conversion timestamp vers date lisible",
+            "code": "#include <time.h>\n\ntime_t now = time(NULL); // timestamp courant\nstruct tm *tm = localtime(&now);\n\n// Champs de struct tm :\n// tm_sec   : secondes (0-60)\n// tm_min   : minutes (0-59)\n// tm_hour  : heures (0-23)\n// tm_mday  : jour du mois (1-31)\n// tm_mon   : mois (0-11, attention !)\n// tm_year  : annees depuis 1900\n// tm_wday  : jour de la semaine (0=dimanche)",
+            "explanation": "Attention : tm_mon commence a 0 et tm_year est relatif a 1900"
+          }
+        ],
+        "keyPoints": [
+          "localtime convertit un time_t en struct tm (temps local)",
+          "tm_mon va de 0 a 11 (pas 1 a 12)",
+          "tm_year est le nombre d'annees depuis 1900 (pas l'annee absolue)",
+          "strftime permet un formatage flexible de la date"
+        ],
+        "commonMistakes": [
+          "Oublier que tm_mon commence a 0 (janvier = 0, pas 1)",
+          "Ajouter 1900 a tm_year pour obtenir l'annee reelle",
+          "Utiliser gmtime au lieu de localtime (donne UTC au lieu de l'heure locale)"
+        ]
+      },
+      {
+        "title": "Fonctions d'identification utilisateur/groupe",
+        "content": "Les fonctions getpwuid et getgrgid convertissent les identifiants numeriques en noms lisibles.",
+        "codeExamples": [
+          {
+            "title": "Convertir UID/GID en noms",
+            "code": "#include <pwd.h>\n#include <grp.h>\n\nstruct passwd *pw = getpwuid(buf.st_uid);\nif (pw)\n\tprintf(\"%s\", pw->pw_name);\nelse\n\tprintf(\"%d\", buf.st_uid);\n\nstruct group *gr = getgrgid(buf.st_gid);\nif (gr)\n\tprintf(\"%s\", gr->gr_name);\nelse\n\tprintf(\"%d\", buf.st_gid);",
+            "explanation": "Si l'UID/GID n'a pas de nom, on affiche le numero"
+          }
+        ],
+        "keyPoints": [
+          "getpwuid retourne une struct passwd avec pw_name (nom utilisateur)",
+          "getgrgid retourne une struct group avec gr_name (nom du groupe)",
+          "Ces fonctions retournent NULL si l'UID/GID n'existe pas",
+          "Dans ce cas, ls affiche le numero au lieu du nom"
+        ],
+        "commonMistakes": [
+          "Ne pas verifier le retour de getpwuid/getgrgid (NULL si inconnu)",
+          "Stocker le pointeur retourne sans copier (la memoire peut etre reutilisee)",
+          "Oublier les includes <pwd.h> et <grp.h>"
+        ]
+      },
+      {
+        "title": "Alignement et formatage de l'affichage",
+        "content": "L'affichage de ls -l est soigneusement aligne en colonnes. printf offre des options de largeur et d'alignement.",
+        "codeExamples": [
+          {
+            "title": "Formatage avec printf",
+            "code": "// Alignement a droite (defaut) :\nprintf(\"%8ld\", size);    // \"     100\"\n\n// Alignement a gauche :\nprintf(\"%-8s\", name);    // \"user    \"\n\n// Largeur minimale :\nprintf(\"%2ld\", links);   // \" 1\" ou \"12\"\n\n// Exemple complet :\n// -rw-r--r--  1 user     group       100 Jan  1 00:00 file.txt\nprintf(\"%c%s %2ld %-8s %-8s %8ld %s %s\\n\",\n\ttype, perms, nlink, user, group, size, date, name);",
+            "explanation": "Les largeurs fixes assurent l'alignement en colonnes"
+          }
+        ],
+        "keyPoints": [
+          "%Nd aligne a droite sur N caracteres minimum",
+          "%-Ns aligne a gauche sur N caracteres minimum",
+          "Les largeurs de colonnes s'adaptent au contenu le plus large",
+          "ls aligne dynamiquement les colonnes en faisant deux passes"
+        ],
+        "commonMistakes": [
+          "Largeurs de colonnes fixes qui ne s'adaptent pas au contenu",
+          "Oublier l'espace entre les colonnes",
+          "Melanger alignement a gauche et a droite sans coherence"
+        ]
+      }
+    ],
+    "prepExercises": [
+      {
+        "id": 1,
+        "title": "Tester un bit de permission",
+        "instruction": "Ecris une fonction qui retourne 'r', 'w' ou 'x' si le bit correspondant est actif, '-' sinon.",
+        "starterCode": "char\tft_perm_char(mode_t mode, mode_t bit, char c)\n{\n\t// A completer\n}",
+        "solution": "char\tft_perm_char(mode_t mode, mode_t bit, char c)\n{\n\tif (mode & bit)\n\t\treturn (c);\n\treturn ('-');\n}",
+        "hint": "Si mode & bit est non-nul, retourne c, sinon retourne '-'",
+        "difficulty": 1
+      },
+      {
+        "id": 2,
+        "title": "Construire la string de permissions",
+        "instruction": "Ecris une fonction qui remplit un buffer de 10 caracteres avec les permissions rwxrwxrwx.",
+        "starterCode": "void\tft_perms_str(mode_t mode, char *str)\n{\n\t// A completer\n}",
+        "solution": "void\tft_perms_str(mode_t mode, char *str)\n{\n\tstr[0] = (mode & S_IRUSR) ? 'r' : '-';\n\tstr[1] = (mode & S_IWUSR) ? 'w' : '-';\n\tstr[2] = (mode & S_IXUSR) ? 'x' : '-';\n\tstr[3] = (mode & S_IRGRP) ? 'r' : '-';\n\tstr[4] = (mode & S_IWGRP) ? 'w' : '-';\n\tstr[5] = (mode & S_IXGRP) ? 'x' : '-';\n\tstr[6] = (mode & S_IROTH) ? 'r' : '-';\n\tstr[7] = (mode & S_IWOTH) ? 'w' : '-';\n\tstr[8] = (mode & S_IXOTH) ? 'x' : '-';\n\tstr[9] = '\\0';\n}",
+        "hint": "Teste chaque bit avec les constantes S_IRUSR, S_IWUSR, etc.",
+        "difficulty": 2
+      },
+      {
+        "id": 3,
+        "title": "Identifier le type de fichier",
+        "instruction": "Ecris une fonction qui retourne le caractere de type de fichier ('d', '-', 'l', etc.).",
+        "starterCode": "char\tft_type_char(mode_t mode)\n{\n\t// A completer\n}",
+        "solution": "char\tft_type_char(mode_t mode)\n{\n\tif (S_ISDIR(mode))\n\t\treturn ('d');\n\tif (S_ISLNK(mode))\n\t\treturn ('l');\n\tif (S_ISCHR(mode))\n\t\treturn ('c');\n\tif (S_ISBLK(mode))\n\t\treturn ('b');\n\tif (S_ISFIFO(mode))\n\t\treturn ('p');\n\tif (S_ISSOCK(mode))\n\t\treturn ('s');\n\treturn ('-');\n}",
+        "hint": "Utilise les macros S_ISDIR, S_ISLNK, S_ISREG, etc. dans un if/else",
+        "difficulty": 2
+      },
+      {
+        "id": 4,
+        "title": "Formater un nombre avec largeur fixe",
+        "instruction": "Ecris une fonction qui affiche un nombre aligne a droite sur une largeur donnee.",
+        "starterCode": "void\tft_print_padded(long n, int width)\n{\n\t// A completer\n}",
+        "solution": "void\tft_print_padded(long n, int width)\n{\n\tprintf(\"%*ld\", width, n);\n}",
+        "hint": "Utilise printf avec %*ld ou le * est remplace par la largeur",
+        "difficulty": 1
+      },
+      {
+        "id": 5,
+        "title": "Construire un chemin complet",
+        "instruction": "Ecris une fonction qui concatene un repertoire et un nom de fichier avec un / entre les deux.",
+        "starterCode": "void\tft_build_path(char *buf, char *dir, char *name)\n{\n\t// A completer\n}",
+        "solution": "void\tft_build_path(char *buf, char *dir, char *name)\n{\n\tint\ti;\n\tint\tj;\n\n\ti = 0;\n\twhile (dir[i])\n\t{\n\t\tbuf[i] = dir[i];\n\t\ti++;\n\t}\n\tif (i > 0 && buf[i - 1] != '/')\n\t\tbuf[i++] = '/';\n\tj = 0;\n\twhile (name[j])\n\t\tbuf[i++] = name[j++];\n\tbuf[i] = '\\0';\n}",
+        "hint": "Copie le repertoire, ajoute un / si necessaire, puis copie le nom",
+        "difficulty": 2
+      }
+    ]
+  },
+  "starterCode": "#include <stdio.h>\n#include <sys/stat.h>\n#include <unistd.h>\n#include <pwd.h>\n#include <grp.h>\n#include <time.h>\n\nvoid\tft_ls_format(char *path)\n{\n\t// A completer\n}\n\nint\tmain(int argc, char **argv)\n{\n\tif (argc == 2)\n\t\tft_ls_format(argv[1]);\n\telse\n\t\tprintf(\"Usage: %s <fichier>\\n\", argv[0]);\n\treturn (0);\n}",
+  "solution": "#include <stdio.h>\n#include <sys/stat.h>\n#include <unistd.h>\n#include <pwd.h>\n#include <grp.h>\n#include <time.h>\n\nchar\tft_type_char(mode_t mode)\n{\n\tif (S_ISDIR(mode))\n\t\treturn ('d');\n\tif (S_ISLNK(mode))\n\t\treturn ('l');\n\treturn ('-');\n}\n\nvoid\tft_ls_format(char *path)\n{\n\tstruct stat\t\tbuf;\n\tchar\t\t\tperms[10];\n\tstruct tm\t\t*tm;\n\n\tif (lstat(path, &buf) == -1)\n\t\treturn ;\n\tperms[0] = (buf.st_mode & S_IRUSR) ? 'r' : '-';\n\tperms[1] = (buf.st_mode & S_IWUSR) ? 'w' : '-';\n\tperms[2] = (buf.st_mode & S_IXUSR) ? 'x' : '-';\n\tperms[3] = (buf.st_mode & S_IRGRP) ? 'r' : '-';\n\tperms[4] = (buf.st_mode & S_IWGRP) ? 'w' : '-';\n\tperms[5] = (buf.st_mode & S_IXGRP) ? 'x' : '-';\n\tperms[6] = (buf.st_mode & S_IROTH) ? 'r' : '-';\n\tperms[7] = (buf.st_mode & S_IWOTH) ? 'w' : '-';\n\tperms[8] = (buf.st_mode & S_IXOTH) ? 'x' : '-';\n\tperms[9] = '\\0';\n\ttm = localtime(&buf.st_mtime);\n\tprintf(\"%c%s %2ld %8ld %s\\n\",\n\t\tft_type_char(buf.st_mode), perms,\n\t\t(long)buf.st_nlink, (long)buf.st_size, path);\n}\n\nint\tmain(int argc, char **argv)\n{\n\tif (argc == 2)\n\t\tft_ls_format(argv[1]);\n\telse\n\t\tprintf(\"Usage: %s <fichier>\\n\", argv[0]);\n\treturn (0);\n}",
+  "hints": [
+    "Utilise lstat au lieu de stat pour gerer correctement les liens symboliques",
+    "Les permissions se decodent bit par bit avec les constantes S_IRUSR, S_IWUSR, etc.",
+    "localtime convertit st_mtime en structure tm avec annee, mois, jour, heure, minute"
+  ],
+  "testCases": [
+    {
+      "id": 1,
+      "description": "Afficher les infos d'un fichier existant",
+      "stdin": "",
+      "expectedStdout": "-rw-r--r--  1      100 test.txt\n",
+      "expectedExitCode": 0,
+      "visible": true
+    },
+    {
+      "id": 2,
+      "description": "Afficher les infos d'un repertoire",
+      "stdin": "",
+      "expectedStdout": "drwxr-xr-x  2     4096 testdir\n",
+      "expectedExitCode": 0,
+      "visible": false
+    },
+    {
+      "id": 3,
+      "description": "Fichier inexistant ne produit pas de sortie",
+      "stdin": "",
+      "expectedStdout": "",
+      "expectedExitCode": 0,
+      "visible": false
+    }
+  ],
+  "constraints": {
+    "allowedFunctions": ["printf", "write", "lstat", "stat", "localtime", "getpwuid", "getgrgid", "readlink"],
+    "forbiddenFunctions": ["system", "popen"],
+    "maxExecutionTime": 5000,
+    "maxMemory": 128
+  },
+  "relatedExercises": ["c-day84-ex00-ft-ls-sort", "c-day84-ex02-ft-ls-recursive"],
+  "resources": [
+    {
+      "title": "stat - Manuel Linux",
+      "url": "https://man7.org/linux/man-pages/man2/stat.2.html",
+      "type": "documentation"
+    },
+    {
+      "title": "Permissions Unix - Tutoriel",
+      "url": "https://www.geeksforgeeks.org/permissions-in-linux/",
+      "type": "article"
+    }
+  ]
+}

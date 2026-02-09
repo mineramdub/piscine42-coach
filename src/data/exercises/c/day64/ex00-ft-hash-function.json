@@ -1,0 +1,257 @@
+{
+  "id": "c-day64-ex00-ft-hash-function",
+  "category": "c",
+  "day": 64,
+  "order": 0,
+  "title": "Implementer une fonction de hachage",
+  "description": "Ecris la fonction ft_hash qui prend une chaine de caracteres (cle) et la taille de la table, et retourne un index (entier non signe) entre 0 et size-1. Implemente l'algorithme djb2 de Dan Bernstein : initialise hash a 5381, puis pour chaque caractere, hash = hash * 33 + c. Retourne hash % size pour obtenir un index valide.",
+  "difficulty": 4,
+  "points": 40,
+  "estimatedTime": 30,
+  "learningObjectives": [
+    "Comprendre le role d'une fonction de hachage dans une table de hachage",
+    "Implementer l'algorithme djb2 pour le hachage de chaines",
+    "Comprendre pourquoi on utilise le modulo pour borner l'index",
+    "Savoir ce qu'est une bonne fonction de hachage (distribution uniforme)",
+    "Gerer les types unsigned pour eviter les depassements negatifs"
+  ],
+  "learningContent": {
+    "lesson": {
+      "introduction": "Une fonction de hachage transforme une cle (souvent une chaine de caracteres) en un index numerique. C'est la brique de base des tables de hachage, qui permettent des acces en O(1) en moyenne. Une bonne fonction de hachage distribue les cles uniformement pour minimiser les collisions. L'algorithme djb2 est simple, efficace et largement utilise.",
+      "steps": [
+        {
+          "id": 1,
+          "title": "Principe du hachage",
+          "content": "Le hachage transforme une donnee de taille variable (chaine) en un entier de taille fixe. Cet entier sert d'index dans un tableau.\n\n**Proprietes souhaitees** :\n- Deterministe : meme entree = meme sortie\n- Distribution uniforme : les index sont repartis equitablement\n- Rapide a calculer\n- Effet avalanche : un petit changement en entree change beaucoup la sortie",
+          "codeExample": "// Principe :\n// \"hello\" -> hash -> 1234567 -> % 100 -> index 67\n// \"world\" -> hash -> 8765432 -> % 100 -> index 32\n// \"test\"  -> hash -> 3141592 -> % 100 -> index 92\n\n// Chaque chaine est mappee a un index dans [0, size-1]\n// Deux chaines differentes PEUVENT donner le meme index\n// C'est une COLLISION",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Si hash(\"hello\") = 210714636441 et size = 10, quel est l'index ?",
+            "starterCode": "// hash = 210714636441\n// size = 10\n// index = hash % size = ???",
+            "solution": "// index = 210714636441 % 10 = 1\n// L'index est toujours dans [0, size-1]"
+          }
+        },
+        {
+          "id": 2,
+          "title": "L'algorithme djb2",
+          "content": "L'algorithme djb2 de Dan Bernstein est un des algorithmes de hachage les plus simples et efficaces pour les chaines :\n1. Initialiser hash a 5381 (nombre magique)\n2. Pour chaque caractere c : hash = hash * 33 + c\n3. Retourner hash % size\n\nLa multiplication par 33 et la valeur initiale 5381 donnent une bonne distribution.",
+          "codeExample": "// djb2 pour \"ab\" avec size = 10 :\n// hash = 5381\n// 'a' (97) : hash = 5381 * 33 + 97 = 177670\n// 'b' (98) : hash = 177670 * 33 + 98 = 5863208\n// index = 5863208 % 10 = 8\n\n// Notation alternative :\n// hash * 33 equivaut a (hash << 5) + hash\n// (decalage de 5 bits = multiplication par 32, + hash = *33)",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Calcule le hash djb2 de \"a\" avec size = 10.",
+            "starterCode": "// hash = 5381\n// 'a' = 97\n// hash = 5381 * 33 + 97 = ???\n// index = ??? % 10 = ???",
+            "solution": "// hash = 5381 * 33 + 97 = 177573 + 97 = 177670\n// index = 177670 % 10 = 0"
+          }
+        },
+        {
+          "id": 3,
+          "title": "Implementation en C",
+          "content": "L'implementation utilise un **unsigned long** pour eviter les problemes de depassement avec les nombres negatifs. Le type unsigned permet au hash de \"wrap around\" naturellement sans comportement indefini.",
+          "codeExample": "unsigned long\tft_hash(char *key, unsigned int size)\n{\n\tunsigned long\thash;\n\tint\t\t\t\tc;\n\n\thash = 5381;\n\twhile (*key)\n\t{\n\t\tc = *key;\n\t\thash = hash * 33 + c;\n\t\tkey++;\n\t}\n\treturn (hash % size);\n}",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Pourquoi utiliser unsigned long au lieu de int pour hash ?",
+            "starterCode": "// Avec int (signe) :\n// Si hash depasse INT_MAX (2^31 - 1)\n// Resultat = ???\n\n// Avec unsigned long :\n// Si hash depasse ULONG_MAX\n// Resultat = ???",
+            "solution": "// Avec int : DEPASSEMENT = comportement INDEFINI\n// (peut devenir negatif, crash, etc.)\n\n// Avec unsigned long : wrap around defini\n// Le hash continue de fonctionner correctement\n// Le modulo final donne toujours un index valide"
+          }
+        },
+        {
+          "id": 4,
+          "title": "Qualite du hachage et collisions",
+          "content": "Une bonne fonction de hachage minimise les collisions (deux cles differentes -> meme index). La qualite depend de la distribution : idealement, chaque bucket recoit le meme nombre de cles.\n\ndjb2 est connue pour bien distribuer les chaines de caracteres classiques, mais ce n'est pas une fonction cryptographique.",
+          "codeExample": "// Test de distribution avec 100 cles et size = 10 :\n// Ideal : chaque bucket recoit ~10 cles\n// djb2 : [12, 8, 11, 9, 10, 11, 8, 9, 12, 10] -> bon\n// Mauvais hash (somme % size) :\n//   [2, 3, 15, 25, 20, 18, 10, 5, 1, 1] -> mauvais\n\n// Un mauvais hash degrade les performances :\n// O(1) en moyenne -> O(n) si toutes les cles\n// sont dans le meme bucket",
+          "language": "c"
+        }
+      ]
+    },
+    "theory": [
+      {
+        "title": "Fonctions de hachage : theorie",
+        "content": "Une fonction de hachage mappe un ensemble potentiellement infini de cles vers un ensemble fini d'index. Par le principe des tiroirs (pigeonhole principle), les collisions sont inevitables si le nombre de cles depasse la taille de la table.",
+        "codeExamples": [
+          {
+            "title": "Differentes fonctions de hachage pour les chaines",
+            "code": "// Hash naif : somme des caracteres\nunsigned long hash_sum(char *key, unsigned int size)\n{\n\tunsigned long h = 0;\n\twhile (*key)\n\t\th += *key++;\n\treturn (h % size);\n}\n// Probleme : \"ab\" et \"ba\" donnent le meme hash !\n\n// djb2 : prend en compte la position\nunsigned long hash_djb2(char *key, unsigned int size)\n{\n\tunsigned long h = 5381;\n\twhile (*key)\n\t\th = h * 33 + *key++;\n\treturn (h % size);\n}\n// \"ab\" != \"ba\" car la multiplication change tout",
+            "explanation": "djb2 est meilleur car la position des caracteres influence le hash."
+          }
+        ],
+        "keyPoints": [
+          "Les collisions sont inevitables (pigeonhole principle)",
+          "Une bonne fonction distribue uniformement les cles",
+          "La position des caracteres doit influencer le hash",
+          "djb2 utilise la multiplication pour melanger les bits"
+        ],
+        "commonMistakes": [
+          "Utiliser une simple somme des caracteres (\"abc\" = \"bca\" = \"cab\")",
+          "Oublier le modulo final (l'index doit etre dans [0, size-1])",
+          "Utiliser un type signe pour le hash (depassement = comportement indefini)"
+        ]
+      },
+      {
+        "title": "L'algorithme djb2 en detail",
+        "content": "djb2 est un algorithme cree par Dan Bernstein. La valeur initiale 5381 et le multiplicateur 33 ont ete choisis empiriquement pour minimiser les collisions sur des ensembles de chaines typiques.",
+        "codeExamples": [
+          {
+            "title": "Variantes de djb2",
+            "code": "// Version classique (multiplication)\nunsigned long djb2(char *str)\n{\n\tunsigned long hash = 5381;\n\tint c;\n\twhile ((c = *str++))\n\t\thash = hash * 33 + c;\n\treturn (hash);\n}\n\n// Version avec XOR (djb2a)\nunsigned long djb2a(char *str)\n{\n\tunsigned long hash = 5381;\n\tint c;\n\twhile ((c = *str++))\n\t\thash = hash * 33 ^ c;\n\treturn (hash);\n}\n\n// Version avec shift (equivalent a *33)\n// hash * 33 = (hash << 5) + hash",
+            "explanation": "La version XOR (djb2a) peut donner une meilleure distribution pour certaines donnees."
+          }
+        ],
+        "keyPoints": [
+          "Valeur initiale 5381 : nombre premier choisi empiriquement",
+          "Multiplicateur 33 : donne une bonne distribution pour les chaines ASCII",
+          "hash * 33 = (hash << 5) + hash (optimisation bit a bit)",
+          "La variante XOR (djb2a) est parfois meilleure"
+        ],
+        "commonMistakes": [
+          "Utiliser un multiplicateur pair (mauvaise distribution, perd les bits de poids faible)",
+          "Initialiser hash a 0 (les chaines vides et les prefixes nuls posent probleme)",
+          "Confondre djb2 (+) et djb2a (^)"
+        ]
+      },
+      {
+        "title": "Taille de la table et modulo",
+        "content": "La taille de la table de hachage influence la performance. Une taille premiere reduit les patterns dans la distribution. Le facteur de charge (nombre d'elements / taille) doit rester inferieur a 0.75 pour de bonnes performances.",
+        "codeExamples": [
+          {
+            "title": "Impact de la taille sur les collisions",
+            "code": "// Taille puissance de 2 : hash % 1024\n// Seuls les 10 bits de poids faible comptent !\n// Si le hash a des patterns dans ces bits -> collisions\n\n// Taille premiere : hash % 1009\n// Meilleure distribution car le premier\n// \"casse\" les patterns periodiques\n\n// Facteur de charge :\n// 100 elements dans une table de 200 -> charge = 0.5 (bon)\n// 100 elements dans une table de 50 -> charge = 2.0 (mauvais)\n// Ideal : charge < 0.75",
+            "explanation": "Une taille premiere ameliore la distribution des hash."
+          }
+        ],
+        "keyPoints": [
+          "Taille premiere = meilleure distribution (casse les patterns)",
+          "Facteur de charge = n / size, ideal < 0.75",
+          "Redimensionner la table quand le facteur de charge est trop eleve",
+          "Puissance de 2 : rapide (masque de bits) mais distribution moins bonne"
+        ],
+        "commonMistakes": [
+          "Utiliser une taille de 1 (tout dans le meme bucket)",
+          "Ne pas redimensionner quand la table est pleine (performances degradees)",
+          "Diviser par 0 si size = 0 dans hash % size"
+        ]
+      },
+      {
+        "title": "Applications des fonctions de hachage",
+        "content": "Les fonctions de hachage sont utilisees partout en informatique : tables de hachage, verification d'integrite, deduplication, caches, routage distribue (consistent hashing), et bien sur en cryptographie (SHA, MD5).",
+        "codeExamples": [
+          {
+            "title": "Utilisations courantes",
+            "code": "// Table de hachage (dictionnaire) :\n// \"nom\" -> hash -> index 42 -> stocke \"Alice\"\n// Recherche en O(1) en moyenne\n\n// Verification d'integrite :\n// hash(fichier) = checksum\n// Si le fichier change, le hash change\n\n// Deduplication :\n// Si hash(A) == hash(B), A et B sont probablement identiques\n// Verifier avec strcmp pour confirmer\n\n// Note : djb2 n'est PAS cryptographique\n// Pour la securite, utiliser SHA-256 ou bcrypt",
+            "explanation": "Les fonctions de hachage non-cryptographiques sont rapides mais pas securisees."
+          }
+        ],
+        "keyPoints": [
+          "Tables de hachage : acces O(1) en moyenne grace au hachage",
+          "Verification d'integrite : detecter les modifications de fichiers",
+          "Deduplication : identifier les doublons rapidement",
+          "djb2 est pour les tables de hachage, pas pour la cryptographie"
+        ],
+        "commonMistakes": [
+          "Utiliser djb2 pour la securite (pas cryptographique, reversible)",
+          "Croire que meme hash = meme donnee (collisions possibles)",
+          "Oublier que la fonction de hachage doit etre deterministe"
+        ]
+      }
+    ],
+    "prepExercises": [
+      {
+        "id": 1,
+        "title": "Hash naif : somme des caracteres",
+        "instruction": "Ecris une fonction de hash qui retourne la somme des caracteres modulo size.",
+        "starterCode": "unsigned long\thash_sum(char *key, unsigned int size)\n{\n\t// Somme des caracteres % size\n}",
+        "solution": "unsigned long\thash_sum(char *key, unsigned int size)\n{\n\tunsigned long h = 0;\n\twhile (*key)\n\t\th += *key++;\n\treturn (h % size);\n}",
+        "hint": "Boucle sur chaque caractere, additionne, retourne modulo size.",
+        "difficulty": 1
+      },
+      {
+        "id": 2,
+        "title": "djb2 sans modulo",
+        "instruction": "Ecris le coeur de djb2 (sans le modulo final).",
+        "starterCode": "unsigned long\tdjb2_raw(char *key)\n{\n\tunsigned long hash = 5381;\n\t// Pour chaque caractere : hash = hash * 33 + c\n\treturn (hash);\n}",
+        "solution": "unsigned long\tdjb2_raw(char *key)\n{\n\tunsigned long hash = 5381;\n\twhile (*key)\n\t{\n\t\thash = hash * 33 + *key;\n\t\tkey++;\n\t}\n\treturn (hash);\n}",
+        "hint": "Boucle while (*key), multiplie par 33, ajoute le caractere.",
+        "difficulty": 2
+      },
+      {
+        "id": 3,
+        "title": "Ajouter le modulo",
+        "instruction": "Complete ft_hash avec le modulo pour obtenir un index valide.",
+        "starterCode": "unsigned long\tft_hash(char *key, unsigned int size)\n{\n\tunsigned long hash = 5381;\n\twhile (*key)\n\t\thash = hash * 33 + *key++;\n\treturn (???);\n}",
+        "solution": "unsigned long\tft_hash(char *key, unsigned int size)\n{\n\tunsigned long hash = 5381;\n\twhile (*key)\n\t\thash = hash * 33 + *key++;\n\treturn (hash % size);\n}",
+        "hint": "Le modulo borne l'index entre 0 et size-1.",
+        "difficulty": 1
+      },
+      {
+        "id": 4,
+        "title": "Tester la distribution",
+        "instruction": "Calcule le hash djb2 de \"a\", \"b\", \"c\" avec size = 5.",
+        "starterCode": "// \"a\" : hash = 5381*33+97 = ???, index = ??? % 5\n// \"b\" : hash = 5381*33+98 = ???, index = ??? % 5\n// \"c\" : hash = 5381*33+99 = ???, index = ??? % 5",
+        "solution": "// \"a\" : hash = 177670, index = 177670 % 5 = 0\n// \"b\" : hash = 177671, index = 177671 % 5 = 1\n// \"c\" : hash = 177672, index = 177672 % 5 = 2\n// Bonne distribution pour des cles simples !",
+        "hint": "5381 * 33 = 177573. Ajoute le code ASCII du caractere.",
+        "difficulty": 2
+      },
+      {
+        "id": 5,
+        "title": "Probleme de la somme",
+        "instruction": "Montre que hash_sum donne le meme index pour \"ab\" et \"ba\".",
+        "starterCode": "// \"ab\" : sum = 97 + 98 = ???\n// \"ba\" : sum = 98 + 97 = ???\n// Meme index ? ???",
+        "solution": "// \"ab\" : sum = 97 + 98 = 195\n// \"ba\" : sum = 98 + 97 = 195\n// Meme hash ! C'est une COLLISION evitable\n// djb2 donne des hash differents car l'ordre compte",
+        "hint": "L'addition est commutative : a+b = b+a. C'est un probleme.",
+        "difficulty": 1
+      }
+    ]
+  },
+  "starterCode": "#include <stdlib.h>\n\nunsigned long\tft_hash(char *key, unsigned int size)\n{\n\t// Algorithme djb2 :\n\t// hash = 5381\n\t// Pour chaque caractere : hash = hash * 33 + c\n\t// Retourne hash % size\n\t(void)key;\n\t(void)size;\n\treturn (0);\n}",
+  "solution": "#include <stdlib.h>\n\nunsigned long\tft_hash(char *key, unsigned int size)\n{\n\tunsigned long\thash;\n\n\thash = 5381;\n\twhile (*key)\n\t{\n\t\thash = hash * 33 + *key;\n\t\tkey++;\n\t}\n\treturn (hash % size);\n}",
+  "hints": [
+    "Initialise hash a 5381, puis boucle sur chaque caractere de la cle.",
+    "Pour chaque caractere : hash = hash * 33 + caractere (algorithme djb2).",
+    "N'oublie pas le modulo final : return (hash % size) pour borner l'index."
+  ],
+  "testCases": [
+    {
+      "id": 1,
+      "description": "Hash de 'hello' avec size 10",
+      "stdin": "",
+      "expectedStdout": "index=1\n",
+      "expectedExitCode": 0,
+      "visible": true
+    },
+    {
+      "id": 2,
+      "description": "Hash de chaines differentes mais similaires",
+      "stdin": "",
+      "expectedStdout": "ab=8 ba=5\n",
+      "expectedExitCode": 0,
+      "visible": false
+    },
+    {
+      "id": 3,
+      "description": "Hash de chaine vide",
+      "stdin": "",
+      "expectedStdout": "index=1\n",
+      "expectedExitCode": 0,
+      "visible": false
+    }
+  ],
+  "constraints": {
+    "allowedFunctions": ["malloc", "free"],
+    "forbiddenFunctions": ["printf"],
+    "maxExecutionTime": 5000,
+    "maxMemory": 128
+  },
+  "relatedExercises": ["c-day64-ex01-ft-hashtable-create", "c-day64-ex02-ft-hashtable-insert"],
+  "resources": [
+    {
+      "title": "Algorithme djb2",
+      "url": "http://www.cse.yorku.ca/~oz/hash.html",
+      "type": "documentation"
+    },
+    {
+      "title": "Tables de hachage - Introduction",
+      "url": "https://www.geeksforgeeks.org/hashing-set-1-introduction/",
+      "type": "article"
+    }
+  ]
+}

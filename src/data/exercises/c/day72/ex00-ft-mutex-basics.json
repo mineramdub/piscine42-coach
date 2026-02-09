@@ -1,0 +1,257 @@
+{
+  "id": "c-day72-ex00-ft-mutex-basics",
+  "category": "c",
+  "day": 72,
+  "order": 0,
+  "title": "Proteger une variable partagee avec pthread_mutex",
+  "description": "Apprends a utiliser les mutex pour proteger l'acces a des variables partagees entre threads. Decouvre les fonctions init, lock, unlock et destroy.",
+  "difficulty": 4,
+  "points": 40,
+  "estimatedTime": 35,
+  "learningObjectives": [
+    "Comprendre le concept de mutex (mutual exclusion)",
+    "Utiliser pthread_mutex_init et pthread_mutex_destroy",
+    "Proteger une section critique avec lock et unlock",
+    "Identifier les variables partagees necessitant une protection",
+    "Ecrire du code thread-safe avec les mutex"
+  ],
+  "learningContent": {
+    "lesson": {
+      "introduction": "Quand plusieurs threads accedent a la meme variable, les resultats peuvent etre imprevisibles. Imaginons deux threads qui incrementent un compteur : sans protection, ils peuvent lire la meme valeur, l'incrementer chacun de leur cote, et ecrire le meme resultat. On perd ainsi une incrementation. Les mutex (mutual exclusion) resolvent ce probleme en garantissant qu'un seul thread a la fois peut acceder a la section critique du code.",
+      "steps": [
+        {
+          "id": 1,
+          "title": "Le probleme des acces concurrents",
+          "content": "Quand deux threads modifient la meme variable sans protection, le resultat est imprevisible :\n\n1. Thread A lit compteur (= 0)\n2. Thread B lit compteur (= 0)\n3. Thread A ecrit compteur = 1\n4. Thread B ecrit compteur = 1\n\nResultat : 1 au lieu de 2 ! C'est une **race condition**.",
+          "codeExample": "#include <pthread.h>\n#include <stdio.h>\n\nint\tg_counter = 0;\n\nvoid\t*increment(void *arg)\n{\n\tint\ti;\n\n\t(void)arg;\n\ti = 0;\n\twhile (i < 100000)\n\t{\n\t\tg_counter++; // Non protege !\n\t\ti++;\n\t}\n\treturn (NULL);\n}",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Lance 2 threads sans mutex qui incrementent un compteur 100000 fois chacun. Observe le resultat (souvent != 200000).",
+            "starterCode": "int\tg_counter = 0;\n\nvoid\t*increment(void *arg)\n{\n\tint\ti = 0;\n\t(void)arg;\n\twhile (i++ < 100000)\n\t\tg_counter++;\n\treturn (NULL);\n}\n\nint\tmain(void)\n{\n\tpthread_t\tt1, t2;\n\t/* TON CODE ICI */\n\tprintf(\"Counter: %d\\n\", g_counter);\n\treturn (0);\n}",
+            "solution": "int\tg_counter = 0;\n\nvoid\t*increment(void *arg)\n{\n\tint\ti = 0;\n\t(void)arg;\n\twhile (i++ < 100000)\n\t\tg_counter++;\n\treturn (NULL);\n}\n\nint\tmain(void)\n{\n\tpthread_t\tt1, t2;\n\n\tpthread_create(&t1, NULL, increment, NULL);\n\tpthread_create(&t2, NULL, increment, NULL);\n\tpthread_join(t1, NULL);\n\tpthread_join(t2, NULL);\n\tprintf(\"Counter: %d\\n\", g_counter);\n\treturn (0);\n}"
+          }
+        },
+        {
+          "id": 2,
+          "title": "Initialiser et detruire un mutex",
+          "content": "Un mutex se declare avec le type `pthread_mutex_t`. Il doit etre initialise avant utilisation et detruit apres.\n\n```c\npthread_mutex_t mutex;\npthread_mutex_init(&mutex, NULL);\n// ... utilisation ...\npthread_mutex_destroy(&mutex);\n```\n\nOn peut aussi initialiser statiquement : `pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;`",
+          "codeExample": "#include <pthread.h>\n\nint\tmain(void)\n{\n\tpthread_mutex_t\tmutex;\n\n\t// Initialisation dynamique\n\tif (pthread_mutex_init(&mutex, NULL) != 0)\n\t{\n\t\tprintf(\"Erreur init mutex\\n\");\n\t\treturn (1);\n\t}\n\t// ... utilisation ...\n\tpthread_mutex_destroy(&mutex);\n\treturn (0);\n}",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Initialise un mutex avec pthread_mutex_init, puis detruis-le avec pthread_mutex_destroy.",
+            "starterCode": "int\tmain(void)\n{\n\tpthread_mutex_t\tmutex;\n\t/* TON CODE ICI */\n\tprintf(\"Mutex OK\\n\");\n\treturn (0);\n}",
+            "solution": "int\tmain(void)\n{\n\tpthread_mutex_t\tmutex;\n\n\tpthread_mutex_init(&mutex, NULL);\n\tpthread_mutex_destroy(&mutex);\n\tprintf(\"Mutex OK\\n\");\n\treturn (0);\n}"
+          }
+        },
+        {
+          "id": 3,
+          "title": "Lock et Unlock : proteger la section critique",
+          "content": "Pour proteger une variable partagee :\n1. `pthread_mutex_lock(&mutex)` : le thread attend si le mutex est deja pris\n2. Modifier la variable (section critique)\n3. `pthread_mutex_unlock(&mutex)` : libere le mutex\n\nUn seul thread peut etre dans la section critique a la fois.",
+          "codeExample": "pthread_mutex_t\tg_mutex;\nint\t\t\t\tg_counter = 0;\n\nvoid\t*increment(void *arg)\n{\n\tint\ti;\n\n\t(void)arg;\n\ti = 0;\n\twhile (i < 100000)\n\t{\n\t\tpthread_mutex_lock(&g_mutex);\n\t\tg_counter++;\n\t\tpthread_mutex_unlock(&g_mutex);\n\t\ti++;\n\t}\n\treturn (NULL);\n}",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Protege l'incrementation du compteur avec un mutex. Le resultat doit toujours etre 200000.",
+            "starterCode": "pthread_mutex_t\tg_mutex;\nint\t\t\t\tg_counter = 0;\n\nvoid\t*increment(void *arg)\n{\n\tint\ti = 0;\n\t(void)arg;\n\twhile (i++ < 100000)\n\t{\n\t\t/* TON CODE ICI */\n\t\tg_counter++;\n\t\t/* TON CODE ICI */\n\t}\n\treturn (NULL);\n}",
+            "solution": "pthread_mutex_t\tg_mutex;\nint\t\t\t\tg_counter = 0;\n\nvoid\t*increment(void *arg)\n{\n\tint\ti = 0;\n\t(void)arg;\n\twhile (i++ < 100000)\n\t{\n\t\tpthread_mutex_lock(&g_mutex);\n\t\tg_counter++;\n\t\tpthread_mutex_unlock(&g_mutex);\n\t}\n\treturn (NULL);\n}"
+          }
+        },
+        {
+          "id": 4,
+          "title": "Programme complet avec mutex",
+          "content": "Voici le programme complet qui utilise un mutex pour proteger un compteur partage entre plusieurs threads. Le resultat est desormais toujours correct et deterministe.\n\nLes etapes cles : initialiser le mutex, creer les threads, les joindre, detruire le mutex.",
+          "codeExample": "#include <pthread.h>\n#include <stdio.h>\n\n#define NB_THREADS 4\n#define ITERATIONS 100000\n\npthread_mutex_t\tg_mutex;\nint\t\t\t\tg_counter = 0;\n\nvoid\t*increment(void *arg)\n{\n\tint\ti;\n\n\t(void)arg;\n\ti = 0;\n\twhile (i < ITERATIONS)\n\t{\n\t\tpthread_mutex_lock(&g_mutex);\n\t\tg_counter++;\n\t\tpthread_mutex_unlock(&g_mutex);\n\t\ti++;\n\t}\n\treturn (NULL);\n}\n\nint\tmain(void)\n{\n\tpthread_t\tthreads[NB_THREADS];\n\tint\t\t\ti;\n\n\tpthread_mutex_init(&g_mutex, NULL);\n\ti = -1;\n\twhile (++i < NB_THREADS)\n\t\tpthread_create(&threads[i], NULL, increment, NULL);\n\ti = -1;\n\twhile (++i < NB_THREADS)\n\t\tpthread_join(threads[i], NULL);\n\tpthread_mutex_destroy(&g_mutex);\n\tprintf(\"Counter: %d\\n\", g_counter);\n\treturn (0);\n}",
+          "language": "c"
+        }
+      ]
+    },
+    "theory": [
+      {
+        "title": "Le concept de mutex",
+        "content": "Un mutex (mutual exclusion) est un mecanisme de synchronisation qui garantit qu'un seul thread a la fois peut acceder a une ressource partagee. C'est comme une cle unique pour une salle : un seul thread peut entrer a la fois, les autres attendent que la cle soit liberee.",
+        "codeExamples": [
+          {
+            "title": "Analogie du mutex",
+            "code": "// Thread A entre dans la section critique\npthread_mutex_lock(&mutex);   // Prend la cle\ng_counter++;                   // Seul dans la salle\npthread_mutex_unlock(&mutex);  // Rend la cle\n// Thread B peut maintenant entrer",
+            "explanation": "Lock bloque les autres threads. Unlock permet au suivant d'entrer."
+          }
+        ],
+        "keyPoints": [
+          "Un mutex garantit l'exclusion mutuelle sur une ressource",
+          "Un seul thread peut detenir le lock a un instant donne",
+          "Les threads en attente sont bloques jusqu'au unlock",
+          "Le mutex doit etre partage entre les threads (global ou via pointeur)"
+        ],
+        "commonMistakes": [
+          "Creer un mutex local a chaque thread au lieu d'un mutex partage",
+          "Oublier d'initialiser le mutex avant utilisation",
+          "Utiliser un mutex detruit (apres pthread_mutex_destroy)"
+        ]
+      },
+      {
+        "title": "Section critique et granularite",
+        "content": "La section critique est la portion de code protegee par le mutex. Plus elle est petite, meilleure est la performance car les threads passent moins de temps a attendre. Mais elle doit etre suffisamment grande pour proteger toutes les operations liees.",
+        "codeExamples": [
+          {
+            "title": "Granularite fine vs grossiere",
+            "code": "// Granularite fine (mieux)\npthread_mutex_lock(&mutex);\ng_counter++;\npthread_mutex_unlock(&mutex);\n\n// Granularite grossiere (moins performant)\npthread_mutex_lock(&mutex);\nprintf(\"Avant: %d\\n\", g_counter);\ng_counter++;\nprintf(\"Apres: %d\\n\", g_counter);\npthread_mutex_unlock(&mutex);",
+            "explanation": "Ne proteger que le strict necessaire ameliore le parallelisme."
+          }
+        ],
+        "keyPoints": [
+          "Minimiser la taille de la section critique pour la performance",
+          "Proteger toutes les operations dependantes dans la meme section",
+          "Ne pas appeler de fonctions bloquantes dans une section critique",
+          "Un mutex trop grossier reduit le parallelisme effectif"
+        ],
+        "commonMistakes": [
+          "Mettre tout le code du thread dans une section critique (serialisation)",
+          "Proteger seulement la lecture OU l'ecriture mais pas les deux",
+          "Appeler sleep ou des I/O dans une section critique"
+        ]
+      },
+      {
+        "title": "Initialisation statique vs dynamique",
+        "content": "Un mutex peut etre initialise statiquement avec PTHREAD_MUTEX_INITIALIZER ou dynamiquement avec pthread_mutex_init. L'initialisation statique est plus simple pour les mutex globaux. L'initialisation dynamique permet de specifier des attributs et est necessaire pour les mutex alloues dynamiquement.",
+        "codeExamples": [
+          {
+            "title": "Les deux methodes",
+            "code": "// Statique (global)\npthread_mutex_t\tg_mutex = PTHREAD_MUTEX_INITIALIZER;\n\n// Dynamique (necessaire pour les attributs)\npthread_mutex_t\tmutex;\npthread_mutex_init(&mutex, NULL);\n// ... utilisation ...\npthread_mutex_destroy(&mutex);",
+            "explanation": "Statique pour les globaux simples, dynamique pour les cas avances."
+          }
+        ],
+        "keyPoints": [
+          "PTHREAD_MUTEX_INITIALIZER est equivalent a init avec attributs NULL",
+          "L'initialisation dynamique requiert un destroy correspondant",
+          "L'initialisation statique ne necessite pas de destroy explicite",
+          "Les mutex dans des structures allouees doivent etre init dynamiquement"
+        ],
+        "commonMistakes": [
+          "Oublier pthread_mutex_destroy pour un mutex init dynamiquement",
+          "Utiliser PTHREAD_MUTEX_INITIALIZER pour un mutex dans une structure allouee",
+          "Initialiser un mutex deja initialise sans le detruire d'abord"
+        ]
+      },
+      {
+        "title": "Erreurs courantes avec les mutex",
+        "content": "Les mutex sont simples a utiliser mais faciles a mal utiliser. Les erreurs les plus courantes sont d'oublier le unlock (deadlock), de locker un mutex deja locke par le meme thread (deadlock), ou de proteger un chemin d'acces mais pas un autre.",
+        "codeExamples": [
+          {
+            "title": "Oubli de unlock",
+            "code": "void\t*routine(void *arg)\n{\n\tpthread_mutex_lock(&mutex);\n\tif (condition)\n\t\treturn (NULL); // BUG : mutex jamais unlock !\n\tg_counter++;\n\tpthread_mutex_unlock(&mutex);\n\treturn (NULL);\n}",
+            "explanation": "Un return premature sans unlock bloque tous les autres threads."
+          }
+        ],
+        "keyPoints": [
+          "Toujours unlock un mutex apres l'avoir locke, meme en cas d'erreur",
+          "Un thread qui locke deux fois le meme mutex fait un deadlock",
+          "Tous les chemins de code doivent avoir un unlock correspondant",
+          "Verifier les codes de retour de lock et unlock en cas de doute"
+        ],
+        "commonMistakes": [
+          "Oublier le unlock dans un chemin de retour premature (if/return)",
+          "Locker un mutex deja detenu par le meme thread (auto-deadlock)",
+          "Proteger une variable dans un thread mais pas dans un autre"
+        ]
+      }
+    ],
+    "prepExercises": [
+      {
+        "id": 1,
+        "title": "Init et destroy",
+        "instruction": "Initialise un mutex dynamiquement et detruis-le proprement.",
+        "starterCode": "int\tmain(void)\n{\n\tpthread_mutex_t\tmutex;\n\t/* TON CODE ICI */\n\treturn (0);\n}",
+        "solution": "int\tmain(void)\n{\n\tpthread_mutex_t\tmutex;\n\n\tpthread_mutex_init(&mutex, NULL);\n\tpthread_mutex_destroy(&mutex);\n\treturn (0);\n}",
+        "hint": "pthread_mutex_init prend l'adresse du mutex et NULL pour les attributs.",
+        "difficulty": 1
+      },
+      {
+        "id": 2,
+        "title": "Lock et unlock simples",
+        "instruction": "Protege l'acces a une variable globale avec lock et unlock.",
+        "starterCode": "pthread_mutex_t\tg_mutex;\nint\t\t\t\tg_val = 0;\n\nvoid\t*routine(void *arg)\n{\n\t(void)arg;\n\t/* TON CODE ICI : protege g_val++ */\n\treturn (NULL);\n}",
+        "solution": "pthread_mutex_t\tg_mutex;\nint\t\t\t\tg_val = 0;\n\nvoid\t*routine(void *arg)\n{\n\t(void)arg;\n\tpthread_mutex_lock(&g_mutex);\n\tg_val++;\n\tpthread_mutex_unlock(&g_mutex);\n\treturn (NULL);\n}",
+        "hint": "Encadre g_val++ avec lock avant et unlock apres.",
+        "difficulty": 1
+      },
+      {
+        "id": 3,
+        "title": "Compteur protege",
+        "instruction": "Cree 2 threads qui incrementent un compteur 1000 fois chacun avec mutex. Affiche le resultat.",
+        "starterCode": "pthread_mutex_t\tg_mutex;\nint\t\t\t\tg_counter = 0;\n\n/* TON CODE ICI */",
+        "solution": "pthread_mutex_t\tg_mutex;\nint\t\t\t\tg_counter = 0;\n\nvoid\t*increment(void *arg)\n{\n\tint\ti = 0;\n\t(void)arg;\n\twhile (i++ < 1000)\n\t{\n\t\tpthread_mutex_lock(&g_mutex);\n\t\tg_counter++;\n\t\tpthread_mutex_unlock(&g_mutex);\n\t}\n\treturn (NULL);\n}\n\nint\tmain(void)\n{\n\tpthread_t\tt1, t2;\n\n\tpthread_mutex_init(&g_mutex, NULL);\n\tpthread_create(&t1, NULL, increment, NULL);\n\tpthread_create(&t2, NULL, increment, NULL);\n\tpthread_join(t1, NULL);\n\tpthread_join(t2, NULL);\n\tpthread_mutex_destroy(&g_mutex);\n\tprintf(\"Counter: %d\\n\", g_counter);\n\treturn (0);\n}",
+        "hint": "Init le mutex avant les threads, destroy apres les joins.",
+        "difficulty": 2
+      },
+      {
+        "id": 4,
+        "title": "Init statique",
+        "instruction": "Utilise PTHREAD_MUTEX_INITIALIZER pour initialiser un mutex global.",
+        "starterCode": "/* TON CODE ICI : declare le mutex */\nint\tg_val = 0;\n\nvoid\t*routine(void *arg)\n{\n\t(void)arg;\n\tpthread_mutex_lock(&g_mutex);\n\tg_val += 10;\n\tpthread_mutex_unlock(&g_mutex);\n\treturn (NULL);\n}",
+        "solution": "pthread_mutex_t\tg_mutex = PTHREAD_MUTEX_INITIALIZER;\nint\tg_val = 0;\n\nvoid\t*routine(void *arg)\n{\n\t(void)arg;\n\tpthread_mutex_lock(&g_mutex);\n\tg_val += 10;\n\tpthread_mutex_unlock(&g_mutex);\n\treturn (NULL);\n}",
+        "hint": "pthread_mutex_t g_mutex = PTHREAD_MUTEX_INITIALIZER;",
+        "difficulty": 2
+      },
+      {
+        "id": 5,
+        "title": "Mutex dans une structure",
+        "instruction": "Cree une structure contenant un compteur et son mutex. Initialise et utilise-la.",
+        "starterCode": "typedef struct s_counter\n{\n\tint\t\t\t\tvalue;\n\tpthread_mutex_t\tmutex;\n}\tt_counter;\n\n/* TON CODE ICI */",
+        "solution": "typedef struct s_counter\n{\n\tint\t\t\t\tvalue;\n\tpthread_mutex_t\tmutex;\n}\tt_counter;\n\nvoid\t*increment(void *arg)\n{\n\tt_counter\t*c = (t_counter *)arg;\n\tint\t\t\ti = 0;\n\n\twhile (i++ < 1000)\n\t{\n\t\tpthread_mutex_lock(&c->mutex);\n\t\tc->value++;\n\t\tpthread_mutex_unlock(&c->mutex);\n\t}\n\treturn (NULL);\n}\n\nint\tmain(void)\n{\n\tpthread_t\tt1, t2;\n\tt_counter\tcounter;\n\n\tcounter.value = 0;\n\tpthread_mutex_init(&counter.mutex, NULL);\n\tpthread_create(&t1, NULL, increment, &counter);\n\tpthread_create(&t2, NULL, increment, NULL);\n\tpthread_join(t1, NULL);\n\tpthread_join(t2, NULL);\n\tprintf(\"%d\\n\", counter.value);\n\tpthread_mutex_destroy(&counter.mutex);\n\treturn (0);\n}",
+        "hint": "Passe &counter comme argument et accede au mutex via c->mutex.",
+        "difficulty": 3
+      }
+    ]
+  },
+  "starterCode": "#include <pthread.h>\n#include <stdio.h>\n\n#define NB_THREADS 4\n#define ITERATIONS 100000\n\ntypedef struct s_counter\n{\n\tint\t\t\t\tvalue;\n\tpthread_mutex_t\tmutex;\n}\tt_counter;\n\nvoid\t*ft_increment(void *arg)\n{\n\tt_counter\t*counter;\n\tint\t\t\ti;\n\n\tcounter = (t_counter *)arg;\n\ti = 0;\n\twhile (i < ITERATIONS)\n\t{\n\t\t// TODO: Proteger l'incrementation avec le mutex\n\t\tcounter->value++;\n\t\ti++;\n\t}\n\treturn (NULL);\n}\n\nint\tmain(void)\n{\n\tpthread_t\tthreads[NB_THREADS];\n\tt_counter\tcounter;\n\tint\t\t\ti;\n\n\tcounter.value = 0;\n\t// TODO: Initialiser le mutex\n\t// TODO: Creer les threads\n\t// TODO: Joindre les threads\n\t// TODO: Detruire le mutex\n\tprintf(\"Counter: %d\\n\", counter.value);\n\treturn (0);\n}",
+  "solution": "#include <pthread.h>\n#include <stdio.h>\n\n#define NB_THREADS 4\n#define ITERATIONS 100000\n\ntypedef struct s_counter\n{\n\tint\t\t\t\tvalue;\n\tpthread_mutex_t\tmutex;\n}\tt_counter;\n\nvoid\t*ft_increment(void *arg)\n{\n\tt_counter\t*counter;\n\tint\t\t\ti;\n\n\tcounter = (t_counter *)arg;\n\ti = 0;\n\twhile (i < ITERATIONS)\n\t{\n\t\tpthread_mutex_lock(&counter->mutex);\n\t\tcounter->value++;\n\t\tpthread_mutex_unlock(&counter->mutex);\n\t\ti++;\n\t}\n\treturn (NULL);\n}\n\nint\tmain(void)\n{\n\tpthread_t\tthreads[NB_THREADS];\n\tt_counter\tcounter;\n\tint\t\t\ti;\n\n\tcounter.value = 0;\n\tpthread_mutex_init(&counter.mutex, NULL);\n\ti = -1;\n\twhile (++i < NB_THREADS)\n\t\tpthread_create(&threads[i], NULL, ft_increment, &counter);\n\ti = -1;\n\twhile (++i < NB_THREADS)\n\t\tpthread_join(threads[i], NULL);\n\tpthread_mutex_destroy(&counter.mutex);\n\tprintf(\"Counter: %d\\n\", counter.value);\n\treturn (0);\n}",
+  "hints": [
+    "Encadre counter->value++ avec pthread_mutex_lock et pthread_mutex_unlock",
+    "Initialise le mutex avec pthread_mutex_init(&counter.mutex, NULL) avant les threads",
+    "Detruis le mutex avec pthread_mutex_destroy apres les joins"
+  ],
+  "testCases": [
+    {
+      "id": 1,
+      "description": "4 threads x 100000 iterations = 400000",
+      "stdin": "",
+      "expectedStdout": "Counter: 400000\n",
+      "expectedExitCode": 0,
+      "visible": true
+    },
+    {
+      "id": 2,
+      "description": "Le resultat est toujours deterministe avec mutex",
+      "stdin": "",
+      "expectedStdout": "Counter: 400000\n",
+      "expectedExitCode": 0,
+      "visible": false
+    },
+    {
+      "id": 3,
+      "description": "Pas de race condition detectee",
+      "stdin": "",
+      "expectedStdout": "Counter: 400000\n",
+      "expectedExitCode": 0,
+      "visible": false
+    }
+  ],
+  "constraints": {
+    "allowedFunctions": ["pthread_create", "pthread_join", "pthread_mutex_init", "pthread_mutex_lock", "pthread_mutex_unlock", "pthread_mutex_destroy", "printf"],
+    "forbiddenFunctions": ["fork", "system"],
+    "maxExecutionTime": 5000,
+    "maxMemory": 128
+  },
+  "relatedExercises": ["c-day72-ex01-ft-race-condition", "c-day72-ex02-ft-deadlock"],
+  "resources": [
+    {
+      "title": "Manuel pthread_mutex_lock",
+      "url": "https://man7.org/linux/man-pages/man3/pthread_mutex_lock.3p.html",
+      "type": "documentation"
+    },
+    {
+      "title": "Comprendre les mutex en C",
+      "url": "https://www.geeksforgeeks.org/mutex-lock-for-linux-thread-synchronization/",
+      "type": "article"
+    }
+  ]
+}

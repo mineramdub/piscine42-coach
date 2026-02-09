@@ -1,0 +1,257 @@
+{
+  "id": "c-day74-ex00-ft-philo-eat",
+  "category": "c",
+  "day": 74,
+  "order": 0,
+  "title": "Gerer la prise de fourchettes et le repas",
+  "description": "Implemente la logique de prise de fourchettes pour un philosophe en evitant les deadlocks. Comprends l'ordre de prise et la gestion du cas d'un seul philosophe.",
+  "difficulty": 5,
+  "points": 50,
+  "estimatedTime": 40,
+  "learningObjectives": [
+    "Implementer la prise de fourchettes sans deadlock",
+    "Gerer le cas special d'un seul philosophe",
+    "Appliquer la strategie pair/impair pour l'ordre de prise",
+    "Proteger les acces a last_meal_time avec un mutex",
+    "Comprendre pourquoi l'ordre de prise est critique"
+  ],
+  "learningContent": {
+    "lesson": {
+      "introduction": "La prise de fourchettes est le moment le plus critique du probleme des philosophes. Si tous les philosophes prennent leur fourchette gauche en meme temps, personne ne peut prendre la droite : c'est un deadlock. Plusieurs strategies existent pour l'eviter : la plus courante est de faire en sorte que les philosophes pairs et impairs prennent leurs fourchettes dans un ordre different.",
+      "steps": [
+        {
+          "id": 1,
+          "title": "Le probleme du deadlock a table",
+          "content": "Avec 5 philosophes, si chacun prend sa fourchette gauche :\n- P0 prend F0, P1 prend F1, P2 prend F2, P3 prend F3, P4 prend F4\n- Chacun attend la fourchette droite... que son voisin detient\n- **Deadlock** : tous bloques indefiniment !\n\nIl faut briser le cycle d'attente circulaire.",
+          "codeExample": "// DEADLOCK :\n// P0: lock(F0), lock(F1) // attend F1\n// P1: lock(F1), lock(F2) // attend F2\n// P2: lock(F2), lock(F3) // attend F3\n// P3: lock(F3), lock(F4) // attend F4\n// P4: lock(F4), lock(F0) // attend F0 -> CYCLE !",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Identifie le cycle de deadlock pour 3 philosophes et 3 fourchettes.",
+            "starterCode": "// P0: lock(F0), lock(F1)\n// P1: lock(F1), lock(F2)\n// P2: lock(F2), lock(F0)\n// Quel est le cycle ? Comment le briser ?",
+            "solution": "// Cycle : P0->F1->P1->F2->P2->F0->P0\n// Solution : P2 prend F0 AVANT F2\n// P0: lock(F0), lock(F1)\n// P1: lock(F1), lock(F2)\n// P2: lock(F0), lock(F2) // Ordre inverse !"
+          }
+        },
+        {
+          "id": 2,
+          "title": "Strategie pair/impair",
+          "content": "La strategie la plus simple :\n- Les philosophes **impairs** prennent d'abord la **gauche**, puis la **droite**\n- Les philosophes **pairs** prennent d'abord la **droite**, puis la **gauche**\n\nCela brise le cycle car tous les philosophes ne prennent plus les fourchettes dans le meme sens.",
+          "codeExample": "void\ttake_forks(t_philo *philo)\n{\n\tif (philo->id % 2 == 1)\n\t{\n\t\tpthread_mutex_lock(philo->left_fork);\n\t\tprint_action(philo, \"has taken a fork\");\n\t\tpthread_mutex_lock(philo->right_fork);\n\t\tprint_action(philo, \"has taken a fork\");\n\t}\n\telse\n\t{\n\t\tpthread_mutex_lock(philo->right_fork);\n\t\tprint_action(philo, \"has taken a fork\");\n\t\tpthread_mutex_lock(philo->left_fork);\n\t\tprint_action(philo, \"has taken a fork\");\n\t}\n}",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Implemente take_forks avec la strategie pair/impair.",
+            "starterCode": "void\ttake_forks(t_philo *p)\n{\n\t/* TON CODE ICI */\n}",
+            "solution": "void\ttake_forks(t_philo *p)\n{\n\tif (p->id % 2 == 1)\n\t{\n\t\tpthread_mutex_lock(p->left_fork);\n\t\tprint_action(p, \"has taken a fork\");\n\t\tpthread_mutex_lock(p->right_fork);\n\t\tprint_action(p, \"has taken a fork\");\n\t}\n\telse\n\t{\n\t\tpthread_mutex_lock(p->right_fork);\n\t\tprint_action(p, \"has taken a fork\");\n\t\tpthread_mutex_lock(p->left_fork);\n\t\tprint_action(p, \"has taken a fork\");\n\t}\n}"
+          }
+        },
+        {
+          "id": 3,
+          "title": "Le cas d'un seul philosophe",
+          "content": "Avec un seul philosophe, il n'y a qu'une seule fourchette. La fourchette gauche et droite pointent vers le meme mutex (car `(0 + 1) % 1 == 0`). Le philosophe prend sa fourchette gauche et ne peut jamais prendre la droite.\n\nIl faut gerer ce cas special : le philosophe prend une fourchette, attend time_to_die, et meurt.",
+          "codeExample": "void\t*philo_routine(void *arg)\n{\n\tt_philo\t*p = (t_philo *)arg;\n\n\tp->last_meal_time = get_time_ms();\n\tif (p->table->nb_philos == 1)\n\t{\n\t\tpthread_mutex_lock(p->left_fork);\n\t\tprint_action(p, \"has taken a fork\");\n\t\tusleep(p->table->time_to_die * 1000);\n\t\tpthread_mutex_unlock(p->left_fork);\n\t\treturn (NULL);\n\t}\n\t// Routine normale...\n\treturn (NULL);\n}",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Gere le cas d'un seul philosophe dans la routine.",
+            "starterCode": "void\t*routine(void *arg)\n{\n\tt_philo\t*p = (t_philo *)arg;\n\tp->last_meal_time = get_time_ms();\n\t/* GERE LE CAS nb_philos == 1 */\n\t// routine normale...\n\treturn (NULL);\n}",
+            "solution": "void\t*routine(void *arg)\n{\n\tt_philo\t*p = (t_philo *)arg;\n\tp->last_meal_time = get_time_ms();\n\tif (p->table->nb_philos == 1)\n\t{\n\t\tpthread_mutex_lock(p->left_fork);\n\t\tprint_action(p, \"has taken a fork\");\n\t\tusleep(p->table->time_to_die * 1000);\n\t\tpthread_mutex_unlock(p->left_fork);\n\t\treturn (NULL);\n\t}\n\t// routine normale...\n\treturn (NULL);\n}"
+          }
+        },
+        {
+          "id": 4,
+          "title": "Fonction eat complete",
+          "content": "La fonction eat complete combine la prise de fourchettes, la mise a jour du temps de repas, l'attente pendant time_to_eat, l'incrementation du compteur de repas, et la liberation des fourchettes. La mise a jour de last_meal_time doit etre protegee si le moniteur y accede.",
+          "codeExample": "void\tft_eat(t_philo *philo)\n{\n\ttake_forks(philo);\n\tpthread_mutex_lock(&philo->table->meal_mutex);\n\tphilo->last_meal_time = get_time_ms();\n\tpthread_mutex_unlock(&philo->table->meal_mutex);\n\tprint_action(philo, \"is eating\");\n\tft_precise_sleep(philo->table->time_to_eat);\n\tphilo->meals_eaten++;\n\tpthread_mutex_unlock(philo->left_fork);\n\tpthread_mutex_unlock(philo->right_fork);\n}",
+          "language": "c"
+        }
+      ]
+    },
+    "theory": [
+      {
+        "title": "Strategies anti-deadlock pour les philosophes",
+        "content": "Plusieurs strategies existent pour eviter le deadlock des philosophes. La strategie pair/impair est la plus simple. D'autres approches incluent : limiter le nombre de philosophes pouvant tenter de manger simultanement, numeroter les fourchettes et toujours prendre la plus petite en premier, ou utiliser un serveur central.",
+        "codeExamples": [
+          {
+            "title": "Strategie par numeration",
+            "code": "// Chaque philo prend la fourchette de plus petit ID d'abord\nvoid\ttake_forks_by_id(t_philo *p)\n{\n\tpthread_mutex_t\t*first;\n\tpthread_mutex_t\t*second;\n\tint\t\t\t\tleft_id = p->id - 1;\n\tint\t\t\t\tright_id = p->id % p->table->nb_philos;\n\n\tif (left_id < right_id)\n\t{\n\t\tfirst = p->left_fork;\n\t\tsecond = p->right_fork;\n\t}\n\telse\n\t{\n\t\tfirst = p->right_fork;\n\t\tsecond = p->left_fork;\n\t}\n\tpthread_mutex_lock(first);\n\tpthread_mutex_lock(second);\n}",
+            "explanation": "Prendre les fourchettes par ordre croissant d'ID brise le cycle."
+          }
+        ],
+        "keyPoints": [
+          "Strategie pair/impair : les philosophes alternent l'ordre de prise",
+          "Strategie par numeration : toujours prendre le plus petit ID d'abord",
+          "Strategie du semaphore : limiter les philosophes pouvant manger",
+          "Toutes les strategies brisent l'attente circulaire"
+        ],
+        "commonMistakes": [
+          "Ne pas implementer de strategie et esperer que ca marche",
+          "Implementer la strategie mais ne pas la tester avec beaucoup de philosophes",
+          "Oublier le cas special d'un seul philosophe"
+        ]
+      },
+      {
+        "title": "Prise de fourchettes et atomicite",
+        "content": "La prise de fourchettes n'est pas atomique : il y a un delai entre la prise de la premiere et de la seconde. Pendant ce delai, un philosophe peut mourir si time_to_die est court. Le moniteur doit verifier la mort meme pendant la prise de fourchettes.",
+        "codeExamples": [
+          {
+            "title": "Risque entre les deux locks",
+            "code": "pthread_mutex_lock(left_fork);  // Fourchette prise\n// Ici, le philo n'a qu'une seule fourchette\n// Si time_to_die est tres court, il peut mourir\n// Le moniteur detectera la mort\npthread_mutex_lock(right_fork); // Peut bloquer longtemps",
+            "explanation": "Un philosophe avec une seule fourchette ne mange pas et peut mourir."
+          }
+        ],
+        "keyPoints": [
+          "La prise de 2 fourchettes n'est pas atomique",
+          "Un philosophe peut bloquer en attendant la deuxieme fourchette",
+          "Le moniteur continue de verifier pendant ce blocage",
+          "Le temps d'attente de fourchette compte dans le time_to_die"
+        ],
+        "commonMistakes": [
+          "Croire que la prise de 2 mutex est instantanee",
+          "Ne pas compter le temps d'attente de fourchette dans le risque de mort",
+          "Mettre a jour last_meal_time avant d'avoir les 2 fourchettes"
+        ]
+      },
+      {
+        "title": "Protection de last_meal_time",
+        "content": "last_meal_time est lu par le moniteur et ecrit par le philosophe. C'est une race condition potentielle. On peut ajouter un mutex dedie (meal_mutex) pour proteger cet acces, ou accepter le risque mineur sur les architectures ou la lecture/ecriture d'un long long est atomique.",
+        "codeExamples": [
+          {
+            "title": "Mutex dedie pour le repas",
+            "code": "// Dans le philosophe (ecriture) :\npthread_mutex_lock(&table->meal_mutex);\nphilo->last_meal_time = get_time_ms();\npthread_mutex_unlock(&table->meal_mutex);\n\n// Dans le moniteur (lecture) :\npthread_mutex_lock(&table->meal_mutex);\ntime_since = get_time_ms() - philo->last_meal_time;\npthread_mutex_unlock(&table->meal_mutex);",
+            "explanation": "Un mutex protege l'acces concurrent a last_meal_time."
+          }
+        ],
+        "keyPoints": [
+          "last_meal_time est une variable partagee entre philo et moniteur",
+          "Un meal_mutex dedie protege les acces en lecture et ecriture",
+          "La granularite fine (un mutex par philo) est plus performante",
+          "Sur x86, la lecture atomique d'un long long est souvent OK sans mutex"
+        ],
+        "commonMistakes": [
+          "Ignorer la race condition sur last_meal_time",
+          "Utiliser le print_mutex pour proteger last_meal_time (mauvaise granularite)",
+          "Proteger l'ecriture mais pas la lecture dans le moniteur"
+        ]
+      },
+      {
+        "title": "Attente precise (precise sleep)",
+        "content": "usleep n'est pas parfaitement precis : il peut dormir un peu plus longtemps que demande. Pour les philosophes, cette imprecision peut causer des morts inattendues. La solution est d'utiliser une boucle active avec de petits usleep.",
+        "codeExamples": [
+          {
+            "title": "Fonction de sleep precis",
+            "code": "void\tft_precise_sleep(long long ms)\n{\n\tlong long\tstart;\n\n\tstart = get_time_ms();\n\twhile (get_time_ms() - start < ms)\n\t\tusleep(200);\n}",
+            "explanation": "La boucle verifie le temps reel ecoule, usleep(200) reduit l'utilisation CPU."
+          }
+        ],
+        "keyPoints": [
+          "usleep peut dormir plus longtemps que demande",
+          "La boucle active avec petit usleep est plus precise",
+          "usleep(200) est un bon compromis precision/CPU",
+          "Ne pas utiliser usleep(100) car trop agressif sur certains systemes"
+        ],
+        "commonMistakes": [
+          "Utiliser un seul usleep(time_to_eat * 1000) sans boucle",
+          "Boucle active sans usleep (100% CPU)",
+          "usleep avec une valeur trop petite qui surcharge le systeme"
+        ]
+      }
+    ],
+    "prepExercises": [
+      {
+        "id": 1,
+        "title": "Prise simple de fourchettes",
+        "instruction": "Prends les fourchettes gauche puis droite et affiche les actions.",
+        "starterCode": "void\ttake_forks(t_philo *p)\n{\n\t/* TON CODE ICI */\n}",
+        "solution": "void\ttake_forks(t_philo *p)\n{\n\tpthread_mutex_lock(p->left_fork);\n\tprint_action(p, \"has taken a fork\");\n\tpthread_mutex_lock(p->right_fork);\n\tprint_action(p, \"has taken a fork\");\n}",
+        "hint": "Lock gauche, affiche, lock droite, affiche.",
+        "difficulty": 1
+      },
+      {
+        "id": 2,
+        "title": "Strategie pair/impair",
+        "instruction": "Implemente la prise de fourchettes avec la strategie pair/impair.",
+        "starterCode": "void\tsmart_take_forks(t_philo *p)\n{\n\t/* TON CODE ICI */\n}",
+        "solution": "void\tsmart_take_forks(t_philo *p)\n{\n\tif (p->id % 2 == 1)\n\t{\n\t\tpthread_mutex_lock(p->left_fork);\n\t\tprint_action(p, \"has taken a fork\");\n\t\tpthread_mutex_lock(p->right_fork);\n\t}\n\telse\n\t{\n\t\tpthread_mutex_lock(p->right_fork);\n\t\tprint_action(p, \"has taken a fork\");\n\t\tpthread_mutex_lock(p->left_fork);\n\t}\n\tprint_action(p, \"has taken a fork\");\n}",
+        "hint": "Les impairs : gauche puis droite. Les pairs : droite puis gauche.",
+        "difficulty": 2
+      },
+      {
+        "id": 3,
+        "title": "Cas d'un seul philo",
+        "instruction": "Gere le cas d'un seul philosophe qui ne peut que prendre une fourchette.",
+        "starterCode": "void\tone_philo(t_philo *p)\n{\n\t/* TON CODE ICI */\n}",
+        "solution": "void\tone_philo(t_philo *p)\n{\n\tpthread_mutex_lock(p->left_fork);\n\tprint_action(p, \"has taken a fork\");\n\tusleep(p->table->time_to_die * 1000);\n\tpthread_mutex_unlock(p->left_fork);\n}",
+        "hint": "Prends une fourchette, attends time_to_die, libere (le moniteur detecte la mort).",
+        "difficulty": 2
+      },
+      {
+        "id": 4,
+        "title": "Liberation des fourchettes",
+        "instruction": "Ecris release_forks qui libere les deux fourchettes.",
+        "starterCode": "void\trelease_forks(t_philo *p)\n{\n\t/* TON CODE ICI */\n}",
+        "solution": "void\trelease_forks(t_philo *p)\n{\n\tpthread_mutex_unlock(p->left_fork);\n\tpthread_mutex_unlock(p->right_fork);\n}",
+        "hint": "Unlock les deux fourchettes. L'ordre de unlock n'est pas critique.",
+        "difficulty": 1
+      },
+      {
+        "id": 5,
+        "title": "Precise sleep",
+        "instruction": "Implemente une fonction de sleep precis avec boucle active.",
+        "starterCode": "void\tft_precise_sleep(long long ms)\n{\n\t/* TON CODE ICI */\n}",
+        "solution": "void\tft_precise_sleep(long long ms)\n{\n\tlong long\tstart;\n\n\tstart = get_time_ms();\n\twhile (get_time_ms() - start < ms)\n\t\tusleep(200);\n}",
+        "hint": "Boucle tant que le temps ecoule < ms, avec usleep(200) dans la boucle.",
+        "difficulty": 2
+      }
+    ]
+  },
+  "starterCode": "#include <pthread.h>\n#include <stdio.h>\n#include <stdlib.h>\n#include <unistd.h>\n#include <sys/time.h>\n\nvoid\tft_take_forks(t_philo *philo)\n{\n\t// TODO: Strategie pair/impair pour eviter les deadlocks\n\t// TODO: Gerer le cas nb_philos == 1\n}\n\nvoid\tft_release_forks(t_philo *philo)\n{\n\t// TODO: Liberer les deux fourchettes\n}\n\nvoid\tft_philo_eat(t_philo *philo)\n{\n\t// TODO: Prendre les fourchettes\n\t// TODO: Mettre a jour last_meal_time\n\t// TODO: Afficher \"is eating\"\n\t// TODO: Attendre time_to_eat\n\t// TODO: Incrementer meals_eaten\n\t// TODO: Liberer les fourchettes\n}",
+  "solution": "#include <pthread.h>\n#include <stdio.h>\n#include <stdlib.h>\n#include <unistd.h>\n#include <sys/time.h>\n\nvoid\tft_precise_sleep(long long ms)\n{\n\tlong long\tstart;\n\n\tstart = get_time_ms();\n\twhile (get_time_ms() - start < ms)\n\t\tusleep(200);\n}\n\nvoid\tft_take_forks(t_philo *philo)\n{\n\tif (philo->id % 2 == 1)\n\t{\n\t\tpthread_mutex_lock(philo->left_fork);\n\t\tprint_action(philo, \"has taken a fork\");\n\t\tpthread_mutex_lock(philo->right_fork);\n\t\tprint_action(philo, \"has taken a fork\");\n\t}\n\telse\n\t{\n\t\tpthread_mutex_lock(philo->right_fork);\n\t\tprint_action(philo, \"has taken a fork\");\n\t\tpthread_mutex_lock(philo->left_fork);\n\t\tprint_action(philo, \"has taken a fork\");\n\t}\n}\n\nvoid\tft_release_forks(t_philo *philo)\n{\n\tpthread_mutex_unlock(philo->left_fork);\n\tpthread_mutex_unlock(philo->right_fork);\n}\n\nvoid\tft_philo_eat(t_philo *philo)\n{\n\tif (philo->table->nb_philos == 1)\n\t{\n\t\tpthread_mutex_lock(philo->left_fork);\n\t\tprint_action(philo, \"has taken a fork\");\n\t\tft_precise_sleep(philo->table->time_to_die);\n\t\tpthread_mutex_unlock(philo->left_fork);\n\t\treturn ;\n\t}\n\tft_take_forks(philo);\n\tphilo->last_meal_time = get_time_ms();\n\tprint_action(philo, \"is eating\");\n\tft_precise_sleep(philo->table->time_to_eat);\n\tphilo->meals_eaten++;\n\tft_release_forks(philo);\n}",
+  "hints": [
+    "Utilisez la strategie pair/impair : impairs prennent gauche d'abord, pairs prennent droite d'abord",
+    "Avec 1 seul philosophe, il ne peut prendre qu'une fourchette puis attend de mourir",
+    "Mettez a jour last_meal_time juste apres avoir pris les 2 fourchettes"
+  ],
+  "testCases": [
+    {
+      "id": 1,
+      "description": "5 philosophes mangent sans deadlock",
+      "stdin": "",
+      "expectedStdout": "",
+      "expectedExitCode": 0,
+      "visible": true
+    },
+    {
+      "id": 2,
+      "description": "1 seul philosophe meurt apres time_to_die",
+      "stdin": "",
+      "expectedStdout": "",
+      "expectedExitCode": 0,
+      "visible": false
+    },
+    {
+      "id": 3,
+      "description": "Les fourchettes sont bien liberees apres chaque repas",
+      "stdin": "",
+      "expectedStdout": "",
+      "expectedExitCode": 0,
+      "visible": false
+    }
+  ],
+  "constraints": {
+    "allowedFunctions": ["pthread_mutex_lock", "pthread_mutex_unlock", "printf", "usleep", "gettimeofday"],
+    "forbiddenFunctions": ["sleep", "system"],
+    "maxExecutionTime": 5000,
+    "maxMemory": 128
+  },
+  "relatedExercises": ["c-day74-ex01-ft-philo-death", "c-day74-ex02-ft-philo-complete"],
+  "resources": [
+    {
+      "title": "Dining philosophers solutions",
+      "url": "https://en.wikipedia.org/wiki/Dining_philosophers_problem",
+      "type": "documentation"
+    },
+    {
+      "title": "Avoiding deadlock in philosophers",
+      "url": "https://medium.com/@ruinadd/philosophers-42-guide-the-dining-philosophers-problem-893a24bc0fe2",
+      "type": "article"
+    }
+  ]
+}

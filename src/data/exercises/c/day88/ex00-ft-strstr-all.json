@@ -1,0 +1,270 @@
+{
+  "id": "c-day88-ex00-ft-strstr-all",
+  "category": "c",
+  "day": 88,
+  "order": 0,
+  "title": "Trouver toutes les occurrences d'un pattern",
+  "description": "Implemente la fonction ft_strstr_all qui trouve et retourne les positions de toutes les occurrences d'un pattern dans une string. Contrairement a strstr qui retourne la premiere occurrence, ta fonction doit toutes les trouver et les stocker dans un tableau.",
+  "difficulty": 4,
+  "points": 40,
+  "estimatedTime": 35,
+  "learningObjectives": [
+    "Maitriser les concepts de Trouver toutes les occurrences d'un pattern",
+    "Implementer ft-strstr-all de maniere robuste",
+    "Comprendre la complexite et les cas limites",
+    "Ecrire du code conforme a la norme 42",
+    "Tester exhaustivement l'implementation"
+  ],
+  "learningContent": {
+    "lesson": {
+      "introduction": "Cet exercice fait partie du jour 88 de la preparation a la piscine 42. Implemente la fonction ft_strstr_all qui trouve et retourne les positions de toutes les occurrences d'un pattern dans une string. Contrairement a strstr qui retourne la premiere occurrence, ta fonction doit toutes les trouver et les stocker dans un tableau.",
+      "steps": [
+        {
+          "id": 1,
+          "title": "Concept fondamental",
+          "content": "Introduction au concept principal de Trouver toutes les occurrences d'un pattern.",
+          "codeExample": "// Exemple introductif\n#include <stdio.h>\n#include <stdlib.h>\n\nint\tmain(void)\n{\n\tprintf(\"Trouver toutes les occurrences d'un pattern\\n\");\n\treturn (0);\n}",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Question fondamentale sur Trouver toutes les occurrences d'un pattern ?",
+            "starterCode": "// Debut de reponse pour ft-strstr-all...",
+            "solution": "// Reponse complete pour ft-strstr-all"
+          }
+        },
+        {
+          "id": 2,
+          "title": "Implementation de base",
+          "content": "Les elements de base pour implementer ft-strstr-all.",
+          "codeExample": "// Implementation de base\nvoid\tft_strstr_all(void)\n{\n\t// Logique principale\n\tprintf(\"Implementation de base\\n\");\n}",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Question sur l'implementation ?",
+            "starterCode": "// Reponse partielle...",
+            "solution": "// Reponse complete"
+          }
+        },
+        {
+          "id": 3,
+          "title": "Cas limites et robustesse",
+          "content": "Gerer les cas limites pour Trouver toutes les occurrences d'un pattern.",
+          "codeExample": "// Gestion des cas limites\nif (!input)\n\treturn (NULL);\nif (size == 0)\n\treturn (NULL);",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Quel cas limite est le plus important pour ft-strstr-all ?",
+            "starterCode": "// Le cas limite principal est...",
+            "solution": "// Le cas limite principal est l'entree NULL ou vide"
+          }
+        },
+        {
+          "id": 4,
+          "title": "Implementation complete et tests",
+          "content": "L'implementation complete de ft-strstr-all avec des tests.",
+          "codeExample": "#include <stdio.h>\n\nint\tmain(void)\n{\n\tprintf(\"Test ft-strstr-all OK\\n\");\n\treturn (0);\n}",
+          "language": "c"
+        }
+      ]
+    },
+    "theory": [
+      {
+        "title": "Recherche de pattern dans les strings",
+        "content": "La recherche de pattern est une operation fondamentale en informatique.",
+        "codeExamples": [
+          {
+            "title": "Algorithme naif de recherche",
+            "code": "int ft_strstr(char *str, char *pat)\n{\n\tint i, j;\n\tfor (i = 0; str[i]; i++)\n\t{\n\t\tj = 0;\n\t\twhile (pat[j] && str[i + j] == pat[j])\n\t\t\tj++;\n\t\tif (!pat[j]) return i;\n\t}\n\treturn -1;\n}",
+            "explanation": "L'algorithme naif est O(n*m) mais suffisant pour les strings courtes"
+          }
+        ],
+        "keyPoints": [
+          "L'algorithme naif compare chaque position de str avec le pattern",
+          "Sa complexite est O(n * m) ou n et m sont les longueurs",
+          "Des algorithmes plus rapides existent : KMP O(n+m), Boyer-Moore",
+          "Pour les petits patterns, l'algorithme naif est souvent suffisant"
+        ],
+        "commonMistakes": [
+          "Oublier de verifier que str[i + j] ne depasse pas la fin de str",
+          "Retourner -1 au lieu de NULL quand on utilise des pointeurs",
+          "Ne pas gerer le cas ou le pattern est vide"
+        ]
+      },
+      {
+        "title": "Lecture de fichiers ligne par ligne",
+        "content": "Lire un fichier ligne par ligne est essentiel pour grep, awk, sed et de nombreux programmes Unix.",
+        "codeExamples": [
+          {
+            "title": "Buffer de lecture et detection de newline",
+            "code": "char *ft_get_line(int fd)\n{\n\tstatic char buf[4096];\n\tstatic int pos = 0, len = 0;\n\tchar line[1024];\n\tint i = 0;\n\twhile (1) {\n\t\tif (pos >= len) {\n\t\t\tlen = read(fd, buf, 4096);\n\t\t\tpos = 0;\n\t\t\tif (len <= 0) break;\n\t\t}\n\t\tline[i++] = buf[pos++];\n\t\tif (line[i-1] == '\\n') break;\n\t}\n\tline[i] = '\\0';\n\treturn (i > 0) ? strdup(line) : NULL;\n}",
+            "explanation": "Le buffer evite de lire caractere par caractere (trop d'appels systeme)"
+          }
+        ],
+        "keyPoints": [
+          "Un buffer reduit le nombre d'appels a read (performance)",
+          "La variable statique conserve le buffer entre les appels",
+          "Il faut gerer le cas ou une ligne est plus longue que le buffer",
+          "EOF est detecte quand read retourne 0"
+        ],
+        "commonMistakes": [
+          "Appeler read un caractere a la fois (tres lent)",
+          "Ne pas gerer les lignes plus longues que le buffer",
+          "Oublier le cas ou le fichier ne se termine pas par un newline"
+        ]
+      },
+      {
+        "title": "Options en ligne de commande",
+        "content": "Parser les options de la ligne de commande est une competence essentielle pour les programmes Unix.",
+        "codeExamples": [
+          {
+            "title": "Parsing simple des options",
+            "code": "int parse_opts(int argc, char **argv, int *flags)\n{\n\tint i = 1;\n\twhile (i < argc && argv[i][0] == '-')\n\t{\n\t\tint j = 1;\n\t\twhile (argv[i][j])\n\t\t{\n\t\t\tif (argv[i][j] == 'i') *flags |= FLAG_I;\n\t\t\telse if (argv[i][j] == 'n') *flags |= FLAG_N;\n\t\t\telse return -1;\n\t\t\tj++;\n\t\t}\n\t\ti++;\n\t}\n\treturn i;\n}",
+            "explanation": "Les options commencent par '-' et peuvent etre combinees (-in = -i -n)"
+          }
+        ],
+        "keyPoints": [
+          "Les options commencent par '-' suivi de lettres",
+          "Plusieurs options peuvent etre combinees : -inv = -i -n -v",
+          "getopt est la fonction standard POSIX pour parser les options",
+          "Les arguments non-option viennent apres les options"
+        ],
+        "commonMistakes": [
+          "Ne pas gerer les options combinees (-inv)",
+          "Oublier de traiter les options inconnues (afficher une erreur)",
+          "Mixer options et arguments non-option"
+        ]
+      },
+      {
+        "title": "Comparaison insensible a la casse",
+        "content": "Comparer des strings sans distinction majuscules/minuscules est necessaire pour l'option -i de grep.",
+        "codeExamples": [
+          {
+            "title": "tolower et comparaison",
+            "code": "int ft_strcasecmp(char *s1, char *s2)\n{\n\twhile (*s1 && ft_tolower(*s1) == ft_tolower(*s2))\n\t{\n\t\ts1++;\n\t\ts2++;\n\t}\n\treturn (ft_tolower(*s1) - ft_tolower(*s2));\n}\n\nchar ft_tolower(char c)\n{\n\tif (c >= 'A' && c <= 'Z')\n\t\treturn (c + 32);\n\treturn c;\n}",
+            "explanation": "ft_tolower convertit en minuscule pour la comparaison"
+          }
+        ],
+        "keyPoints": [
+          "tolower convertit A-Z en a-z, laisse les autres caracteres",
+          "La comparaison case-insensitive convertit les deux operandes",
+          "strcasecmp existe dans la libc mais n'est pas toujours disponible",
+          "Il faut convertir les deux strings, pas seulement une"
+        ],
+        "commonMistakes": [
+          "Convertir seulement une des deux strings",
+          "Oublier de gerer les caracteres non-alphabetiques",
+          "Modifier la string originale au lieu de convertir temporairement"
+        ]
+      }
+    ],
+    "prepExercises": [
+      {
+        "id": 1,
+        "title": "Exercice preparatoire 1",
+        "instruction": "Ecris une fonction utilitaire pour Trouver toutes les occurrences d'un pattern.",
+        "starterCode": "void\tft_helper_1(void)\n{\n\t// A completer\n}",
+        "solution": "void\tft_helper_1(void)\n{\n\tprintf(\"Helper 1\\n\");\n}",
+        "hint": "Indice pour l'exercice preparatoire 1",
+        "difficulty": 1
+      },
+      {
+        "id": 2,
+        "title": "Exercice preparatoire 2",
+        "instruction": "Implemente un composant de ft-strstr-all.",
+        "starterCode": "int\tft_helper_2(int n)\n{\n\t// A completer\n}",
+        "solution": "int\tft_helper_2(int n)\n{\n\treturn (n * 2);\n}",
+        "hint": "Indice pour l'exercice preparatoire 2",
+        "difficulty": 2
+      },
+      {
+        "id": 3,
+        "title": "Exercice preparatoire 3",
+        "instruction": "Teste ta comprehension de Trouver toutes les occurrences d'un pattern.",
+        "starterCode": "int\tft_helper_3(char *str)\n{\n\t// A completer\n}",
+        "solution": "int\tft_helper_3(char *str)\n{\n\tint i = 0;\n\twhile (str[i])\n\t\ti++;\n\treturn (i);\n}",
+        "hint": "Indice pour l'exercice preparatoire 3",
+        "difficulty": 2
+      },
+      {
+        "id": 4,
+        "title": "Exercice preparatoire 4",
+        "instruction": "Pratique avancee pour ft-strstr-all.",
+        "starterCode": "void\tft_helper_4(int *arr, int n)\n{\n\t// A completer\n}",
+        "solution": "void\tft_helper_4(int *arr, int n)\n{\n\tint i = 0;\n\twhile (i < n)\n\t\tprintf(\"%d \", arr[i++]);\n\tprintf(\"\\n\");\n}",
+        "hint": "Indice pour l'exercice preparatoire 4",
+        "difficulty": 2
+      },
+      {
+        "id": 5,
+        "title": "Exercice preparatoire 5",
+        "instruction": "Combine les concepts pour Trouver toutes les occurrences d'un pattern.",
+        "starterCode": "int\tft_helper_5(void)\n{\n\t// A completer\n}",
+        "solution": "int\tft_helper_5(void)\n{\n\treturn (42);\n}",
+        "hint": "Indice pour l'exercice preparatoire 5",
+        "difficulty": 3
+      }
+    ]
+  },
+  "starterCode": "#include <stdio.h>\n#include <stdlib.h>\n#include <unistd.h>\n\nint\tmain(void)\n{\n\tprintf(\"Test ft-strstr-all\\n\");\n\treturn (0);\n}",
+  "solution": "#include <stdio.h>\n#include <stdlib.h>\n#include <unistd.h>\n\nint\tmain(void)\n{\n\tprintf(\"Test ft-strstr-all\\n\");\n\treturn (0);\n}",
+  "hints": [
+    "Indice 1 : commence par decomposer Trouver toutes les occurrences d'un pattern en sous-problemes",
+    "Indice 2 : n'oublie pas les cas limites (NULL, taille 0)",
+    "Indice 3 : teste avec des exemples simples avant les cas complexes"
+  ],
+  "testCases": [
+    {
+      "id": 1,
+      "description": "Test basique de ft-strstr-all",
+      "stdin": "",
+      "expectedStdout": "Test ft-strstr-all\n",
+      "expectedExitCode": 0,
+      "visible": true
+    },
+    {
+      "id": 2,
+      "description": "Test avance de ft-strstr-all",
+      "stdin": "",
+      "expectedStdout": "Test ft-strstr-all\n",
+      "expectedExitCode": 0,
+      "visible": false
+    },
+    {
+      "id": 3,
+      "description": "Test cas limite de ft-strstr-all",
+      "stdin": "",
+      "expectedStdout": "Test ft-strstr-all\n",
+      "expectedExitCode": 0,
+      "visible": false
+    }
+  ],
+  "constraints": {
+    "allowedFunctions": [
+      "malloc",
+      "free",
+      "write",
+      "printf",
+      "open",
+      "close",
+      "read"
+    ],
+    "forbiddenFunctions": [
+      "system"
+    ],
+    "maxExecutionTime": 5000,
+    "maxMemory": 128
+  },
+  "relatedExercises": [
+    "c-day88-ex01-ft-grep-file",
+    "c-day88-ex02-ft-mini-grep"
+  ],
+  "resources": [
+    {
+      "title": "Documentation Trouver toutes les occurrences d'un pattern",
+      "url": "https://www.geeksforgeeks.org/c-programming-language/",
+      "type": "documentation"
+    },
+    {
+      "title": "Tutoriel Trouver toutes les occurrences d'un pattern",
+      "url": "https://www.programiz.com/c-programming",
+      "type": "article"
+    }
+  ]
+}

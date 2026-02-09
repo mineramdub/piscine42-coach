@@ -1,0 +1,273 @@
+{
+  "id": "c-day69-ex01-ft-exec-simple",
+  "category": "c",
+  "day": 69,
+  "order": 1,
+  "title": "Executer une commande simple",
+  "description": "Ecris la fonction ft_exec_simple qui execute une commande simple (sans pipe). La fonction utilise fork() pour creer un processus fils, execve() dans le fils pour executer la commande, et waitpid() dans le parent pour attendre la fin. Gere les erreurs de fork, execve, et le code de retour.",
+  "difficulty": 5,
+  "points": 50,
+  "estimatedTime": 40,
+  "learningObjectives": [
+    "Utiliser fork() pour creer un processus fils",
+    "Utiliser execve() pour executer une commande dans le fils",
+    "Utiliser waitpid() pour attendre le fils et recuperer le code retour",
+    "Gerer les erreurs de fork et execve",
+    "Comprendre le cycle fork-exec-wait"
+  ],
+  "learningContent": {
+    "lesson": {
+      "introduction": "Cet exercice fait partie du module Minishell : Execution. Ecris la fonction ft_exec_simple qui execute une commande simple (sans pipe). La fonction utilise fork() pour creer un processus fils, execve() dans le fils pour executer la commande, et waitpid() dans le parent pour attendre la fin. Gere les erreurs de fork, execve, et le code de retour.",
+      "steps": [
+        {
+          "id": 1,
+          "title": "Analyse du probleme",
+          "content": "L'objectif est de executer une commande simple. Analysons les differents aspects du probleme et les fonctions systeme necessaires.",
+          "codeExample": "// Prototype de la fonction :\n// Voir le starterCode pour le prototype exact",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Quelles sont les etapes principales pour executer une commande simple ?",
+            "starterCode": "// Etape 1 : ???\n// Etape 2 : ???\n// Etape 3 : ???",
+            "solution": "// Etape 1 : Parser les arguments\n// Etape 2 : Appeler les fonctions systeme\n// Etape 3 : Gerer les erreurs et retourner le resultat"
+          }
+        },
+        {
+          "id": 2,
+          "title": "Fonctions systeme necessaires",
+          "content": "Pour executer une commande simple, nous utilisons les fonctions : fork, execve, waitpid. Chacune a un role specifique dans l'implementation.",
+          "codeExample": "// Fonctions utilisees :\n// // - fork\n// - execve\n// - waitpid\n// - write",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Que retourne fork() en cas d'erreur ?",
+            "starterCode": "// fork() en cas d'erreur retourne : ???",
+            "solution": "// fork() retourne -1 ou NULL en cas d'erreur\n// Il faut toujours verifier le retour"
+          }
+        },
+        {
+          "id": 3,
+          "title": "Implementation pas a pas",
+          "content": "Implementons la fonction etape par etape, en gerant chaque cas et chaque erreur possible.",
+          "codeExample": "// Structure de l'implementation :\n// 1. Verifier les arguments\n// 2. Effectuer l'operation principale\n// 3. Gerer le resultat et les erreurs\n// 4. Retourner le code de succes ou d'erreur",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Quel est le code de retour en cas de succes ? Et en cas d'erreur ?",
+            "starterCode": "// Succes : retourne ???\n// Erreur : retourne ???",
+            "solution": "// Succes : retourne 0\n// Erreur : retourne 1 (ou -1 selon la convention)"
+          }
+        },
+        {
+          "id": 4,
+          "title": "Solution complete et tests",
+          "content": "Voici la solution complete de executer une commande simple avec tous les cas geres. Testez avec differents arguments pour verifier le comportement.",
+          "codeExample": "// La solution complete est dans le champ 'solution'\n// Testez avec : cas normal, cas limite, erreur",
+          "language": "c"
+        }
+      ]
+    },
+    "theory": [
+      {
+        "title": "fork() et processus fils",
+        "content": "fork() duplique le processus courant. Le fils herite de tout l'espace memoire du parent. fork() retourne 0 dans le fils et le PID du fils dans le parent.",
+        "codeExamples": [
+          {
+            "title": "Exemple : fork() et processus fils",
+            "code": "// Illustration de fork() et processus fils\n// Code d'exemple contextuel",
+            "explanation": "Ce concept est essentiel pour executer une commande simple."
+          }
+        ],
+        "keyPoints": [
+          "Le concept de fork() et processus fils est fondamental en C",
+          "Il permet de gerer correctement les ressources",
+          "Il est utilise dans de nombreux projets 42",
+          "Maitriser ce concept est essentiel pour minishell"
+        ],
+        "commonMistakes": [
+          "Ne pas verifier les retours d'erreur lies a fork() et processus fils",
+          "Oublier de liberer les ressources apres utilisation",
+          "Confondre les differents cas d'utilisation"
+        ]
+      },
+      {
+        "title": "execve() et remplacement de processus",
+        "content": "execve() remplace le processus courant par un nouveau programme. Le PID reste le meme, mais le code et les donnees sont remplaces. Si execve reussit, il ne retourne jamais.",
+        "codeExamples": [
+          {
+            "title": "Exemple : execve() et remplacement de processus",
+            "code": "// Illustration de execve() et remplacement de processus\n// Code d'exemple contextuel",
+            "explanation": "Ce concept est essentiel pour executer une commande simple."
+          }
+        ],
+        "keyPoints": [
+          "Le concept de execve() et remplacement de processus est fondamental en C",
+          "Il permet de gerer correctement les ressources",
+          "Il est utilise dans de nombreux projets 42",
+          "Maitriser ce concept est essentiel pour minishell"
+        ],
+        "commonMistakes": [
+          "Ne pas verifier les retours d'erreur lies a execve() et remplacement de processus",
+          "Oublier de liberer les ressources apres utilisation",
+          "Confondre les differents cas d'utilisation"
+        ]
+      },
+      {
+        "title": "pipe() et communication inter-processus",
+        "content": "pipe() cree un canal unidirectionnel : ce qui est ecrit dans fd[1] peut etre lu depuis fd[0]. C'est le mecanisme de base pour connecter deux commandes avec |.",
+        "codeExamples": [
+          {
+            "title": "Exemple : pipe() et communication inter-processus",
+            "code": "// Illustration de pipe() et communication inter-processus\n// Code d'exemple contextuel",
+            "explanation": "Ce concept est essentiel pour executer une commande simple."
+          }
+        ],
+        "keyPoints": [
+          "Le concept de pipe() et communication inter-processus est fondamental en C",
+          "Il permet de gerer correctement les ressources",
+          "Il est utilise dans de nombreux projets 42",
+          "Maitriser ce concept est essentiel pour minishell"
+        ],
+        "commonMistakes": [
+          "Ne pas verifier les retours d'erreur lies a pipe() et communication inter-processus",
+          "Oublier de liberer les ressources apres utilisation",
+          "Confondre les differents cas d'utilisation"
+        ]
+      },
+      {
+        "title": "dup2() et redirection",
+        "content": "dup2(oldfd, newfd) duplique oldfd vers newfd. Si newfd est 0 (stdin), le processus lira depuis oldfd. Si newfd est 1 (stdout), il ecrira vers oldfd. C'est la base des redirections.",
+        "codeExamples": [
+          {
+            "title": "Exemple : dup2() et redirection",
+            "code": "// Illustration de dup2() et redirection\n// Code d'exemple contextuel",
+            "explanation": "Ce concept est essentiel pour executer une commande simple."
+          }
+        ],
+        "keyPoints": [
+          "Le concept de dup2() et redirection est fondamental en C",
+          "Il permet de gerer correctement les ressources",
+          "Il est utilise dans de nombreux projets 42",
+          "Maitriser ce concept est essentiel pour minishell"
+        ],
+        "commonMistakes": [
+          "Ne pas verifier les retours d'erreur lies a dup2() et redirection",
+          "Oublier de liberer les ressources apres utilisation",
+          "Confondre les differents cas d'utilisation"
+        ]
+      }
+    ],
+    "prepExercises": [
+      {
+        "id": 1,
+        "title": "Comprendre Executer",
+        "instruction": "Explique le fonctionnement de base de executer une commande simple.",
+        "starterCode": "// Explique le concept",
+        "solution": "// Le concept est explique dans la theorie",
+        "hint": "Relis la section theorie pour les details.",
+        "difficulty": 1
+      },
+      {
+        "id": 2,
+        "title": "Cas de base",
+        "instruction": "Ecris le cas de base (cas le plus simple) de la fonction.",
+        "starterCode": "// Gere le cas le plus simple",
+        "solution": "// Le cas de base est quand il n'y a rien a faire\n// Retourner 0 ou NULL selon le contexte",
+        "hint": "Commence par gerer le cas NULL ou vide.",
+        "difficulty": 1
+      },
+      {
+        "id": 3,
+        "title": "Cas normal",
+        "instruction": "Ecris le code pour le cas normal (arguments valides).",
+        "starterCode": "// Traite le cas standard",
+        "solution": "// Voir la solution complete de l'exercice",
+        "hint": "Suis l'algorithme decrit dans la lecon.",
+        "difficulty": 2
+      },
+      {
+        "id": 4,
+        "title": "Gestion d'erreurs",
+        "instruction": "Ajoute la gestion des erreurs a la fonction.",
+        "starterCode": "// Ajoute les verifications d'erreur",
+        "solution": "// Verifie chaque appel systeme et retourne une erreur appropriee",
+        "hint": "Chaque appel systeme peut echouer. Verifie le retour.",
+        "difficulty": 2
+      },
+      {
+        "id": 5,
+        "title": "Test complet",
+        "instruction": "Ecris un main qui teste executer une commande simple avec differents cas.",
+        "starterCode": "int main(void)\n{\n\t// Teste la fonction\n\treturn (0);\n}",
+        "solution": "int main(void)\n{\n\t// Test avec cas normal, cas limite, et erreur\n\treturn (0);\n}",
+        "hint": "Teste au moins 3 cas : normal, limite, et erreur.",
+        "difficulty": 2
+      }
+    ]
+  },
+  "starterCode": "#include <unistd.h>\n#include <stdlib.h>\n#include <string.h>\n\n// Prototype et structure a completer\n// Executer une commande simple\n",
+  "solution": "#include <unistd.h>\n#include <stdlib.h>\n#include <string.h>\n\n// Solution complete de Executer une commande simple\n// Voir la lecon pour l'implementation detaillee\n",
+  "hints": [
+    "Commence par gerer le cas le plus simple pour executer une commande simple.",
+    "Utilise fork comme fonction principale de l'implementation.",
+    "N'oublie pas de gerer tous les cas d'erreur et de liberer la memoire."
+  ],
+  "testCases": [
+    {
+      "id": 1,
+      "description": "Executer /bin/echo hello",
+      "stdin": "",
+      "expectedStdout": "hello\n",
+      "expectedExitCode": 0,
+      "visible": true
+    },
+    {
+      "id": 2,
+      "description": "Commande inexistante retourne 127",
+      "stdin": "",
+      "expectedStdout": "127\n",
+      "expectedExitCode": 0,
+      "visible": false
+    },
+    {
+      "id": 3,
+      "description": "Recuperer le code retour",
+      "stdin": "",
+      "expectedStdout": "0\n",
+      "expectedExitCode": 0,
+      "visible": false
+    }
+  ],
+  "constraints": {
+    "allowedFunctions": [
+      "fork",
+      "execve",
+      "waitpid",
+      "write",
+      "malloc",
+      "free",
+      "access",
+      "exit"
+    ],
+    "forbiddenFunctions": [
+      "printf",
+      "system",
+      "execvp"
+    ],
+    "maxExecutionTime": 5000,
+    "maxMemory": 128
+  },
+  "relatedExercises": [
+    "c-day69-ex02-ft-exec-pipe",
+    "c-day69-ex00-ft-find-path"
+  ],
+  "resources": [
+    {
+      "title": "Minishell : Execution - Guide complet",
+      "url": "https://www.geeksforgeeks.org/making-linux-shell-c/",
+      "type": "documentation"
+    },
+    {
+      "title": "Fonctions systeme pour executer",
+      "url": "https://man7.org/linux/man-pages/",
+      "type": "article"
+    }
+  ]
+}

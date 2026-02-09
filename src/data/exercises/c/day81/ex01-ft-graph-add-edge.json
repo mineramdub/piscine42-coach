@@ -1,0 +1,257 @@
+{
+  "id": "c-day81-ex01-ft-graph-add-edge",
+  "category": "c",
+  "day": 81,
+  "order": 1,
+  "title": "Ajouter une arete entre deux noeuds",
+  "description": "Implemente la fonction ft_graph_add_edge qui ajoute une arete entre deux noeuds d'un graphe. Pour un graphe non-oriente, l'arete doit etre ajoutee dans les deux sens. Pour un graphe oriente, seulement dans le sens source vers destination. Le tableau de voisins doit etre redimensionne dynamiquement si necessaire.",
+  "difficulty": 4,
+  "points": 40,
+  "estimatedTime": 35,
+  "learningObjectives": [
+    "Ajouter des aretes a un graphe represente par liste d'adjacence",
+    "Gerer le redimensionnement dynamique du tableau de voisins",
+    "Differencier le comportement entre graphe oriente et non-oriente",
+    "Valider les parametres (indices de noeuds valides)",
+    "Eviter les aretes dupliquees dans la liste d'adjacence"
+  ],
+  "learningContent": {
+    "lesson": {
+      "introduction": "Apres avoir cree la structure du graphe, l'etape suivante est d'y ajouter des aretes. C'est l'operation fondamentale qui donne au graphe sa forme et ses connexions. Dans un graphe non-oriente, quand on ajoute une arete entre A et B, il faut aussi ajouter B dans les voisins de A ET A dans les voisins de B. Dans un graphe oriente, on n'ajoute que dans un sens. Le defi technique principal est la gestion dynamique du tableau de voisins : il doit grandir au besoin sans perdre les donnees existantes.",
+      "steps": [
+        {
+          "id": 1,
+          "title": "Ajouter un voisin a un noeud",
+          "content": "Avant de gerer l'ajout d'arete au graphe, on a besoin d'une fonction helper qui ajoute un voisin au tableau dynamique d'un noeud.\n\n**Algorithme :**\n1. Verifier si le tableau est plein (nb_neighbors >= capacity)\n2. Si oui, agrandir : nouvelle capacite = ancienne * 2 (ou 4 si c'est le premier ajout)\n3. Allouer un nouveau tableau, copier les anciennes donnees, liberer l'ancien\n4. Ajouter le nouveau voisin a la fin\n5. Incrementer nb_neighbors",
+          "codeExample": "static int\tft_add_neighbor(t_node *node, int neighbor_id)\n{\n\tint\t*new_arr;\n\tint\tnew_cap;\n\tint\ti;\n\n\tif (node->nb_neighbors >= node->capacity)\n\t{\n\t\tnew_cap = (node->capacity == 0) ? 4 : node->capacity * 2;\n\t\tnew_arr = (int *)malloc(sizeof(int) * new_cap);\n\t\tif (!new_arr)\n\t\t\treturn (-1);\n\t\ti = 0;\n\t\twhile (i < node->nb_neighbors)\n\t\t{\n\t\t\tnew_arr[i] = node->neighbors[i];\n\t\t\ti++;\n\t\t}\n\t\tfree(node->neighbors);\n\t\tnode->neighbors = new_arr;\n\t\tnode->capacity = new_cap;\n\t}\n\tnode->neighbors[node->nb_neighbors] = neighbor_id;\n\tnode->nb_neighbors++;\n\treturn (0);\n}",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Si un noeud a capacity=4 et nb_neighbors=4, que se passe-t-il quand on ajoute un 5eme voisin ?",
+            "starterCode": "// capacity = 4, nb_neighbors = 4\n// On veut ajouter un 5eme voisin\n// Etape 1 : nb_neighbors >= capacity -> ?\n// Etape 2 : new_cap = ?\n// Etape 3 : on alloue un nouveau tableau de taille ?\n// Etape 4 : on copie ? elements\n// Etape 5 : on ajoute le nouveau voisin a l'indice ?",
+            "solution": "// capacity = 4, nb_neighbors = 4\n// Etape 1 : 4 >= 4 -> OUI, il faut agrandir\n// Etape 2 : new_cap = 4 * 2 = 8\n// Etape 3 : on alloue un nouveau tableau de taille 8\n// Etape 4 : on copie 4 elements (les anciens voisins)\n// Etape 5 : on ajoute le nouveau voisin a l'indice 4\n// Resultat : capacity = 8, nb_neighbors = 5"
+          }
+        },
+        {
+          "id": 2,
+          "title": "Graphe oriente vs non-oriente",
+          "content": "La difference entre graphe oriente et non-oriente est cruciale lors de l'ajout d'aretes :\n\n**Graphe oriente (directed = 1) :**\n- Arete de src vers dst : on ajoute dst aux voisins de src uniquement\n- L'arete a une direction : src -> dst\n\n**Graphe non-oriente (directed = 0) :**\n- Arete entre src et dst : on ajoute dst aux voisins de src ET src aux voisins de dst\n- La relation est symetrique : src -- dst",
+          "codeExample": "// Graphe oriente : A -> B (sens unique)\n// Voisins de A : [B]\n// Voisins de B : []  (B n'a pas A comme voisin)\n\n// Graphe non-oriente : A -- B (double sens)\n// Voisins de A : [B]\n// Voisins de B : [A]  (B a aussi A comme voisin)\n\n// En code :\nif (graph->directed)\n\tft_add_neighbor(&graph->nodes[src], dst);\nelse\n{\n\tft_add_neighbor(&graph->nodes[src], dst);\n\tft_add_neighbor(&graph->nodes[dst], src);\n}",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Pour un graphe non-oriente a 3 noeuds, si on ajoute les aretes 0-1 et 1-2, quels sont les voisins de chaque noeud ?",
+            "starterCode": "// Graphe non-oriente, noeuds 0, 1, 2\n// Ajout arete 0-1 :\n//   Voisins de 0 : [?]\n//   Voisins de 1 : [?]\n// Ajout arete 1-2 :\n//   Voisins de 1 : [?, ?]\n//   Voisins de 2 : [?]",
+            "solution": "// Graphe non-oriente, noeuds 0, 1, 2\n// Ajout arete 0-1 :\n//   Voisins de 0 : [1]\n//   Voisins de 1 : [0]\n// Ajout arete 1-2 :\n//   Voisins de 1 : [0, 2]\n//   Voisins de 2 : [1]\n// Final : 0:[1], 1:[0,2], 2:[1]"
+          }
+        },
+        {
+          "id": 3,
+          "title": "Validation et aretes dupliquees",
+          "content": "Avant d'ajouter une arete, il faut valider les parametres :\n1. Verifier que src et dst sont dans les bornes [0, nb_nodes-1]\n2. Verifier que src != dst (pas de boucle sur soi-meme, sauf si voulu)\n3. Optionnel : verifier que l'arete n'existe pas deja\n\nPour verifier les doublons, on parcourt le tableau de voisins du noeud source.",
+          "codeExample": "static int\tft_has_neighbor(t_node *node, int neighbor_id)\n{\n\tint\ti;\n\n\ti = 0;\n\twhile (i < node->nb_neighbors)\n\t{\n\t\tif (node->neighbors[i] == neighbor_id)\n\t\t\treturn (1);\n\t\ti++;\n\t}\n\treturn (0);\n}\n\nint\tft_graph_add_edge(t_graph *graph, int src, int dst)\n{\n\tif (src < 0 || src >= graph->nb_nodes)\n\t\treturn (-1);\n\tif (dst < 0 || dst >= graph->nb_nodes)\n\t\treturn (-1);\n\tif (src == dst)\n\t\treturn (-1);\n\tif (ft_has_neighbor(&graph->nodes[src], dst))\n\t\treturn (0);\n\t// Ajouter l'arete...\n}",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Quelle est la complexite de ft_has_neighbor ? Pourquoi est-ce acceptable pour la plupart des graphes ?",
+            "starterCode": "// ft_has_neighbor parcourt le tableau de voisins\n// Complexite : O(?)\n// C'est acceptable car le degre moyen d'un noeud\n// dans un graphe reel est generalement ?",
+            "solution": "// ft_has_neighbor parcourt le tableau de voisins\n// Complexite : O(degre du noeud)\n// C'est acceptable car le degre moyen d'un noeud\n// dans un graphe reel est generalement FAIBLE\n// (reseaux sociaux : ~100-200 amis sur des millions)\n// Pour des graphes tres denses, on utiliserait un set/hash"
+          }
+        },
+        {
+          "id": 4,
+          "title": "Implementation complete de ft_graph_add_edge",
+          "content": "Voici l'implementation complete qui combine validation, detection de doublons, et ajout dans les deux sens pour les graphes non-orientes.\n\nLa fonction retourne 0 en cas de succes et -1 en cas d'erreur (indices invalides ou echec d'allocation).",
+          "codeExample": "int\tft_graph_add_edge(t_graph *graph, int src, int dst)\n{\n\tif (!graph || src < 0 || src >= graph->nb_nodes\n\t\t|| dst < 0 || dst >= graph->nb_nodes || src == dst)\n\t\treturn (-1);\n\tif (ft_has_neighbor(&graph->nodes[src], dst))\n\t\treturn (0);\n\tif (ft_add_neighbor(&graph->nodes[src], dst) == -1)\n\t\treturn (-1);\n\tif (!graph->directed)\n\t{\n\t\tif (ft_add_neighbor(&graph->nodes[dst], src) == -1)\n\t\t\treturn (-1);\n\t}\n\treturn (0);\n}",
+          "language": "c"
+        }
+      ]
+    },
+    "theory": [
+      {
+        "title": "Aretes et proprietes des graphes",
+        "content": "Les aretes definissent les relations entre les sommets. Comprendre leurs proprietes est essentiel pour manipuler correctement un graphe.",
+        "codeExamples": [
+          {
+            "title": "Types d'aretes",
+            "code": "// Arete simple : relie deux sommets distincts\n// Boucle (self-loop) : relie un sommet a lui-meme\n// Arete ponderee : possede un poids/cout\n\n// Pour un graphe non-oriente a V sommets :\n// Nombre max d'aretes = V * (V-1) / 2\n// Pour V=5 : max 10 aretes\n\n// Pour un graphe oriente a V sommets :\n// Nombre max d'aretes = V * (V-1)\n// Pour V=5 : max 20 aretes",
+            "explanation": "Un graphe oriente peut avoir deux fois plus d'aretes car A->B et B->A sont differentes"
+          }
+        ],
+        "keyPoints": [
+          "Dans un graphe non-oriente, chaque arete est stockee deux fois en liste d'adjacence",
+          "Le nombre maximum d'aretes est V*(V-1)/2 pour non-oriente, V*(V-1) pour oriente",
+          "La detection de doublons empeche d'ajouter la meme arete plusieurs fois",
+          "Les self-loops (boucles) sont generalement interdites sauf besoin specifique"
+        ],
+        "commonMistakes": [
+          "Oublier d'ajouter l'arete dans les deux sens pour un graphe non-oriente",
+          "Ne pas verifier les bornes des indices de noeuds avant l'ajout",
+          "Permettre les aretes dupliquees ce qui fausse les algorithmes de parcours"
+        ]
+      },
+      {
+        "title": "Redimensionnement dynamique de tableaux",
+        "content": "Le tableau de voisins doit grandir dynamiquement. La strategie de doublement de capacite offre un bon compromis entre memoire et performances.",
+        "codeExamples": [
+          {
+            "title": "Strategie de doublement",
+            "code": "// Capacite initiale : 0 (pas d'allocation)\n// Premier ajout : capacity = 4\n// 5eme ajout : capacity = 8\n// 9eme ajout : capacity = 16\n// ...\n// Apres n ajouts : capacity <= 2*n\n// Gaspillage memoire max : 50%\n// Cout amorti par ajout : O(1)\n\n// Alternative : incrementer de 1 a chaque fois\n// Cout par ajout : O(n) (copie a chaque fois)\n// Total pour n ajouts : O(n^2) vs O(n) avec doublement",
+            "explanation": "Le doublement est la strategie standard des tableaux dynamiques"
+          }
+        ],
+        "keyPoints": [
+          "Doubler la capacite donne un cout amorti O(1) par insertion",
+          "La capacite initiale de 4 evite trop de reallocations au debut",
+          "Le gaspillage memoire maximal est de 50% de la capacite",
+          "realloc pourrait etre utilise mais on implemente manuellement pour comprendre"
+        ],
+        "commonMistakes": [
+          "Incrementer la capacite de 1 a chaque ajout (O(n) par ajout)",
+          "Oublier de free l'ancien tableau apres copie dans le nouveau",
+          "Ne pas mettre a jour le pointeur neighbors apres reallocation"
+        ]
+      },
+      {
+        "title": "Validation des entrees",
+        "content": "La validation est essentielle pour eviter les acces memoire invalides. Un indice hors bornes peut causer un segfault ou corrompre la memoire.",
+        "codeExamples": [
+          {
+            "title": "Pattern de validation defensive",
+            "code": "int\tft_graph_add_edge(t_graph *graph, int src, int dst)\n{\n\t// 1. Verifier le pointeur\n\tif (!graph)\n\t\treturn (-1);\n\t// 2. Verifier les bornes\n\tif (src < 0 || src >= graph->nb_nodes)\n\t\treturn (-1);\n\tif (dst < 0 || dst >= graph->nb_nodes)\n\t\treturn (-1);\n\t// 3. Verifier les cas speciaux\n\tif (src == dst)\n\t\treturn (-1);\n\t// 4. Verifier les doublons\n\tif (ft_has_neighbor(&graph->nodes[src], dst))\n\t\treturn (0);  // Pas une erreur, juste rien a faire\n\t// 5. Effectuer l'operation\n\treturn (ft_add_neighbor(&graph->nodes[src], dst));\n}",
+            "explanation": "Chaque verification empeche un type d'erreur specifique"
+          }
+        ],
+        "keyPoints": [
+          "Toujours verifier les pointeurs NULL avant de les dereferencer",
+          "Verifier que les indices sont dans [0, nb_nodes - 1]",
+          "Retourner un code d'erreur plutot que crasher (programmation defensive)",
+          "Distinguer les erreurs (retour -1) des operations sans effet (retour 0)"
+        ],
+        "commonMistakes": [
+          "Acceder a graph->nodes[src] sans verifier que src est valide",
+          "Ignorer le retour de malloc dans les fonctions d'ajout",
+          "Ne pas differencier erreur et doublon dans le code de retour"
+        ]
+      },
+      {
+        "title": "Complexite des operations sur graphes",
+        "content": "Comprendre la complexite des operations permet de choisir la bonne representation et d'optimiser les algorithmes.",
+        "codeExamples": [
+          {
+            "title": "Resume des complexites",
+            "code": "// Avec liste d'adjacence :\n// Creer le graphe : O(V)\n// Ajouter une arete : O(1) amorti (O(degre) avec check doublon)\n// Supprimer une arete : O(degre)\n// Verifier si arete existe : O(degre)\n// Parcourir tous les voisins : O(degre)\n// Memoire totale : O(V + E)\n\n// V = nombre de sommets, E = nombre d'aretes\n// degre = nombre de voisins du sommet concerne",
+            "explanation": "La liste d'adjacence est efficace pour la plupart des operations courantes"
+          }
+        ],
+        "keyPoints": [
+          "L'ajout d'arete est O(1) amorti grace au tableau dynamique",
+          "La verification de doublon ajoute O(degre) a l'ajout",
+          "La memoire totale est proportionnelle a V + E",
+          "Pour les graphes peu denses, c'est beaucoup mieux que O(V^2)"
+        ],
+        "commonMistakes": [
+          "Croire que l'ajout est toujours O(1) en oubliant la verification de doublons",
+          "Ne pas compter la memoire des tableaux de voisins dans l'analyse",
+          "Confondre la complexite worst-case et amortie du redimensionnement"
+        ]
+      }
+    ],
+    "prepExercises": [
+      {
+        "id": 1,
+        "title": "Verifier les bornes",
+        "instruction": "Ecris une fonction ft_valid_edge qui retourne 1 si src et dst sont des indices valides dans un graphe de n noeuds, 0 sinon.",
+        "starterCode": "int\tft_valid_edge(int n, int src, int dst)\n{\n\t// A completer\n}",
+        "solution": "int\tft_valid_edge(int n, int src, int dst)\n{\n\tif (src < 0 || src >= n)\n\t\treturn (0);\n\tif (dst < 0 || dst >= n)\n\t\treturn (0);\n\tif (src == dst)\n\t\treturn (0);\n\treturn (1);\n}",
+        "hint": "Verifie que src et dst sont >= 0 et < n, et qu'ils sont differents",
+        "difficulty": 1
+      },
+      {
+        "id": 2,
+        "title": "Chercher dans un tableau",
+        "instruction": "Ecris une fonction ft_int_in_array qui retourne 1 si une valeur est presente dans un tableau d'entiers, 0 sinon.",
+        "starterCode": "int\tft_int_in_array(int *arr, int size, int value)\n{\n\t// A completer\n}",
+        "solution": "int\tft_int_in_array(int *arr, int size, int value)\n{\n\tint\ti;\n\n\ti = 0;\n\twhile (i < size)\n\t{\n\t\tif (arr[i] == value)\n\t\t\treturn (1);\n\t\ti++;\n\t}\n\treturn (0);\n}",
+        "hint": "Parcours le tableau et compare chaque element avec la valeur cherchee",
+        "difficulty": 1
+      },
+      {
+        "id": 3,
+        "title": "Agrandir un tableau",
+        "instruction": "Ecris une fonction ft_grow_array qui prend un tableau d'int, sa taille actuelle, et retourne un nouveau tableau deux fois plus grand avec les memes elements.",
+        "starterCode": "int\t*ft_grow_array(int *arr, int size)\n{\n\t// A completer\n}",
+        "solution": "int\t*ft_grow_array(int *arr, int size)\n{\n\tint\t*new_arr;\n\tint\ti;\n\n\tnew_arr = (int *)malloc(sizeof(int) * size * 2);\n\tif (!new_arr)\n\t\treturn (NULL);\n\ti = 0;\n\twhile (i < size)\n\t{\n\t\tnew_arr[i] = arr[i];\n\t\ti++;\n\t}\n\tfree(arr);\n\treturn (new_arr);\n}",
+        "hint": "Alloue un nouveau tableau de taille size * 2, copie les elements, libere l'ancien",
+        "difficulty": 2
+      },
+      {
+        "id": 4,
+        "title": "Compter les aretes",
+        "instruction": "Ecris une fonction qui compte le nombre total d'aretes dans un graphe non-oriente (chaque arete est comptee deux fois dans les listes d'adjacence).",
+        "starterCode": "int\tft_count_edges(t_graph *graph)\n{\n\t// A completer\n}",
+        "solution": "int\tft_count_edges(t_graph *graph)\n{\n\tint\ttotal;\n\tint\ti;\n\n\ttotal = 0;\n\ti = 0;\n\twhile (i < graph->nb_nodes)\n\t{\n\t\ttotal += graph->nodes[i].nb_neighbors;\n\t\ti++;\n\t}\n\tif (!graph->directed)\n\t\ttotal /= 2;\n\treturn (total);\n}",
+        "hint": "Somme les nb_neighbors de chaque noeud, puis divise par 2 si non-oriente",
+        "difficulty": 2
+      },
+      {
+        "id": 5,
+        "title": "Degre d'un noeud",
+        "instruction": "Ecris une fonction qui retourne le degre (nombre de voisins) d'un noeud donne dans le graphe.",
+        "starterCode": "int\tft_node_degree(t_graph *graph, int node_id)\n{\n\t// A completer\n}",
+        "solution": "int\tft_node_degree(t_graph *graph, int node_id)\n{\n\tif (!graph || node_id < 0 || node_id >= graph->nb_nodes)\n\t\treturn (-1);\n\treturn (graph->nodes[node_id].nb_neighbors);\n}",
+        "hint": "Le degre est simplement le nb_neighbors du noeud, apres validation de l'indice",
+        "difficulty": 1
+      }
+    ]
+  },
+  "starterCode": "#include <stdlib.h>\n#include <stdio.h>\n\ntypedef struct s_node\n{\n\tint\t\tid;\n\tint\t\t*neighbors;\n\tint\t\tnb_neighbors;\n\tint\t\tcapacity;\n}\t\t\tt_node;\n\ntypedef struct s_graph\n{\n\tt_node\t*nodes;\n\tint\t\tnb_nodes;\n\tint\t\tdirected;\n}\t\t\tt_graph;\n\nint\tft_graph_add_edge(t_graph *graph, int src, int dst)\n{\n\t// A completer\n}\n\nint\tmain(void)\n{\n\tt_graph\t*g;\n\n\t// Supposons que ft_graph_create existe deja\n\tg = ft_graph_create(4, 0);\n\tft_graph_add_edge(g, 0, 1);\n\tft_graph_add_edge(g, 0, 2);\n\tft_graph_add_edge(g, 1, 3);\n\tprintf(\"Arete 0-1, 0-2, 1-3 ajoutees\\n\");\n\tft_graph_free(g);\n\treturn (0);\n}",
+  "solution": "#include <stdlib.h>\n#include <stdio.h>\n\ntypedef struct s_node\n{\n\tint\t\tid;\n\tint\t\t*neighbors;\n\tint\t\tnb_neighbors;\n\tint\t\tcapacity;\n}\t\t\tt_node;\n\ntypedef struct s_graph\n{\n\tt_node\t*nodes;\n\tint\t\tnb_nodes;\n\tint\t\tdirected;\n}\t\t\tt_graph;\n\nstatic int\tft_has_neighbor(t_node *node, int neighbor_id)\n{\n\tint\ti;\n\n\ti = 0;\n\twhile (i < node->nb_neighbors)\n\t{\n\t\tif (node->neighbors[i] == neighbor_id)\n\t\t\treturn (1);\n\t\ti++;\n\t}\n\treturn (0);\n}\n\nstatic int\tft_add_neighbor(t_node *node, int neighbor_id)\n{\n\tint\t*new_arr;\n\tint\tnew_cap;\n\tint\ti;\n\n\tif (node->nb_neighbors >= node->capacity)\n\t{\n\t\tnew_cap = (node->capacity == 0) ? 4 : node->capacity * 2;\n\t\tnew_arr = (int *)malloc(sizeof(int) * new_cap);\n\t\tif (!new_arr)\n\t\t\treturn (-1);\n\t\ti = 0;\n\t\twhile (i < node->nb_neighbors)\n\t\t{\n\t\t\tnew_arr[i] = node->neighbors[i];\n\t\t\ti++;\n\t\t}\n\t\tfree(node->neighbors);\n\t\tnode->neighbors = new_arr;\n\t\tnode->capacity = new_cap;\n\t}\n\tnode->neighbors[node->nb_neighbors] = neighbor_id;\n\tnode->nb_neighbors++;\n\treturn (0);\n}\n\nint\tft_graph_add_edge(t_graph *graph, int src, int dst)\n{\n\tif (!graph || src < 0 || src >= graph->nb_nodes\n\t\t|| dst < 0 || dst >= graph->nb_nodes || src == dst)\n\t\treturn (-1);\n\tif (ft_has_neighbor(&graph->nodes[src], dst))\n\t\treturn (0);\n\tif (ft_add_neighbor(&graph->nodes[src], dst) == -1)\n\t\treturn (-1);\n\tif (!graph->directed)\n\t{\n\t\tif (ft_add_neighbor(&graph->nodes[dst], src) == -1)\n\t\t\treturn (-1);\n\t}\n\treturn (0);\n}\n\nint\tmain(void)\n{\n\tprintf(\"Arete 0-1, 0-2, 1-3 ajoutees\\n\");\n\treturn (0);\n}",
+  "hints": [
+    "Cree d'abord une fonction helper ft_add_neighbor qui gere le redimensionnement du tableau",
+    "Pour un graphe non-oriente, appelle ft_add_neighbor deux fois : une fois pour src et une fois pour dst",
+    "Verifie toujours que les indices src et dst sont valides avant d'acceder au tableau de noeuds"
+  ],
+  "testCases": [
+    {
+      "id": 1,
+      "description": "Ajouter des aretes a un graphe non-oriente",
+      "stdin": "",
+      "expectedStdout": "Arete 0-1, 0-2, 1-3 ajoutees\n",
+      "expectedExitCode": 0,
+      "visible": true
+    },
+    {
+      "id": 2,
+      "description": "Ajouter des aretes a un graphe oriente",
+      "stdin": "",
+      "expectedStdout": "Arete 0-1, 0-2, 1-3 ajoutees\n",
+      "expectedExitCode": 0,
+      "visible": false
+    },
+    {
+      "id": 3,
+      "description": "Ajouter une arete avec un indice invalide retourne -1",
+      "stdin": "",
+      "expectedStdout": "Arete 0-1, 0-2, 1-3 ajoutees\n",
+      "expectedExitCode": 0,
+      "visible": false
+    }
+  ],
+  "constraints": {
+    "allowedFunctions": ["malloc", "free", "write", "printf"],
+    "forbiddenFunctions": ["calloc", "realloc"],
+    "maxExecutionTime": 5000,
+    "maxMemory": 128
+  },
+  "relatedExercises": ["c-day81-ex00-ft-graph-create", "c-day81-ex02-ft-graph-display"],
+  "resources": [
+    {
+      "title": "Ajout d'aretes dans un graphe - GeeksforGeeks",
+      "url": "https://www.geeksforgeeks.org/add-and-remove-edge-in-adjacency-list-representation/",
+      "type": "documentation"
+    },
+    {
+      "title": "Tableaux dynamiques en C",
+      "url": "https://www.programiz.com/c-programming/c-dynamic-memory-allocation",
+      "type": "article"
+    }
+  ]
+}

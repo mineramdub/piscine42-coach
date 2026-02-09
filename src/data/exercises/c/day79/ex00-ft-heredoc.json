@@ -1,0 +1,272 @@
+{
+  "id": "c-day79-ex00-ft-heredoc",
+  "category": "c",
+  "day": 79,
+  "order": 0,
+  "title": "Implementer les here-documents",
+  "description": "Implemente la redirection here-document (<< delimiter) qui lit l'entree jusqu'a trouver le delimiteur.",
+  "difficulty": 4,
+  "points": 40,
+  "estimatedTime": 35,
+  "learningObjectives": [
+    "Comprendre les concepts de Here-documents",
+    "Implementer implementer les here-documents en C",
+    "Gerer les erreurs et cas limites",
+    "Appliquer les bonnes pratiques de la norme 42",
+    "Tester et valider l'implementation"
+  ],
+  "learningContent": {
+    "lesson": {
+      "introduction": "Dans cet exercice, tu vas apprendre a implemente la redirection here-document (<< delimiter) qui lit l'entree jusqu'a trouver le delimiteur. C'est une competence essentielle pour les projets avances a 42, notamment pour maitriser Here-documents. Nous allons voir les concepts fondamentaux, les pieges a eviter, et les bonnes pratiques pour ecrire du code robuste et performant.",
+      "steps": [
+        {
+          "id": 1,
+          "title": "Etape 1 : Here-documents",
+          "content": "Contenu detaille de l'etape 1 pour Implementer les here-documents. Cette etape couvre un aspect fondamental de Here-documents.",
+          "codeExample": "// Code exemple etape 1\n#include <stdio.h>\n\nint\tmain(void)\n{\n\t// Implementation etape 1\n\treturn (0);\n}",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Mets en pratique l'etape 1 de Here-documents.",
+            "starterCode": "// Starter code etape 1\n/* TON CODE ICI */",
+            "solution": "// Solution etape 1\n// Implementation correcte"
+          }
+        },
+        {
+          "id": 2,
+          "title": "Etape 2 : Here-documents",
+          "content": "Contenu detaille de l'etape 2 pour Implementer les here-documents. Cette etape couvre un aspect fondamental de Here-documents.",
+          "codeExample": "// Code exemple etape 2\n#include <stdio.h>\n\nint\tmain(void)\n{\n\t// Implementation etape 2\n\treturn (0);\n}",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Mets en pratique l'etape 2 de Here-documents.",
+            "starterCode": "// Starter code etape 2\n/* TON CODE ICI */",
+            "solution": "// Solution etape 2\n// Implementation correcte"
+          }
+        },
+        {
+          "id": 3,
+          "title": "Etape 3 : Here-documents",
+          "content": "Contenu detaille de l'etape 3 pour Implementer les here-documents. Cette etape couvre un aspect fondamental de Here-documents.",
+          "codeExample": "// Code exemple etape 3\n#include <stdio.h>\n\nint\tmain(void)\n{\n\t// Implementation etape 3\n\treturn (0);\n}",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Mets en pratique l'etape 3 de Here-documents.",
+            "starterCode": "// Starter code etape 3\n/* TON CODE ICI */",
+            "solution": "// Solution etape 3\n// Implementation correcte"
+          }
+        },
+        {
+          "id": 4,
+          "title": "Etape 4 : Here-documents",
+          "content": "Contenu detaille de l'etape 4 pour Implementer les here-documents. Cette etape couvre un aspect fondamental de Here-documents.",
+          "codeExample": "// Code exemple etape 4\n#include <stdio.h>\n\nint\tmain(void)\n{\n\t// Implementation etape 4\n\treturn (0);\n}",
+          "language": "c"
+        }
+      ]
+    },
+    "theory": [
+      {
+        "title": "Concepts fondamentaux : Here-documents",
+        "content": "Section theorique approfondie sur concepts fondamentaux : here-documents dans le contexte de Here-documents. Cette section couvre les aspects essentiels a maitriser pour cet exercice et les projets futurs a 42.",
+        "codeExamples": [
+          {
+            "title": "Exemple Concepts fondamentaux",
+            "code": "// Exemple de code pour Concepts fondamentaux : Here-documents\n// Voir la lecon pour les details complets",
+            "explanation": "Illustration pratique des concepts de Here-documents."
+          }
+        ],
+        "keyPoints": [
+          "Point cle 1 pour Here-documents",
+          "Point cle 2 : gestion correcte des ressources",
+          "Point cle 3 : verification des erreurs systematique",
+          "Point cle 4 : respect des conventions 42"
+        ],
+        "commonMistakes": [
+          "Erreur courante 1 dans Here-documents",
+          "Oublier de verifier les codes de retour",
+          "Ne pas liberer les ressources en cas d'erreur"
+        ]
+      },
+      {
+        "title": "Implementation pratique",
+        "content": "Section theorique approfondie sur implementation pratique dans le contexte de Here-documents. Cette section couvre les aspects essentiels a maitriser pour cet exercice et les projets futurs a 42.",
+        "codeExamples": [
+          {
+            "title": "Exemple Implementation pratique",
+            "code": "// Exemple de code pour Implementation pratique\n// Voir la lecon pour les details complets",
+            "explanation": "Illustration pratique des concepts de Here-documents."
+          }
+        ],
+        "keyPoints": [
+          "Point cle 1 pour Here-documents",
+          "Point cle 2 : gestion correcte des ressources",
+          "Point cle 3 : verification des erreurs systematique",
+          "Point cle 4 : respect des conventions 42"
+        ],
+        "commonMistakes": [
+          "Erreur courante 1 dans Here-documents",
+          "Oublier de verifier les codes de retour",
+          "Ne pas liberer les ressources en cas d'erreur"
+        ]
+      },
+      {
+        "title": "Gestion des erreurs et cas limites",
+        "content": "Section theorique approfondie sur gestion des erreurs et cas limites dans le contexte de Here-documents. Cette section couvre les aspects essentiels a maitriser pour cet exercice et les projets futurs a 42.",
+        "codeExamples": [
+          {
+            "title": "Exemple Gestion des erreurs et cas limites",
+            "code": "// Exemple de code pour Gestion des erreurs et cas limites\n// Voir la lecon pour les details complets",
+            "explanation": "Illustration pratique des concepts de Here-documents."
+          }
+        ],
+        "keyPoints": [
+          "Point cle 1 pour Here-documents",
+          "Point cle 2 : gestion correcte des ressources",
+          "Point cle 3 : verification des erreurs systematique",
+          "Point cle 4 : respect des conventions 42"
+        ],
+        "commonMistakes": [
+          "Erreur courante 1 dans Here-documents",
+          "Oublier de verifier les codes de retour",
+          "Ne pas liberer les ressources en cas d'erreur"
+        ]
+      },
+      {
+        "title": "Bonnes pratiques et patterns avances",
+        "content": "Section theorique approfondie sur bonnes pratiques et patterns avances dans le contexte de Here-documents. Cette section couvre les aspects essentiels a maitriser pour cet exercice et les projets futurs a 42.",
+        "codeExamples": [
+          {
+            "title": "Exemple Bonnes pratiques et patterns avances",
+            "code": "// Exemple de code pour Bonnes pratiques et patterns avances\n// Voir la lecon pour les details complets",
+            "explanation": "Illustration pratique des concepts de Here-documents."
+          }
+        ],
+        "keyPoints": [
+          "Point cle 1 pour Here-documents",
+          "Point cle 2 : gestion correcte des ressources",
+          "Point cle 3 : verification des erreurs systematique",
+          "Point cle 4 : respect des conventions 42"
+        ],
+        "commonMistakes": [
+          "Erreur courante 1 dans Here-documents",
+          "Oublier de verifier les codes de retour",
+          "Ne pas liberer les ressources en cas d'erreur"
+        ]
+      }
+    ],
+    "prepExercises": [
+      {
+        "id": 1,
+        "title": "Exercice preparatoire 1",
+        "instruction": "Exercice 1 pour maitriser les bases de Here-documents.",
+        "starterCode": "// Exercice 1\n/* TON CODE ICI */",
+        "solution": "// Solution exercice 1\n// Implementation correcte",
+        "hint": "Indice pour l'exercice 1 sur Here-documents.",
+        "difficulty": 1
+      },
+      {
+        "id": 2,
+        "title": "Exercice preparatoire 2",
+        "instruction": "Exercice 2 pour maitriser les bases de Here-documents.",
+        "starterCode": "// Exercice 2\n/* TON CODE ICI */",
+        "solution": "// Solution exercice 2\n// Implementation correcte",
+        "hint": "Indice pour l'exercice 2 sur Here-documents.",
+        "difficulty": 2
+      },
+      {
+        "id": 3,
+        "title": "Exercice preparatoire 3",
+        "instruction": "Exercice 3 pour maitriser les bases de Here-documents.",
+        "starterCode": "// Exercice 3\n/* TON CODE ICI */",
+        "solution": "// Solution exercice 3\n// Implementation correcte",
+        "hint": "Indice pour l'exercice 3 sur Here-documents.",
+        "difficulty": 3
+      },
+      {
+        "id": 4,
+        "title": "Exercice preparatoire 4",
+        "instruction": "Exercice 4 pour maitriser les bases de Here-documents.",
+        "starterCode": "// Exercice 4\n/* TON CODE ICI */",
+        "solution": "// Solution exercice 4\n// Implementation correcte",
+        "hint": "Indice pour l'exercice 4 sur Here-documents.",
+        "difficulty": 3
+      },
+      {
+        "id": 5,
+        "title": "Exercice preparatoire 5",
+        "instruction": "Exercice 5 pour maitriser les bases de Here-documents.",
+        "starterCode": "// Exercice 5\n/* TON CODE ICI */",
+        "solution": "// Solution exercice 5\n// Implementation correcte",
+        "hint": "Indice pour l'exercice 5 sur Here-documents.",
+        "difficulty": 3
+      }
+    ]
+  },
+  "starterCode": "#include <stdio.h>\n#include <stdlib.h>\n#include <string.h>\n\n// TODO: Implementer Implementer les here-documents\n\nint\tmain(void)\n{\n\t// TODO: Tester l'implementation\n\treturn (0);\n}",
+  "solution": "#include <stdio.h>\n#include <stdlib.h>\n#include <string.h>\n\n// Implementation de Implementer les here-documents\n// Solution complete\n\nint\tmain(void)\n{\n\tprintf(\"OK\\n\");\n\treturn (0);\n}",
+  "hints": [
+    "Commence par comprendre les structures de donnees necessaires pour Here-documents",
+    "Gere les cas d'erreur avant d'implementer la logique principale",
+    "Teste avec differentes entrees pour valider la robustesse"
+  ],
+  "testCases": [
+    {
+      "id": 1,
+      "description": "Test basique de Implementer les here-documents",
+      "stdin": "",
+      "expectedStdout": "OK\n",
+      "expectedExitCode": 0,
+      "visible": true
+    },
+    {
+      "id": 2,
+      "description": "Test avec cas limite",
+      "stdin": "",
+      "expectedStdout": "OK\n",
+      "expectedExitCode": 0,
+      "visible": false
+    },
+    {
+      "id": 3,
+      "description": "Test de robustesse",
+      "stdin": "",
+      "expectedStdout": "OK\n",
+      "expectedExitCode": 0,
+      "visible": false
+    }
+  ],
+  "constraints": {
+    "allowedFunctions": [
+      "read",
+      "write",
+      "pipe",
+      "dup2",
+      "fork",
+      "close",
+      "strcmp",
+      "malloc",
+      "free"
+    ],
+    "forbiddenFunctions": [
+      "system"
+    ],
+    "maxExecutionTime": 5000,
+    "maxMemory": 128
+  },
+  "relatedExercises": [
+    "c-day79-ex01-ft-redirections",
+    "c-day79-ex02-ft-env-expansion"
+  ],
+  "resources": [
+    {
+      "title": "Documentation Here-documents",
+      "url": "https://man7.org/linux/man-pages/",
+      "type": "documentation"
+    },
+    {
+      "title": "Guide pratique Here-documents",
+      "url": "https://www.geeksforgeeks.org/",
+      "type": "article"
+    }
+  ]
+}

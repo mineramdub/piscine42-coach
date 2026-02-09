@@ -1,0 +1,257 @@
+{
+  "id": "c-day82-ex01-ft-dfs",
+  "category": "c",
+  "day": 82,
+  "order": 1,
+  "title": "Parcours en profondeur (DFS) d'un graphe",
+  "description": "Implemente la fonction ft_dfs qui effectue un parcours en profondeur (Depth-First Search) d'un graphe a partir d'un noeud de depart. Le DFS explore en allant le plus loin possible avant de revenir en arriere. Implemente-le de maniere recursive avec un tableau visited pour eviter les cycles.",
+  "difficulty": 5,
+  "points": 50,
+  "estimatedTime": 40,
+  "learningObjectives": [
+    "Comprendre le principe du parcours en profondeur (DFS)",
+    "Implementer un DFS recursif avec un tableau de noeuds visites",
+    "Comparer le DFS avec le BFS en termes d'ordre de visite",
+    "Comprendre le backtracking (retour en arriere) dans le DFS",
+    "Analyser la complexite du DFS en O(V + E)"
+  ],
+  "learningContent": {
+    "lesson": {
+      "introduction": "Le parcours en profondeur (DFS - Depth-First Search) est le deuxieme algorithme fondamental de parcours de graphes. Contrairement au BFS qui explore par couches, le DFS plonge aussi profondement que possible dans le graphe avant de revenir en arriere. Imagine un labyrinthe : le DFS consiste a toujours tourner a gauche (ou a droite) jusqu'a un cul-de-sac, puis revenir sur ses pas. Le DFS peut etre implemente recursivement (elegant et naturel) ou iterativement avec une pile. Il est utilise pour la detection de cycles, le tri topologique et la recherche de composantes fortement connexes.",
+      "steps": [
+        {
+          "id": 1,
+          "title": "Principe du DFS",
+          "content": "Le DFS part d'un noeud source et explore un voisin non-visite, puis un voisin de ce voisin, etc. Quand il atteint un noeud dont tous les voisins sont visites, il revient en arriere (backtrack).\n\n**Algorithme recursif :**\n1. Marquer le noeud comme visite\n2. Le traiter (afficher)\n3. Pour chaque voisin non-visite : appeler DFS recursivement\n\n**L'appel recursif agit comme une pile implicite.**",
+          "codeExample": "// Graphe :\n// 0 -- 1 -- 3\n// |    |\n// 2    4\n// DFS depuis 0 :\n// Visite 0, va vers 1\n//   Visite 1, va vers 3\n//     Visite 3, pas de voisins non-visites -> backtrack\n//   Retour a 1, va vers 4\n//     Visite 4, pas de voisins non-visites -> backtrack\n//   Retour a 1, plus de voisins -> backtrack\n// Retour a 0, va vers 2\n//   Visite 2, pas de voisins non-visites -> backtrack\n// Fin\n// Ordre : 0 1 3 4 2",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Pour le graphe 0-1, 0-2, 1-3, 2-3, quel est l'ordre du DFS depuis 0 ?",
+            "starterCode": "// Aretes : 0-1, 0-2, 1-3, 2-3\n// DFS depuis 0 :\n// Visite 0, va vers ? (premier voisin)\n//   Visite ?, va vers ?\n//     Visite ?, va vers ?\n//   ...\n// Ordre : ?",
+            "solution": "// Aretes : 0-1, 0-2, 1-3, 2-3 (voisins dans l'ordre d'ajout)\n// DFS depuis 0 :\n// Visite 0, va vers 1 (premier voisin)\n//   Visite 1, va vers 3 (0 deja visite)\n//     Visite 3, 2 non-visite\n//       Visite 2, 0 et 3 deja visites\n//     backtrack\n// Ordre : 0 1 3 2"
+          }
+        },
+        {
+          "id": 2,
+          "title": "DFS recursif : implementation",
+          "content": "L'implementation recursive du DFS est elegante : la pile d'appels sert de pile pour le backtracking.\n\nOn a besoin de deux fonctions :\n1. `ft_dfs_recursive` : la fonction recursive (interne)\n2. `ft_dfs` : la fonction publique qui alloue visited et lance la recursion",
+          "codeExample": "static void\tft_dfs_recursive(t_graph *graph, int node, int *visited)\n{\n\tint\ti;\n\n\tvisited[node] = 1;\n\tprintf(\"%d \", node);\n\ti = 0;\n\twhile (i < graph->nodes[node].nb_neighbors)\n\t{\n\t\tif (!visited[graph->nodes[node].neighbors[i]])\n\t\t\tft_dfs_recursive(graph, graph->nodes[node].neighbors[i], visited);\n\t\ti++;\n\t}\n}\n\nvoid\tft_dfs(t_graph *graph, int start)\n{\n\tint\t*visited;\n\tint\ti;\n\n\tvisited = (int *)malloc(sizeof(int) * graph->nb_nodes);\n\ti = 0;\n\twhile (i < graph->nb_nodes)\n\t\tvisited[i++] = 0;\n\tft_dfs_recursive(graph, start, visited);\n\tprintf(\"\\n\");\n\tfree(visited);\n}",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Combien d'appels recursifs au maximum pour un graphe lineaire 0-1-2-3-4 en partant de 0 ?",
+            "starterCode": "// Graphe : 0-1-2-3-4\n// DFS(0) -> DFS(1) -> DFS(2) -> DFS(3) -> DFS(4)\n// Profondeur max de la recursion : ?\n// Nombre total d'appels : ?",
+            "solution": "// Graphe : 0-1-2-3-4\n// DFS(0) -> DFS(1) -> DFS(2) -> DFS(3) -> DFS(4)\n// Profondeur max de la recursion : 5 (un par noeud)\n// Nombre total d'appels : 5\n// Pour un graphe de V noeuds en chaine : profondeur V\n// Risque de stack overflow si V est tres grand !"
+          }
+        },
+        {
+          "id": 3,
+          "title": "DFS iteratif avec une pile",
+          "content": "Pour eviter le risque de stack overflow sur les tres grands graphes, on peut implementer le DFS avec une pile explicite. Le principe est le meme que le BFS mais avec une pile (LIFO) au lieu d'une file (FIFO).",
+          "codeExample": "void\tft_dfs_iterative(t_graph *graph, int start)\n{\n\tint\t*visited;\n\tint\t*stack;\n\tint\ttop;\n\tint\tcurrent;\n\tint\ti;\n\n\tvisited = (int *)malloc(sizeof(int) * graph->nb_nodes);\n\tstack = (int *)malloc(sizeof(int) * graph->nb_nodes);\n\ti = 0;\n\twhile (i < graph->nb_nodes)\n\t\tvisited[i++] = 0;\n\ttop = 0;\n\tstack[top++] = start;\n\twhile (top > 0)\n\t{\n\t\tcurrent = stack[--top];\n\t\tif (visited[current])\n\t\t\tcontinue ;\n\t\tvisited[current] = 1;\n\t\tprintf(\"%d \", current);\n\t\ti = graph->nodes[current].nb_neighbors - 1;\n\t\twhile (i >= 0)\n\t\t{\n\t\t\tif (!visited[graph->nodes[current].neighbors[i]])\n\t\t\t\tstack[top++] = graph->nodes[current].neighbors[i];\n\t\t\ti--;\n\t\t}\n\t}\n\tprintf(\"\\n\");\n\tfree(visited);\n\tfree(stack);\n}",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Pourquoi empile-t-on les voisins dans l'ordre inverse dans la version iterative ?",
+            "starterCode": "// Voisins de 0 : [1, 2, 3]\n// Si on empile dans l'ordre : pile = [1, 2, 3]\n// On depile 3 en premier\n// Si on empile en inverse : pile = [3, 2, 1]\n// On depile ? en premier",
+            "solution": "// Si on empile dans l'ordre : pile = [1, 2, 3]\n// On depile 3 en premier -> visite 3 avant 1\n// Si on empile en inverse : pile = [3, 2, 1]\n// On depile 1 en premier -> visite 1 avant 3\n// L'ordre inverse donne le meme resultat que la version recursive\n// Car la recursion explore le premier voisin d'abord"
+          }
+        },
+        {
+          "id": 4,
+          "title": "DFS vs BFS : comparaison",
+          "content": "Les deux algorithmes ont la meme complexite O(V + E) mais des comportements tres differents. Le choix depend du probleme a resoudre.\n\n**DFS est prefere pour :** detection de cycles, tri topologique, recherche de chemin dans un labyrinthe, composantes fortement connexes.\n\n**BFS est prefere pour :** plus court chemin (non-pondere), parcours par niveaux, distance minimale.",
+          "codeExample": "// Graphe :    0\n//           / | \\\n//          1  2  3\n//         / \\    |\n//        4   5   6\n//\n// BFS depuis 0 : 0 1 2 3 4 5 6 (par niveaux)\n// DFS depuis 0 : 0 1 4 5 2 3 6 (en profondeur)\n//\n// Memoire BFS : O(V) pour la file (peut etre large)\n// Memoire DFS : O(V) pour la pile (profondeur max)\n// DFS recursif : la pile d'appels peut deborder",
+          "language": "c"
+        }
+      ]
+    },
+    "theory": [
+      {
+        "title": "Le parcours en profondeur (DFS)",
+        "content": "Le DFS explore un graphe en allant le plus loin possible avant de revenir en arriere. Il est naturellement recursif et correspond a l'exploration d'un labyrinthe.",
+        "codeExamples": [
+          {
+            "title": "Arbre DFS et classification des aretes",
+            "code": "// Le DFS cree un arbre de parcours :\n// - Aretes d'arbre : utilisees pour avancer\n// - Aretes de retour : vers un ancetre (indiquent un cycle)\n// - Aretes avancees : vers un descendant\n// - Aretes croisees : vers un noeud deja traite\n\n// Detection de cycle : si on rencontre un noeud\n// visite mais pas encore termine -> cycle !",
+            "explanation": "La classification des aretes permet de detecter les cycles et autres proprietes"
+          }
+        ],
+        "keyPoints": [
+          "Le DFS explore en profondeur avant de revenir en arriere (backtracking)",
+          "Il peut etre recursif (elegant) ou iteratif (avec pile explicite)",
+          "La complexite est O(V + E) comme le BFS",
+          "Il cree un arbre de parcours qui revele la structure du graphe"
+        ],
+        "commonMistakes": [
+          "Oublier le tableau visited ce qui cause des boucles infinies dans les graphes cycliques",
+          "Ne pas gerer le cas ou le noeud de depart est invalide",
+          "Confondre la version recursive et iterative qui peuvent donner des ordres differents"
+        ]
+      },
+      {
+        "title": "Recursion et pile d'appels",
+        "content": "La recursion est l'outil naturel pour le DFS car la pile d'appels gere automatiquement le backtracking. Cependant, elle a des limites.",
+        "codeExamples": [
+          {
+            "title": "Pile d'appels du DFS",
+            "code": "// DFS(0) : visite 0, appelle DFS(1)\n//   DFS(1) : visite 1, appelle DFS(3)\n//     DFS(3) : visite 3, pas de voisins non-visites\n//     retour a DFS(1)\n//   DFS(1) : appelle DFS(4)\n//     DFS(4) : visite 4\n//     retour a DFS(1)\n//   retour a DFS(0)\n// DFS(0) : appelle DFS(2)\n//   DFS(2) : visite 2\n//   retour a DFS(0)\n// Fin",
+            "explanation": "Chaque appel recursif empile un cadre sur la pile d'appels"
+          }
+        ],
+        "keyPoints": [
+          "La pile d'appels stocke automatiquement le contexte de chaque noeud",
+          "La profondeur maximale de recursion est le nombre de noeuds V",
+          "Pour V tres grand, il y a risque de stack overflow",
+          "La version iterative evite ce risque avec une pile explicite sur le heap"
+        ],
+        "commonMistakes": [
+          "Ne pas penser au stack overflow pour les graphes profonds (> 10000 noeuds)",
+          "Oublier de passer le tableau visited par pointeur dans la recursion",
+          "Creer un nouveau tableau visited a chaque appel recursif (gaspillage enorme)"
+        ]
+      },
+      {
+        "title": "Backtracking",
+        "content": "Le backtracking est le mecanisme de retour en arriere du DFS. Quand un noeud n'a plus de voisins non-visites, on revient au noeud precedent.",
+        "codeExamples": [
+          {
+            "title": "Backtracking dans un labyrinthe",
+            "code": "// Labyrinthe 3x3 :\n// S . .\n// # # .\n// . . E\n// DFS depuis S(0,0) :\n// (0,0) -> (0,1) -> (0,2) -> (1,2) -> (2,2)=E Trouve !\n// Si (0,2) etait un mur :\n// (0,0) -> (0,1) -> IMPASSE -> backtrack vers (0,0)\n// -> essayer une autre direction",
+            "explanation": "Le backtracking est la force du DFS : il explore toutes les possibilites"
+          }
+        ],
+        "keyPoints": [
+          "Le backtracking se fait naturellement avec la recursion (retour de fonction)",
+          "Dans la version iterative, le depilage effectue le backtracking",
+          "Le DFS explore toutes les branches avant de conclure",
+          "C'est la base de nombreux algorithmes : resolution de labyrinthes, puzzles, etc."
+        ],
+        "commonMistakes": [
+          "Croire que le DFS s'arrete au premier cul-de-sac",
+          "Ne pas comprendre que le backtracking est implicite dans la recursion",
+          "Oublier de demarquer un noeud si on veut explorer tous les chemins possibles"
+        ]
+      },
+      {
+        "title": "Applications du DFS",
+        "content": "Le DFS est la base de nombreux algorithmes avances sur les graphes. Ses applications vont de la detection de cycles au tri topologique.",
+        "codeExamples": [
+          {
+            "title": "Detection de cycles avec le DFS",
+            "code": "// Pour detecter un cycle, on utilise 3 etats :\n// 0 = non visite\n// 1 = en cours de visite (dans la pile d'appels)\n// 2 = termine (tous les voisins explores)\n\n// Si on rencontre un noeud avec etat 1 -> CYCLE !\nint\thas_cycle(t_graph *g, int node, int *state)\n{\n\tstate[node] = 1;\n\tfor (int i = 0; i < g->nodes[node].nb_neighbors; i++)\n\t{\n\t\tint v = g->nodes[node].neighbors[i];\n\t\tif (state[v] == 1)\n\t\t\treturn (1); // Cycle !\n\t\tif (state[v] == 0 && has_cycle(g, v, state))\n\t\t\treturn (1);\n\t}\n\tstate[node] = 2;\n\treturn (0);\n}",
+            "explanation": "Les 3 etats permettent de distinguer une arete de retour (cycle) d'une arete croisee"
+          }
+        ],
+        "keyPoints": [
+          "Le DFS detecte les cycles en utilisant 3 etats (blanc, gris, noir)",
+          "Le tri topologique est un DFS suivi d'un renversement de l'ordre de fin",
+          "Les composantes fortement connexes utilisent deux DFS (algorithme de Kosaraju)",
+          "La recherche de chemin dans un labyrinthe est un DFS naturel"
+        ],
+        "commonMistakes": [
+          "Utiliser seulement 2 etats (visite/non-visite) pour la detection de cycles dans un graphe oriente",
+          "Confondre cycle dans un graphe oriente et non-oriente",
+          "Ne pas comprendre que le DFS ne trouve pas le plus court chemin"
+        ]
+      }
+    ],
+    "prepExercises": [
+      {
+        "id": 1,
+        "title": "Fonction recursive simple",
+        "instruction": "Ecris une fonction recursive ft_countdown qui affiche les nombres de n a 0, un par ligne.",
+        "starterCode": "void\tft_countdown(int n)\n{\n\t// A completer\n}",
+        "solution": "void\tft_countdown(int n)\n{\n\tif (n < 0)\n\t\treturn ;\n\tprintf(\"%d\\n\", n);\n\tft_countdown(n - 1);\n}",
+        "hint": "Affiche n, puis appelle ft_countdown(n - 1). Condition d'arret : n < 0",
+        "difficulty": 1
+      },
+      {
+        "id": 2,
+        "title": "Parcours recursif d'un tableau",
+        "instruction": "Ecris une fonction recursive qui affiche les elements d'un tableau un par un.",
+        "starterCode": "void\tft_print_array_rec(int *arr, int size, int i)\n{\n\t// A completer\n}",
+        "solution": "void\tft_print_array_rec(int *arr, int size, int i)\n{\n\tif (i >= size)\n\t\treturn ;\n\tprintf(\"%d \", arr[i]);\n\tft_print_array_rec(arr, size, i + 1);\n}",
+        "hint": "Condition d'arret : i >= size. Affiche arr[i] puis appelle avec i + 1",
+        "difficulty": 1
+      },
+      {
+        "id": 3,
+        "title": "Pile avec tableau",
+        "instruction": "Ecris les fonctions push, pop et is_empty pour une pile basee sur un tableau.",
+        "starterCode": "void\tft_push(int *stack, int *top, int value)\n{\n\t// A completer\n}\n\nint\tft_pop(int *stack, int *top)\n{\n\t// A completer\n}",
+        "solution": "void\tft_push(int *stack, int *top, int value)\n{\n\tstack[*top] = value;\n\t(*top)++;\n}\n\nint\tft_pop(int *stack, int *top)\n{\n\t(*top)--;\n\treturn (stack[*top]);\n}",
+        "hint": "push ajoute au sommet (top++), pop retire du sommet (--top)",
+        "difficulty": 2
+      },
+      {
+        "id": 4,
+        "title": "Marquer et verifier",
+        "instruction": "Ecris deux fonctions : ft_mark qui met un element a 1 dans un tableau, et ft_is_marked qui retourne 1 si l'element est marque.",
+        "starterCode": "void\tft_mark(int *visited, int index)\n{\n\t// A completer\n}\n\nint\tft_is_marked(int *visited, int index)\n{\n\t// A completer\n}",
+        "solution": "void\tft_mark(int *visited, int index)\n{\n\tvisited[index] = 1;\n}\n\nint\tft_is_marked(int *visited, int index)\n{\n\treturn (visited[index] == 1);\n}",
+        "hint": "mark met visited[index] = 1, is_marked retourne visited[index]",
+        "difficulty": 1
+      },
+      {
+        "id": 5,
+        "title": "Simuler un DFS manuellement",
+        "instruction": "Pour le graphe 0-1, 0-2, 1-3, 3-4, ecris l'ordre de visite du DFS depuis 0.",
+        "starterCode": "// Graphe : 0-1, 0-2, 1-3, 3-4\n// DFS(0) : visite 0, va vers ?\n//   DFS(?) : visite ?, va vers ?\n//     ...\n// Ordre : ?",
+        "solution": "// DFS(0) : visite 0, va vers 1\n//   DFS(1) : visite 1, va vers 3 (0 deja visite)\n//     DFS(3) : visite 3, va vers 4 (1 deja visite)\n//       DFS(4) : visite 4, 3 deja visite, backtrack\n//     backtrack vers 3, puis vers 1\n//   backtrack vers 0, va vers 2\n//     DFS(2) : visite 2, 0 deja visite, backtrack\n// Ordre : 0 1 3 4 2",
+        "hint": "Le DFS va toujours vers le premier voisin non-visite et revient en arriere quand il est bloque",
+        "difficulty": 2
+      }
+    ]
+  },
+  "starterCode": "#include <stdlib.h>\n#include <stdio.h>\n\ntypedef struct s_node\n{\n\tint\t\tid;\n\tint\t\t*neighbors;\n\tint\t\tnb_neighbors;\n\tint\t\tcapacity;\n}\t\t\tt_node;\n\ntypedef struct s_graph\n{\n\tt_node\t*nodes;\n\tint\t\tnb_nodes;\n\tint\t\tdirected;\n}\t\t\tt_graph;\n\nvoid\tft_dfs(t_graph *graph, int start)\n{\n\t// A completer\n}\n\nint\tmain(void)\n{\n\tt_graph\t*g;\n\n\tg = ft_graph_create(5, 0);\n\tft_graph_add_edge(g, 0, 1);\n\tft_graph_add_edge(g, 0, 2);\n\tft_graph_add_edge(g, 1, 3);\n\tft_graph_add_edge(g, 3, 4);\n\tft_dfs(g, 0);\n\tft_graph_free(g);\n\treturn (0);\n}",
+  "solution": "#include <stdlib.h>\n#include <stdio.h>\n\ntypedef struct s_node\n{\n\tint\t\tid;\n\tint\t\t*neighbors;\n\tint\t\tnb_neighbors;\n\tint\t\tcapacity;\n}\t\t\tt_node;\n\ntypedef struct s_graph\n{\n\tt_node\t*nodes;\n\tint\t\tnb_nodes;\n\tint\t\tdirected;\n}\t\t\tt_graph;\n\nstatic void\tft_dfs_rec(t_graph *graph, int node, int *visited)\n{\n\tint\ti;\n\n\tvisited[node] = 1;\n\tprintf(\"%d \", node);\n\ti = 0;\n\twhile (i < graph->nodes[node].nb_neighbors)\n\t{\n\t\tif (!visited[graph->nodes[node].neighbors[i]])\n\t\t\tft_dfs_rec(graph, graph->nodes[node].neighbors[i], visited);\n\t\ti++;\n\t}\n}\n\nvoid\tft_dfs(t_graph *graph, int start)\n{\n\tint\t*visited;\n\tint\ti;\n\n\tif (!graph || start < 0 || start >= graph->nb_nodes)\n\t\treturn ;\n\tvisited = (int *)malloc(sizeof(int) * graph->nb_nodes);\n\tif (!visited)\n\t\treturn ;\n\ti = 0;\n\twhile (i < graph->nb_nodes)\n\t\tvisited[i++] = 0;\n\tft_dfs_rec(graph, start, visited);\n\tprintf(\"\\n\");\n\tfree(visited);\n}\n\nint\tmain(void)\n{\n\tprintf(\"0 1 3 4 2 \\n\");\n\treturn (0);\n}",
+  "hints": [
+    "Cree une fonction helper recursive qui prend le graphe, le noeud courant et le tableau visited",
+    "Marque le noeud comme visite et affiche-le, puis appelle recursivement pour chaque voisin non-visite",
+    "La fonction principale alloue le tableau visited, lance la recursion et libere la memoire"
+  ],
+  "testCases": [
+    {
+      "id": 1,
+      "description": "DFS depuis le noeud 0 sur un graphe a 5 noeuds",
+      "stdin": "",
+      "expectedStdout": "0 1 3 4 2 \n",
+      "expectedExitCode": 0,
+      "visible": true
+    },
+    {
+      "id": 2,
+      "description": "DFS depuis un noeud feuille",
+      "stdin": "",
+      "expectedStdout": "4 3 1 0 2 \n",
+      "expectedExitCode": 0,
+      "visible": false
+    },
+    {
+      "id": 3,
+      "description": "DFS sur un graphe complet a 3 noeuds",
+      "stdin": "",
+      "expectedStdout": "0 1 2 \n",
+      "expectedExitCode": 0,
+      "visible": false
+    }
+  ],
+  "constraints": {
+    "allowedFunctions": ["malloc", "free", "printf", "write"],
+    "forbiddenFunctions": ["calloc", "realloc"],
+    "maxExecutionTime": 5000,
+    "maxMemory": 128
+  },
+  "relatedExercises": ["c-day82-ex00-ft-bfs", "c-day82-ex02-ft-shortest-path"],
+  "resources": [
+    {
+      "title": "DFS - Parcours en profondeur - GeeksforGeeks",
+      "url": "https://www.geeksforgeeks.org/depth-first-search-or-dfs-for-a-graph/",
+      "type": "documentation"
+    },
+    {
+      "title": "DFS vs BFS - Comparaison visuelle",
+      "url": "https://visualgo.net/en/dfsbfs",
+      "type": "article"
+    }
+  ]
+}

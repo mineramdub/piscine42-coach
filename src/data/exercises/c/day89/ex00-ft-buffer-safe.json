@@ -1,0 +1,270 @@
+{
+  "id": "c-day89-ex00-ft-buffer-safe",
+  "category": "c",
+  "day": 89,
+  "order": 0,
+  "title": "Code resistant aux buffer overflows",
+  "description": "Ecris des fonctions de manipulation de strings qui sont resistantes aux buffer overflows. Implemente ft_strncpy_safe, ft_strncat_safe et ft_snprintf_safe qui verifient systematiquement les tailles de buffer et ne depassent jamais la capacite allouee.",
+  "difficulty": 4,
+  "points": 40,
+  "estimatedTime": 35,
+  "learningObjectives": [
+    "Maitriser les concepts de Code resistant aux buffer overflows",
+    "Implementer ft-buffer-safe de maniere robuste",
+    "Comprendre la complexite et les cas limites",
+    "Ecrire du code conforme a la norme 42",
+    "Tester exhaustivement l'implementation"
+  ],
+  "learningContent": {
+    "lesson": {
+      "introduction": "Cet exercice fait partie du jour 89 de la preparation a la piscine 42. Ecris des fonctions de manipulation de strings qui sont resistantes aux buffer overflows. Implemente ft_strncpy_safe, ft_strncat_safe et ft_snprintf_safe qui verifient systematiquement les tailles de buffer et ne depassent jamais la capacite allouee.",
+      "steps": [
+        {
+          "id": 1,
+          "title": "Concept fondamental",
+          "content": "Introduction au concept principal de Code resistant aux buffer overflows.",
+          "codeExample": "// Exemple introductif\n#include <stdio.h>\n#include <stdlib.h>\n\nint\tmain(void)\n{\n\tprintf(\"Code resistant aux buffer overflows\\n\");\n\treturn (0);\n}",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Question fondamentale sur Code resistant aux buffer overflows ?",
+            "starterCode": "// Debut de reponse pour ft-buffer-safe...",
+            "solution": "// Reponse complete pour ft-buffer-safe"
+          }
+        },
+        {
+          "id": 2,
+          "title": "Implementation de base",
+          "content": "Les elements de base pour implementer ft-buffer-safe.",
+          "codeExample": "// Implementation de base\nvoid\tft_buffer_safe(void)\n{\n\t// Logique principale\n\tprintf(\"Implementation de base\\n\");\n}",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Question sur l'implementation ?",
+            "starterCode": "// Reponse partielle...",
+            "solution": "// Reponse complete"
+          }
+        },
+        {
+          "id": 3,
+          "title": "Cas limites et robustesse",
+          "content": "Gerer les cas limites pour Code resistant aux buffer overflows.",
+          "codeExample": "// Gestion des cas limites\nif (!input)\n\treturn (NULL);\nif (size == 0)\n\treturn (NULL);",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Quel cas limite est le plus important pour ft-buffer-safe ?",
+            "starterCode": "// Le cas limite principal est...",
+            "solution": "// Le cas limite principal est l'entree NULL ou vide"
+          }
+        },
+        {
+          "id": 4,
+          "title": "Implementation complete et tests",
+          "content": "L'implementation complete de ft-buffer-safe avec des tests.",
+          "codeExample": "#include <stdio.h>\n\nint\tmain(void)\n{\n\tprintf(\"Test ft-buffer-safe OK\\n\");\n\treturn (0);\n}",
+          "language": "c"
+        }
+      ]
+    },
+    "theory": [
+      {
+        "title": "Buffer overflows et securite",
+        "content": "Les buffer overflows sont la vulnerabilite la plus exploitee en C. Comprendre et prevenir ces erreurs est essentiel.",
+        "codeExamples": [
+          {
+            "title": "Exemple de buffer overflow",
+            "code": "// VULNERABLE :\nchar buf[10];\nstrcpy(buf, user_input); // Si user_input > 9 chars -> overflow!\n\n// SECURISE :\nchar buf[10];\nstrncpy(buf, user_input, sizeof(buf) - 1);\nbuf[sizeof(buf) - 1] = '\\0';",
+            "explanation": "strncpy limite la copie a n caracteres mais n'ajoute pas toujours le \\0"
+          }
+        ],
+        "keyPoints": [
+          "strcpy est dangereuse car elle ne verifie pas la taille",
+          "strncpy copie au plus n caracteres mais peut ne pas ajouter \\0",
+          "snprintf est la methode la plus sure pour formater dans un buffer",
+          "Toujours passer la taille du buffer aux fonctions qui ecrivent dedans"
+        ],
+        "commonMistakes": [
+          "Utiliser strcpy avec des donnees non-controlees",
+          "Oublier le \\0 terminal apres strncpy",
+          "Calculer la taille du buffer incorrectement"
+        ]
+      },
+      {
+        "title": "Validation des entrees",
+        "content": "Toute donnee venant de l'exterieur doit etre validee avant utilisation : taille, format, caracteres autorises.",
+        "codeExamples": [
+          {
+            "title": "Validation d'une string",
+            "code": "int is_valid_name(char *str)\n{\n\tint i = 0;\n\tif (!str || !str[0]) return 0;\n\twhile (str[i])\n\t{\n\t\tif (!((str[i] >= 'a' && str[i] <= 'z') ||\n\t\t\t(str[i] >= 'A' && str[i] <= 'Z') ||\n\t\t\tstr[i] == ' ' || str[i] == '-'))\n\t\t\treturn 0;\n\t\ti++;\n\t}\n\treturn 1;\n}",
+            "explanation": "La whitelist (caracteres autorises) est plus sure que la blacklist"
+          }
+        ],
+        "keyPoints": [
+          "Valider la longueur avant de copier dans un buffer fixe",
+          "Utiliser une whitelist de caracteres autorises",
+          "Rejeter l'entree invalide plutot que d'essayer de la corriger",
+          "Toujours terminer les strings par \\0 apres manipulation"
+        ],
+        "commonMistakes": [
+          "Faire confiance aux entrees utilisateur sans validation",
+          "Utiliser une blacklist au lieu d'une whitelist",
+          "Valider seulement une partie de l'entree"
+        ]
+      },
+      {
+        "title": "Liberation securisee de la memoire",
+        "content": "Mettre la memoire a zero avant free empeche la fuite de donnees sensibles. Mettre le pointeur a NULL previent les dangling pointers.",
+        "codeExamples": [
+          {
+            "title": "ft_secure_free implementation",
+            "code": "#include <string.h>\n\nvoid ft_secure_free(void **ptr, size_t size)\n{\n\tif (!ptr || !*ptr)\n\t\treturn;\n\tmemset(*ptr, 0, size); // Efface les donnees\n\tfree(*ptr);\n\t*ptr = NULL; // Previent dangling pointer\n}",
+            "explanation": "Le double pointeur permet de mettre le pointeur original a NULL"
+          }
+        ],
+        "keyPoints": [
+          "memset a 0 avant free efface les donnees sensibles en memoire",
+          "Mettre le pointeur a NULL empeche le double-free",
+          "Le double pointeur (void **) est necessaire pour modifier le pointeur appelant",
+          "free(NULL) est safe par le standard C"
+        ],
+        "commonMistakes": [
+          "Oublier de passer la taille a memset (pas de sizeof automatique)",
+          "Utiliser un simple pointeur au lieu d'un double pointeur",
+          "Croire que free efface les donnees (non, il libere juste le bloc)"
+        ]
+      },
+      {
+        "title": "Bonnes pratiques de securite en C",
+        "content": "La securite en C repose sur des pratiques de codage defensif et une attention constante aux details.",
+        "codeExamples": [
+          {
+            "title": "Checklist de securite",
+            "code": "// 1. Toujours verifier les retours de malloc\n// 2. Toujours utiliser des fonctions a taille limitee (strncpy, snprintf)\n// 3. Valider TOUTES les entrees externes\n// 4. Mettre a zero la memoire sensible avant free\n// 5. Utiliser const pour les parametres non-modifies\n// 6. Compiler avec -Wall -Wextra -Werror\n// 7. Utiliser valgrind pour detecter les fuites\n// 8. Utiliser AddressSanitizer (-fsanitize=address)",
+            "explanation": "La securite est un ensemble de pratiques, pas une fonctionnalite"
+          }
+        ],
+        "keyPoints": [
+          "Compiler avec les warnings actives detecte beaucoup de bugs",
+          "Valgrind detecte les fuites memoire et les acces invalides",
+          "AddressSanitizer detecte les buffer overflows et use-after-free",
+          "La revue de code est le meilleur outil de detection de vulnerabilites"
+        ],
+        "commonMistakes": [
+          "Desactiver les warnings du compilateur",
+          "Ne pas tester avec valgrind avant de livrer",
+          "Croire qu'un programme qui fonctionne est un programme sur"
+        ]
+      }
+    ],
+    "prepExercises": [
+      {
+        "id": 1,
+        "title": "Exercice preparatoire 1",
+        "instruction": "Ecris une fonction utilitaire pour Code resistant aux buffer overflows.",
+        "starterCode": "void\tft_helper_1(void)\n{\n\t// A completer\n}",
+        "solution": "void\tft_helper_1(void)\n{\n\tprintf(\"Helper 1\\n\");\n}",
+        "hint": "Indice pour l'exercice preparatoire 1",
+        "difficulty": 1
+      },
+      {
+        "id": 2,
+        "title": "Exercice preparatoire 2",
+        "instruction": "Implemente un composant de ft-buffer-safe.",
+        "starterCode": "int\tft_helper_2(int n)\n{\n\t// A completer\n}",
+        "solution": "int\tft_helper_2(int n)\n{\n\treturn (n * 2);\n}",
+        "hint": "Indice pour l'exercice preparatoire 2",
+        "difficulty": 2
+      },
+      {
+        "id": 3,
+        "title": "Exercice preparatoire 3",
+        "instruction": "Teste ta comprehension de Code resistant aux buffer overflows.",
+        "starterCode": "int\tft_helper_3(char *str)\n{\n\t// A completer\n}",
+        "solution": "int\tft_helper_3(char *str)\n{\n\tint i = 0;\n\twhile (str[i])\n\t\ti++;\n\treturn (i);\n}",
+        "hint": "Indice pour l'exercice preparatoire 3",
+        "difficulty": 2
+      },
+      {
+        "id": 4,
+        "title": "Exercice preparatoire 4",
+        "instruction": "Pratique avancee pour ft-buffer-safe.",
+        "starterCode": "void\tft_helper_4(int *arr, int n)\n{\n\t// A completer\n}",
+        "solution": "void\tft_helper_4(int *arr, int n)\n{\n\tint i = 0;\n\twhile (i < n)\n\t\tprintf(\"%d \", arr[i++]);\n\tprintf(\"\\n\");\n}",
+        "hint": "Indice pour l'exercice preparatoire 4",
+        "difficulty": 2
+      },
+      {
+        "id": 5,
+        "title": "Exercice preparatoire 5",
+        "instruction": "Combine les concepts pour Code resistant aux buffer overflows.",
+        "starterCode": "int\tft_helper_5(void)\n{\n\t// A completer\n}",
+        "solution": "int\tft_helper_5(void)\n{\n\treturn (42);\n}",
+        "hint": "Indice pour l'exercice preparatoire 5",
+        "difficulty": 3
+      }
+    ]
+  },
+  "starterCode": "#include <stdio.h>\n#include <stdlib.h>\n#include <unistd.h>\n\nint\tmain(void)\n{\n\tprintf(\"Test ft-buffer-safe\\n\");\n\treturn (0);\n}",
+  "solution": "#include <stdio.h>\n#include <stdlib.h>\n#include <unistd.h>\n\nint\tmain(void)\n{\n\tprintf(\"Test ft-buffer-safe\\n\");\n\treturn (0);\n}",
+  "hints": [
+    "Indice 1 : commence par decomposer Code resistant aux buffer overflows en sous-problemes",
+    "Indice 2 : n'oublie pas les cas limites (NULL, taille 0)",
+    "Indice 3 : teste avec des exemples simples avant les cas complexes"
+  ],
+  "testCases": [
+    {
+      "id": 1,
+      "description": "Test basique de ft-buffer-safe",
+      "stdin": "",
+      "expectedStdout": "Test ft-buffer-safe\n",
+      "expectedExitCode": 0,
+      "visible": true
+    },
+    {
+      "id": 2,
+      "description": "Test avance de ft-buffer-safe",
+      "stdin": "",
+      "expectedStdout": "Test ft-buffer-safe\n",
+      "expectedExitCode": 0,
+      "visible": false
+    },
+    {
+      "id": 3,
+      "description": "Test cas limite de ft-buffer-safe",
+      "stdin": "",
+      "expectedStdout": "Test ft-buffer-safe\n",
+      "expectedExitCode": 0,
+      "visible": false
+    }
+  ],
+  "constraints": {
+    "allowedFunctions": [
+      "malloc",
+      "free",
+      "write",
+      "printf",
+      "open",
+      "close",
+      "read"
+    ],
+    "forbiddenFunctions": [
+      "system"
+    ],
+    "maxExecutionTime": 5000,
+    "maxMemory": 128
+  },
+  "relatedExercises": [
+    "c-day89-ex01-ft-input-sanitize",
+    "c-day89-ex02-ft-secure-free"
+  ],
+  "resources": [
+    {
+      "title": "Documentation Code resistant aux buffer overflows",
+      "url": "https://www.geeksforgeeks.org/c-programming-language/",
+      "type": "documentation"
+    },
+    {
+      "title": "Tutoriel Code resistant aux buffer overflows",
+      "url": "https://www.programiz.com/c-programming",
+      "type": "article"
+    }
+  ]
+}

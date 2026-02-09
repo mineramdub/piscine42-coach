@@ -1,0 +1,257 @@
+{
+  "id": "c-day73-ex02-ft-philo-monitor",
+  "category": "c",
+  "day": 73,
+  "order": 2,
+  "title": "Le thread moniteur de mort",
+  "description": "Implemente le thread moniteur qui verifie en permanence si un philosophe est mort (temps depuis le dernier repas depasse time_to_die).",
+  "difficulty": 5,
+  "points": 50,
+  "estimatedTime": 40,
+  "learningObjectives": [
+    "Implementer un thread de surveillance (moniteur)",
+    "Calculer le temps ecoule depuis le dernier repas",
+    "Gerer la detection de mort avec precision temporelle",
+    "Comprendre la communication entre threads via flag partage",
+    "Arreter proprement la simulation quand un philosophe meurt"
+  ],
+  "learningContent": {
+    "lesson": {
+      "introduction": "Le moniteur est un thread special qui ne mange pas. Sa seule tache est de verifier en permanence si un philosophe est mort, c'est-a-dire si le temps ecoule depuis son dernier repas depasse time_to_die. Quand une mort est detectee, le moniteur met someone_died a 1 et affiche le message de mort. Les autres threads verront ce flag et s'arreteront.",
+      "steps": [
+        {
+          "id": 1,
+          "title": "Pourquoi un thread moniteur ?",
+          "content": "Chaque philosophe est occupe a manger, dormir ou penser. Il ne peut pas verifier lui-meme s'il est mort (car il dort ou attend une fourchette).\n\nLe moniteur est un thread dedie qui :\n1. Parcourt tous les philosophes\n2. Calcule le temps depuis le dernier repas\n3. Si ce temps depasse time_to_die -> mort !\n4. Affiche le message et arrete la simulation",
+          "codeExample": "// Le moniteur boucle en permanence :\n// Pour chaque philosophe :\n//   temps_ecoule = temps_actuel - dernier_repas\n//   si temps_ecoule > time_to_die\n//     -> philosophe mort !\n//     -> afficher \"timestamp id died\"\n//     -> mettre someone_died = 1",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Ecris une fonction qui verifie si un philosophe est mort (temps depuis dernier repas > time_to_die).",
+            "starterCode": "int\tis_dead(t_philo *philo)\n{\n\t/* TON CODE ICI */\n}",
+            "solution": "int\tis_dead(t_philo *philo)\n{\n\tlong long\ttime_since_meal;\n\n\ttime_since_meal = get_time_ms() - philo->last_meal_time;\n\tif (time_since_meal > philo->table->time_to_die)\n\t\treturn (1);\n\treturn (0);\n}"
+          }
+        },
+        {
+          "id": 2,
+          "title": "La boucle du moniteur",
+          "content": "Le moniteur parcourt tous les philosophes dans une boucle infinie. Des qu'une mort est detectee, il met someone_died a 1 et sort. Un petit usleep entre chaque verification evite une consommation CPU excessive.",
+          "codeExample": "void\t*monitor_routine(void *arg)\n{\n\tt_table\t*table;\n\tint\t\ti;\n\n\ttable = (t_table *)arg;\n\twhile (!table->someone_died)\n\t{\n\t\ti = 0;\n\t\twhile (i < table->nb_philos)\n\t\t{\n\t\t\tif (is_dead(&table->philos[i]))\n\t\t\t{\n\t\t\t\tprint_death(&table->philos[i]);\n\t\t\t\ttable->someone_died = 1;\n\t\t\t\treturn (NULL);\n\t\t\t}\n\t\t\ti++;\n\t\t}\n\t\tusleep(1000);\n\t}\n\treturn (NULL);\n}",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Ecris la boucle du moniteur qui verifie chaque philosophe et detecte la mort.",
+            "starterCode": "void\t*monitor_routine(void *arg)\n{\n\tt_table\t*table = (t_table *)arg;\n\t/* TON CODE ICI */\n\treturn (NULL);\n}",
+            "solution": "void\t*monitor_routine(void *arg)\n{\n\tt_table\t*table = (t_table *)arg;\n\tint\t\ti;\n\n\twhile (!table->someone_died)\n\t{\n\t\ti = 0;\n\t\twhile (i < table->nb_philos)\n\t\t{\n\t\t\tif (get_time_ms() - table->philos[i].last_meal_time\n\t\t\t\t> table->time_to_die)\n\t\t\t{\n\t\t\t\tpthread_mutex_lock(&table->print_mutex);\n\t\t\t\tprintf(\"%lld %d died\\n\",\n\t\t\t\t\tget_time_ms() - table->start_time,\n\t\t\t\t\ttable->philos[i].id);\n\t\t\t\ttable->someone_died = 1;\n\t\t\t\tpthread_mutex_unlock(&table->print_mutex);\n\t\t\t\treturn (NULL);\n\t\t\t}\n\t\t\ti++;\n\t\t}\n\t\tusleep(1000);\n\t}\n\treturn (NULL);\n}"
+          }
+        },
+        {
+          "id": 3,
+          "title": "Affichage du message de mort",
+          "content": "Le message de mort est special : il doit etre le **dernier** message affiche. Apres le message de mort, plus aucun autre message ne doit apparaitre.\n\nPour cela, on met someone_died a 1 **avant** de liberer le print_mutex. Ainsi, les autres threads verront le flag quand ils essaieront d'afficher.",
+          "codeExample": "void\tprint_death(t_philo *philo)\n{\n\tlong long\ttime;\n\n\tpthread_mutex_lock(&philo->table->print_mutex);\n\ttime = get_time_ms() - philo->table->start_time;\n\tprintf(\"%lld %d died\\n\", time, philo->id);\n\tphilo->table->someone_died = 1;\n\tpthread_mutex_unlock(&philo->table->print_mutex);\n}",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Ecris print_death qui affiche le message et met someone_died a 1 de facon atomique.",
+            "starterCode": "void\tprint_death(t_philo *philo)\n{\n\t/* TON CODE ICI */\n}",
+            "solution": "void\tprint_death(t_philo *philo)\n{\n\tlong long\ttime;\n\n\tpthread_mutex_lock(&philo->table->print_mutex);\n\ttime = get_time_ms() - philo->table->start_time;\n\tprintf(\"%lld %d died\\n\", time, philo->id);\n\tphilo->table->someone_died = 1;\n\tpthread_mutex_unlock(&philo->table->print_mutex);\n}"
+          }
+        },
+        {
+          "id": 4,
+          "title": "Integration : lancer la simulation",
+          "content": "Pour lancer la simulation complete :\n1. Initialiser la table\n2. Sauvegarder le temps de debut (start_time)\n3. Creer les threads philosophes\n4. Creer le thread moniteur\n5. Joindre tous les threads\n6. Nettoyer les ressources\n\nLe moniteur est lance en dernier pour que tous les philosophes soient deja actifs.",
+          "codeExample": "int\tstart_simulation(t_table *table)\n{\n\tpthread_t\tmonitor;\n\tint\t\t\ti;\n\n\ttable->start_time = get_time_ms();\n\ti = -1;\n\twhile (++i < table->nb_philos)\n\t{\n\t\ttable->philos[i].last_meal_time = table->start_time;\n\t\tpthread_create(&table->philos[i].thread, NULL,\n\t\t\tphilo_routine, &table->philos[i]);\n\t}\n\tpthread_create(&monitor, NULL, monitor_routine, table);\n\ti = -1;\n\twhile (++i < table->nb_philos)\n\t\tpthread_join(table->philos[i].thread, NULL);\n\tpthread_join(monitor, NULL);\n\treturn (0);\n}",
+          "language": "c"
+        }
+      ]
+    },
+    "theory": [
+      {
+        "title": "Le pattern moniteur",
+        "content": "Le pattern moniteur est un design courant en programmation concurrente. Un thread dedie surveille l'etat du systeme sans participer directement aux operations. Il prend des decisions globales (comme arreter la simulation) que les threads individuels ne peuvent pas prendre seuls.",
+        "codeExamples": [
+          {
+            "title": "Moniteur generique",
+            "code": "void\t*monitor(void *arg)\n{\n\tt_system\t*sys = (t_system *)arg;\n\n\twhile (!sys->should_stop)\n\t{\n\t\tcheck_conditions(sys);\n\t\tusleep(MONITOR_INTERVAL);\n\t}\n\treturn (NULL);\n}",
+            "explanation": "Le moniteur verifie periodiquement les conditions d'arret."
+          }
+        ],
+        "keyPoints": [
+          "Le moniteur est un thread dedie a la surveillance",
+          "Il ne participe pas aux operations (ne mange pas)",
+          "Il verifie periodiquement les conditions d'arret",
+          "L'intervalle de verification impacte la precision de detection"
+        ],
+        "commonMistakes": [
+          "Moniteur avec un intervalle trop grand (detection tardive de la mort)",
+          "Moniteur sans usleep (consommation CPU a 100%)",
+          "Moniteur qui modifie des donnees sans mutex"
+        ]
+      },
+      {
+        "title": "Detection de la mort",
+        "content": "La mort d'un philosophe est detectee quand le temps ecoule depuis son dernier repas depasse time_to_die. Cette verification doit etre suffisamment frequente pour detecter la mort rapidement, mais pas trop pour eviter la surconsommation CPU.",
+        "codeExamples": [
+          {
+            "title": "Calcul du temps ecoule",
+            "code": "long long\ttime_since_meal;\n\ntime_since_meal = get_time_ms() - philo->last_meal_time;\nif (time_since_meal > table->time_to_die)\n{\n\t// Philosophe mort !\n}",
+            "explanation": "La difference entre le temps actuel et le dernier repas donne le temps de jeune."
+          }
+        ],
+        "keyPoints": [
+          "Temps depuis dernier repas = temps_actuel - last_meal_time",
+          "Si ce temps depasse time_to_die, le philosophe est mort",
+          "La verification doit etre frequente (usleep(1000) = 1ms)",
+          "last_meal_time est mis a jour au debut de chaque repas"
+        ],
+        "commonMistakes": [
+          "Utiliser >= au lieu de > pour la comparaison (un philosophe meurt pile a time_to_die)",
+          "Ne pas proteger la lecture de last_meal_time avec un mutex",
+          "Oublier d'initialiser last_meal_time au start_time"
+        ]
+      },
+      {
+        "title": "Communication par flag partage",
+        "content": "Le flag someone_died est le mecanisme de communication entre le moniteur et les philosophes. Le moniteur le met a 1, et chaque philosophe le verifie dans sa boucle. Ce pattern simple fonctionne car la lecture et l'ecriture d'un int sont generalement atomiques sur les architectures modernes.",
+        "codeExamples": [
+          {
+            "title": "Flag d'arret",
+            "code": "// Le moniteur ecrit :\ntable->someone_died = 1;\n\n// Les philosophes lisent :\nwhile (!table->someone_died)\n{\n\t// Continuer la routine\n}",
+            "explanation": "Le flag permet une communication simple entre threads."
+          }
+        ],
+        "keyPoints": [
+          "someone_died est un int partage entre tous les threads",
+          "Le moniteur l'ecrit, les philosophes le lisent",
+          "La lecture d'un int est generalement atomique sur x86",
+          "Pour plus de surete, on pourrait utiliser un mutex pour ce flag"
+        ],
+        "commonMistakes": [
+          "Supposer que toutes les operations sur un int sont atomiques (pas vrai sur toutes les arch)",
+          "Ne pas verifier le flag assez souvent dans la boucle du philosophe",
+          "Modifier le flag sans le print_mutex (messages peuvent apparaitre apres la mort)"
+        ]
+      },
+      {
+        "title": "Precision temporelle",
+        "content": "La precision de la detection depend de l'intervalle de verification du moniteur. Un usleep(1000) (1ms) donne une bonne precision sans trop consommer de CPU. Le timing des actions (eat, sleep) doit aussi etre precis : usleep peut dormir un peu plus longtemps que demande.",
+        "codeExamples": [
+          {
+            "title": "Attente precise",
+            "code": "void\tft_precise_sleep(long long duration_ms)\n{\n\tlong long\tstart;\n\n\tstart = get_time_ms();\n\twhile (get_time_ms() - start < duration_ms)\n\t\tusleep(100);\n}",
+            "explanation": "Une boucle active avec petit usleep est plus precise qu'un seul usleep."
+          }
+        ],
+        "keyPoints": [
+          "usleep n'est pas parfaitement precis (peut dormir un peu plus)",
+          "La boucle active avec micro-sleep ameliore la precision",
+          "L'intervalle du moniteur de 1ms est un bon compromis",
+          "La precision temporelle est critique pour le projet philosophers"
+        ],
+        "commonMistakes": [
+          "Utiliser un seul usleep pour des durees longues (imprecision)",
+          "Moniteur qui verifie toutes les 10ms (detection de mort trop tardive)",
+          "Ignorer l'imprecision de usleep dans les calculs de timing"
+        ]
+      }
+    ],
+    "prepExercises": [
+      {
+        "id": 1,
+        "title": "Verifier la mort",
+        "instruction": "Ecris une fonction qui verifie si un philosophe est mort.",
+        "starterCode": "int\tis_dead(t_philo *p)\n{\n\t/* TON CODE ICI */\n}",
+        "solution": "int\tis_dead(t_philo *p)\n{\n\tif (get_time_ms() - p->last_meal_time > p->table->time_to_die)\n\t\treturn (1);\n\treturn (0);\n}",
+        "hint": "Compare get_time_ms() - last_meal_time avec time_to_die.",
+        "difficulty": 1
+      },
+      {
+        "id": 2,
+        "title": "Message de mort",
+        "instruction": "Affiche le message de mort et met someone_died a 1 de facon thread-safe.",
+        "starterCode": "void\tprint_death(t_philo *p)\n{\n\t/* TON CODE ICI */\n}",
+        "solution": "void\tprint_death(t_philo *p)\n{\n\tpthread_mutex_lock(&p->table->print_mutex);\n\tprintf(\"%lld %d died\\n\",\n\t\tget_time_ms() - p->table->start_time, p->id);\n\tp->table->someone_died = 1;\n\tpthread_mutex_unlock(&p->table->print_mutex);\n}",
+        "hint": "Met someone_died AVANT unlock pour empecher d'autres messages.",
+        "difficulty": 2
+      },
+      {
+        "id": 3,
+        "title": "Boucle moniteur",
+        "instruction": "Ecris la boucle du moniteur qui parcourt tous les philosophes.",
+        "starterCode": "void\t*monitor(void *arg)\n{\n\tt_table\t*t = (t_table *)arg;\n\t/* TON CODE ICI */\n\treturn (NULL);\n}",
+        "solution": "void\t*monitor(void *arg)\n{\n\tt_table\t*t = (t_table *)arg;\n\tint\t\ti;\n\n\twhile (!t->someone_died)\n\t{\n\t\ti = -1;\n\t\twhile (++i < t->nb_philos)\n\t\t{\n\t\t\tif (is_dead(&t->philos[i]))\n\t\t\t{\n\t\t\t\tprint_death(&t->philos[i]);\n\t\t\t\treturn (NULL);\n\t\t\t}\n\t\t}\n\t\tusleep(1000);\n\t}\n\treturn (NULL);\n}",
+        "hint": "Boucle while(!someone_died) avec une boucle interne sur les philosophes.",
+        "difficulty": 2
+      },
+      {
+        "id": 4,
+        "title": "Verification max_meals",
+        "instruction": "Ajoute la verification de max_meals au moniteur : si tous ont assez mange, arrete.",
+        "starterCode": "int\tall_ate_enough(t_table *t)\n{\n\t/* TON CODE ICI */\n}",
+        "solution": "int\tall_ate_enough(t_table *t)\n{\n\tint\ti;\n\n\tif (t->max_meals == -1)\n\t\treturn (0);\n\ti = 0;\n\twhile (i < t->nb_philos)\n\t{\n\t\tif (t->philos[i].meals_eaten < t->max_meals)\n\t\t\treturn (0);\n\t\ti++;\n\t}\n\treturn (1);\n}",
+        "hint": "Si max_meals est -1, retourne 0. Sinon verifie que chaque philo a mange assez.",
+        "difficulty": 2
+      },
+      {
+        "id": 5,
+        "title": "Lancer la simulation",
+        "instruction": "Ecris la fonction qui cree les threads philosophes et le moniteur.",
+        "starterCode": "int\tstart_sim(t_table *t)\n{\n\t/* TON CODE ICI */\n}",
+        "solution": "int\tstart_sim(t_table *t)\n{\n\tpthread_t\tmonitor_tid;\n\tint\t\t\ti;\n\n\tt->start_time = get_time_ms();\n\ti = -1;\n\twhile (++i < t->nb_philos)\n\t{\n\t\tt->philos[i].last_meal_time = t->start_time;\n\t\tpthread_create(&t->philos[i].thread, NULL,\n\t\t\tphilo_routine, &t->philos[i]);\n\t}\n\tpthread_create(&monitor_tid, NULL, monitor_routine, t);\n\ti = -1;\n\twhile (++i < t->nb_philos)\n\t\tpthread_join(t->philos[i].thread, NULL);\n\tpthread_join(monitor_tid, NULL);\n\treturn (0);\n}",
+        "hint": "Init start_time, cree philo threads, cree moniteur, join tous.",
+        "difficulty": 3
+      }
+    ]
+  },
+  "starterCode": "#include <pthread.h>\n#include <stdio.h>\n#include <stdlib.h>\n#include <unistd.h>\n#include <sys/time.h>\n\n// Structures et fonctions des exercices precedents\n\nint\tft_is_dead(t_philo *philo)\n{\n\t// TODO: Verifier si le temps depuis le dernier repas > time_to_die\n\treturn (0);\n}\n\nvoid\tft_print_death(t_philo *philo)\n{\n\t// TODO: Afficher le message de mort et mettre someone_died a 1\n}\n\nvoid\t*ft_monitor_routine(void *arg)\n{\n\tt_table\t*table;\n\n\ttable = (t_table *)arg;\n\t// TODO: Boucle de verification de chaque philosophe\n\treturn (NULL);\n}",
+  "solution": "#include <pthread.h>\n#include <stdio.h>\n#include <stdlib.h>\n#include <unistd.h>\n#include <sys/time.h>\n\nlong long\tget_time_ms(void)\n{\n\tstruct timeval\ttv;\n\n\tgettimeofday(&tv, NULL);\n\treturn ((long long)tv.tv_sec * 1000 + tv.tv_usec / 1000);\n}\n\nint\tft_is_dead(t_philo *philo)\n{\n\tlong long\ttime_since_meal;\n\n\ttime_since_meal = get_time_ms() - philo->last_meal_time;\n\tif (time_since_meal > philo->table->time_to_die)\n\t\treturn (1);\n\treturn (0);\n}\n\nvoid\tft_print_death(t_philo *philo)\n{\n\tlong long\ttime;\n\n\tpthread_mutex_lock(&philo->table->print_mutex);\n\ttime = get_time_ms() - philo->table->start_time;\n\tprintf(\"%lld %d died\\n\", time, philo->id);\n\tphilo->table->someone_died = 1;\n\tpthread_mutex_unlock(&philo->table->print_mutex);\n}\n\nvoid\t*ft_monitor_routine(void *arg)\n{\n\tt_table\t*table;\n\tint\t\ti;\n\n\ttable = (t_table *)arg;\n\twhile (!table->someone_died)\n\t{\n\t\ti = 0;\n\t\twhile (i < table->nb_philos)\n\t\t{\n\t\t\tif (ft_is_dead(&table->philos[i]))\n\t\t\t{\n\t\t\t\tft_print_death(&table->philos[i]);\n\t\t\t\treturn (NULL);\n\t\t\t}\n\t\t\ti++;\n\t\t}\n\t\tusleep(1000);\n\t}\n\treturn (NULL);\n}",
+  "hints": [
+    "Compare get_time_ms() - last_meal_time avec time_to_die pour detecter la mort",
+    "Mets someone_died = 1 dans le print_mutex pour que ce soit le dernier message",
+    "usleep(1000) dans la boucle du moniteur evite la surconsommation CPU"
+  ],
+  "testCases": [
+    {
+      "id": 1,
+      "description": "Le moniteur detecte la mort d'un philosophe",
+      "stdin": "",
+      "expectedStdout": "800 1 died\n",
+      "expectedExitCode": 0,
+      "visible": true
+    },
+    {
+      "id": 2,
+      "description": "Aucun message apres le message de mort",
+      "stdin": "",
+      "expectedStdout": "",
+      "expectedExitCode": 0,
+      "visible": false
+    },
+    {
+      "id": 3,
+      "description": "La simulation s'arrete proprement",
+      "stdin": "",
+      "expectedStdout": "",
+      "expectedExitCode": 0,
+      "visible": false
+    }
+  ],
+  "constraints": {
+    "allowedFunctions": ["pthread_create", "pthread_join", "pthread_mutex_lock", "pthread_mutex_unlock", "printf", "usleep", "gettimeofday"],
+    "forbiddenFunctions": ["sleep", "system"],
+    "maxExecutionTime": 5000,
+    "maxMemory": 128
+  },
+  "relatedExercises": ["c-day73-ex00-ft-philo-setup", "c-day73-ex01-ft-philo-routine"],
+  "resources": [
+    {
+      "title": "Philosophers death detection",
+      "url": "https://man7.org/linux/man-pages/man3/usleep.3.html",
+      "type": "documentation"
+    },
+    {
+      "title": "Thread monitoring patterns",
+      "url": "https://www.geeksforgeeks.org/dining-philosopher-problem-using-semaphores/",
+      "type": "article"
+    }
+  ]
+}

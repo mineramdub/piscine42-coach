@@ -1,0 +1,257 @@
+{
+  "id": "c-day65-ex01-ft-hashtable-delete",
+  "category": "c",
+  "day": 65,
+  "order": 1,
+  "title": "Supprimer une entree de la table de hachage",
+  "description": "Ecris la fonction ft_hashtable_delete qui supprime une entree par sa cle dans une table de hachage. La fonction localise le bucket, parcourt la liste chainee pour trouver la cle, puis supprime l'entree en relinkant la liste. La cle dupliquee (strdup) et l'entree sont liberees. Si une fonction del est fournie, elle est utilisee pour liberer la valeur.",
+  "difficulty": 5,
+  "points": 50,
+  "estimatedTime": 40,
+  "learningObjectives": [
+    "Supprimer un element d'une liste chainee en maintenant le chainage",
+    "Gerer le cas special de la suppression de la tete de liste",
+    "Liberer correctement la cle dupliquee et l'entree",
+    "Utiliser un pointeur de fonction pour liberer les valeurs generiques",
+    "Comprendre le relinking dans une liste chainee"
+  ],
+  "learningContent": {
+    "lesson": {
+      "introduction": "La suppression dans une table de hachage combine la recherche (localiser l'entree) et la suppression dans une liste chainee (relinker et liberer). La difficulte reside dans le maintien correct du chainage : il faut mettre a jour le pointeur next du noeud precedent pour pointer vers le noeud suivant de l'entree supprimee.",
+      "steps": [
+        {
+          "id": 1,
+          "title": "Trouver l'entree et son predecesseur",
+          "content": "Pour supprimer un noeud dans une liste chainee, il faut connaitre le noeud precedent (pour mettre a jour son next). On utilise deux pointeurs : **prev** (predecesseur) et **entry** (courant).\n\nCas special : si l'entree est la tete de la liste, prev est NULL.",
+          "codeExample": "t_entry\t*prev;\nt_entry\t*entry;\n\nprev = NULL;\nentry = ht->buckets[index];\nwhile (entry)\n{\n\tif (strcmp(entry->key, key) == 0)\n\t\tbreak ;  // Trouve !\n\tprev = entry;\n\tentry = entry->next;\n}\n// Si entry == NULL : cle non trouvee\n// Si prev == NULL : entry est la tete",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Quelles sont les valeurs de prev et entry pour 'age' dans le bucket [name]->[age]->[city] ?",
+            "starterCode": "// Bucket : [name] -> [age] -> [city]\n// Chercher 'age' :\n// 1. prev=NULL, entry=[name] -> strcmp != 0\n// 2. prev=???, entry=??? -> strcmp == 0",
+            "solution": "// 1. prev=NULL, entry=[name] -> strcmp('name','age')!=0\n// 2. prev=[name], entry=[age] -> strcmp('age','age')==0\n// prev pointe vers [name], entry vers [age]"
+          }
+        },
+        {
+          "id": 2,
+          "title": "Relinker la liste chainee",
+          "content": "Apres avoir trouve l'entree, on relinke la liste :\n- Si **prev est NULL** : l'entree est la tete -> le bucket pointe vers entry->next\n- Sinon : prev->next pointe vers entry->next\n\nCela 'saute' l'entree a supprimer dans la chaine.",
+          "codeExample": "// Cas 1 : suppression de la tete\n// Avant : bucket -> [A] -> [B] -> [C]\n// Apres : bucket -> [B] -> [C]\nif (!prev)\n\tht->buckets[index] = entry->next;\n\n// Cas 2 : suppression au milieu\n// Avant : [A] -> [B] -> [C]\n// Apres : [A] -> [C]\nelse\n\tprev->next = entry->next;",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Comment supprimer le dernier element [C] de la liste [A]->[B]->[C] ?",
+            "starterCode": "// prev = [B], entry = [C]\n// entry->next = NULL\n// prev->next = ??? (entry->next = NULL)",
+            "solution": "// prev->next = entry->next = NULL\n// Resultat : [A] -> [B] -> NULL\n// [C] est deconnecte de la liste\n// Meme code : prev->next = entry->next"
+          }
+        },
+        {
+          "id": 3,
+          "title": "Liberer l'entree",
+          "content": "Apres le relinking, on libere la memoire de l'entree :\n1. del(entry->value) si del n'est pas NULL (libere la valeur)\n2. free(entry->key) : libere la cle dupliquee par strdup\n3. free(entry) : libere la structure de l'entree",
+          "codeExample": "// Liberation complete :\nif (del)\n\tdel(entry->value);   // Libere la valeur si necessaire\nfree(entry->key);        // Libere la cle (strdup)\nfree(entry);             // Libere l'entree\n\n// Attention a l'ordre :\n// 1. Liberer les sous-elements (value, key)\n// 2. Liberer la structure (entry)",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Pourquoi faut-il free(entry->key) en plus de free(entry) ?",
+            "starterCode": "// entry->key a ete alloue par ??? lors de l'insertion\n// free(entry) libere la structure MAIS PAS entry->key\n// Resultat sans free(entry->key) : ???",
+            "solution": "// entry->key a ete alloue par STRDUP lors de l'insertion\n// free(entry) libere seulement sizeof(t_entry) octets\n// entry->key pointe vers une zone malloc separee\n// Sans free(entry->key) : FUITE MEMOIRE"
+          }
+        },
+        {
+          "id": 4,
+          "title": "La fonction complete",
+          "content": "La fonction combine la recherche, le relinking et la liberation. Elle retourne 1 si la cle a ete trouvee et supprimee, 0 sinon.",
+          "codeExample": "int\tft_hashtable_delete(t_hashtable *ht, char *key,\n\t\tvoid (*del)(void *))\n{\n\tunsigned long\tindex;\n\tt_entry\t\t\t*prev;\n\tt_entry\t\t\t*entry;\n\n\tindex = ht->hash(key, ht->size);\n\tprev = NULL;\n\tentry = ht->buckets[index];\n\twhile (entry)\n\t{\n\t\tif (strcmp(entry->key, key) == 0)\n\t\t{\n\t\t\tif (!prev)\n\t\t\t\tht->buckets[index] = entry->next;\n\t\t\telse\n\t\t\t\tprev->next = entry->next;\n\t\t\tif (del)\n\t\t\t\tdel(entry->value);\n\t\t\tfree(entry->key);\n\t\t\tfree(entry);\n\t\t\treturn (1);\n\t\t}\n\t\tprev = entry;\n\t\tentry = entry->next;\n\t}\n\treturn (0);\n}",
+          "language": "c"
+        }
+      ]
+    },
+    "theory": [
+      {
+        "title": "Suppression dans une liste chainee",
+        "content": "La suppression dans une liste chainee necessite de connaitre le predecesseur pour relinker. Il existe deux approches : avec un pointeur prev, ou avec un double pointeur (pointeur vers le pointeur next).",
+        "codeExamples": [
+          {
+            "title": "Approche avec double pointeur (alternative elegante)",
+            "code": "// Avec prev (classique) :\nt_entry *prev = NULL;\nt_entry *curr = head;\nwhile (curr)\n{\n\tif (match(curr))\n\t{\n\t\tif (!prev)\n\t\t\thead = curr->next;\n\t\telse\n\t\t\tprev->next = curr->next;\n\t\tfree(curr);\n\t\tbreak ;\n\t}\n\tprev = curr;\n\tcurr = curr->next;\n}\n\n// Avec double pointeur (plus elegant) :\nt_entry **pp = &head;\nwhile (*pp)\n{\n\tif (match(*pp))\n\t{\n\t\tt_entry *tmp = *pp;\n\t\t*pp = (*pp)->next;\n\t\tfree(tmp);\n\t\tbreak ;\n\t}\n\tpp = &(*pp)->next;\n}",
+            "explanation": "Le double pointeur elimine le cas special de la tete."
+          }
+        ],
+        "keyPoints": [
+          "Il faut connaitre le predecesseur pour relinker (prev->next = curr->next)",
+          "Cas special quand l'element est en tete de liste (pas de predecesseur)",
+          "Le double pointeur est plus elegant mais moins intuitif",
+          "Toujours sauvegarder entry avant de relinker pour pouvoir le free"
+        ],
+        "commonMistakes": [
+          "Oublier le cas ou l'element est la tete de liste (bucket non mis a jour)",
+          "Free l'entree avant de relinker (perte du pointeur next)",
+          "Ne pas avancer prev quand on avance entry (desynchronisation)"
+        ]
+      },
+      {
+        "title": "Ordre de liberation",
+        "content": "Quand on supprime une entree, il faut liberer dans le bon ordre : d'abord les sous-elements (cle, valeur), puis la structure. Si on libere la structure d'abord, on ne peut plus acceder aux sous-elements.",
+        "codeExamples": [
+          {
+            "title": "Ordre correct de liberation",
+            "code": "// BON ORDRE :\n// 1. Relinker (deconnecter de la liste)\nif (!prev)\n\tht->buckets[index] = entry->next;\nelse\n\tprev->next = entry->next;\n// 2. Liberer la valeur (si del fourni)\nif (del)\n\tdel(entry->value);\n// 3. Liberer la cle\nfree(entry->key);\n// 4. Liberer l'entree\nfree(entry);\n\n// MAUVAIS ORDRE :\nfree(entry);       // entry->key est inaccessible !\nfree(entry->key);  // USE-AFTER-FREE",
+            "explanation": "Toujours liberer les sous-elements avant la structure."
+          }
+        ],
+        "keyPoints": [
+          "Relinker AVANT de liberer (sinon la liste est corrompue)",
+          "Liberer les sous-elements AVANT la structure",
+          "del(value) avant free(key) avant free(entry)",
+          "L'ordre est : deconnecter, puis liberer du plus profond au plus haut"
+        ],
+        "commonMistakes": [
+          "Free l'entree avant de sauvegarder entry->next pour le relinking",
+          "Oublier de free la cle (fuite memoire de strdup)",
+          "Appeler del sur une valeur qui n'a pas ete malloc"
+        ]
+      },
+      {
+        "title": "Gestion de la valeur avec del",
+        "content": "Le parametre del permet a l'appelant de specifier comment liberer la valeur. C'est le meme pattern que pour ft_btree_free. Si del est NULL, la valeur n'est pas liberee (elle peut etre sur la pile ou partagee).",
+        "codeExamples": [
+          {
+            "title": "Differents cas de del",
+            "code": "// Valeur malloc simple :\nint *val = malloc(sizeof(int));\n*val = 42;\nft_hashtable_insert(ht, \"age\", val);\n// del = free\n\n// Valeur statique :\nchar *name = \"Alice\"; // PAS malloc\nft_hashtable_insert(ht, \"name\", name);\n// del = NULL (ne pas free une constante !)\n\n// Valeur complexe :\nt_student *s = create_student(\"Bob\", 20);\nft_hashtable_insert(ht, \"student\", s);\n// del = del_student (libere name, grades, etc.)",
+            "explanation": "del doit correspondre a la methode d'allocation de la valeur."
+          }
+        ],
+        "keyPoints": [
+          "del = NULL : ne pas liberer la valeur",
+          "del = free : liberer un bloc malloc simple",
+          "del = fonction custom : liberer une structure complexe",
+          "Le choix de del depend de comment la valeur a ete allouee"
+        ],
+        "commonMistakes": [
+          "Utiliser free comme del quand la valeur n'a pas ete malloc",
+          "Oublier de passer del lors de la suppression",
+          "Ne pas verifier del != NULL avant l'appel"
+        ]
+      },
+      {
+        "title": "Impact de la suppression sur les performances",
+        "content": "La suppression raccourcit les listes chainees dans les buckets, ce qui ameliore les performances de recherche future. Cependant, la table ne retrecit pas automatiquement. Pour une gestion optimale, on pourrait reduire la taille quand le facteur de charge est trop bas.",
+        "codeExamples": [
+          {
+            "title": "Impact sur le facteur de charge",
+            "code": "// Avant suppression :\n// 100 elements, 50 buckets, charge = 2.0\n// En moyenne 2 elements par bucket\n\n// Apres suppression de 80 elements :\n// 20 elements, 50 buckets, charge = 0.4\n// En moyenne 0.4 element par bucket\n// La table gaspille de la memoire\n\n// Solution : redimensionner quand charge < 0.25\n// Diviser la taille par 2 et re-hasher tout",
+            "explanation": "Le redimensionnement dynamique maintient un facteur de charge optimal."
+          }
+        ],
+        "keyPoints": [
+          "La suppression ameliore les performances de recherche (listes plus courtes)",
+          "La table ne retrecit pas automatiquement",
+          "Redimensionner quand charge < 0.25 pour economiser la memoire",
+          "Le rehashing lors du redimensionnement est O(n)"
+        ],
+        "commonMistakes": [
+          "Ne jamais supprimer d'entrees (fuites memoire si les valeurs sont malloc)",
+          "Oublier que la suppression ne reduit pas la taille de la table",
+          "Redimensionner trop souvent (le rehashing est couteux)"
+        ]
+      }
+    ],
+    "prepExercises": [
+      {
+        "id": 1,
+        "title": "Trouver avec prev",
+        "instruction": "Ecris le code qui trouve une entree et son predecesseur dans un bucket.",
+        "starterCode": "t_entry *prev = NULL;\nt_entry *entry = ht->buckets[index];\nwhile (entry)\n{\n\tif (strcmp(entry->key, key) == 0)\n\t\tbreak ;\n\tprev = ???;\n\tentry = entry->???;\n}",
+        "solution": "t_entry *prev = NULL;\nt_entry *entry = ht->buckets[index];\nwhile (entry)\n{\n\tif (strcmp(entry->key, key) == 0)\n\t\tbreak ;\n\tprev = entry;\n\tentry = entry->next;\n}",
+        "hint": "prev prend la valeur de entry avant d'avancer entry.",
+        "difficulty": 2
+      },
+      {
+        "id": 2,
+        "title": "Relinker la liste",
+        "instruction": "Ecris le code pour relinker la liste apres suppression.",
+        "starterCode": "if (!prev)\n\tht->buckets[index] = entry->???;\nelse\n\tprev->??? = entry->???;",
+        "solution": "if (!prev)\n\tht->buckets[index] = entry->next;\nelse\n\tprev->next = entry->next;",
+        "hint": "Si pas de prev, le bucket pointe vers entry->next. Sinon prev->next = entry->next.",
+        "difficulty": 2
+      },
+      {
+        "id": 3,
+        "title": "Liberer l'entree",
+        "instruction": "Ecris le code pour liberer completement une entree.",
+        "starterCode": "// Liberer valeur, cle, et entree\nif (del)\n\t???(entry->value);\nfree(entry->???);\nfree(???);",
+        "solution": "if (del)\n\tdel(entry->value);\nfree(entry->key);\nfree(entry);",
+        "hint": "del pour la valeur, free pour la cle (strdup), free pour la structure.",
+        "difficulty": 1
+      },
+      {
+        "id": 4,
+        "title": "Suppression en tete",
+        "instruction": "Trace la suppression de 'name' dans le bucket [name]->[age]->[city].",
+        "starterCode": "// prev = NULL, entry = [name]\n// Relinking : buckets[i] = ???\n// Liberation : ???",
+        "solution": "// prev = NULL (name est la tete)\n// buckets[i] = entry->next = [age]\n// free(entry->key) = free(\"name\")\n// free(entry)\n// Bucket apres : [age] -> [city] -> NULL",
+        "hint": "Name est la tete, donc le bucket pointe vers entry->next.",
+        "difficulty": 2
+      },
+      {
+        "id": 5,
+        "title": "Suppression au milieu",
+        "instruction": "Trace la suppression de 'age' dans le bucket [name]->[age]->[city].",
+        "starterCode": "// prev = [name], entry = [age]\n// Relinking : prev->next = ???\n// Bucket apres : ???",
+        "solution": "// prev = [name], entry = [age]\n// prev->next = entry->next = [city]\n// Bucket apres : [name] -> [city] -> NULL\n// [age] est deconnecte et libere",
+        "hint": "prev->next saute entry et pointe vers entry->next.",
+        "difficulty": 2
+      }
+    ]
+  },
+  "starterCode": "#include <stdlib.h>\n#include <string.h>\n\ntypedef struct s_entry\n{\n\tchar\t\t\t*key;\n\tvoid\t\t\t*value;\n\tstruct s_entry\t*next;\n}\t\t\t\t\tt_entry;\n\ntypedef struct s_hashtable\n{\n\tt_entry\t\t\t**buckets;\n\tunsigned int\tsize;\n\tunsigned long\t(*hash)(char *, unsigned int);\n}\t\t\t\t\tt_hashtable;\n\nint\tft_hashtable_delete(t_hashtable *ht, char *key,\n\t\tvoid (*del)(void *))\n{\n\t// Supprime l'entree avec la cle donnee\n\t// Retourne 1 si supprimee, 0 si non trouvee\n\t(void)ht;\n\t(void)key;\n\t(void)del;\n\treturn (0);\n}",
+  "solution": "#include <stdlib.h>\n#include <string.h>\n\ntypedef struct s_entry\n{\n\tchar\t\t\t*key;\n\tvoid\t\t\t*value;\n\tstruct s_entry\t*next;\n}\t\t\t\t\tt_entry;\n\ntypedef struct s_hashtable\n{\n\tt_entry\t\t\t**buckets;\n\tunsigned int\tsize;\n\tunsigned long\t(*hash)(char *, unsigned int);\n}\t\t\t\t\tt_hashtable;\n\nint\tft_hashtable_delete(t_hashtable *ht, char *key,\n\t\tvoid (*del)(void *))\n{\n\tunsigned long\tindex;\n\tt_entry\t\t\t*prev;\n\tt_entry\t\t\t*entry;\n\n\tindex = ht->hash(key, ht->size);\n\tprev = NULL;\n\tentry = ht->buckets[index];\n\twhile (entry)\n\t{\n\t\tif (strcmp(entry->key, key) == 0)\n\t\t{\n\t\t\tif (!prev)\n\t\t\t\tht->buckets[index] = entry->next;\n\t\t\telse\n\t\t\t\tprev->next = entry->next;\n\t\t\tif (del)\n\t\t\t\tdel(entry->value);\n\t\t\tfree(entry->key);\n\t\t\tfree(entry);\n\t\t\treturn (1);\n\t\t}\n\t\tprev = entry;\n\t\tentry = entry->next;\n\t}\n\treturn (0);\n}",
+  "hints": [
+    "Utilise deux pointeurs prev et entry pour parcourir le bucket. prev garde la trace du predecesseur.",
+    "Quand la cle est trouvee, relinke : si prev est NULL, bucket = entry->next, sinon prev->next = entry->next.",
+    "Libere dans l'ordre : del(value) si del existe, free(key), free(entry)."
+  ],
+  "testCases": [
+    {
+      "id": 1,
+      "description": "Suppression d'une cle existante",
+      "stdin": "",
+      "expectedStdout": "deleted=1 search=NULL\n",
+      "expectedExitCode": 0,
+      "visible": true
+    },
+    {
+      "id": 2,
+      "description": "Suppression d'une cle inexistante",
+      "stdin": "",
+      "expectedStdout": "deleted=0\n",
+      "expectedExitCode": 0,
+      "visible": false
+    },
+    {
+      "id": 3,
+      "description": "Suppression de la tete de bucket",
+      "stdin": "",
+      "expectedStdout": "deleted=1 remaining=2\n",
+      "expectedExitCode": 0,
+      "visible": false
+    }
+  ],
+  "constraints": {
+    "allowedFunctions": ["malloc", "free", "strcmp", "strdup"],
+    "forbiddenFunctions": ["printf"],
+    "maxExecutionTime": 5000,
+    "maxMemory": 128
+  },
+  "relatedExercises": ["c-day65-ex00-ft-hashtable-search", "c-day65-ex02-ft-hashtable-free"],
+  "resources": [
+    {
+      "title": "Suppression dans une liste chainee",
+      "url": "https://www.geeksforgeeks.org/linked-list-set-3-deleting-node/",
+      "type": "documentation"
+    },
+    {
+      "title": "Operations sur les tables de hachage",
+      "url": "https://en.wikipedia.org/wiki/Hash_table#Operations",
+      "type": "article"
+    }
+  ]
+}

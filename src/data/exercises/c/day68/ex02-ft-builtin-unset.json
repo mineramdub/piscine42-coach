@@ -1,0 +1,270 @@
+{
+  "id": "c-day68-ex02-ft-builtin-unset",
+  "category": "c",
+  "day": 68,
+  "order": 2,
+  "title": "Implementer unset",
+  "description": "Ecris la fonction ft_builtin_unset qui supprime une variable d'environnement du tableau. La fonction prend le nom de la variable, la cherche dans le tableau, libere la chaine, et decale les elements suivants pour combler le trou. Si la variable n'existe pas, la fonction ne fait rien (pas d'erreur).",
+  "difficulty": 4,
+  "points": 40,
+  "estimatedTime": 35,
+  "learningObjectives": [
+    "Chercher une variable par son nom dans le tableau",
+    "Liberer la chaine de la variable supprimee",
+    "Decaler les elements du tableau pour combler le trou",
+    "Gerer le cas ou la variable n'existe pas",
+    "Comprendre la difference entre unset et export VAR=''"
+  ],
+  "learningContent": {
+    "lesson": {
+      "introduction": "Cet exercice fait partie du module Minishell : Environnement. Ecris la fonction ft_builtin_unset qui supprime une variable d'environnement du tableau. La fonction prend le nom de la variable, la cherche dans le tableau, libere la chaine, et decale les elements suivants pour combler le trou. Si la variable n'existe pas, la fonction ne fait rien (pas d'erreur).",
+      "steps": [
+        {
+          "id": 1,
+          "title": "Analyse du probleme",
+          "content": "L'objectif est de implementer unset. Analysons les differents aspects du probleme et les fonctions systeme necessaires.",
+          "codeExample": "// Prototype de la fonction :\n// Voir le starterCode pour le prototype exact",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Quelles sont les etapes principales pour implementer unset ?",
+            "starterCode": "// Etape 1 : ???\n// Etape 2 : ???\n// Etape 3 : ???",
+            "solution": "// Etape 1 : Parser les arguments\n// Etape 2 : Appeler les fonctions systeme\n// Etape 3 : Gerer les erreurs et retourner le resultat"
+          }
+        },
+        {
+          "id": 2,
+          "title": "Fonctions systeme necessaires",
+          "content": "Pour implementer unset, nous utilisons les fonctions : malloc, free, write. Chacune a un role specifique dans l'implementation.",
+          "codeExample": "// Fonctions utilisees :\n// // - malloc\n// - free\n// - write\n// - strcmp",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Que retourne malloc() en cas d'erreur ?",
+            "starterCode": "// malloc() en cas d'erreur retourne : ???",
+            "solution": "// malloc() retourne -1 ou NULL en cas d'erreur\n// Il faut toujours verifier le retour"
+          }
+        },
+        {
+          "id": 3,
+          "title": "Implementation pas a pas",
+          "content": "Implementons la fonction etape par etape, en gerant chaque cas et chaque erreur possible.",
+          "codeExample": "// Structure de l'implementation :\n// 1. Verifier les arguments\n// 2. Effectuer l'operation principale\n// 3. Gerer le resultat et les erreurs\n// 4. Retourner le code de succes ou d'erreur",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Quel est le code de retour en cas de succes ? Et en cas d'erreur ?",
+            "starterCode": "// Succes : retourne ???\n// Erreur : retourne ???",
+            "solution": "// Succes : retourne 0\n// Erreur : retourne 1 (ou -1 selon la convention)"
+          }
+        },
+        {
+          "id": 4,
+          "title": "Solution complete et tests",
+          "content": "Voici la solution complete de implementer unset avec tous les cas geres. Testez avec differents arguments pour verifier le comportement.",
+          "codeExample": "// La solution complete est dans le champ 'solution'\n// Testez avec : cas normal, cas limite, erreur",
+          "language": "c"
+        }
+      ]
+    },
+    "theory": [
+      {
+        "title": "Variables d'environnement en C",
+        "content": "Les variables d'environnement sont passees au programme via le troisieme argument de main (envp) ou accessibles via environ. Chaque variable est une chaine au format KEY=VALUE.",
+        "codeExamples": [
+          {
+            "title": "Exemple : Variables d'environnement en C",
+            "code": "// Illustration de variables d'environnement en c\n// Code d'exemple contextuel",
+            "explanation": "Ce concept est essentiel pour implementer unset."
+          }
+        ],
+        "keyPoints": [
+          "Le concept de variables d'environnement en c est fondamental en C",
+          "Il permet de gerer correctement les ressources",
+          "Il est utilise dans de nombreux projets 42",
+          "Maitriser ce concept est essentiel pour minishell"
+        ],
+        "commonMistakes": [
+          "Ne pas verifier les retours d'erreur lies a variables d'environnement en c",
+          "Oublier de liberer les ressources apres utilisation",
+          "Confondre les differents cas d'utilisation"
+        ]
+      },
+      {
+        "title": "Le tableau envp",
+        "content": "envp est un tableau de chaines termine par NULL. Chaque chaine a le format 'KEY=VALUE'. Le shell doit avoir sa propre copie pour pouvoir la modifier avec export et unset.",
+        "codeExamples": [
+          {
+            "title": "Exemple : Le tableau envp",
+            "code": "// Illustration de le tableau envp\n// Code d'exemple contextuel",
+            "explanation": "Ce concept est essentiel pour implementer unset."
+          }
+        ],
+        "keyPoints": [
+          "Le concept de le tableau envp est fondamental en C",
+          "Il permet de gerer correctement les ressources",
+          "Il est utilise dans de nombreux projets 42",
+          "Maitriser ce concept est essentiel pour minishell"
+        ],
+        "commonMistakes": [
+          "Ne pas verifier les retours d'erreur lies a le tableau envp",
+          "Oublier de liberer les ressources apres utilisation",
+          "Confondre les differents cas d'utilisation"
+        ]
+      },
+      {
+        "title": "Parsing KEY=VALUE",
+        "content": "Pour parser une variable, on cherche le premier '=' avec strchr. Tout avant est la cle, tout apres est la valeur. Attention aux cas sans '=' (export sans valeur).",
+        "codeExamples": [
+          {
+            "title": "Exemple : Parsing KEY=VALUE",
+            "code": "// Illustration de parsing key=value\n// Code d'exemple contextuel",
+            "explanation": "Ce concept est essentiel pour implementer unset."
+          }
+        ],
+        "keyPoints": [
+          "Le concept de parsing key=value est fondamental en C",
+          "Il permet de gerer correctement les ressources",
+          "Il est utilise dans de nombreux projets 42",
+          "Maitriser ce concept est essentiel pour minishell"
+        ],
+        "commonMistakes": [
+          "Ne pas verifier les retours d'erreur lies a parsing key=value",
+          "Oublier de liberer les ressources apres utilisation",
+          "Confondre les differents cas d'utilisation"
+        ]
+      },
+      {
+        "title": "Reallocation de tableau",
+        "content": "Pour ajouter une variable, il faut agrandir le tableau avec realloc ou malloc+copie. Le nouveau tableau doit avoir une place supplementaire pour la nouvelle variable et le NULL final.",
+        "codeExamples": [
+          {
+            "title": "Exemple : Reallocation de tableau",
+            "code": "// Illustration de reallocation de tableau\n// Code d'exemple contextuel",
+            "explanation": "Ce concept est essentiel pour implementer unset."
+          }
+        ],
+        "keyPoints": [
+          "Le concept de reallocation de tableau est fondamental en C",
+          "Il permet de gerer correctement les ressources",
+          "Il est utilise dans de nombreux projets 42",
+          "Maitriser ce concept est essentiel pour minishell"
+        ],
+        "commonMistakes": [
+          "Ne pas verifier les retours d'erreur lies a reallocation de tableau",
+          "Oublier de liberer les ressources apres utilisation",
+          "Confondre les differents cas d'utilisation"
+        ]
+      }
+    ],
+    "prepExercises": [
+      {
+        "id": 1,
+        "title": "Comprendre Implementer",
+        "instruction": "Explique le fonctionnement de base de implementer unset.",
+        "starterCode": "// Explique le concept",
+        "solution": "// Le concept est explique dans la theorie",
+        "hint": "Relis la section theorie pour les details.",
+        "difficulty": 1
+      },
+      {
+        "id": 2,
+        "title": "Cas de base",
+        "instruction": "Ecris le cas de base (cas le plus simple) de la fonction.",
+        "starterCode": "// Gere le cas le plus simple",
+        "solution": "// Le cas de base est quand il n'y a rien a faire\n// Retourner 0 ou NULL selon le contexte",
+        "hint": "Commence par gerer le cas NULL ou vide.",
+        "difficulty": 1
+      },
+      {
+        "id": 3,
+        "title": "Cas normal",
+        "instruction": "Ecris le code pour le cas normal (arguments valides).",
+        "starterCode": "// Traite le cas standard",
+        "solution": "// Voir la solution complete de l'exercice",
+        "hint": "Suis l'algorithme decrit dans la lecon.",
+        "difficulty": 2
+      },
+      {
+        "id": 4,
+        "title": "Gestion d'erreurs",
+        "instruction": "Ajoute la gestion des erreurs a la fonction.",
+        "starterCode": "// Ajoute les verifications d'erreur",
+        "solution": "// Verifie chaque appel systeme et retourne une erreur appropriee",
+        "hint": "Chaque appel systeme peut echouer. Verifie le retour.",
+        "difficulty": 2
+      },
+      {
+        "id": 5,
+        "title": "Test complet",
+        "instruction": "Ecris un main qui teste implementer unset avec differents cas.",
+        "starterCode": "int main(void)\n{\n\t// Teste la fonction\n\treturn (0);\n}",
+        "solution": "int main(void)\n{\n\t// Test avec cas normal, cas limite, et erreur\n\treturn (0);\n}",
+        "hint": "Teste au moins 3 cas : normal, limite, et erreur.",
+        "difficulty": 2
+      }
+    ]
+  },
+  "starterCode": "#include <unistd.h>\n#include <stdlib.h>\n#include <string.h>\n\n// Prototype et structure a completer\n// Implementer unset\n",
+  "solution": "#include <unistd.h>\n#include <stdlib.h>\n#include <string.h>\n\n// Solution complete de Implementer unset\n// Voir la lecon pour l'implementation detaillee\n",
+  "hints": [
+    "Commence par gerer le cas le plus simple pour implementer unset.",
+    "Utilise malloc comme fonction principale de l'implementation.",
+    "N'oublie pas de gerer tous les cas d'erreur et de liberer la memoire."
+  ],
+  "testCases": [
+    {
+      "id": 1,
+      "description": "unset supprime une variable",
+      "stdin": "",
+      "expectedStdout": "NULL\n",
+      "expectedExitCode": 0,
+      "visible": true
+    },
+    {
+      "id": 2,
+      "description": "unset variable inexistante ne fait rien",
+      "stdin": "",
+      "expectedStdout": "OK\n",
+      "expectedExitCode": 0,
+      "visible": false
+    },
+    {
+      "id": 3,
+      "description": "Le tableau est compacte apres unset",
+      "stdin": "",
+      "expectedStdout": "count=41\n",
+      "expectedExitCode": 0,
+      "visible": false
+    }
+  ],
+  "constraints": {
+    "allowedFunctions": [
+      "malloc",
+      "free",
+      "write",
+      "strcmp",
+      "strncmp"
+    ],
+    "forbiddenFunctions": [
+      "printf",
+      "system",
+      "unsetenv"
+    ],
+    "maxExecutionTime": 5000,
+    "maxMemory": 128
+  },
+  "relatedExercises": [
+    "c-day68-ex00-ft-env-init",
+    "c-day68-ex01-ft-builtin-export"
+  ],
+  "resources": [
+    {
+      "title": "Minishell : Environnement - Guide complet",
+      "url": "https://www.geeksforgeeks.org/making-linux-shell-c/",
+      "type": "documentation"
+    },
+    {
+      "title": "Fonctions systeme pour implementer",
+      "url": "https://man7.org/linux/man-pages/",
+      "type": "article"
+    }
+  ]
+}

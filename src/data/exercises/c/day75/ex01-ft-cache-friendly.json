@@ -1,0 +1,257 @@
+{
+  "id": "c-day75-ex01-ft-cache-friendly",
+  "category": "c",
+  "day": 75,
+  "order": 1,
+  "title": "Comprendre la localite du cache",
+  "description": "Apprends pourquoi l'ordre de parcours d'une matrice impacte drastiquement les performances. Comprends la localite spatiale du cache CPU et comment en tirer parti.",
+  "difficulty": 4,
+  "points": 40,
+  "estimatedTime": 35,
+  "learningObjectives": [
+    "Comprendre la hierarchie de cache du CPU (L1, L2, L3)",
+    "Differencier localite spatiale et localite temporelle",
+    "Mesurer la difference de performance entre parcours ligne et colonne",
+    "Optimiser le parcours de donnees pour le cache",
+    "Appliquer ces concepts a des problemes reels"
+  ],
+  "learningContent": {
+    "lesson": {
+      "introduction": "Le cache CPU est une memoire ultra-rapide entre le processeur et la RAM. Quand le CPU accede a une adresse memoire, il charge un bloc entier (cache line) de ~64 octets. Si les acces suivants sont proches en memoire (localite spatiale), ils sont servis depuis le cache : c'est un cache hit. Sinon, il faut aller en RAM : c'est un cache miss, beaucoup plus lent. L'ordre de parcours d'une matrice peut faire une difference de 10x en performance !",
+      "steps": [
+        {
+          "id": 1,
+          "title": "La hierarchie de cache",
+          "content": "Le CPU a plusieurs niveaux de cache :\n- **L1** : ~32 KB, ~1 ns (4 cycles)\n- **L2** : ~256 KB, ~4 ns (12 cycles)\n- **L3** : ~8 MB, ~12 ns (36 cycles)\n- **RAM** : ~100 ns (300+ cycles)\n\nAcceder au cache L1 est **100x plus rapide** qu'acceder a la RAM !",
+          "codeExample": "// Cache line = 64 octets = 16 int (4 octets chacun)\n// Quand on accede a arr[0], le cache charge arr[0] a arr[15]\n// arr[1], arr[2], ... arr[15] sont alors en cache !\n\nint\tarr[1000];\nint\ti;\n\ni = 0;\nwhile (i < 1000)\n{\n\tarr[i] = i; // Chaque acces charge 16 elements voisins\n\ti++;\n}",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Calcule combien de cache lines sont necessaires pour stocker un tableau de 1000 int (4 octets chacun, cache line = 64 octets).",
+            "starterCode": "// Cache line = 64 octets\n// sizeof(int) = 4 octets\n// Tableau de 1000 int\n// Combien de cache lines ?",
+            "solution": "// 1000 int * 4 octets = 4000 octets\n// 4000 / 64 = 62.5 -> 63 cache lines\n// Parcours sequentiel : 63 cache misses\n// Parcours aleatoire : jusqu'a 1000 cache misses !"
+          }
+        },
+        {
+          "id": 2,
+          "title": "Matrice : ligne vs colonne",
+          "content": "En C, une matrice `int mat[N][M]` est stockee **ligne par ligne** en memoire (row-major). Les elements `mat[i][0], mat[i][1], ..., mat[i][M-1]` sont contigus.\n\n**Parcours par ligne** : acces contigus en memoire -> cache hits\n**Parcours par colonne** : sauts de M elements -> cache misses",
+          "codeExample": "// Memoire : mat[0][0] mat[0][1] mat[0][2] mat[1][0] mat[1][1] ...\n\n// Parcours par LIGNE (cache-friendly) :\nfor (i = 0; i < N; i++)\n\tfor (j = 0; j < M; j++)\n\t\tsum += mat[i][j]; // Acces contigus\n\n// Parcours par COLONNE (cache-unfriendly) :\nfor (j = 0; j < M; j++)\n\tfor (i = 0; i < N; i++)\n\t\tsum += mat[i][j]; // Sauts de M*4 octets",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Ecris deux fonctions de somme de matrice : une par ligne et une par colonne. Mesure la difference.",
+            "starterCode": "long\tsum_by_row(int mat[1000][1000])\n{\n\t/* TON CODE ICI */\n}\n\nlong\tsum_by_col(int mat[1000][1000])\n{\n\t/* TON CODE ICI */\n}",
+            "solution": "long\tsum_by_row(int mat[1000][1000])\n{\n\tlong\tsum = 0;\n\tint\t\ti = -1;\n\twhile (++i < 1000)\n\t{\n\t\tint j = -1;\n\t\twhile (++j < 1000)\n\t\t\tsum += mat[i][j];\n\t}\n\treturn (sum);\n}\n\nlong\tsum_by_col(int mat[1000][1000])\n{\n\tlong\tsum = 0;\n\tint\t\tj = -1;\n\twhile (++j < 1000)\n\t{\n\t\tint i = -1;\n\t\twhile (++i < 1000)\n\t\t\tsum += mat[i][j];\n\t}\n\treturn (sum);\n}"
+          }
+        },
+        {
+          "id": 3,
+          "title": "Mesurer la difference",
+          "content": "On mesure la difference avec gettimeofday. Pour une matrice 1000x1000, le parcours par colonne est typiquement **3 a 10 fois** plus lent que par ligne. Plus la matrice est grande, plus la difference est importante.",
+          "codeExample": "#define N 2000\n\nint\tmain(void)\n{\n\tstatic int\tmat[N][N];\n\tstruct timeval\ts, e;\n\tlong\t\t\trow_time;\n\tlong\t\t\tcol_time;\n\n\t// Remplir la matrice...\n\tgettimeofday(&s, NULL);\n\tsum_by_row(mat);\n\tgettimeofday(&e, NULL);\n\trow_time = elapsed_us(s, e);\n\n\tgettimeofday(&s, NULL);\n\tsum_by_col(mat);\n\tgettimeofday(&e, NULL);\n\tcol_time = elapsed_us(s, e);\n\n\tprintf(\"Row: %ld us, Col: %ld us\\n\", row_time, col_time);\n\tprintf(\"Ratio: x%.1f\\n\", (float)col_time / row_time);\n}",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Mesure et affiche la difference de temps entre les deux parcours sur une matrice 1000x1000.",
+            "starterCode": "int\tmain(void)\n{\n\tstatic int\tmat[1000][1000];\n\t/* TON CODE ICI */\n}",
+            "solution": "int\tmain(void)\n{\n\tstatic int\tmat[1000][1000];\n\tstruct timeval\ts, e;\n\tlong\t\t\tr, c;\n\n\tgettimeofday(&s, NULL);\n\tsum_by_row(mat);\n\tgettimeofday(&e, NULL);\n\tr = (e.tv_sec - s.tv_sec) * 1000000 + e.tv_usec - s.tv_usec;\n\tgettimeofday(&s, NULL);\n\tsum_by_col(mat);\n\tgettimeofday(&e, NULL);\n\tc = (e.tv_sec - s.tv_sec) * 1000000 + e.tv_usec - s.tv_usec;\n\tprintf(\"Row: %ld us\\nCol: %ld us\\nRatio: x%.1f\\n\", r, c, (float)c / r);\n\treturn (0);\n}"
+          }
+        },
+        {
+          "id": 4,
+          "title": "Applications pratiques",
+          "content": "La localite du cache est cruciale dans de nombreux contextes :\n- **Multiplication de matrices** : la transposition ameliore les performances\n- **Traitement d'images** : parcourir pixel par pixel en ligne\n- **Structures de donnees** : les tableaux sont plus cache-friendly que les listes chainees\n- **Jeux video** : Entity Component System (ECS) organise les donnees par composant pour le cache",
+          "codeExample": "// Multiplication de matrices optimisee :\n// Au lieu de mat_b[k][j], on transpose B d'abord\n// Puis on accede a B_t[j][k] qui est contigu en memoire\n\nvoid\tmat_mul_optimized(int a[N][N], int b[N][N], int c[N][N])\n{\n\tint\tb_t[N][N];\n\tint\ti, j, k;\n\n\t// Transposer B\n\tfor (i = 0; i < N; i++)\n\t\tfor (j = 0; j < N; j++)\n\t\t\tb_t[j][i] = b[i][j];\n\t// Multiplier avec B transposee (cache-friendly)\n\tfor (i = 0; i < N; i++)\n\t\tfor (j = 0; j < N; j++)\n\t\t{\n\t\t\tc[i][j] = 0;\n\t\t\tfor (k = 0; k < N; k++)\n\t\t\t\tc[i][j] += a[i][k] * b_t[j][k];\n\t\t}\n}",
+          "language": "c"
+        }
+      ]
+    },
+    "theory": [
+      {
+        "title": "Le fonctionnement du cache CPU",
+        "content": "Le cache est organise en lignes (cache lines) de 64 octets. Quand le CPU accede a une adresse, la ligne entiere est chargee. Les acces subsequents a la meme ligne sont des hits. Les evictions suivent generalement la politique LRU (Least Recently Used).",
+        "codeExamples": [
+          {
+            "title": "Cache line de 64 octets",
+            "code": "// Un int = 4 octets\n// Une cache line = 64 octets = 16 int\n// arr[0] charge aussi arr[1]..arr[15]\nint arr[100];\narr[0] = 1; // Miss (charge arr[0..15])\narr[1] = 2; // Hit !\narr[16] = 3; // Miss (nouvelle cache line)",
+            "explanation": "Les acces contigus beneficient du chargement par cache line."
+          }
+        ],
+        "keyPoints": [
+          "Une cache line fait generalement 64 octets",
+          "Le chargement d'un element charge toute la cache line",
+          "Les acces contigus maximisent les cache hits",
+          "La politique LRU evicte les lignes les moins recemment utilisees"
+        ],
+        "commonMistakes": [
+          "Croire que chaque element est charge individuellement en cache",
+          "Ignorer la taille des cache lines dans l'optimisation",
+          "Penser que l'alignement memoire n'a pas d'impact"
+        ]
+      },
+      {
+        "title": "Localite spatiale et temporelle",
+        "content": "La localite spatiale signifie que les acces proches en memoire sont rapides. La localite temporelle signifie que les acces recents sont encore en cache. Un bon programme maximise les deux types de localite.",
+        "codeExamples": [
+          {
+            "title": "Les deux types de localite",
+            "code": "// Localite spatiale (bonne) :\nfor (i = 0; i < N; i++)\n\tarr[i] = 0; // Acces contigus\n\n// Localite temporelle (bonne) :\nfor (i = 0; i < 10; i++)\n\tsum += arr[0]; // Meme element reutilise\n\n// Mauvaise localite :\nfor (i = 0; i < N; i++)\n\tsum += arr[rand() % N]; // Acces aleatoires",
+            "explanation": "Les acces sequentiels et la reutilisation sont cache-friendly."
+          }
+        ],
+        "keyPoints": [
+          "Localite spatiale : acceder a des adresses proches",
+          "Localite temporelle : reutiliser des donnees recemment accedees",
+          "Les tableaux ont une bonne localite spatiale",
+          "Les listes chainees ont une mauvaise localite spatiale"
+        ],
+        "commonMistakes": [
+          "Utiliser une liste chainee quand un tableau suffit",
+          "Parcourir des donnees dans un ordre non-sequentiel sans raison",
+          "Allouer de petits blocs eparpilles au lieu d'un gros bloc contigu"
+        ]
+      },
+      {
+        "title": "Row-major vs Column-major",
+        "content": "En C, les tableaux 2D sont stockes en row-major : les elements d'une meme ligne sont contigus en memoire. En Fortran, c'est l'inverse (column-major). L'ordre de parcours optimal depend du langage et de la disposition memoire.",
+        "codeExamples": [
+          {
+            "title": "Disposition memoire row-major",
+            "code": "// int mat[3][4] en memoire :\n// mat[0][0] mat[0][1] mat[0][2] mat[0][3]\n// mat[1][0] mat[1][1] mat[1][2] mat[1][3]\n// mat[2][0] mat[2][1] mat[2][2] mat[2][3]\n// -> Parcours i puis j est optimal en C",
+            "explanation": "En C, la boucle externe sur les lignes et interne sur les colonnes est optimale."
+          }
+        ],
+        "keyPoints": [
+          "C utilise le stockage row-major (lignes contiguees)",
+          "Le parcours optimal est for(i) for(j) mat[i][j]",
+          "Fortran utilise column-major (colonnes contiguees)",
+          "La transposition peut ameliorer les performances"
+        ],
+        "commonMistakes": [
+          "Parcourir une matrice C en column-major (for j, for i)",
+          "Ne pas considerer la disposition memoire lors de l'optimisation",
+          "Oublier que les tableaux dynamiques (malloc) ont la meme disposition"
+        ]
+      },
+      {
+        "title": "Optimisation par blocs (blocking)",
+        "content": "Le blocking (ou tiling) divise les donnees en blocs qui tiennent dans le cache. Au lieu de parcourir toute une ligne puis la suivante, on traite un bloc de BxB, puis le suivant. Cela ameliore la localite temporelle pour les algorithmes qui accedent a plusieurs tableaux.",
+        "codeExamples": [
+          {
+            "title": "Multiplication par blocs",
+            "code": "#define BLOCK 32\n\nfor (ii = 0; ii < N; ii += BLOCK)\n\tfor (jj = 0; jj < N; jj += BLOCK)\n\t\tfor (kk = 0; kk < N; kk += BLOCK)\n\t\t\tfor (i = ii; i < ii + BLOCK; i++)\n\t\t\t\tfor (j = jj; j < jj + BLOCK; j++)\n\t\t\t\t\tfor (k = kk; k < kk + BLOCK; k++)\n\t\t\t\t\t\tc[i][j] += a[i][k] * b[k][j];",
+            "explanation": "Les blocs de 32x32 int (4KB) tiennent dans le cache L1."
+          }
+        ],
+        "keyPoints": [
+          "Le blocking divise les donnees en blocs qui tiennent en cache",
+          "La taille de bloc optimale depend de la taille du cache L1",
+          "Pour L1 de 32KB, un bloc de 32x32 int (4KB) est typique",
+          "Le blocking ameliore surtout la multiplication de matrices"
+        ],
+        "commonMistakes": [
+          "Choisir des blocs trop grands (ne tiennent pas en cache)",
+          "Choisir des blocs trop petits (overhead de boucle)",
+          "Appliquer le blocking quand ce n'est pas necessaire (complexite inutile)"
+        ]
+      }
+    ],
+    "prepExercises": [
+      {
+        "id": 1,
+        "title": "Somme par ligne",
+        "instruction": "Calcule la somme d'une matrice en parcourant par ligne (cache-friendly).",
+        "starterCode": "long\tsum_row(int mat[500][500])\n{\n\t/* TON CODE ICI */\n}",
+        "solution": "long\tsum_row(int mat[500][500])\n{\n\tlong\ts = 0;\n\tint\t\ti = -1;\n\twhile (++i < 500)\n\t{\n\t\tint j = -1;\n\t\twhile (++j < 500)\n\t\t\ts += mat[i][j];\n\t}\n\treturn (s);\n}",
+        "hint": "Boucle externe sur i (lignes), interne sur j (colonnes).",
+        "difficulty": 1
+      },
+      {
+        "id": 2,
+        "title": "Somme par colonne",
+        "instruction": "Calcule la somme en parcourant par colonne (cache-unfriendly).",
+        "starterCode": "long\tsum_col(int mat[500][500])\n{\n\t/* TON CODE ICI */\n}",
+        "solution": "long\tsum_col(int mat[500][500])\n{\n\tlong\ts = 0;\n\tint\t\tj = -1;\n\twhile (++j < 500)\n\t{\n\t\tint i = -1;\n\t\twhile (++i < 500)\n\t\t\ts += mat[i][j];\n\t}\n\treturn (s);\n}",
+        "hint": "Boucle externe sur j (colonnes), interne sur i (lignes).",
+        "difficulty": 1
+      },
+      {
+        "id": 3,
+        "title": "Transposer une matrice",
+        "instruction": "Transpose une matrice de facon cache-friendly.",
+        "starterCode": "void\ttranspose(int src[N][N], int dst[N][N])\n{\n\t/* TON CODE ICI */\n}",
+        "solution": "void\ttranspose(int src[N][N], int dst[N][N])\n{\n\tint\ti = -1;\n\twhile (++i < N)\n\t{\n\t\tint j = -1;\n\t\twhile (++j < N)\n\t\t\tdst[j][i] = src[i][j];\n\t}\n}",
+        "hint": "Parcours src par ligne et ecris dans dst par colonne.",
+        "difficulty": 2
+      },
+      {
+        "id": 4,
+        "title": "Comparer les temps",
+        "instruction": "Mesure et affiche le temps des deux parcours et le ratio.",
+        "starterCode": "void\tcompare(int mat[1000][1000])\n{\n\t/* TON CODE ICI */\n}",
+        "solution": "void\tcompare(int mat[1000][1000])\n{\n\tstruct timeval s, e;\n\tlong r, c;\n\n\tgettimeofday(&s, NULL);\n\tsum_row(mat);\n\tgettimeofday(&e, NULL);\n\tr = (e.tv_sec-s.tv_sec)*1000000 + e.tv_usec-s.tv_usec;\n\tgettimeofday(&s, NULL);\n\tsum_col(mat);\n\tgettimeofday(&e, NULL);\n\tc = (e.tv_sec-s.tv_sec)*1000000 + e.tv_usec-s.tv_usec;\n\tprintf(\"Row: %ld, Col: %ld, Ratio: %.1f\\n\", r, c, (float)c/r);\n}",
+        "hint": "Mesure chaque parcours avec gettimeofday et calcule le ratio.",
+        "difficulty": 2
+      },
+      {
+        "id": 5,
+        "title": "Initialiser cache-friendly",
+        "instruction": "Remplis une matrice avec des valeurs en parcourant par ligne.",
+        "starterCode": "void\tinit_matrix(int mat[1000][1000])\n{\n\t/* TON CODE ICI */\n}",
+        "solution": "void\tinit_matrix(int mat[1000][1000])\n{\n\tint\ti = -1;\n\twhile (++i < 1000)\n\t{\n\t\tint j = -1;\n\t\twhile (++j < 1000)\n\t\t\tmat[i][j] = i * 1000 + j;\n\t}\n}",
+        "hint": "Parcours par ligne : for i, for j, mat[i][j] = valeur.",
+        "difficulty": 1
+      }
+    ]
+  },
+  "starterCode": "#include <stdio.h>\n#include <sys/time.h>\n\n#define SIZE 2000\n\nstatic int\tg_mat[SIZE][SIZE];\n\nlong\tft_sum_by_row(void)\n{\n\t// TODO: Somme en parcourant par ligne\n\treturn (0);\n}\n\nlong\tft_sum_by_col(void)\n{\n\t// TODO: Somme en parcourant par colonne\n\treturn (0);\n}\n\nint\tmain(void)\n{\n\t// TODO: Remplir la matrice\n\t// TODO: Mesurer les deux parcours\n\t// TODO: Afficher les temps et le ratio\n\treturn (0);\n}",
+  "solution": "#include <stdio.h>\n#include <sys/time.h>\n\n#define SIZE 2000\n\nstatic int\tg_mat[SIZE][SIZE];\n\nlong\tft_sum_by_row(void)\n{\n\tlong\tsum;\n\tint\t\ti;\n\tint\t\tj;\n\n\tsum = 0;\n\ti = -1;\n\twhile (++i < SIZE)\n\t{\n\t\tj = -1;\n\t\twhile (++j < SIZE)\n\t\t\tsum += g_mat[i][j];\n\t}\n\treturn (sum);\n}\n\nlong\tft_sum_by_col(void)\n{\n\tlong\tsum;\n\tint\t\ti;\n\tint\t\tj;\n\n\tsum = 0;\n\tj = -1;\n\twhile (++j < SIZE)\n\t{\n\t\ti = -1;\n\t\twhile (++i < SIZE)\n\t\t\tsum += g_mat[i][j];\n\t}\n\treturn (sum);\n}\n\nint\tmain(void)\n{\n\tstruct timeval\ts;\n\tstruct timeval\te;\n\tlong\t\t\trow_t;\n\tlong\t\t\tcol_t;\n\tint\t\t\t\ti;\n\tint\t\t\t\tj;\n\n\ti = -1;\n\twhile (++i < SIZE)\n\t{\n\t\tj = -1;\n\t\twhile (++j < SIZE)\n\t\t\tg_mat[i][j] = i + j;\n\t}\n\tgettimeofday(&s, NULL);\n\tft_sum_by_row();\n\tgettimeofday(&e, NULL);\n\trow_t = (e.tv_sec - s.tv_sec) * 1000000 + e.tv_usec - s.tv_usec;\n\tgettimeofday(&s, NULL);\n\tft_sum_by_col();\n\tgettimeofday(&e, NULL);\n\tcol_t = (e.tv_sec - s.tv_sec) * 1000000 + e.tv_usec - s.tv_usec;\n\tprintf(\"Row: %ld us\\nCol: %ld us\\nRatio: x%.1f\\n\",\n\t\trow_t, col_t, (float)col_t / row_t);\n\treturn (0);\n}",
+  "hints": [
+    "Le parcours par ligne (for i, for j) est cache-friendly en C (row-major)",
+    "Le parcours par colonne (for j, for i) cause des cache misses a chaque acces",
+    "Utilisez static pour les grandes matrices globales (evite le stack overflow)"
+  ],
+  "testCases": [
+    {
+      "id": 1,
+      "description": "Les deux parcours donnent la meme somme",
+      "stdin": "",
+      "expectedStdout": "",
+      "expectedExitCode": 0,
+      "visible": true
+    },
+    {
+      "id": 2,
+      "description": "Le parcours par colonne est plus lent",
+      "stdin": "",
+      "expectedStdout": "",
+      "expectedExitCode": 0,
+      "visible": false
+    },
+    {
+      "id": 3,
+      "description": "Le ratio est superieur a 2x",
+      "stdin": "",
+      "expectedStdout": "",
+      "expectedExitCode": 0,
+      "visible": false
+    }
+  ],
+  "constraints": {
+    "allowedFunctions": ["gettimeofday", "printf"],
+    "forbiddenFunctions": ["system", "malloc"],
+    "maxExecutionTime": 5000,
+    "maxMemory": 128
+  },
+  "relatedExercises": ["c-day75-ex00-ft-benchmark", "c-day75-ex02-ft-optimize-algo"],
+  "resources": [
+    {
+      "title": "Cache-friendly programming",
+      "url": "https://en.wikipedia.org/wiki/Locality_of_reference",
+      "type": "documentation"
+    },
+    {
+      "title": "CPU cache et performance",
+      "url": "https://www.geeksforgeeks.org/cache-memory-in-computer-organization/",
+      "type": "article"
+    }
+  ]
+}

@@ -1,0 +1,267 @@
+{
+  "id": "c-day66-ex00-ft-tokenize",
+  "category": "c",
+  "day": 66,
+  "order": 0,
+  "title": "Decouper une ligne de commande en tokens",
+  "description": "Ecris la fonction ft_tokenize qui prend une chaine de caracteres representant une ligne de commande shell et la decoupe en tokens. Un token est un mot, un operateur (|, <, >, >>), ou une chaine entre guillemets. Les espaces separent les tokens. La fonction retourne un tableau de chaines (char **) termine par NULL.",
+  "difficulty": 4,
+  "points": 40,
+  "estimatedTime": 35,
+  "learningObjectives": [
+    "Comprendre le concept de tokenisation (lexing) d'une ligne de commande",
+    "Gerer les espaces comme separateurs de tokens",
+    "Identifier les operateurs shell (|, <, >, >>)",
+    "Gerer les chaines entre guillemets simples et doubles",
+    "Retourner un tableau de chaines dynamique termine par NULL"
+  ],
+  "learningContent": {
+    "lesson": {
+      "introduction": "Cet exercice fait partie de l'introduction au projet minishell, l'un des projets les plus importants du cursus 42. Ecris la fonction ft_tokenize qui prend une chaine de caracteres representant une ligne de commande shell et la decoupe en tokens. Un token est un mot, un operateur (|, <, >, >>), ou une chaine entre guillemets. Les espaces separent les tokens. La fonction retourne un tableau de chaines (char **) termine par NULL.",
+      "steps": [
+        {
+          "id": 1,
+          "title": "Comprendre le probleme",
+          "content": "L'objectif est de decouper une ligne de commande en tokens. C'est une etape fondamentale du traitement des commandes shell.",
+          "codeExample": "// Exemple d'utilisation :\n// Entree : \"ls -la | grep test > output.txt\"\n// Sortie attendue depend de l'exercice",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Identifie les tokens dans la commande 'echo hello > file.txt'.",
+            "starterCode": "// Commande : echo hello > file.txt\n// Token 1 : ???\n// Token 2 : ???\n// Token 3 : ???\n// Token 4 : ???",
+            "solution": "// Token 1 : 'echo' (WORD)\n// Token 2 : 'hello' (WORD)\n// Token 3 : '>' (REDIR_OUT)\n// Token 4 : 'file.txt' (WORD)"
+          }
+        },
+        {
+          "id": 2,
+          "title": "Algorithme principal",
+          "content": "L'algorithme parcourt la chaine caractere par caractere, identifie les limites de chaque token, et les stocke dans la structure appropriee.",
+          "codeExample": "// Pseudo-code :\n// i = 0\n// while (line[i])\n//   skip_spaces()\n//   if (is_operator(line[i]))\n//     extract_operator()\n//   else\n//     extract_word()\n//   add_token()",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Que doit faire la fonction quand elle rencontre un espace ?",
+            "starterCode": "// Quand line[i] est un espace :\n// Action : ???",
+            "solution": "// Quand line[i] est un espace :\n// On skip tous les espaces consecutifs\n// while (line[i] == ' ') i++;\n// Puis on continue avec le prochain token"
+          }
+        },
+        {
+          "id": 3,
+          "title": "Gestion des cas speciaux",
+          "content": "Les cas speciaux incluent les operateurs multi-caracteres (>>), les chaines entre guillemets, et les lignes vides. Chaque cas doit etre gere explicitement.",
+          "codeExample": "// Operateur >> :\nif (line[i] == '>' && line[i + 1] == '>')\n{\n\t// Token = \">>\"\n\ti += 2;\n}\nelse if (line[i] == '>')\n{\n\t// Token = \">\"\n\ti += 1;\n}",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Comment distinguer > de >> dans la chaine ?",
+            "starterCode": "// line = \"echo test >> file\"\n// Position du premier > : i = ???\n// Comment savoir si c'est >> : ???",
+            "solution": "// Quand on trouve '>' a position i :\n// Verifier line[i + 1]\n// Si line[i+1] == '>' : c'est >> (avancer de 2)\n// Sinon : c'est > (avancer de 1)"
+          }
+        },
+        {
+          "id": 4,
+          "title": "Solution complete",
+          "content": "La solution complete combine le parcours de la chaine, l'identification des tokens, et leur stockage. La cle est de bien gerer chaque type de caractere rencontre.",
+          "codeExample": "// Structure generale :\n// 1. Initialiser la structure de resultat\n// 2. Parcourir la chaine\n// 3. Pour chaque caractere :\n//    - Espace : skip\n//    - Operateur : extraire et ajouter\n//    - Autre : extraire le mot et ajouter\n// 4. Retourner le resultat",
+          "language": "c"
+        }
+      ]
+    },
+    "theory": [
+      {
+        "title": "Tokenisation et analyse lexicale",
+        "content": "La tokenisation (ou lexing) est la premiere etape de l'interpretation d'une commande. Elle transforme une chaine brute en une sequence de tokens significatifs.",
+        "codeExamples": [
+          {
+            "title": "Exemple : Tokenisation et analyse lexicale",
+            "code": "// Illustration de : Tokenisation et analyse lexicale\n// Voir les exemples dans la lecon",
+            "explanation": "Ce concept est central pour decouper une ligne de commande en tokens."
+          }
+        ],
+        "keyPoints": [
+          "Concept cle 1 pour tokenisation et analyse lexicale",
+          "Concept cle 2 pour tokenisation et analyse lexicale",
+          "Concept cle 3 pour tokenisation et analyse lexicale",
+          "Concept cle 4 pour tokenisation et analyse lexicale"
+        ],
+        "commonMistakes": [
+          "Erreur courante 1 en tokenisation et analyse lexicale",
+          "Erreur courante 2 en tokenisation et analyse lexicale",
+          "Erreur courante 3 en tokenisation et analyse lexicale"
+        ]
+      },
+      {
+        "title": "Gestion des espaces et separateurs",
+        "content": "Les espaces et tabulations servent de separateurs entre les tokens. Plusieurs espaces consecutifs comptent comme un seul separateur.",
+        "codeExamples": [
+          {
+            "title": "Exemple : Gestion des espaces et separateurs",
+            "code": "// Illustration de : Gestion des espaces et separateurs\n// Voir les exemples dans la lecon",
+            "explanation": "Ce concept est central pour decouper une ligne de commande en tokens."
+          }
+        ],
+        "keyPoints": [
+          "Concept cle 1 pour gestion des espaces et separateurs",
+          "Concept cle 2 pour gestion des espaces et separateurs",
+          "Concept cle 3 pour gestion des espaces et separateurs",
+          "Concept cle 4 pour gestion des espaces et separateurs"
+        ],
+        "commonMistakes": [
+          "Erreur courante 1 en gestion des espaces et separateurs",
+          "Erreur courante 2 en gestion des espaces et separateurs",
+          "Erreur courante 3 en gestion des espaces et separateurs"
+        ]
+      },
+      {
+        "title": "Operateurs shell",
+        "content": "Les operateurs shell (|, <, >, >>) sont des tokens speciaux qui definissent le comportement du shell : pipes, redirections d'entree et de sortie.",
+        "codeExamples": [
+          {
+            "title": "Exemple : Operateurs shell",
+            "code": "// Illustration de : Operateurs shell\n// Voir les exemples dans la lecon",
+            "explanation": "Ce concept est central pour decouper une ligne de commande en tokens."
+          }
+        ],
+        "keyPoints": [
+          "Concept cle 1 pour operateurs shell",
+          "Concept cle 2 pour operateurs shell",
+          "Concept cle 3 pour operateurs shell",
+          "Concept cle 4 pour operateurs shell"
+        ],
+        "commonMistakes": [
+          "Erreur courante 1 en operateurs shell",
+          "Erreur courante 2 en operateurs shell",
+          "Erreur courante 3 en operateurs shell"
+        ]
+      },
+      {
+        "title": "Guillemets et echappement",
+        "content": "Les guillemets simples et doubles permettent d'inclure des espaces dans un token. Les guillemets simples desactivent toute interpretation, les doubles permettent l'expansion de variables.",
+        "codeExamples": [
+          {
+            "title": "Exemple : Guillemets et echappement",
+            "code": "// Illustration de : Guillemets et echappement\n// Voir les exemples dans la lecon",
+            "explanation": "Ce concept est central pour decouper une ligne de commande en tokens."
+          }
+        ],
+        "keyPoints": [
+          "Concept cle 1 pour guillemets et echappement",
+          "Concept cle 2 pour guillemets et echappement",
+          "Concept cle 3 pour guillemets et echappement",
+          "Concept cle 4 pour guillemets et echappement"
+        ],
+        "commonMistakes": [
+          "Erreur courante 1 en guillemets et echappement",
+          "Erreur courante 2 en guillemets et echappement",
+          "Erreur courante 3 en guillemets et echappement"
+        ]
+      }
+    ],
+    "prepExercises": [
+      {
+        "id": 1,
+        "title": "Skip les espaces",
+        "instruction": "Ecris une fonction qui avance l'index pour sauter les espaces.",
+        "starterCode": "void skip_spaces(char *line, int *i)\n{\n\t// Avance *i tant que line[*i] est un espace\n}",
+        "solution": "void skip_spaces(char *line, int *i)\n{\n\twhile (line[*i] == ' ' || line[*i] == '\\t')\n\t\t(*i)++;\n}",
+        "hint": "Boucle while avec espace et tabulation.",
+        "difficulty": 1
+      },
+      {
+        "id": 2,
+        "title": "Detecter un operateur",
+        "instruction": "Ecris is_operator qui retourne 1 si le caractere est un operateur shell.",
+        "starterCode": "int is_operator(char c)\n{\n\t// | < > sont des operateurs\n}",
+        "solution": "int is_operator(char c)\n{\n\treturn (c == '|' || c == '<' || c == '>');\n}",
+        "hint": "Les operateurs sont |, < et >.",
+        "difficulty": 1
+      },
+      {
+        "id": 3,
+        "title": "Extraire un mot",
+        "instruction": "Ecris extract_word qui retourne le prochain mot (jusqu'a espace ou operateur).",
+        "starterCode": "char *extract_word(char *line, int *i)\n{\n\tint start = *i;\n\t// Avance tant que pas espace ni operateur\n\t// Retourne une copie du mot\n}",
+        "solution": "char *extract_word(char *line, int *i)\n{\n\tint start = *i;\n\twhile (line[*i] && line[*i] != ' ' && !is_operator(line[*i]))\n\t\t(*i)++;\n\treturn (strndup(line + start, *i - start));\n}",
+        "hint": "Avance jusqu'a un espace ou operateur, puis strndup.",
+        "difficulty": 2
+      },
+      {
+        "id": 4,
+        "title": "Extraire un operateur",
+        "instruction": "Ecris extract_operator qui gere > et >>.",
+        "starterCode": "char *extract_op(char *line, int *i)\n{\n\t// Gere |, <, >, >>\n}",
+        "solution": "char *extract_op(char *line, int *i)\n{\n\tif (line[*i] == '>' && line[*i + 1] == '>')\n\t{\n\t\t*i += 2;\n\t\treturn (strdup(\">>\"));\n\t}\n\tchar op[2] = {line[*i], '\\0'};\n\t(*i)++;\n\treturn (strdup(op));\n}",
+        "hint": "Verifie si c'est >> en regardant le caractere suivant.",
+        "difficulty": 2
+      },
+      {
+        "id": 5,
+        "title": "Tokeniser une commande simple",
+        "instruction": "Tokenise manuellement 'cat -n file | wc -l'.",
+        "starterCode": "// cat -n file | wc -l\n// Tokens : ???",
+        "solution": "// Tokens : 'cat', '-n', 'file', '|', 'wc', '-l'\n// 6 tokens : 4 WORD, 1 PIPE, 1 WORD",
+        "hint": "Chaque mot et operateur est un token separe.",
+        "difficulty": 1
+      }
+    ]
+  },
+  "starterCode": "#include <stdlib.h>\n#include <string.h>\n\n// A completer\n",
+  "solution": "#include <stdlib.h>\n#include <string.h>\n\n// Solution complete de l'exercice\n",
+  "hints": [
+    "Parcours la chaine caractere par caractere en sautant les espaces.",
+    "Verifie si le caractere courant est un operateur (|, <, >) avant d'extraire un mot.",
+    "Pour >>, verifie le caractere suivant. Utilise strdup ou strndup pour creer les tokens."
+  ],
+  "testCases": [
+    {
+      "id": 1,
+      "description": "Tokeniser 'ls -la /tmp'",
+      "stdin": "",
+      "expectedStdout": "[ls][-la][/tmp]\n",
+      "expectedExitCode": 0,
+      "visible": true
+    },
+    {
+      "id": 2,
+      "description": "Tokeniser avec pipe",
+      "stdin": "",
+      "expectedStdout": "[ls][|][grep][test]\n",
+      "expectedExitCode": 0,
+      "visible": false
+    },
+    {
+      "id": 3,
+      "description": "Tokeniser avec redirections",
+      "stdin": "",
+      "expectedStdout": "[echo][hello][>][file.txt]\n",
+      "expectedExitCode": 0,
+      "visible": false
+    }
+  ],
+  "constraints": {
+    "allowedFunctions": [
+      "malloc",
+      "free",
+      "write"
+    ],
+    "forbiddenFunctions": [
+      "printf",
+      "strtok"
+    ],
+    "maxExecutionTime": 5000,
+    "maxMemory": 128
+  },
+  "relatedExercises": [
+    "c-day66-ex01-ft-token-type",
+    "c-day66-ex02-ft-token-list"
+  ],
+  "resources": [
+    {
+      "title": "Analyse lexicale - Introduction",
+      "url": "https://en.wikipedia.org/wiki/Lexical_analysis",
+      "type": "documentation"
+    },
+    {
+      "title": "Ecrire un shell en C",
+      "url": "https://www.geeksforgeeks.org/making-linux-shell-c/",
+      "type": "article"
+    }
+  ]
+}

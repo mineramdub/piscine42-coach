@@ -1,0 +1,257 @@
+{
+  "id": "c-day74-ex01-ft-philo-death",
+  "category": "c",
+  "day": 74,
+  "order": 1,
+  "title": "Detecter la mort d'un philosophe",
+  "description": "Implemente la detection precise de la mort d'un philosophe en comparant le temps actuel avec le dernier repas. Gere l'affichage du deces et l'arret de la simulation.",
+  "difficulty": 5,
+  "points": 50,
+  "estimatedTime": 40,
+  "learningObjectives": [
+    "Implementer une detection de mort precise en millisecondes",
+    "Gerer la synchronisation entre le moniteur et les philosophes",
+    "Afficher le message de mort sans messages supplementaires",
+    "Comprendre les problemes de timing dans les simulations",
+    "Tester la detection de mort avec differents parametres"
+  ],
+  "learningContent": {
+    "lesson": {
+      "introduction": "La detection de la mort est le coeur du moniteur. Un philosophe meurt si le temps ecoule depuis son dernier repas depasse time_to_die millisecondes. La precision de cette detection est critique : si le moniteur detecte la mort trop tard, le timestamp affiche sera incorrect. Si la detection est trop frequente, le programme consomme trop de CPU.",
+      "steps": [
+        {
+          "id": 1,
+          "title": "Calcul du temps de jeune",
+          "content": "Le temps de jeune d'un philosophe est la difference entre le temps actuel et le moment de son dernier repas (ou le debut de la simulation s'il n'a pas encore mange).\n\n```\ntemps_jeune = get_time_ms() - last_meal_time\n```\n\nSi `temps_jeune > time_to_die`, le philosophe est mort.",
+          "codeExample": "long long\tget_time_since_meal(t_philo *philo)\n{\n\treturn (get_time_ms() - philo->last_meal_time);\n}\n\nint\tcheck_death(t_philo *philo)\n{\n\tif (get_time_since_meal(philo) > philo->table->time_to_die)\n\t\treturn (1);\n\treturn (0);\n}",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Ecris une fonction qui retourne 1 si le philosophe est mort, 0 sinon.",
+            "starterCode": "int\tcheck_death(t_philo *p)\n{\n\t/* TON CODE ICI */\n}",
+            "solution": "int\tcheck_death(t_philo *p)\n{\n\tif (get_time_ms() - p->last_meal_time > p->table->time_to_die)\n\t\treturn (1);\n\treturn (0);\n}"
+          }
+        },
+        {
+          "id": 2,
+          "title": "Affichage atomique de la mort",
+          "content": "Quand la mort est detectee, il faut :\n1. Prendre le print_mutex\n2. Verifier que personne n'est deja mort (evite double message)\n3. Afficher le message de mort\n4. Mettre someone_died a 1\n5. Liberer le print_mutex\n\n**Ordre critique** : someone_died DOIT etre mis a 1 AVANT de liberer le mutex.",
+          "codeExample": "void\tannounce_death(t_philo *philo)\n{\n\tlong long\ttimestamp;\n\n\tpthread_mutex_lock(&philo->table->print_mutex);\n\tif (!philo->table->someone_died)\n\t{\n\t\ttimestamp = get_time_ms() - philo->table->start_time;\n\t\tprintf(\"%lld %d died\\n\", timestamp, philo->id);\n\t\tphilo->table->someone_died = 1;\n\t}\n\tpthread_mutex_unlock(&philo->table->print_mutex);\n}",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Ecris announce_death qui affiche le deces et met le flag de maniere thread-safe.",
+            "starterCode": "void\tannounce_death(t_philo *p)\n{\n\t/* TON CODE ICI */\n}",
+            "solution": "void\tannounce_death(t_philo *p)\n{\n\tlong long\tts;\n\n\tpthread_mutex_lock(&p->table->print_mutex);\n\tif (!p->table->someone_died)\n\t{\n\t\tts = get_time_ms() - p->table->start_time;\n\t\tprintf(\"%lld %d died\\n\", ts, p->id);\n\t\tp->table->someone_died = 1;\n\t}\n\tpthread_mutex_unlock(&p->table->print_mutex);\n}"
+          }
+        },
+        {
+          "id": 3,
+          "title": "Moniteur avec protection mutex",
+          "content": "Pour une detection precise, le moniteur doit aussi proteger la lecture de `last_meal_time` avec un mutex. Sinon, il pourrait lire une valeur en cours d'ecriture par le philosophe.\n\nOn utilise un `meal_mutex` dedie pour minimiser la contention.",
+          "codeExample": "int\tcheck_death_safe(t_philo *philo, pthread_mutex_t *meal_mutex)\n{\n\tlong long\ttime_since;\n\n\tpthread_mutex_lock(meal_mutex);\n\ttime_since = get_time_ms() - philo->last_meal_time;\n\tpthread_mutex_unlock(meal_mutex);\n\treturn (time_since > philo->table->time_to_die);\n}",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Ecris check_death_safe qui protege la lecture de last_meal_time avec un mutex.",
+            "starterCode": "int\tcheck_death_safe(t_philo *p, pthread_mutex_t *m)\n{\n\t/* TON CODE ICI */\n}",
+            "solution": "int\tcheck_death_safe(t_philo *p, pthread_mutex_t *m)\n{\n\tlong long\tt;\n\n\tpthread_mutex_lock(m);\n\tt = get_time_ms() - p->last_meal_time;\n\tpthread_mutex_unlock(m);\n\treturn (t > p->table->time_to_die);\n}"
+          }
+        },
+        {
+          "id": 4,
+          "title": "Tests de detection de mort",
+          "content": "Pour tester la detection de mort :\n- `./philo 1 800 200 200` -> 1 philo, meurt a ~800ms\n- `./philo 5 800 200 200` -> 5 philos, personne ne meurt\n- `./philo 4 310 200 100` -> 4 philos, personne ne devrait mourir\n- `./philo 4 200 205 200` -> 4 philos, quelqu'un meurt rapidement\n\nLe timestamp de mort ne doit pas depasser time_to_die + 10ms (tolerance).",
+          "codeExample": "// Test : 1 philosophe, meurt a 800ms\n// ./philo 1 800 200 200\n// Sortie attendue :\n// 0 1 has taken a fork\n// 800 1 died\n\n// Test : 5 philos, personne ne meurt\n// ./philo 5 800 200 200\n// La simulation tourne indefiniment\n\n// Test : avec max_meals\n// ./philo 5 800 200 200 3\n// Chaque philo mange 3 fois puis la simulation s'arrete",
+          "language": "c"
+        }
+      ]
+    },
+    "theory": [
+      {
+        "title": "Precision de la detection",
+        "content": "La precision de la detection de mort depend de la frequence de verification du moniteur. Avec usleep(1000) (1ms), la detection peut avoir jusqu'a 1ms de retard. Pour le sujet de 42, la tolerance est de 10ms : le message de mort ne doit pas apparaitre plus de 10ms apres le time_to_die.",
+        "codeExamples": [
+          {
+            "title": "Impact de l'intervalle",
+            "code": "// Avec usleep(1000) : precision ~1ms\n// Avec usleep(5000) : precision ~5ms\n// Avec usleep(100)  : precision ~0.1ms mais CPU eleve\n\n// Compromis recommande : usleep(1000)\nwhile (!table->someone_died)\n{\n\tcheck_all_philos(table);\n\tusleep(1000); // 1ms entre chaque verification\n}",
+            "explanation": "1ms est un bon compromis entre precision et utilisation CPU."
+          }
+        ],
+        "keyPoints": [
+          "La tolerance habituelle est de 10ms pour la detection de mort",
+          "usleep(1000) donne une precision suffisante",
+          "Le timestamp de mort doit etre time_to_die +/- 10ms",
+          "Une verification trop frequente gaspille du CPU"
+        ],
+        "commonMistakes": [
+          "Utiliser usleep(10000) qui donne 10ms de retard",
+          "Ne pas tester avec des valeurs de time_to_die faibles",
+          "Afficher le timestamp de mort avec un gros retard"
+        ]
+      },
+      {
+        "title": "Synchronisation moniteur-philosophes",
+        "content": "Le moniteur et les philosophes accedent concurremment a last_meal_time et someone_died. La synchronisation est necessaire pour eviter les race conditions. Le print_mutex protege someone_died et l'affichage. Un meal_mutex optionnel protege last_meal_time.",
+        "codeExamples": [
+          {
+            "title": "Double protection",
+            "code": "// Philosophe ecrit last_meal_time :\npthread_mutex_lock(&meal_mutex);\nphilo->last_meal_time = get_time_ms();\npthread_mutex_unlock(&meal_mutex);\n\n// Moniteur lit last_meal_time :\npthread_mutex_lock(&meal_mutex);\ntime = philo->last_meal_time;\npthread_mutex_unlock(&meal_mutex);",
+            "explanation": "Le meal_mutex protege les acces concurrents a last_meal_time."
+          }
+        ],
+        "keyPoints": [
+          "Le print_mutex protege l'affichage et someone_died",
+          "Un meal_mutex optionnel protege last_meal_time",
+          "Le moniteur ne doit pas garder de mutex longtemps",
+          "Les philosophes verifient someone_died regulierement"
+        ],
+        "commonMistakes": [
+          "Le moniteur garde un mutex pendant toute sa boucle de verification",
+          "Ne pas proteger la lecture de last_meal_time dans le moniteur",
+          "Utiliser le print_mutex pour tout (mauvaise granularite)"
+        ]
+      },
+      {
+        "title": "Cas limites de timing",
+        "content": "Certaines combinaisons de parametres sont critiques. Par exemple, avec 4 philosophes et time_to_die = time_to_eat + time_to_sleep, les philosophes n'ont aucune marge. Le timing doit etre parfait pour eviter la mort. La desynchronisation initiale est cruciale dans ces cas.",
+        "codeExamples": [
+          {
+            "title": "Parametres critiques",
+            "code": "// Cas critique : 4 310 200 100\n// time_to_die(310) > time_to_eat(200) + time_to_sleep(100) = 300\n// Marge de seulement 10ms !\n// Si un philo attend trop pour une fourchette -> mort\n\n// Cas impossible : 4 200 205 200\n// time_to_die(200) < time_to_eat(205)\n// Un philo meurt avant meme de finir de manger !",
+            "explanation": "Analyser les parametres pour savoir si la survie est possible."
+          }
+        ],
+        "keyPoints": [
+          "time_to_die > time_to_eat + time_to_sleep est necessaire pour survivre",
+          "La desynchronisation aide quand la marge est faible",
+          "Avec un nombre impair de philosophes, un doit toujours attendre",
+          "Tester avec des marges tres faibles revele les bugs de timing"
+        ],
+        "commonMistakes": [
+          "Ne pas tester les cas limites (marges faibles)",
+          "Ignorer que le nombre impair de philos cause plus d'attente",
+          "Ne pas desynchroniser les philosophes au demarrage"
+        ]
+      },
+      {
+        "title": "Arret propre de la simulation",
+        "content": "Quand someone_died est mis a 1, tous les threads doivent s'arreter proprement. Les philosophes doivent liberer les fourchettes qu'ils detiennent. Le main doit joindre tous les threads avant de nettoyer les ressources.",
+        "codeExamples": [
+          {
+            "title": "Verification dans la routine",
+            "code": "while (!philo->table->someone_died)\n{\n\tft_eat(philo);\n\tif (philo->table->someone_died)\n\t\tbreak ;\n\tft_sleep_think(philo);\n}\n// Thread se termine proprement\nreturn (NULL);",
+            "explanation": "Verifier someone_died apres chaque action pour un arret rapide."
+          }
+        ],
+        "keyPoints": [
+          "Verifier someone_died apres chaque action dans la routine",
+          "Les fourchettes doivent etre liberees avant la fin du thread",
+          "Le main join tous les threads avant cleanup",
+          "Aucun message ne doit apparaitre apres le message de mort"
+        ],
+        "commonMistakes": [
+          "Ne pas verifier someone_died assez souvent (messages post-mortem)",
+          "Quitter sans liberer les fourchettes (mutex lock restant)",
+          "Ne pas joindre tous les threads avant de detruire les mutex"
+        ]
+      }
+    ],
+    "prepExercises": [
+      {
+        "id": 1,
+        "title": "Temps depuis le repas",
+        "instruction": "Calcule le temps ecoule depuis le dernier repas d'un philosophe.",
+        "starterCode": "long long\ttime_since_meal(t_philo *p)\n{\n\t/* TON CODE ICI */\n}",
+        "solution": "long long\ttime_since_meal(t_philo *p)\n{\n\treturn (get_time_ms() - p->last_meal_time);\n}",
+        "hint": "Soustrais last_meal_time du temps actuel.",
+        "difficulty": 1
+      },
+      {
+        "id": 2,
+        "title": "Verifier la mort",
+        "instruction": "Retourne 1 si le philosophe est mort, 0 sinon.",
+        "starterCode": "int\tis_dead(t_philo *p)\n{\n\t/* TON CODE ICI */\n}",
+        "solution": "int\tis_dead(t_philo *p)\n{\n\treturn (get_time_ms() - p->last_meal_time > p->table->time_to_die);\n}",
+        "hint": "Compare le temps depuis le repas avec time_to_die.",
+        "difficulty": 1
+      },
+      {
+        "id": 3,
+        "title": "Afficher la mort",
+        "instruction": "Affiche le message de mort avec protection mutex et mise a jour du flag.",
+        "starterCode": "void\tprint_death(t_philo *p)\n{\n\t/* TON CODE ICI */\n}",
+        "solution": "void\tprint_death(t_philo *p)\n{\n\tpthread_mutex_lock(&p->table->print_mutex);\n\tif (!p->table->someone_died)\n\t{\n\t\tprintf(\"%lld %d died\\n\",\n\t\t\tget_time_ms() - p->table->start_time, p->id);\n\t\tp->table->someone_died = 1;\n\t}\n\tpthread_mutex_unlock(&p->table->print_mutex);\n}",
+        "hint": "Lock le print_mutex, verifie someone_died, affiche, met le flag, unlock.",
+        "difficulty": 2
+      },
+      {
+        "id": 4,
+        "title": "Moniteur complet",
+        "instruction": "Ecris le moniteur qui verifie tous les philosophes en boucle.",
+        "starterCode": "void\t*monitor(void *arg)\n{\n\t/* TON CODE ICI */\n}",
+        "solution": "void\t*monitor(void *arg)\n{\n\tt_table\t*t = (t_table *)arg;\n\tint\t\ti;\n\n\twhile (!t->someone_died)\n\t{\n\t\ti = -1;\n\t\twhile (++i < t->nb_philos)\n\t\t{\n\t\t\tif (is_dead(&t->philos[i]))\n\t\t\t{\n\t\t\t\tprint_death(&t->philos[i]);\n\t\t\t\treturn (NULL);\n\t\t\t}\n\t\t}\n\t\tusleep(1000);\n\t}\n\treturn (NULL);\n}",
+        "hint": "Boucle externe !someone_died, boucle interne sur les philos, usleep(1000).",
+        "difficulty": 3
+      },
+      {
+        "id": 5,
+        "title": "Verification tous ont mange",
+        "instruction": "Le moniteur verifie aussi si tous les philosophes ont mange max_meals fois.",
+        "starterCode": "int\tall_full(t_table *t)\n{\n\t/* TON CODE ICI */\n}",
+        "solution": "int\tall_full(t_table *t)\n{\n\tint\ti;\n\n\tif (t->max_meals == -1)\n\t\treturn (0);\n\ti = -1;\n\twhile (++i < t->nb_philos)\n\t\tif (t->philos[i].meals_eaten < t->max_meals)\n\t\t\treturn (0);\n\treturn (1);\n}",
+        "hint": "Si max_meals == -1 retourne 0. Sinon verifie chaque philo.",
+        "difficulty": 2
+      }
+    ]
+  },
+  "starterCode": "#include <pthread.h>\n#include <stdio.h>\n#include <stdlib.h>\n#include <unistd.h>\n#include <sys/time.h>\n\nint\tft_check_death(t_philo *philo)\n{\n\t// TODO: Verifier si le philosophe est mort\n\treturn (0);\n}\n\nvoid\tft_announce_death(t_philo *philo)\n{\n\t// TODO: Afficher la mort avec protection mutex\n\t// TODO: Mettre someone_died a 1\n}\n\nvoid\t*ft_death_monitor(void *arg)\n{\n\tt_table\t*table;\n\tint\t\ti;\n\n\ttable = (t_table *)arg;\n\t// TODO: Boucle de detection de mort\n\treturn (NULL);\n}",
+  "solution": "#include <pthread.h>\n#include <stdio.h>\n#include <stdlib.h>\n#include <unistd.h>\n#include <sys/time.h>\n\nlong long\tget_time_ms(void)\n{\n\tstruct timeval\ttv;\n\tgettimeofday(&tv, NULL);\n\treturn ((long long)tv.tv_sec * 1000 + tv.tv_usec / 1000);\n}\n\nint\tft_check_death(t_philo *philo)\n{\n\tlong long\ttime_since;\n\n\ttime_since = get_time_ms() - philo->last_meal_time;\n\treturn (time_since > philo->table->time_to_die);\n}\n\nvoid\tft_announce_death(t_philo *philo)\n{\n\tlong long\ttimestamp;\n\n\tpthread_mutex_lock(&philo->table->print_mutex);\n\tif (!philo->table->someone_died)\n\t{\n\t\ttimestamp = get_time_ms() - philo->table->start_time;\n\t\tprintf(\"%lld %d died\\n\", timestamp, philo->id);\n\t\tphilo->table->someone_died = 1;\n\t}\n\tpthread_mutex_unlock(&philo->table->print_mutex);\n}\n\nvoid\t*ft_death_monitor(void *arg)\n{\n\tt_table\t*table;\n\tint\t\ti;\n\n\ttable = (t_table *)arg;\n\twhile (!table->someone_died)\n\t{\n\t\ti = 0;\n\t\twhile (i < table->nb_philos)\n\t\t{\n\t\t\tif (ft_check_death(&table->philos[i]))\n\t\t\t{\n\t\t\t\tft_announce_death(&table->philos[i]);\n\t\t\t\treturn (NULL);\n\t\t\t}\n\t\t\ti++;\n\t\t}\n\t\tusleep(1000);\n\t}\n\treturn (NULL);\n}",
+  "hints": [
+    "get_time_ms() - last_meal_time > time_to_die signifie que le philosophe est mort",
+    "Mettez someone_died = 1 AVANT pthread_mutex_unlock pour eviter les messages post-mortem",
+    "usleep(1000) dans la boucle du moniteur donne une precision de ~1ms"
+  ],
+  "testCases": [
+    {
+      "id": 1,
+      "description": "1 philosophe meurt apres time_to_die ms",
+      "stdin": "",
+      "expectedStdout": "0 1 has taken a fork\n800 1 died\n",
+      "expectedExitCode": 0,
+      "visible": true
+    },
+    {
+      "id": 2,
+      "description": "Le timestamp de mort est precis (tolerance 10ms)",
+      "stdin": "",
+      "expectedStdout": "",
+      "expectedExitCode": 0,
+      "visible": false
+    },
+    {
+      "id": 3,
+      "description": "Pas de message apres 'died'",
+      "stdin": "",
+      "expectedStdout": "",
+      "expectedExitCode": 0,
+      "visible": false
+    }
+  ],
+  "constraints": {
+    "allowedFunctions": ["pthread_mutex_lock", "pthread_mutex_unlock", "printf", "usleep", "gettimeofday"],
+    "forbiddenFunctions": ["sleep", "system"],
+    "maxExecutionTime": 5000,
+    "maxMemory": 128
+  },
+  "relatedExercises": ["c-day74-ex00-ft-philo-eat", "c-day74-ex02-ft-philo-complete"],
+  "resources": [
+    {
+      "title": "gettimeofday precision",
+      "url": "https://man7.org/linux/man-pages/man2/gettimeofday.2.html",
+      "type": "documentation"
+    },
+    {
+      "title": "Philosophers timing guide",
+      "url": "https://www.notion.so/philosophers-VM-97f3b9f7170748e5a24390900aa72281",
+      "type": "article"
+    }
+  ]
+}

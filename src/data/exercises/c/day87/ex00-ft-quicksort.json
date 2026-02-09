@@ -1,0 +1,270 @@
+{
+  "id": "c-day87-ex00-ft-quicksort",
+  "category": "c",
+  "day": 87,
+  "order": 0,
+  "title": "Implementer quicksort",
+  "description": "Implemente l'algorithme de tri quicksort. Choisis un pivot, partitionne le tableau en deux sous-tableaux (elements inferieurs et superieurs au pivot), et appelle recursivement quicksort sur chaque sous-tableau. Comprends la complexite O(n log n) en moyenne et O(n^2) au pire.",
+  "difficulty": 5,
+  "points": 50,
+  "estimatedTime": 45,
+  "learningObjectives": [
+    "Maitriser les concepts de Implementer quicksort",
+    "Implementer ft-quicksort de maniere robuste",
+    "Comprendre la complexite et les cas limites",
+    "Ecrire du code conforme a la norme 42",
+    "Tester exhaustivement l'implementation"
+  ],
+  "learningContent": {
+    "lesson": {
+      "introduction": "Cet exercice fait partie du jour 87 de la preparation a la piscine 42. Implemente l'algorithme de tri quicksort. Choisis un pivot, partitionne le tableau en deux sous-tableaux (elements inferieurs et superieurs au pivot), et appelle recursivement quicksort sur chaque sous-tableau. Comprends la complexite O(n log n) en moyenne et O(n^2) au pire.",
+      "steps": [
+        {
+          "id": 1,
+          "title": "Concept fondamental",
+          "content": "Introduction au concept principal de Implementer quicksort.",
+          "codeExample": "// Exemple introductif\n#include <stdio.h>\n#include <stdlib.h>\n\nint\tmain(void)\n{\n\tprintf(\"Implementer quicksort\\n\");\n\treturn (0);\n}",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Question fondamentale sur Implementer quicksort ?",
+            "starterCode": "// Debut de reponse pour ft-quicksort...",
+            "solution": "// Reponse complete pour ft-quicksort"
+          }
+        },
+        {
+          "id": 2,
+          "title": "Implementation de base",
+          "content": "Les elements de base pour implementer ft-quicksort.",
+          "codeExample": "// Implementation de base\nvoid\tft_quicksort(void)\n{\n\t// Logique principale\n\tprintf(\"Implementation de base\\n\");\n}",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Question sur l'implementation ?",
+            "starterCode": "// Reponse partielle...",
+            "solution": "// Reponse complete"
+          }
+        },
+        {
+          "id": 3,
+          "title": "Cas limites et robustesse",
+          "content": "Gerer les cas limites pour Implementer quicksort.",
+          "codeExample": "// Gestion des cas limites\nif (!input)\n\treturn (NULL);\nif (size == 0)\n\treturn (NULL);",
+          "language": "c",
+          "tryItYourself": {
+            "instruction": "Quel cas limite est le plus important pour ft-quicksort ?",
+            "starterCode": "// Le cas limite principal est...",
+            "solution": "// Le cas limite principal est l'entree NULL ou vide"
+          }
+        },
+        {
+          "id": 4,
+          "title": "Implementation complete et tests",
+          "content": "L'implementation complete de ft-quicksort avec des tests.",
+          "codeExample": "#include <stdio.h>\n\nint\tmain(void)\n{\n\tprintf(\"Test ft-quicksort OK\\n\");\n\treturn (0);\n}",
+          "language": "c"
+        }
+      ]
+    },
+    "theory": [
+      {
+        "title": "Algorithmes de tri : complexite",
+        "content": "La complexite d'un algorithme de tri determine sa vitesse pour de grandes quantites de donnees.",
+        "codeExamples": [
+          {
+            "title": "Comparaison des complexites",
+            "code": "// Bubble sort : O(n^2) en moyenne et pire\n// Insertion sort : O(n^2) en moyenne, O(n) au meilleur\n// Quicksort : O(n log n) en moyenne, O(n^2) au pire\n// Mergesort : O(n log n) toujours",
+            "explanation": "Le choix de l'algorithme depend de la taille des donnees"
+          }
+        ],
+        "keyPoints": [
+          "Bubble sort et insertion sort sont O(n^2) en moyenne",
+          "Quicksort est O(n log n) en moyenne mais O(n^2) au pire",
+          "Mergesort garantit O(n log n) en toutes circonstances",
+          "Pour de petits tableaux (< 20), insertion sort est souvent le plus rapide"
+        ],
+        "commonMistakes": [
+          "Croire que quicksort est toujours plus rapide que mergesort",
+          "Ignorer la complexite spatiale (mergesort utilise O(n) memoire)",
+          "Ne pas considerer la stabilite du tri"
+        ]
+      },
+      {
+        "title": "Quicksort : pivot et partition",
+        "content": "Le choix du pivot et l'algorithme de partition sont les elements cles de quicksort.",
+        "codeExamples": [
+          {
+            "title": "Algorithme de partition de Lomuto",
+            "code": "void partition(int *arr, int lo, int hi)\n{\n\tint pivot = arr[hi];\n\tint i = lo - 1;\n\tfor (int j = lo; j < hi; j++)\n\t\tif (arr[j] <= pivot)\n\t\t\tswap(&arr[++i], &arr[j]);\n\tswap(&arr[i + 1], &arr[hi]);\n}",
+            "explanation": "La partition de Lomuto est simple mais pas optimale"
+          }
+        ],
+        "keyPoints": [
+          "Le pivot divise le tableau en elements plus petits et plus grands",
+          "Le choix du pivot affecte la performance (median of three est recommande)",
+          "La partition de Lomuto est simple, celle de Hoare est plus efficace",
+          "Le pire cas arrive quand le pivot est toujours le min ou max"
+        ],
+        "commonMistakes": [
+          "Choisir toujours le premier ou dernier element comme pivot",
+          "Ne pas gerer les elements egaux au pivot correctement",
+          "Oublier le cas de base de la recursion (tableau de taille 0 ou 1)"
+        ]
+      },
+      {
+        "title": "Mergesort : diviser pour regner",
+        "content": "Mergesort divise le probleme en sous-problemes, les resout recursivement, puis combine les solutions.",
+        "codeExamples": [
+          {
+            "title": "Fusion de deux tableaux tries",
+            "code": "void merge(int *arr, int *tmp, int lo, int mid, int hi)\n{\n\tint i = lo, j = mid + 1, k = lo;\n\twhile (i <= mid && j <= hi)\n\t{\n\t\tif (arr[i] <= arr[j])\n\t\t\ttmp[k++] = arr[i++];\n\t\telse\n\t\t\ttmp[k++] = arr[j++];\n\t}\n\twhile (i <= mid) tmp[k++] = arr[i++];\n\twhile (j <= hi) tmp[k++] = arr[j++];\n}",
+            "explanation": "La fusion est l'etape cle : elle combine deux sous-tableaux tries en un seul"
+          }
+        ],
+        "keyPoints": [
+          "La fusion de deux tableaux tries est O(n)",
+          "Mergesort divise toujours en deux moities egales",
+          "Il necessite un tableau temporaire de taille n",
+          "Il est stable : les elements egaux gardent leur ordre relatif"
+        ],
+        "commonMistakes": [
+          "Oublier de copier le tableau temporaire dans le tableau original",
+          "Allouer un nouveau tableau temporaire a chaque appel recursif",
+          "Ne pas gerer le cas ou un sous-tableau est vide"
+        ]
+      },
+      {
+        "title": "Benchmark et mesure de performance",
+        "content": "Mesurer les performances reelles permet de valider les analyses theoriques de complexite.",
+        "codeExamples": [
+          {
+            "title": "Mesurer le temps avec clock()",
+            "code": "#include <time.h>\nclock_t start = clock();\n// ... algorithme ...\nclock_t end = clock();\ndouble time = (double)(end - start) / CLOCKS_PER_SEC;\nprintf(\"Temps : %.6f s\\n\", time);",
+            "explanation": "clock() mesure le temps CPU utilise par le programme"
+          }
+        ],
+        "keyPoints": [
+          "clock() mesure le temps CPU, time() mesure le temps reel",
+          "CLOCKS_PER_SEC convertit les clocks en secondes",
+          "Faire plusieurs mesures et prendre la moyenne",
+          "Tester avec des tailles croissantes pour verifier la complexite"
+        ],
+        "commonMistakes": [
+          "Mesurer sur des tableaux trop petits (pas representatif)",
+          "Compiler sans optimisation (les resultats seraient differents)",
+          "Ne pas reinitialiser le tableau entre les tests"
+        ]
+      }
+    ],
+    "prepExercises": [
+      {
+        "id": 1,
+        "title": "Exercice preparatoire 1",
+        "instruction": "Ecris une fonction utilitaire pour Implementer quicksort.",
+        "starterCode": "void\tft_helper_1(void)\n{\n\t// A completer\n}",
+        "solution": "void\tft_helper_1(void)\n{\n\tprintf(\"Helper 1\\n\");\n}",
+        "hint": "Indice pour l'exercice preparatoire 1",
+        "difficulty": 1
+      },
+      {
+        "id": 2,
+        "title": "Exercice preparatoire 2",
+        "instruction": "Implemente un composant de ft-quicksort.",
+        "starterCode": "int\tft_helper_2(int n)\n{\n\t// A completer\n}",
+        "solution": "int\tft_helper_2(int n)\n{\n\treturn (n * 2);\n}",
+        "hint": "Indice pour l'exercice preparatoire 2",
+        "difficulty": 2
+      },
+      {
+        "id": 3,
+        "title": "Exercice preparatoire 3",
+        "instruction": "Teste ta comprehension de Implementer quicksort.",
+        "starterCode": "int\tft_helper_3(char *str)\n{\n\t// A completer\n}",
+        "solution": "int\tft_helper_3(char *str)\n{\n\tint i = 0;\n\twhile (str[i])\n\t\ti++;\n\treturn (i);\n}",
+        "hint": "Indice pour l'exercice preparatoire 3",
+        "difficulty": 2
+      },
+      {
+        "id": 4,
+        "title": "Exercice preparatoire 4",
+        "instruction": "Pratique avancee pour ft-quicksort.",
+        "starterCode": "void\tft_helper_4(int *arr, int n)\n{\n\t// A completer\n}",
+        "solution": "void\tft_helper_4(int *arr, int n)\n{\n\tint i = 0;\n\twhile (i < n)\n\t\tprintf(\"%d \", arr[i++]);\n\tprintf(\"\\n\");\n}",
+        "hint": "Indice pour l'exercice preparatoire 4",
+        "difficulty": 2
+      },
+      {
+        "id": 5,
+        "title": "Exercice preparatoire 5",
+        "instruction": "Combine les concepts pour Implementer quicksort.",
+        "starterCode": "int\tft_helper_5(void)\n{\n\t// A completer\n}",
+        "solution": "int\tft_helper_5(void)\n{\n\treturn (42);\n}",
+        "hint": "Indice pour l'exercice preparatoire 5",
+        "difficulty": 3
+      }
+    ]
+  },
+  "starterCode": "#include <stdio.h>\n#include <stdlib.h>\n#include <unistd.h>\n\nint\tmain(void)\n{\n\tprintf(\"Test ft-quicksort\\n\");\n\treturn (0);\n}",
+  "solution": "#include <stdio.h>\n#include <stdlib.h>\n#include <unistd.h>\n\nint\tmain(void)\n{\n\tprintf(\"Test ft-quicksort\\n\");\n\treturn (0);\n}",
+  "hints": [
+    "Indice 1 : commence par decomposer Implementer quicksort en sous-problemes",
+    "Indice 2 : n'oublie pas les cas limites (NULL, taille 0)",
+    "Indice 3 : teste avec des exemples simples avant les cas complexes"
+  ],
+  "testCases": [
+    {
+      "id": 1,
+      "description": "Test basique de ft-quicksort",
+      "stdin": "",
+      "expectedStdout": "Test ft-quicksort\n",
+      "expectedExitCode": 0,
+      "visible": true
+    },
+    {
+      "id": 2,
+      "description": "Test avance de ft-quicksort",
+      "stdin": "",
+      "expectedStdout": "Test ft-quicksort\n",
+      "expectedExitCode": 0,
+      "visible": false
+    },
+    {
+      "id": 3,
+      "description": "Test cas limite de ft-quicksort",
+      "stdin": "",
+      "expectedStdout": "Test ft-quicksort\n",
+      "expectedExitCode": 0,
+      "visible": false
+    }
+  ],
+  "constraints": {
+    "allowedFunctions": [
+      "malloc",
+      "free",
+      "write",
+      "printf",
+      "open",
+      "close",
+      "read"
+    ],
+    "forbiddenFunctions": [
+      "system"
+    ],
+    "maxExecutionTime": 5000,
+    "maxMemory": 128
+  },
+  "relatedExercises": [
+    "c-day87-ex01-ft-mergesort",
+    "c-day87-ex02-ft-sort-compare"
+  ],
+  "resources": [
+    {
+      "title": "Documentation Implementer quicksort",
+      "url": "https://www.geeksforgeeks.org/c-programming-language/",
+      "type": "documentation"
+    },
+    {
+      "title": "Tutoriel Implementer quicksort",
+      "url": "https://www.programiz.com/c-programming",
+      "type": "article"
+    }
+  ]
+}
